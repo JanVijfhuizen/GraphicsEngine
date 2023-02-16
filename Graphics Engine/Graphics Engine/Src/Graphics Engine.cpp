@@ -15,15 +15,18 @@ void Free(void* ptr)
 
 int main()
 {
+	char c[100];
+
 	jv::ArenaCreateInfo info{};
 	info.alloc = Alloc;
 	info.free = Free;
-	info.chunkSize = sizeof(uint32_t) * 6 + sizeof(jv::Arena);
+	info.memory = c;
+	info.memorySize = sizeof c;
 	auto arena = jv::Arena::Create(info);
 	
 	for (uint32_t i = 0; i < 13; ++i)
 	{
-		void* p = arena.Alloc(sizeof(uint32_t), jv::Arena::AllocType::linear);
+		void* p = arena.Alloc(sizeof(uint32_t));
 		std::cout << arena.front << std::endl;
 	}
 

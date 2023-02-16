@@ -4,9 +4,10 @@ namespace jv
 {
 	struct ArenaCreateInfo final
 	{
-		void* (*alloc)(uint32_t size) = nullptr;
-		void (*free)(void* ptr) = nullptr;
-		uint32_t chunkSize = 4096;
+		void* (*alloc)(uint32_t size);
+		void (*free)(void* ptr);
+		void* memory = nullptr;
+		uint32_t memorySize = 4096;
 	};
 
 	struct ArenaAllocMetaData final
@@ -16,12 +17,6 @@ namespace jv
 
 	struct Arena final
 	{
-		enum class AllocType
-		{
-			free,
-			linear
-		};
-
 		ArenaCreateInfo info;
 		void* memory;
 		uint32_t front = 0;
@@ -30,7 +25,8 @@ namespace jv
 		[[nodiscard]] static Arena Create(const ArenaCreateInfo& info);
 		static void Destroy(const Arena& arena);
 
-		void* Alloc(uint32_t size, AllocType type);
+		void* Alloc(uint32_t size);
 		void Free(const void* ptr);
+		void Clear();
 	};
 }

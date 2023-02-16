@@ -8,7 +8,7 @@ namespace jv
 	{
 		Arena arena{};
 		arena.info = info;
-		arena.memory = info.alloc(info.chunkSize);
+		arena.memory = info.memory ? info.memory : info.alloc(info.memorySize);
 		return arena;
 	}
 
@@ -16,38 +16,31 @@ namespace jv
 	{
 		if (arena.next)
 			Destroy(*arena.next);
-		arena.info.free(arena.memory);
+		if(!arena.info.memory)
+			arena.info.free(arena.memory);
 	}
 
-	void* Arena::Alloc(const uint32_t size, const AllocType type)
+	void* Arena::Alloc(const uint32_t size)
 	{
-		void* ptr = nullptr;
-		ArenaAllocMetaData* metaData = nullptr;
-
-		switch (type)
+		if (front + size + sizeof(ArenaAllocMetaData) > info.memorySize - sizeof(Arena))
 		{
-		case AllocType::linear:
-			if(front + size + sizeof(ArenaAllocMetaData) > info.chunkSize - sizeof(Arena))
+			if (!next)
 			{
-				if (!next)
-				{
-					const auto nextPtr = &static_cast<char*>(memory)[info.chunkSize - sizeof(Arena)];
-					next = reinterpret_cast<Arena*>(nextPtr);
-					ArenaCreateInfo createInfo = info;
-					createInfo.chunkSize = Max<uint32_t>(createInfo.chunkSize, size + sizeof(ArenaAllocMetaData) + sizeof(Arena));
-					*next = Create(createInfo);
-				}
-				return next->Alloc(size, type);
+				const auto nextPtr = &static_cast<char*>(memory)[info.memorySize - sizeof(Arena)];
+				next = reinterpret_cast<Arena*>(nextPtr);
+				ArenaCreateInfo createInfo = info;
+				createInfo.memory = nullptr;
+				createInfo.memorySize = Max<uint32_t>(createInfo.memorySize, size + sizeof(ArenaAllocMetaData) + sizeof(Arena));
+				*next = Create(createInfo);
 			}
-			ptr = &static_cast<char*>(memory)[front];
-			front += size + sizeof(ArenaAllocMetaData);
-			metaData = reinterpret_cast<ArenaAllocMetaData*>(&static_cast<char*>(memory)[front - sizeof(ArenaAllocMetaData)]);
-			*metaData = ArenaAllocMetaData();
-			metaData->size = size;
-			break;
-		default:
-			std::cerr << "Allocation type not implemented." << std::endl;
+			return next->Alloc(size);
 		}
+		void* ptr = &static_cast<char*>(memory)[front];
+		front += size + sizeof(ArenaAllocMetaData);
+		const auto metaData = reinterpret_cast<ArenaAllocMetaData*>(&static_cast<char*>(memory)[front - sizeof(
+			ArenaAllocMetaData)]);
+		*metaData = ArenaAllocMetaData();
+		metaData->size = size;
 
 		return ptr;
 	}
