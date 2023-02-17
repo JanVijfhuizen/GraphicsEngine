@@ -38,5 +38,11 @@
     <ClInclude Include="Include\Array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Iterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ArenaArray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

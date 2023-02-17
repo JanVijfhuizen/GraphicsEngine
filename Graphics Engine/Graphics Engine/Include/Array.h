@@ -1,37 +1,44 @@
 #pragma once
-#include "Arena.h"
 #include <cstdint>
+#include "Iterator.h"
 
 namespace jv
 {
 	template <typename T>
 	struct Array final
 	{
-		T* ptr;
-		uint32_t length;
+		T* ptr = nullptr;
+		uint32_t length = 0;
 
-		static Array Create(T* ptr, uint32_t length);
-		static Array Create(Arena& arena, uint32_t length);
-		static void Destroy(Arena& arena, const Array& array);
+		[[nodiscard]] T& operator[](uint32_t i) const;
+		[[nodiscard]] Iterator<T> begin() const;
+		[[nodiscard]] Iterator<T> end() const;
 	};
 
 	template <typename T>
-	Array<T> Array<T>::Create(T* ptr, const uint32_t length)
+	T& Array<T>::operator[](const uint32_t i) const
 	{
-		Array<T> array{};
-		array.ptr = ptr;
-		array.length = length;
-		return array;
+		assert(i < length);
+		assert(ptr);
+		return ptr[i];
 	}
 
 	template <typename T>
-	Array<T> Array<T>::Create(Arena& arena, const uint32_t length)
+	Iterator<T> Array<T>::begin() const
 	{
-		
+		Iterator<T> it{};
+		it.length = length;
+		it.ptr = ptr;
+		return it;
 	}
 
 	template <typename T>
-	void Array<T>::Destroy(Arena& arena, const Array& array)
+	Iterator<T> Array<T>::end() const
 	{
+		Iterator<T> it{};
+		it.length = length;
+		it.index = length;
+		it.ptr = ptr;
+		return it;
 	}
 }

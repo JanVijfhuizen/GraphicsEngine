@@ -146,7 +146,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Arena.h" />
+    <ClInclude Include="Include\ArenaArray.h" />
     <ClInclude Include="Include\Array.h" />
+    <ClInclude Include="Include\Iterator.h" />
     <ClInclude Include="Include\JvMath.h" />
     <ClInclude Include="Include\pch.h" />
   </ItemGroup>
