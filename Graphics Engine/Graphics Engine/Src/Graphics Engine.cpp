@@ -3,6 +3,7 @@
 
 #include "JLib/Arena.h"
 #include "JLib/ArrayUtils.h"
+#include "JLib/LinkedList.h"
 #include "JLib/MapUtils.h"
 #include "JLib/QueueUtils.h"
 #include "JLib/VectorUtils.h"
@@ -86,5 +87,16 @@ int main()
 	assert(!m.Contains(6));
 	assert(m.Contains(5));
 
-    std::cout << "Hello World!\n";
+	std::cout << "Hello World!\n";
+
+	auto ll = jv::LinkedList<int>::Create(arena);
+	for (int i = 0; i < 8; ++i)
+		ll.Add() = i;
+	ll.Pop();
+	for (auto& i : ll)
+	{
+		std::cout << i << std::endl;
+	}
+
+	std::cout << "Hello World!\n";
 }

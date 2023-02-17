@@ -41,7 +41,7 @@ namespace jv
 		void Clear();
 
 		template <typename T>
-		[[nodiscard]] T* New(size_t count);
+		[[nodiscard]] T* New(size_t count = 1);
 
 		template <typename T>
 		void Delete(T* ptr);

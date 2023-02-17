@@ -150,6 +150,7 @@
     <ClInclude Include="Include\JLib\Array.h" />
     <ClInclude Include="Include\JLib\Iterator.h" />
     <ClInclude Include="Include\JLib\KeyPair.h" />
+    <ClInclude Include="Include\JLib\LinkedList.h" />
     <ClInclude Include="Include\JLib\MapUtils.h" />
     <ClInclude Include="Include\JLib\Math.h" />
     <ClInclude Include="Include\JLib\Map.h" />

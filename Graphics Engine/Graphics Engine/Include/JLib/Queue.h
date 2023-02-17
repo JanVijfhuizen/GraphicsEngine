@@ -89,7 +89,7 @@ namespace jv
 	template <typename T>
 	QueueIterator<T> Queue<T>::begin() const
 	{
-		Iterator<T> it{};
+		QueueIterator<T> it{};
 		it.length = count;
 		it.ptr = ptr;
 		return it;
@@ -98,7 +98,7 @@ namespace jv
 	template <typename T>
 	QueueIterator<T> Queue<T>::end() const
 	{
-		Iterator<T> it{};
+		QueueIterator<T> it{};
 		it.length = count;
 		it.index = count;
 		it.ptr = ptr;
