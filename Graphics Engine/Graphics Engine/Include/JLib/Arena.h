@@ -42,9 +42,6 @@ namespace jv
 
 		template <typename T>
 		[[nodiscard]] T* New(size_t count = 1);
-
-		template <typename T>
-		void Delete(T* ptr);
 	};
 
 	template <typename T>
@@ -53,11 +50,5 @@ namespace jv
 		void* ptr = Alloc(sizeof(T) * count);
 		T* ptrType = static_cast<T*>(ptr);
 		return ptrType;
-	}
-
-	template <typename T>
-	void Arena::Delete(T* ptr)
-	{
-		Free(ptr);
 	}
 }

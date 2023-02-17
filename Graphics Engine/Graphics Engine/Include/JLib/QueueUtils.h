@@ -13,7 +13,7 @@ namespace jv
 	}
 
 	template <typename T>
-	void DestroyQueue(Arena& arena, const Queue<T>& queue)
+	void Destroy(Arena& arena, const Queue<T>& queue)
 	{
 		arena.Free(queue.ptr);
 	}

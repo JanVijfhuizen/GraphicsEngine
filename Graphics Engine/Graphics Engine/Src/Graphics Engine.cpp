@@ -4,6 +4,7 @@
 #include "JLib/Arena.h"
 #include "JLib/ArrayUtils.h"
 #include "JLib/LinkedList.h"
+#include "JLib/LinkedListUtils.h"
 #include "JLib/MapUtils.h"
 #include "JLib/QueueUtils.h"
 #include "JLib/VectorUtils.h"
@@ -89,14 +90,12 @@ int main()
 
 	std::cout << "Hello World!\n";
 
-	auto ll = jv::LinkedList<int>::Create(arena);
+	jv::LinkedList<int> ll{};
 	for (int i = 0; i < 8; ++i)
-		ll.Add() = i;
-	ll.Pop();
+		Add(arena, ll) = i;
+	Pop(arena, ll);
 	for (auto& i : ll)
-	{
 		std::cout << i << std::endl;
-	}
 
 	std::cout << "Hello World!\n";
 }

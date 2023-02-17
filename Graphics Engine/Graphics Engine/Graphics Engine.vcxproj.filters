@@ -68,5 +68,8 @@
     <ClInclude Include="Include\JLib\LinkedList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\JLib\LinkedListUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -13,7 +13,7 @@ namespace jv
 	}
 
 	template <typename T>
-	void DestroyVector(Arena& arena, const Vector<T>& vector)
+	void Destroy(Arena& arena, const Vector<T>& vector)
 	{
 		arena.Free(vector.ptr);
 	}
