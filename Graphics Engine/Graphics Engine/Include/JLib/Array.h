@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include "Iterator.h"
 
 namespace jv
 {

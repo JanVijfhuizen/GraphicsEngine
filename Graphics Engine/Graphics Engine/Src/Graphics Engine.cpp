@@ -1,8 +1,10 @@
 #include "pch.h"
 #include <iostream>
 
-#include "Arena.h"
-#include "ArrayUtils.h"
+#include "JLib/Arena.h"
+#include "JLib/ArrayUtils.h"
+#include "JLib/QueueUtils.h"
+#include "JLib/VectorUtils.h"
 
 void* Alloc(const uint32_t size)
 {
@@ -55,6 +57,27 @@ int main()
 	{
 		std::cout << arr1 << std::endl;
 	}
+
+	auto v = jv::CreateVector<int>(arena, 12);
+	auto q = jv::CreateQueue<float>(arena, 8);
+
+	std::cout << "Hello World!\n";
+
+	for (int i = 0; i < 4; ++i)
+	{
+		q.Add() = i;
+	}
+
+	for (int i = 0; i < 2; ++i)
+		std::cout << q.Pop() << std::endl;
+
+	for (int i = 0; i < 4; ++i)
+	{
+		q.Add() = i;
+	}
+
+	for (int i = 0; i < 6; ++i)
+		std::cout << q.Pop() << std::endl;
 
     std::cout << "Hello World!\n";
 }

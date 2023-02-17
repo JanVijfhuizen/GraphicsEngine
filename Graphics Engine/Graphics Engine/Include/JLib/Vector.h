@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include "Iterator.h"
 
 namespace jv
 {
@@ -17,6 +16,8 @@ namespace jv
 
 		T& Add();
 		void RemoveAt(uint32_t i);
+		[[nodiscard]] T& Peek() const;
+		T Pop();
 	};
 
 	template <typename T>
@@ -57,5 +58,18 @@ namespace jv
 	{
 		assert(count > i);
 		ptr[i] = ptr[--count];
+	}
+
+	template <typename T>
+	T& Vector<T>::Peek() const
+	{
+		return ptr[count - 1];
+	}
+
+	template <typename T>
+	T Vector<T>::Pop()
+	{
+		assert(count > 0);
+		return ptr[--count];
 	}
 }

@@ -18,7 +18,7 @@
     <ClCompile Include="Src\Graphics Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Arena.cpp">
+    <ClCompile Include="Src\JLib\Arena.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Src\pch.cpp">
@@ -26,28 +26,34 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Include\Arena.h">
+    <ClInclude Include="Include\JLib\Arena.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\JvMath.h">
+    <ClInclude Include="Include\JLib\JvMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Array.h">
+    <ClInclude Include="Include\JLib\Array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Iterator.h">
+    <ClInclude Include="Include\JLib\Iterator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ArrayUtils.h">
+    <ClInclude Include="Include\JLib\ArrayUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Vector.h">
+    <ClInclude Include="Include\JLib\Vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\VectorUtils.h">
+    <ClInclude Include="Include\JLib\VectorUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\Queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\QueueUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
