@@ -44,6 +44,9 @@ namespace jv
 		[[nodiscard]] LinkedListIterator<T> begin() const;
 		[[nodiscard]] static LinkedListIterator<T> end();
 
+		T& Add(LinkedListNode<T>& node);
+		void Pop();
+
 		[[nodiscard]] uint32_t GetCount() const;
 	};
 
@@ -102,6 +105,20 @@ namespace jv
 	LinkedListIterator<T> LinkedList<T>::end()
 	{
 		return {};
+	}
+
+	template <typename T>
+	T& LinkedList<T>::Add(LinkedListNode<T>& node)
+	{
+		node.next = values;
+		values = node;
+		return node.value;
+	}
+
+	template <typename T>
+	void LinkedList<T>::Pop()
+	{
+		values = values->next;
 	}
 
 	template <typename T>
