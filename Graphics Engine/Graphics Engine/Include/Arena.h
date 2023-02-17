@@ -2,6 +2,8 @@
 
 namespace jv
 {
+	struct Arena;
+
 	struct ArenaCreateInfo final
 	{
 		void* (*alloc)(uint32_t size);
@@ -13,6 +15,15 @@ namespace jv
 	struct ArenaAllocMetaData final
 	{
 		uint32_t size;
+	};
+
+	struct ArenaScope final
+	{
+		Arena* arena;
+		uint32_t front;
+
+		[[nodiscard]] static ArenaScope Create(Arena& arena);
+		static void Destroy(const ArenaScope& scope);
 	};
 
 	struct Arena final
@@ -28,5 +39,25 @@ namespace jv
 		void* Alloc(uint32_t size);
 		void Free(const void* ptr);
 		void Clear();
+
+		template <typename T>
+		[[nodiscard]] T* New(size_t count);
+
+		template <typename T>
+		void Delete(T* ptr);
 	};
+
+	template <typename T>
+	T* Arena::New(const size_t count)
+	{
+		void* ptr = Alloc(sizeof(T) * count);
+		T* ptrType = static_cast<T*>(ptr);
+		return ptrType;
+	}
+
+	template <typename T>
+	void Arena::Delete(T* ptr)
+	{
+		Free(ptr);
+	}
 }
