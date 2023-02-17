@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "Arena.h"
-#include "ArenaArray.h"
+#include "ArrayUtils.h"
 
 void* Alloc(const uint32_t size)
 {

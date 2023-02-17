@@ -18,14 +18,15 @@ namespace jv
 	template <typename T>
 	T& Array<T>::operator[](const uint32_t i) const
 	{
-		assert(i < length);
 		assert(ptr);
+		assert(i < length);
 		return ptr[i];
 	}
 
 	template <typename T>
 	Iterator<T> Array<T>::begin() const
 	{
+		assert(ptr || length == 0);
 		Iterator<T> it{};
 		it.length = length;
 		it.ptr = ptr;
@@ -35,6 +36,7 @@ namespace jv
 	template <typename T>
 	Iterator<T> Array<T>::end() const
 	{
+		assert(ptr || length == 0);
 		Iterator<T> it{};
 		it.length = length;
 		it.index = length;

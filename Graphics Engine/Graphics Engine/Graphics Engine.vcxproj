@@ -146,11 +146,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Arena.h" />
-    <ClInclude Include="Include\ArenaArray.h" />
+    <ClInclude Include="Include\ArrayUtils.h" />
     <ClInclude Include="Include\Array.h" />
     <ClInclude Include="Include\Iterator.h" />
     <ClInclude Include="Include\JvMath.h" />
     <ClInclude Include="Include\pch.h" />
+    <ClInclude Include="Include\Vector.h" />
+    <ClInclude Include="Include\VectorUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

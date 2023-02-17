@@ -41,7 +41,13 @@
     <ClInclude Include="Include\Iterator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ArenaArray.h">
+    <ClInclude Include="Include\ArrayUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\VectorUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
