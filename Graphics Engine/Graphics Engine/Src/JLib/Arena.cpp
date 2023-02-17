@@ -1,6 +1,6 @@
 ﻿#include "pch.h"
 #include "JLib/Arena.h"
-#include "JLib/JvMath.h"
+#include "JLib/Math.h"
 
 namespace jv
 {

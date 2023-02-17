@@ -149,7 +149,10 @@
     <ClInclude Include="Include\JLib\ArrayUtils.h" />
     <ClInclude Include="Include\JLib\Array.h" />
     <ClInclude Include="Include\JLib\Iterator.h" />
-    <ClInclude Include="Include\JLib\JvMath.h" />
+    <ClInclude Include="Include\JLib\KeyPair.h" />
+    <ClInclude Include="Include\JLib\MapUtils.h" />
+    <ClInclude Include="Include\JLib\Math.h" />
+    <ClInclude Include="Include\JLib\Map.h" />
     <ClInclude Include="Include\JLib\QueueUtils.h" />
     <ClInclude Include="Include\pch.h" />
     <ClInclude Include="Include\JLib\Queue.h" />

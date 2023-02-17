@@ -3,6 +3,7 @@
 
 #include "JLib/Arena.h"
 #include "JLib/ArrayUtils.h"
+#include "JLib/MapUtils.h"
 #include "JLib/QueueUtils.h"
 #include "JLib/VectorUtils.h"
 
@@ -78,6 +79,12 @@ int main()
 
 	for (int i = 0; i < 6; ++i)
 		std::cout << q.Pop() << std::endl;
+
+	auto m = jv::CreateMap<int>(arena, 20);
+	m.Insert(5, 5);
+	m.Insert(8, 8);
+	assert(!m.Contains(6));
+	assert(m.Contains(5));
 
     std::cout << "Hello World!\n";
 }

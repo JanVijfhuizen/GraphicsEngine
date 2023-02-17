@@ -32,7 +32,7 @@
     <ClInclude Include="Include\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\JLib\JvMath.h">
+    <ClInclude Include="Include\JLib\Math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\JLib\Array.h">
@@ -54,6 +54,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\JLib\QueueUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\Map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\KeyPair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\MapUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
