@@ -44,24 +44,23 @@ namespace jv
 			arena.info.free(arena.memory);
 	}
 
-	void* Arena::Alloc(const uint32_t size)
+	void* Arena::Alloc(uint32_t size)
 	{
 		if (next && next->front > 0)
 			return next->Alloc(size);
 
+		size += (4 - size) % 4;
+
 		if (front + size + sizeof(ArenaAllocMetaData) > info.memorySize - sizeof(Arena))
 		{
-			if (!next)
-			{
-				const auto nextPtr = &static_cast<char*>(memory)[info.memorySize - sizeof(Arena)];
-				next = reinterpret_cast<Arena*>(nextPtr);
-				ArenaCreateInfo createInfo = info;
-				createInfo.memory = nullptr;
-				createInfo.memorySize = Max<uint32_t>(createInfo.memorySize, size + sizeof(ArenaAllocMetaData) + sizeof(Arena));
-				*next = Create(createInfo);
-			}
-			return next->Alloc(size);
+			const auto nextPtr = &static_cast<char*>(memory)[info.memorySize - sizeof(Arena)];
+			next = reinterpret_cast<Arena*>(nextPtr);
+			ArenaCreateInfo createInfo = info;
+			createInfo.memory = nullptr;
+			createInfo.memorySize = Max<uint32_t>(createInfo.memorySize, size + sizeof(ArenaAllocMetaData) + sizeof(Arena));
+			*next = Create(createInfo);
 		}
+
 		void* ptr = &static_cast<char*>(memory)[front];
 		front += size + sizeof(ArenaAllocMetaData);
 		const auto metaData = reinterpret_cast<ArenaAllocMetaData*>(&static_cast<char*>(memory)[front - sizeof(
