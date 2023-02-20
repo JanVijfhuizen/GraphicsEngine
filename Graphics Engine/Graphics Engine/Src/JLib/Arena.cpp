@@ -59,6 +59,8 @@ namespace jv
 			createInfo.memory = nullptr;
 			createInfo.memorySize = Max<uint32_t>(createInfo.memorySize, size + sizeof(ArenaAllocMetaData) + sizeof(Arena));
 			*next = Create(createInfo);
+
+			return next->Alloc(size);
 		}
 
 		void* ptr = &static_cast<char*>(memory)[front];

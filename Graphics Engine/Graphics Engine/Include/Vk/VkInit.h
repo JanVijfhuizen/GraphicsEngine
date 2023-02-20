@@ -1,14 +1,10 @@
 ﻿#pragma once
 #include "JLib/Array.h"
+#include "Vk/VkApp.h"
 
 namespace jv
 {
 	struct Arena;
-}
-
-namespace jv::vk
-{
-	struct App;
 }
 
 namespace jv::vk::init
@@ -46,7 +42,9 @@ namespace jv::vk::init
 	// Vulkan application create info.
 	struct Info final
 	{
-		Arena* tempArena = nullptr;
+		Arena* tempArena;
+		VkSurfaceKHR(*createSurface)(VkInstance instance);
+
 		Array<const char*> validationLayers{};
 		Array<const char*> instanceExtensions{};
 		Array<const char*> deviceExtensions{};
@@ -54,7 +52,6 @@ namespace jv::vk::init
 		bool(*isPhysicalDeviceValid)(const PhysicalDeviceInfo& info) = IsPhysicalDeviceValid;
 		uint32_t(*getPhysicalDeviceRating)(const PhysicalDeviceInfo& info) = GetPhysicalDeviceRating;
 		VkPhysicalDeviceFeatures(*getPhysicalDeviceFeatures)() = GetPhysicalDeviceFeatures;
-		VkSurfaceKHR(*createSurface)(VkInstance instance) = nullptr;
 	};
 
 	// Initialize a vulkan app that work for most common use cases like pc games.

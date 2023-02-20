@@ -8,6 +8,7 @@
 #include "JLib/MapUtils.h"
 #include "JLib/QueueUtils.h"
 #include "JLib/VectorUtils.h"
+#include "Vk/VkInit.h"
 
 void* Alloc(const uint32_t size)
 {
@@ -98,4 +99,11 @@ int main()
 		std::cout << i << std::endl;
 
 	std::cout << "Hello World!\n";
+	/*
+	jv::vk::init::Info vkInfo{};
+	vkInfo.tempArena = &arena;
+	const auto app = CreateApp(vkInfo);
+
+	jv::vk::init::DestroyApp(app);
+	*/
 }

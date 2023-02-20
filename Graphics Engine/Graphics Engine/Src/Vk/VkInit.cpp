@@ -2,9 +2,9 @@
 #include "Vk/VkInit.h"
 
 #include "JLib/ArrayUtils.h"
+#include "JLib/HeapUtils.h"
 #include "JLib/MapUtils.h"
 #include "JLib/VectorUtils.h"
-#include "Vk/VkApp.h"
 
 namespace jv::vk::init
 {

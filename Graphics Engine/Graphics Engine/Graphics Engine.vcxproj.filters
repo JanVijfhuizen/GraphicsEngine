@@ -80,5 +80,11 @@
     <ClInclude Include="Include\Vk\VkApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\JLib\Heap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\HeapUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
