@@ -2,12 +2,6 @@
 #include <iostream>
 
 #include "JLib/Arena.h"
-#include "JLib/ArrayUtils.h"
-#include "JLib/LinkedList.h"
-#include "JLib/LinkedListUtils.h"
-#include "JLib/MapUtils.h"
-#include "JLib/QueueUtils.h"
-#include "JLib/VectorUtils.h"
 #include "Vk/VkInit.h"
 
 void* Alloc(const uint32_t size)
@@ -20,9 +14,62 @@ void Free(void* ptr)
 	return free(ptr);
 }
 
+struct ExampleApp final
+{
+	GLFWwindow* window = nullptr;
+
+	static ExampleApp Create();
+	static void Destroy(const ExampleApp& app);
+	static VkSurfaceKHR CreateSurface(VkInstance instance, void* userPtr);
+	static const char** GetRequiredExtensions(uint32_t& count);
+};
+
+ExampleApp ExampleApp::Create()
+{
+	ExampleApp app{};
+
+	const int result = glfwInit();
+	assert(result);
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, false);
+
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+	// Create window.
+	auto& window = app.window;
+	window = glfwCreateWindow(800, 600, "Example App", nullptr, nullptr);
+	assert(window);
+	
+	glfwMakeContextCurrent(window);
+	return app;
+}
+
+void ExampleApp::Destroy(const ExampleApp& app)
+{
+	glfwDestroyWindow(app.window);
+	glfwTerminate();
+}
+
+VkSurfaceKHR ExampleApp::CreateSurface(const VkInstance instance, void* userPtr)
+{
+	const auto self = static_cast<ExampleApp*>(userPtr);
+	VkSurfaceKHR surface;
+	const auto result = glfwCreateWindowSurface(instance, self->window, nullptr, &surface);
+	assert(!result);
+	return surface;
+}
+
+const char** ExampleApp::GetRequiredExtensions(uint32_t& count)
+{
+	const auto buffer = glfwGetRequiredInstanceExtensions(&count);
+	return buffer;
+}
+
 int main()
 {
-	char c[800];
+	char c[800]{};
 
 	jv::ArenaCreateInfo info{};
 	info.alloc = Alloc;
@@ -30,80 +77,21 @@ int main()
 	info.memory = c;
 	info.memorySize = sizeof c;
 	auto arena = jv::Arena::Create(info);
-	
-	for (uint32_t i = 0; i < 13; ++i)
-	{
-		void* p = arena.Alloc(sizeof(uint32_t));
-		std::cout << arena.front << std::endl;
-	}
 
-	const auto scope = jv::ArenaScope::Create(arena);
+	auto app = ExampleApp::Create();
 
-	for (uint32_t i = 0; i < 4; ++i)
-	{
-		void* p = arena.Alloc(sizeof(uint32_t));
-		std::cout << arena.front << std::endl;
-	}
+	jv::Array<const char*> extensions{};
+	extensions.ptr = ExampleApp::GetRequiredExtensions(extensions.length);
 
-	jv::ArenaScope::Destroy(scope);
-
-	for (uint32_t i = 0; i < 4; ++i)
-	{
-		void* p = arena.Alloc(sizeof(uint32_t));
-		std::cout << arena.front << std::endl;
-	}
-
-	const auto arr = jv::CreateArray<float>(arena, 4);
-	arr[0] = 8;
-	arr[1] = 4;
-	arr[2] = 6;
-	for (const auto& arr1 : arr)
-	{
-		std::cout << arr1 << std::endl;
-	}
-
-	auto v = jv::CreateVector<int>(arena, 12);
-	auto q = jv::CreateQueue<float>(arena, 8);
-
-	std::cout << "Hello World!\n";
-
-	for (int i = 0; i < 4; ++i)
-	{
-		q.Add() = i;
-	}
-
-	for (int i = 0; i < 2; ++i)
-		std::cout << q.Pop() << std::endl;
-
-	for (int i = 0; i < 4; ++i)
-	{
-		q.Add() = i;
-	}
-
-	for (int i = 0; i < 6; ++i)
-		std::cout << q.Pop() << std::endl;
-
-	auto m = jv::CreateMap<int>(arena, 20);
-	m.Insert(5, 5);
-	m.Insert(8, 8);
-	assert(!m.Contains(6));
-	assert(m.Contains(5));
-
-	std::cout << "Hello World!\n";
-
-	jv::LinkedList<int> ll{};
-	for (int i = 0; i < 8; ++i)
-		Add(arena, ll) = i;
-	Pop(arena, ll);
-	for (auto& i : ll)
-		std::cout << i << std::endl;
-
-	std::cout << "Hello World!\n";
-	/*
 	jv::vk::init::Info vkInfo{};
 	vkInfo.tempArena = &arena;
-	const auto app = CreateApp(vkInfo);
+	vkInfo.createSurface = ExampleApp::CreateSurface;
+	vkInfo.userPtr = &app;
+	vkInfo.instanceExtensions = extensions;
+	const auto vkApp = CreateApp(vkInfo);
 
-	jv::vk::init::DestroyApp(app);
-	*/
+	jv::vk::init::DestroyApp(vkApp);
+
+	ExampleApp::Destroy(app);
+	jv::Arena::Destroy(arena);
 }

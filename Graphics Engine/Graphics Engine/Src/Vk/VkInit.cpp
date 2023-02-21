@@ -408,7 +408,7 @@ namespace jv::vk::init
 #ifdef _DEBUG
 		debugExtensionPresent = false;
 		for (const auto& instanceExtension : info.instanceExtensions)
-			if (strcmp(instanceExtension, VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
+			if (strcmp(instanceExtension, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
 			{
 				debugExtensionPresent = true;
 				break;
@@ -456,7 +456,7 @@ namespace jv::vk::init
 		CheckValidationSupport(*updatedInfo.tempArena, validationLayers);
 		app.instance = CreateInstance(validationLayers, instanceExtensions);
 		app.debugger = CreateDebugger(app.instance);
-		app.surface = updatedInfo.createSurface(app.instance);
+		app.surface = updatedInfo.createSurface(app.instance, info.userPtr);
 		app.physicalDevice = SelectPhysicalDevice(updatedInfo, app.instance, app.surface);
 		CreateLogicalDevice(app, updatedInfo, *updatedInfo.tempArena, app.physicalDevice, app.surface);
 		app.commandPool = CreateCommandPool(*updatedInfo.tempArena, app.physicalDevice, app.surface, app.device);

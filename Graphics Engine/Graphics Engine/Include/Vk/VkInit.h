@@ -43,7 +43,8 @@ namespace jv::vk::init
 	struct Info final
 	{
 		Arena* tempArena;
-		VkSurfaceKHR(*createSurface)(VkInstance instance);
+		VkSurfaceKHR(*createSurface)(VkInstance instance, void* userPtr);
+		void* userPtr;
 
 		Array<const char*> validationLayers{};
 		Array<const char*> instanceExtensions{};
