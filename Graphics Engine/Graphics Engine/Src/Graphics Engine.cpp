@@ -2,6 +2,8 @@
 #include <iostream>
 
 #include "JLib/Arena.h"
+#include "JLib/LinkedList.h"
+#include "JLib/LinkedListUtils.h"
 #include "Vk/VkInit.h"
 
 void* Alloc(const uint32_t size)
@@ -89,6 +91,18 @@ int main()
 	vkInfo.userPtr = &app;
 	vkInfo.instanceExtensions = extensions;
 	const auto vkApp = CreateApp(vkInfo);
+
+	jv::LinkedList<int> l{};
+	for (int i = 0; i < 10; ++i)
+	{
+		Add(arena, l) = i;
+	}
+
+	Erase(arena, l, 7);
+	for (auto& l1 : l)
+	{
+		std::cout << l1 << std::endl;
+	}
 
 	jv::vk::init::DestroyApp(vkApp);
 

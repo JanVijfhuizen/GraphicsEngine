@@ -13,24 +13,37 @@ namespace jv::vk
 		uint32_t pageSize = 4096;
 	};
 
+	struct FreeMemory final
+	{
+		VkDeviceMemory memory;
+		VkDeviceSize size;
+		VkDeviceSize offset;
+		uint32_t poolId;
+	};
+
 	struct FreeArena final
 	{
-		struct Pool final
-		{
-			VkFlags memPropertyFlags;
-		};
-
 		struct Page final
 		{
 			uint32_t size;
+			uint32_t alignment;
+			VkDeviceMemory memory = VK_NULL_HANDLE;
+		};
+
+		struct Pool final
+		{
+			VkFlags memPropertyFlags;
+			LinkedList<Page> pages{};
 		};
 
 		FreeArenaInfo info;
 		ArenaScope scope;
 		Array<Pool> pools;
-		LinkedList<Page> pages{};
 
 		static FreeArena Create(const FreeArenaInfo& info);
 		static void Destroy(const FreeArena& freeArena);
+		
+		[[nodiscard]] FreeMemory Alloc(VkMemoryRequirements memRequirements, VkMemoryPropertyFlags properties, uint32_t count = 1) const;
+		void Free(const FreeMemory& memory) const;
 	};
 }
