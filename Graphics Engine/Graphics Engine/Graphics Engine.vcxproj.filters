@@ -27,6 +27,9 @@
     <ClCompile Include="Src\Vk\VkInit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Vk\VkFreeArena.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\JLib\Arena.h">
@@ -84,6 +87,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\JLib\HeapUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Vk\VkFreeArena.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
