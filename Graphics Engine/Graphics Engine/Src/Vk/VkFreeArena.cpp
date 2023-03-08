@@ -47,14 +47,14 @@ namespace jv::vk
 		ArenaScope::Destroy(freeArena.scope);
 	}
 
-	FreeMemory FreeArena::Alloc(const VkMemoryRequirements memRequirements, 
+	uint64_t FreeArena::Alloc(const VkMemoryRequirements memRequirements, 
 		const VkMemoryPropertyFlags properties,
 		const uint32_t count) const
 	{
 		return {};
 	}
 
-	void FreeArena::Free(const FreeMemory& memory) const
+	void FreeArena::Free(uint64_t handle) const
 	{
 	}
 }

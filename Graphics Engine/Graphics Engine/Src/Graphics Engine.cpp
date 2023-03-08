@@ -98,7 +98,8 @@ int main()
 		Add(arena, l) = i;
 	}
 
-	Erase(arena, l, 7);
+	//Erase(arena, l, 7);
+	Insert(arena, l, 7) = 4;
 	for (auto& l1 : l)
 	{
 		std::cout << l1 << std::endl;

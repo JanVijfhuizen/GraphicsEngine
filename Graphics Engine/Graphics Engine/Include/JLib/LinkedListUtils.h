@@ -15,24 +15,36 @@ namespace jv
 	}
 
 	template <typename T>
+	T& Insert(Arena& arena, LinkedList<T>& linkedList, const uint32_t index)
+	{
+		const uint32_t c = linkedList.GetCount() - index;
+		Add(arena, linkedList);
+		LinkedListNode<T>* n = linkedList.values;
+
+		for (uint32_t i = 0; i < c; ++i)
+		{
+			assert(n->next);
+			n->value = n->next->value;
+			n = n->next;
+		}
+
+		return n->value;
+	}
+
+	template <typename T>
 	void Erase(Arena& arena, LinkedList<T>& linkedList, const uint32_t index)
 	{
 		LinkedListNode<T>* n = linkedList.values;
 		const uint32_t c = linkedList.GetCount() - index;
-
 		assert(n);
 		
 		T v{};
-
 		for (uint32_t i = 0; i < c; ++i)
 		{
-			
 			assert(n->next);
-
 			T t = n->value;
 			n->value = v;
 			v = t;
-
 			n = n->next;
 		}
 
