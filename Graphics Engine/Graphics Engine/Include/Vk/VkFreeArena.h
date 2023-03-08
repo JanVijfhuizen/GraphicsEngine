@@ -6,25 +6,18 @@ namespace jv::vk
 {
 	struct App;
 
-	struct FreeArenaInfo final
-	{
-		Arena* arena;
-		App* app;
-		uint32_t pageSize = 4096;
-	};
-
 	struct FreeArena final
 	{
-		struct Allocation final
+		struct Division final
 		{
-			
+			VkDeviceSize size;
 		};
 
 		struct Page final
 		{
-			uint32_t size;
-			uint32_t alignment;
+			VkDeviceSize alignment;
 			VkDeviceMemory memory = VK_NULL_HANDLE;
+			LinkedList<Division> divisions{};
 		};
 
 		struct Pool final
@@ -32,15 +25,15 @@ namespace jv::vk
 			VkFlags memPropertyFlags;
 			LinkedList<Page> pages{};
 		};
-
-		FreeArenaInfo info;
+		
+		VkDeviceSize pageSize;
 		ArenaScope scope;
 		Array<Pool> pools;
 
-		static FreeArena Create(const FreeArenaInfo& info);
-		static void Destroy(const FreeArena& freeArena);
+		static FreeArena Create(Arena& arena, const App& app, VkDeviceSize pageSize = 4096);
+		static void Destroy(const App& app, const FreeArena& freeArena);
 		
-		[[nodiscard]] uint64_t Alloc(VkMemoryRequirements memRequirements, VkMemoryPropertyFlags properties, uint32_t count = 1) const;
+		[[nodiscard]] uint64_t Alloc(Arena& arena, VkMemoryRequirements memRequirements, VkMemoryPropertyFlags properties, uint32_t count = 1) const;
 		void Free(uint64_t handle) const;
 	};
 }
