@@ -2,6 +2,7 @@
 #include "Vk/VkFreeArena.h"
 #include "JLib/ArrayUtils.h"
 #include "JLib/LinkedListUtils.h"
+#include "JLib/Math.h"
 #include "Vk/VkApp.h"
 
 namespace jv::vk
@@ -55,7 +56,7 @@ namespace jv::vk
 
 	uint64_t FreeArena::Alloc(Arena& arena, const VkMemoryRequirements memRequirements,
 		const VkMemoryPropertyFlags properties,
-		const uint32_t count) const
+		const uint32_t count, FreeMemory& outFreeMemory) const
 	{
 		const uint32_t poolId = GetPoolId(*this, memRequirements.memoryTypeBits, properties);
 		assert(poolId != UINT32_MAX);
@@ -63,33 +64,25 @@ namespace jv::vk
 		const VkDeviceSize size = CalculateBufferSize(memRequirements.size * count, memRequirements.alignment);
 		auto& pool = pools[poolId];
 
-		Page* dstPage = nullptr;
-		uint32_t pageNumber = 0;
-		for (auto& page : pool.pages)
-		{
-			if (page.alignment == memRequirements.alignment)
-			{
-				dstPage = &page;
-				break;
-			}
-
-			++pageNumber;
-		}
+		Page* dstPage = pool.pages.GetCount() > pool.depth ? &pool.pages[pool.depth] : nullptr;
+		if (dstPage && dstPage->remaining < size)
+			dstPage = nullptr;
 
 		if(!dstPage)
 		{
 			dstPage = &Add(arena, pool.pages);
-			auto& div = Add(arena, dstPage->divisions);
-			div.size = size;
+			dstPage->remaining = Max<VkDeviceSize>(size, pageSize);
 		}
 
-		// 16: Page number.
-		// 16: Pool.
-		// 32: Division number.
-		uint64_t handle = pageNumber;
-		handle |= static_cast<uint64_t>(poolId) << 16;
+		outFreeMemory.memory = dstPage->memory;
+		outFreeMemory.offset = dstPage->size - dstPage->remaining;
 
-		// todo division number.
+		dstPage->remaining -= size;
+
+		// 32: Pool Id.
+		// 32: Size.
+		uint64_t handle = poolId;
+		handle |= static_cast<uint64_t>(size) << 32;
 
 		return handle;
 	}
