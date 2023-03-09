@@ -64,7 +64,7 @@ namespace jv
 	}
 
 	template <typename T>
-	void Destroy(Arena& arena, const LinkedList<T>& linkedList)
+	void DestroyLinkedList(Arena& arena, const LinkedList<T>& linkedList)
 	{
 		while (linkedList.values)
 			Pop(arena, linkedList);

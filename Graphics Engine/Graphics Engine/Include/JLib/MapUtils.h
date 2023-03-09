@@ -15,7 +15,7 @@ namespace jv
 	}
 
 	template <typename T>
-	void Destroy(Arena& arena, const Map<T>& map)
+	void DestroyMap(Arena& arena, const Map<T>& map)
 	{
 		arena.Free(map.ptr);
 	}
