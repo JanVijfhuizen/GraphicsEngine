@@ -2,9 +2,8 @@
 #include <iostream>
 
 #include "JLib/Arena.h"
-#include "JLib/LinkedList.h"
-#include "JLib/LinkedListUtils.h"
 #include "Vk/VkInit.h"
+#include "Vk/VkSwapChain.h"
 
 void* Alloc(const uint32_t size)
 {
@@ -20,11 +19,33 @@ struct ExampleApp final
 {
 	GLFWwindow* window = nullptr;
 
+	bool BeginFrame() const;
+
 	static ExampleApp Create();
 	static void Destroy(const ExampleApp& app);
 	static VkSurfaceKHR CreateSurface(VkInstance instance, void* userPtr);
 	static const char** GetRequiredExtensions(uint32_t& count);
 };
+
+bool ExampleApp::BeginFrame() const
+{
+	// Check for events.
+	glfwPollEvents();
+
+	// Check if the user pressed the close button.
+	if (glfwWindowShouldClose(window))
+		return false;
+
+	int32_t width = 0, height = 0;
+	glfwGetFramebufferSize(window, &width, &height);
+	while (width == 0 || height == 0)
+	{
+		glfwGetFramebufferSize(window, &width, &height);
+		glfwWaitEvents();
+	}
+
+	return true;
+}
 
 ExampleApp ExampleApp::Create()
 {
@@ -72,6 +93,7 @@ const char** ExampleApp::GetRequiredExtensions(uint32_t& count)
 int main()
 {
 	char c[800]{};
+	char tc[800]{};
 
 	jv::ArenaCreateInfo info{};
 	info.alloc = Alloc;
@@ -79,6 +101,10 @@ int main()
 	info.memory = c;
 	info.memorySize = sizeof c;
 	auto arena = jv::Arena::Create(info);
+
+	info.memory = tc;
+	info.memorySize = sizeof tc;
+	auto tempArena = jv::Arena::Create(info);
 
 	auto app = ExampleApp::Create();
 
@@ -92,19 +118,15 @@ int main()
 	vkInfo.instanceExtensions = extensions;
 	const auto vkApp = CreateApp(vkInfo);
 
-	jv::LinkedList<int> l{};
-	for (int i = 0; i < 10; ++i)
+	auto swapChain = jv::vk::SwapChain::Create(arena, tempArena, vkApp, glm::ivec2(800, 600));
+
+	while(app.BeginFrame())
 	{
-		Add(arena, l) = i;
+		auto cmdBuffer = swapChain.BeginFrame(vkApp);
+		swapChain.EndFrame(tempArena, vkApp);
 	}
 
-	//Erase(arena, l, 7);
-	Insert(arena, l, 7) = 4;
-	for (auto& l1 : l)
-	{
-		std::cout << l1 << std::endl;
-	}
-
+	jv::vk::SwapChain::Destroy(arena, vkApp, swapChain);
 	jv::vk::init::DestroyApp(vkApp);
 
 	ExampleApp::Destroy(app);

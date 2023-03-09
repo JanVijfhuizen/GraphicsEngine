@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Vk\VkSwapChain.cpp" />
     <ClCompile Include="Src\Vk\VkFreeArena.cpp" />
     <ClCompile Include="Src\Vk\VkInit.cpp" />
     <ClCompile Include="Src\JLib\Arena.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="Include\Vk\VkApp.h" />
     <ClInclude Include="Include\Vk\VkFreeArena.h" />
     <ClInclude Include="Include\Vk\VkInit.h" />
+    <ClInclude Include="Include\Vk\VkSwapChain.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

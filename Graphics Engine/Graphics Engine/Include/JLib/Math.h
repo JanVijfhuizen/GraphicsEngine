@@ -13,4 +13,10 @@ namespace jv
 	{
 		return a > b ? b : a;
 	}
+
+	template <typename T>
+	[[nodiscard]] T Clamp(const T& t, const T& min, const T& max)
+	{
+		return Min(max, Max(t, min));
+	}
 }
