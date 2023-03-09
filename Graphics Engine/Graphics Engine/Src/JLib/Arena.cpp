@@ -4,26 +4,6 @@
 
 namespace jv
 {
-	ArenaScope ArenaScope::Create(Arena& arena)
-	{
-		Arena* current = &arena;
-		while (current->next && current->next->front > 0)
-			current = current->next;
-
-		ArenaScope scope{};
-		scope.arena = current;
-		scope.front = current->front;
-		return scope;
-	}
-
-	void ArenaScope::Destroy(const ArenaScope& scope)
-	{
-		assert(scope.arena->front >= scope.front);
-		scope.arena->front = scope.front;
-		if (scope.arena->next)
-			scope.arena->next->Clear();
-	}
-
 	Arena Arena::Create(const ArenaCreateInfo& info)
 	{
 		assert(info.memorySize > sizeof(Arena) + sizeof(ArenaAllocMetaData));
@@ -119,5 +99,34 @@ namespace jv
 		front = 0;
 		if (next)
 			next->Clear();
+	}
+
+	uint64_t Arena::CreateScope() const
+	{
+		const Arena* current = this;
+		uint32_t depth = 0;
+		while (current->next && current->next->front > 0)
+		{
+			current = current->next;
+			++depth;
+		}
+
+		Scope scope{};
+		scope.unpacked.depth = depth;
+		scope.unpacked.front = current->front;
+		return scope.handle;
+	}
+
+	void Arena::DestroyScope(const uint64_t handle)
+	{
+		Scope scope{};
+		scope.handle = handle;
+
+		Arena* current = this;
+		for (uint32_t i = 0; i < scope.unpacked.depth; ++i)
+			current = current->next;
+		if (current->next)
+			current->next->Clear();
+		current->front = scope.unpacked.front;
 	}
 }

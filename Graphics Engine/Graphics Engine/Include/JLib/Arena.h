@@ -17,17 +17,23 @@ namespace jv
 		uint32_t size;
 	};
 
-	struct ArenaScope final
-	{
-		Arena* arena;
-		uint32_t front;
-
-		[[nodiscard]] static ArenaScope Create(Arena& arena);
-		static void Destroy(const ArenaScope& scope);
-	};
-
 	struct Arena final
 	{
+		struct Scope final
+		{
+			struct Unpacked final
+			{
+				uint32_t depth;
+				uint32_t front;
+			};
+
+			union
+			{
+				uint64_t handle;
+				Unpacked unpacked;
+			};
+		};
+
 		ArenaCreateInfo info;
 		void* memory;
 		uint32_t front = 0;
@@ -42,6 +48,9 @@ namespace jv
 
 		template <typename T>
 		[[nodiscard]] T* New(size_t count = 1);
+
+		[[nodiscard]] uint64_t CreateScope() const;
+		void DestroyScope(uint64_t handle);
 	};
 
 	template <typename T>

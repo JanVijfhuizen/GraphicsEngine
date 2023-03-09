@@ -50,14 +50,14 @@ namespace jv::vk
 		};
 		
 		VkDeviceSize pageSize;
-		ArenaScope scope;
+		uint64_t scope;
 		Array<Pool> pools;
 
 		static FreeArena Create(Arena& arena, const App& app, VkDeviceSize pageSize = 4096);
-		static void Destroy(const App& app, const FreeArena& freeArena);
+		static void Destroy(Arena& arena, const App& app, const FreeArena& freeArena);
 		
 		[[nodiscard]] uint64_t Alloc(const App& app, Arena& arena, VkMemoryRequirements memRequirements, 
-		                             VkMemoryPropertyFlags properties, uint32_t count, FreeMemory& outFreeMemory) const;
+			VkMemoryPropertyFlags properties, uint32_t count, FreeMemory& outFreeMemory) const;
 		void Free(uint64_t handle) const;
 	};
 }

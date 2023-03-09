@@ -30,7 +30,7 @@ namespace jv::vk
 	{
 		FreeArena freeArena{};
 		freeArena.pageSize = pageSize;
-		freeArena.scope = ArenaScope::Create(arena);
+		freeArena.scope = arena.CreateScope();
 
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(app.physicalDevice, &memProperties);
@@ -46,12 +46,12 @@ namespace jv::vk
 		return freeArena;
 	}
 
-	void FreeArena::Destroy(const App& app, const FreeArena& freeArena)
+	void FreeArena::Destroy(Arena& arena, const App& app, const FreeArena& freeArena)
 	{
 		for (const auto& pool : freeArena.pools)
 			for (const auto& page : pool.pages)
 				vkFreeMemory(app.device, page.memory, nullptr);
-		ArenaScope::Destroy(freeArena.scope);
+		arena.DestroyScope(freeArena.scope);
 	}
 
 	uint64_t FreeArena::Alloc(const App& app, Arena& arena, const VkMemoryRequirements memRequirements,
@@ -109,7 +109,8 @@ namespace jv::vk
 	{
 		Handle _handle{};
 		_handle.handle = handle;
-		auto& page = pools[_handle.unpacked.poolId].pages[_handle.unpacked.pageNum];
+		auto& pool = pools[_handle.unpacked.poolId];
+		auto& page = pool.pages[_handle.unpacked.pageNum];
 		page.remaining += _handle.unpacked.size;
 	}
 }

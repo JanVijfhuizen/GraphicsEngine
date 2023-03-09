@@ -56,7 +56,7 @@ namespace jv::vk::init
 		return;
 #endif
 		
-		const auto scope = ArenaScope::Create(tempArena);
+		const auto scope = tempArena.CreateScope();
 
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -78,7 +78,7 @@ namespace jv::vk::init
 			assert(layerFound);
 		}
 
-		ArenaScope::Destroy(scope);
+		tempArena.DestroyScope(scope);
 	}
 
 	VkApplicationInfo CreateApplicationInfo()
@@ -176,7 +176,7 @@ namespace jv::vk::init
 
 	QueueFamilies GetQueueFamilies(Arena& arena, const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
 	{
-		const auto scope = ArenaScope::Create(arena);
+		const auto scope = arena.CreateScope();
 
 		QueueFamilies families{};
 
@@ -206,7 +206,7 @@ namespace jv::vk::init
 			++i;
 		}
 
-		ArenaScope::Destroy(scope);
+		arena.DestroyScope(scope);
 		return families;
 	}
 
@@ -272,7 +272,7 @@ namespace jv::vk::init
 		assert(info.getPhysicalDeviceRating);
 
 		auto& arena = *info.tempArena;
-		const auto scope = ArenaScope::Create(arena);
+		const auto scope = arena.CreateScope();
 
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -298,9 +298,10 @@ namespace jv::vk::init
 			if (!CheckDeviceExtensionSupport(arena, device, info.deviceExtensions))
 				continue;
 
-			const auto swapChainSupportScope = ArenaScope::Create(arena);
+			const auto swapChainSupportScope = arena.CreateScope();
 			auto swapChainSupport = QuerySwapChainSupport(arena, device, surface);
-			ArenaScope::Destroy(swapChainSupportScope);
+			arena.DestroyScope(swapChainSupportScope);
+
 			if (!swapChainSupport)
 				continue;
 
@@ -316,13 +317,13 @@ namespace jv::vk::init
 		}
 
 		assert(candidates.count > 0);
-		ArenaScope::Destroy(scope);
+		arena.DestroyScope(scope);
 		return candidates.Peek();
 	}
 
 	void CreateLogicalDevice(App& app, const Info& info, Arena& arena, const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
 	{
-		const auto scope = ArenaScope::Create(arena);
+		const auto scope = arena.CreateScope();
 		const auto queueFamilies = GetQueueFamilies(arena, physicalDevice, surface);
 
 		constexpr uint32_t queueFamiliesCount = sizeof(uint32_t) * 3;
@@ -378,8 +379,8 @@ namespace jv::vk::init
 			vkGetDeviceQueue(app.device, static_cast<uint32_t>(family), 0, &app.queues[i]);
 			i++;
 		}
-
-		ArenaScope::Destroy(scope);
+		
+		arena.DestroyScope(scope);
 	}
 
 	VkCommandPool CreateCommandPool(Arena& arena, const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface, const VkDevice device)
@@ -400,7 +401,7 @@ namespace jv::vk::init
 
 	App CreateApp(const Info& info)
 	{
-		const auto scope = ArenaScope::Create(*info.tempArena);
+		const auto scope = info.tempArena->CreateScope();
 
 		App app{};
 
@@ -460,8 +461,8 @@ namespace jv::vk::init
 		app.physicalDevice = SelectPhysicalDevice(updatedInfo, app.instance, app.surface);
 		CreateLogicalDevice(app, updatedInfo, *updatedInfo.tempArena, app.physicalDevice, app.surface);
 		app.commandPool = CreateCommandPool(*updatedInfo.tempArena, app.physicalDevice, app.surface, app.device);
-
-		ArenaScope::Destroy(scope);
+		
+		info.tempArena->DestroyScope(scope);
 		return app;
 	}
 
