@@ -31,7 +31,22 @@ namespace jv::vk
 		{
 			VkFlags memPropertyFlags;
 			LinkedList<Page> pages{};
-			uint32_t depth = 0;
+		};
+
+		struct Handle final
+		{
+			struct Unpacked final
+			{
+				uint32_t size;
+				uint16_t poolId;
+				uint16_t pageNum;
+			};
+
+			union
+			{
+				uint64_t handle;
+				Unpacked unpacked;
+			};
 		};
 		
 		VkDeviceSize pageSize;
@@ -41,8 +56,8 @@ namespace jv::vk
 		static FreeArena Create(Arena& arena, const App& app, VkDeviceSize pageSize = 4096);
 		static void Destroy(const App& app, const FreeArena& freeArena);
 		
-		[[nodiscard]] uint64_t Alloc(Arena& arena, VkMemoryRequirements memRequirements, 
-			VkMemoryPropertyFlags properties, uint32_t count, FreeMemory& outFreeMemory) const;
+		[[nodiscard]] uint64_t Alloc(const App& app, Arena& arena, VkMemoryRequirements memRequirements, 
+		                             VkMemoryPropertyFlags properties, uint32_t count, FreeMemory& outFreeMemory) const;
 		void Free(uint64_t handle) const;
 	};
 }

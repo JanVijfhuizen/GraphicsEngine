@@ -54,8 +54,8 @@ namespace jv::vk
 		ArenaScope::Destroy(freeArena.scope);
 	}
 
-	uint64_t FreeArena::Alloc(Arena& arena, const VkMemoryRequirements memRequirements,
-		const VkMemoryPropertyFlags properties,
+	uint64_t FreeArena::Alloc(const App& app, Arena& arena, const VkMemoryRequirements memRequirements,
+	    const VkMemoryPropertyFlags properties,
 		const uint32_t count, FreeMemory& outFreeMemory) const
 	{
 		const uint32_t poolId = GetPoolId(*this, memRequirements.memoryTypeBits, properties);
@@ -64,14 +64,32 @@ namespace jv::vk
 		const VkDeviceSize size = CalculateBufferSize(memRequirements.size * count, memRequirements.alignment);
 		auto& pool = pools[poolId];
 
-		Page* dstPage = pool.pages.GetCount() > pool.depth ? &pool.pages[pool.depth] : nullptr;
-		if (dstPage && dstPage->remaining < size)
-			dstPage = nullptr;
+		Page* dstPage = nullptr;
+		uint32_t pageNum = 0;
+		for (auto& page : pool.pages)
+		{
+			if (page.remaining == page.size && page.alignment == memRequirements.alignment)
+			{
+				dstPage = &page;
+				break;
+			}
+
+			++pageNum;
+		}
 
 		if(!dstPage)
 		{
-			dstPage = &Add(arena, pool.pages);
+			dstPage = &Insert(arena, pool.pages, 0);
 			dstPage->remaining = Max<VkDeviceSize>(size, pageSize);
+			dstPage->size = dstPage->remaining;
+
+			VkMemoryAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			allocInfo.allocationSize = dstPage->size;
+			allocInfo.memoryTypeIndex = static_cast<uint32_t>(poolId);
+
+			const auto result = vkAllocateMemory(app.device, &allocInfo, nullptr, &dstPage->memory);
+			assert(!result);
 		}
 
 		outFreeMemory.memory = dstPage->memory;
@@ -79,15 +97,19 @@ namespace jv::vk
 
 		dstPage->remaining -= size;
 
-		// 32: Pool Id.
-		// 32: Size.
-		uint64_t handle = poolId;
-		handle |= static_cast<uint64_t>(size) << 32;
+		Handle handle{};
+		handle.unpacked.size = static_cast<uint32_t>(size);
+		handle.unpacked.pageNum = static_cast<uint16_t>(pool.pages.GetCount() - pageNum);
+		handle.unpacked.poolId = static_cast<uint16_t>(poolId);
 
-		return handle;
+		return handle.handle;
 	}
 
 	void FreeArena::Free(const uint64_t handle) const
 	{
+		Handle _handle{};
+		_handle.handle = handle;
+		auto& page = pools[_handle.unpacked.poolId].pages[_handle.unpacked.pageNum];
+		page.remaining += _handle.unpacked.size;
 	}
 }
