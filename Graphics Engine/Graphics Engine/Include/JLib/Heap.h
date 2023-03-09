@@ -4,7 +4,7 @@
 
 namespace jv
 {
-	// Automatically sorts values during insertion.
+	// A nonlinear data container that automatically sorts values added.
 	template <typename T>
 	struct Heap final
 	{

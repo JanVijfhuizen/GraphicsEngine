@@ -55,7 +55,7 @@ namespace jv::vk::init
 		VkPhysicalDeviceFeatures(*getPhysicalDeviceFeatures)() = GetPhysicalDeviceFeatures;
 	};
 
-	// Initialize a vulkan app that work for most common use cases like pc games.
+	// Initialize a Vulkan application for standard use.
 	[[nodiscard]] App CreateApp(const Info& info);
 	void DestroyApp(const App& app);
 

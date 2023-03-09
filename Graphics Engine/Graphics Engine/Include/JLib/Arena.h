@@ -17,6 +17,8 @@ namespace jv
 		uint32_t size;
 	};
 
+	// Handles manual memory allocation.
+	// Allocates one or more large chunks of memory which can then be (re)used for smaller linear allocations.
 	struct Arena final
 	{
 		struct Scope final
@@ -49,6 +51,7 @@ namespace jv
 		template <typename T>
 		[[nodiscard]] T* New(size_t count = 1);
 
+		// A scope can be used to instantly delete everything that was made after the scope's creation.
 		[[nodiscard]] uint64_t CreateScope() const;
 		void DestroyScope(uint64_t handle);
 	};

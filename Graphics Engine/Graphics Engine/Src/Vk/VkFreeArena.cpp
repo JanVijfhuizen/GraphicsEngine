@@ -80,6 +80,7 @@ namespace jv::vk
 		if(!dstPage)
 		{
 			dstPage = &Insert(arena, pool.pages, 0);
+			dstPage->alignment = memRequirements.alignment;
 			dstPage->remaining = Max<VkDeviceSize>(size, pageSize);
 			dstPage->size = dstPage->remaining;
 
@@ -97,7 +98,7 @@ namespace jv::vk
 
 		dstPage->remaining -= size;
 
-		Handle handle{};
+		Memory handle{};
 		handle.unpacked.size = static_cast<uint32_t>(size);
 		handle.unpacked.pageNum = static_cast<uint16_t>(pool.pages.GetCount() - pageNum);
 		handle.unpacked.poolId = static_cast<uint16_t>(poolId);
@@ -107,10 +108,10 @@ namespace jv::vk
 
 	void FreeArena::Free(const uint64_t handle) const
 	{
-		Handle _handle{};
-		_handle.handle = handle;
-		auto& pool = pools[_handle.unpacked.poolId];
-		auto& page = pool.pages[_handle.unpacked.pageNum];
-		page.remaining += _handle.unpacked.size;
+		Memory memory{};
+		memory.handle = handle;
+		const auto& pool = pools[memory.unpacked.poolId];
+		auto& page = pool.pages[memory.unpacked.pageNum];
+		page.remaining += memory.unpacked.size;
 	}
 }

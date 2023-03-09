@@ -3,6 +3,7 @@
 
 namespace jv
 {
+	// A linear data container of a set size.
 	template <typename T>
 	struct Array final
 	{

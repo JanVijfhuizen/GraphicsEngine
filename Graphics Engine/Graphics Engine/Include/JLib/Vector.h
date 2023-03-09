@@ -3,6 +3,7 @@
 
 namespace jv
 {
+	// Linear data container that can be resized.
 	template <typename T>
 	struct Vector final
 	{

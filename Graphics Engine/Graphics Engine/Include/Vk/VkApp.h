@@ -2,6 +2,8 @@
 
 namespace jv::vk
 {
+	// Everything needed to create a project with Vulkan.
+	// Generated with VkInit.
 	struct App final
 	{
 		enum Queue

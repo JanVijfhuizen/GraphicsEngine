@@ -6,6 +6,7 @@ namespace jv
 	template <typename T>
 	struct Queue;
 
+	// Nonlinear data container that uses a First In First Out structure.
 	template <typename T>
 	struct QueueIterator final
 	{

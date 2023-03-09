@@ -6,23 +6,21 @@ namespace jv::vk
 {
 	struct App;
 
+	// Graphics memory.
 	struct FreeMemory final
 	{
 		VkDeviceMemory memory;
 		VkDeviceSize offset;
 	};
 
+	// Handles manual memory allocation for graphics memory.
+	// Allocates one or more large chunks of memory which can then be (re)used for smaller linear allocations.
 	struct FreeArena final
 	{
-		struct Division final
-		{
-			VkDeviceSize size;
-		};
-
 		struct Page final
 		{
 			VkDeviceSize alignment;
-			VkDeviceMemory memory = VK_NULL_HANDLE;
+			VkDeviceMemory memory;
 			VkDeviceSize size;
 			VkDeviceSize remaining;
 		};
@@ -33,7 +31,7 @@ namespace jv::vk
 			LinkedList<Page> pages{};
 		};
 
-		struct Handle final
+		struct Memory final
 		{
 			struct Unpacked final
 			{

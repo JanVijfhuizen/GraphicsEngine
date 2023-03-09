@@ -5,7 +5,7 @@ namespace jv
 {
 	template <typename T>
 	struct LinkedListNode;
-
+	
 	template <typename T>
 	struct LinkedListIterator final
 	{
@@ -35,6 +35,7 @@ namespace jv
 		LinkedListNode<T>* next = nullptr;
 	};
 
+	// Linear data container where the individual values are not necessarily aligned in memory, or even in order. 
 	template <typename T>
 	struct LinkedList final
 	{

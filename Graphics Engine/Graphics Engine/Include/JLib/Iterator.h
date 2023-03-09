@@ -2,6 +2,7 @@
 
 namespace jv
 {
+	// Can be used to linearly iterate (foreach loops) over more basic data structures.
 	template <typename T>
 	struct Iterator final
 	{

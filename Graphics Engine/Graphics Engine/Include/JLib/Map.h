@@ -3,6 +3,7 @@
 
 namespace jv
 {
+	// Nonlinear data container used for fast lookup (O(1)).
 	template <typename T>
 	struct Map final
 	{
