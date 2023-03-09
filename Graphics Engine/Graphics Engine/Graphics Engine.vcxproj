@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Vk\VkLayout.cpp" />
     <ClCompile Include="Src\Vk\VkImage.cpp" />
     <ClCompile Include="Src\Vk\VkGLFWApp.cpp" />
     <ClCompile Include="Src\Vk\VkSwapChain.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="Include\Vk\VkGLFWApp.h" />
     <ClInclude Include="Include\Vk\VkImage.h" />
     <ClInclude Include="Include\Vk\VkInit.h" />
+    <ClInclude Include="Include\Vk\VkLayout.h" />
     <ClInclude Include="Include\Vk\VkMemory.h" />
     <ClInclude Include="Include\Vk\VkSwapChain.h" />
   </ItemGroup>

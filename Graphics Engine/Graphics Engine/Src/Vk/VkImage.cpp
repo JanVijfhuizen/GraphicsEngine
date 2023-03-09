@@ -170,7 +170,7 @@ namespace jv::vk
 		info.usageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		Image image{};
 
-		const size_t imageSize = static_cast<size_t>(resolution.x) * static_cast<size_t>(resolution.y) * 4;
+		const uint32_t imageSize = resolution.x * resolution.y * 4;
 
 		VkBuffer stagingBuffer;
 		VkBufferCreateInfo bufferInfo{};
