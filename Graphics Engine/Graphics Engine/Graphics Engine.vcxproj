@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\VkHL\Mesh.cpp" />
     <ClCompile Include="Src\VkHL\VkVertex.cpp" />
     <ClCompile Include="Src\JLib\FileLoader.cpp" />
     <ClCompile Include="Src\JLib\PackingFFDH.cpp" />
@@ -181,6 +182,8 @@
     <ClInclude Include="Include\JLib\Queue.h" />
     <ClInclude Include="Include\JLib\Vector.h" />
     <ClInclude Include="Include\JLib\VectorUtils.h" />
+    <ClInclude Include="Include\VkHL\Mesh.h" />
+    <ClInclude Include="Include\VkHL\VkBuffer.h" />
     <ClInclude Include="Include\VkHL\VkSubTexture.h" />
     <ClInclude Include="Include\VkHL\VkTexture.h" />
     <ClInclude Include="Include\Vk\VkApp.h" />

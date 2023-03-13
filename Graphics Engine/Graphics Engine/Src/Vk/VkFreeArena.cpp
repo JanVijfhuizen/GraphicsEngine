@@ -96,6 +96,7 @@ namespace jv::vk
 
 		outMemory.memory = dstPage->memory;
 		outMemory.offset = dstPage->size - dstPage->remaining;
+		outMemory.size = size;
 
 		dstPage->remaining -= size;
 

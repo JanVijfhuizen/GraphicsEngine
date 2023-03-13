@@ -7,5 +7,6 @@ namespace jv::vk
 	{
 		VkDeviceMemory memory;
 		VkDeviceSize offset;
+		VkDeviceSize size;
 	};
 }
