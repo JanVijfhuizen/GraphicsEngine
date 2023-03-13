@@ -139,11 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\JLib\PackingFFDH.cpp" />
+    <ClCompile Include="Src\VkHL\VkTexture.cpp" />
     <ClCompile Include="Src\Vk\VkShader.cpp" />
     <ClCompile Include="Src\Vk\VkPipeline.cpp" />
     <ClCompile Include="Src\Vk\VkLayout.cpp" />
     <ClCompile Include="Src\Vk\VkImage.cpp" />
-    <ClCompile Include="Src\Vk\VkGLFWApp.cpp" />
+    <ClCompile Include="Src\VkHL\VkGLFWApp.cpp" />
     <ClCompile Include="Src\Vk\VkSwapChain.cpp" />
     <ClCompile Include="Src\Vk\VkFreeArena.cpp" />
     <ClCompile Include="Src\Vk\VkInit.cpp" />
@@ -164,19 +166,23 @@
     <ClInclude Include="Include\JLib\HeapUtils.h" />
     <ClInclude Include="Include\JLib\Iterator.h" />
     <ClInclude Include="Include\JLib\KeyPair.h" />
+    <ClInclude Include="Include\JLib\LinearSort.h" />
     <ClInclude Include="Include\JLib\LinkedList.h" />
     <ClInclude Include="Include\JLib\LinkedListUtils.h" />
     <ClInclude Include="Include\JLib\MapUtils.h" />
     <ClInclude Include="Include\JLib\Math.h" />
     <ClInclude Include="Include\JLib\Map.h" />
+    <ClInclude Include="Include\JLib\PackingFFDH.h" />
     <ClInclude Include="Include\JLib\QueueUtils.h" />
     <ClInclude Include="Include\pch.h" />
     <ClInclude Include="Include\JLib\Queue.h" />
     <ClInclude Include="Include\JLib\Vector.h" />
     <ClInclude Include="Include\JLib\VectorUtils.h" />
+    <ClInclude Include="Include\VkHL\VkSubTexture.h" />
+    <ClInclude Include="Include\VkHL\VkTexture.h" />
     <ClInclude Include="Include\Vk\VkApp.h" />
     <ClInclude Include="Include\Vk\VkFreeArena.h" />
-    <ClInclude Include="Include\Vk\VkGLFWApp.h" />
+    <ClInclude Include="Include\VkHL\VkGLFWApp.h" />
     <ClInclude Include="Include\Vk\VkImage.h" />
     <ClInclude Include="Include\Vk\VkInit.h" />
     <ClInclude Include="Include\Vk\VkLayout.h" />

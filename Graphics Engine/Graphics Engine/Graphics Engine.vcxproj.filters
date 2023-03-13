@@ -33,7 +33,7 @@
     <ClCompile Include="Src\Vk\VkSwapChain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Vk\VkGLFWApp.cpp">
+    <ClCompile Include="Src\VkHL\VkGLFWApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Src\Vk\VkImage.cpp">
@@ -46,6 +46,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Src\Vk\VkShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\VkHL\VkTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\JLib\PackingFFDH.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -113,7 +119,7 @@
     <ClInclude Include="Include\Vk\VkSwapChain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Vk\VkGLFWApp.h">
+    <ClInclude Include="Include\VkHL\VkGLFWApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Vk\VkImage.h">
@@ -129,6 +135,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Vk\VkShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\VkHL\VkTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\VkHL\VkSubTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\PackingFFDH.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\LinearSort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

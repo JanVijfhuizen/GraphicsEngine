@@ -69,7 +69,7 @@ namespace jv::vk
 		layout = newLayout;
 	}
 
-	void Image::FillImage(Arena& arena, FreeArena& freeArena, const App& app, const Array<unsigned char>& pixels)
+	void Image::FillImage(Arena& arena, const FreeArena& freeArena, const App& app, const Array<unsigned char>& pixels)
 	{
 		assert(usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 

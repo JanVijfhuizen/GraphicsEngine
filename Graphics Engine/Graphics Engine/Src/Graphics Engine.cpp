@@ -3,7 +3,7 @@
 
 #include "JLib/Arena.h"
 #include "Vk/VkFreeArena.h"
-#include "Vk/VkGLFWApp.h"
+#include "VkHL/VkGLFWApp.h"
 #include "Vk/VkInit.h"
 #include "Vk/VkSwapChain.h"
 
