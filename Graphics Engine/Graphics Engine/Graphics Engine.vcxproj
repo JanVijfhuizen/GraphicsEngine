@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Vk\VkShader.cpp" />
     <ClCompile Include="Src\Vk\VkPipeline.cpp" />
     <ClCompile Include="Src\Vk\VkLayout.cpp" />
     <ClCompile Include="Src\Vk\VkImage.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="Include\Vk\VkLayout.h" />
     <ClInclude Include="Include\Vk\VkMemory.h" />
     <ClInclude Include="Include\Vk\VkPipeline.h" />
+    <ClInclude Include="Include\Vk\VkShader.h" />
     <ClInclude Include="Include\Vk\VkSwapChain.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
