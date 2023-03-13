@@ -4,6 +4,7 @@
 #include "JLib/LinkedListUtils.h"
 #include "JLib/Math.h"
 #include "Vk/VkApp.h"
+#include "Vk/VkMemory.h"
 
 namespace jv::vk
 {
@@ -54,9 +55,9 @@ namespace jv::vk
 		arena.DestroyScope(freeArena.scope);
 	}
 
-	uint64_t FreeArena::Alloc(const App& app, Arena& arena, const VkMemoryRequirements memRequirements,
+	uint64_t FreeArena::Alloc(Arena& arena, const App& app, const VkMemoryRequirements memRequirements,
 	    const VkMemoryPropertyFlags properties,
-		const uint32_t count, FreeMemory& outFreeMemory) const
+		const uint32_t count, Memory& outMemory) const
 	{
 		const uint32_t poolId = GetPoolId(*this, memRequirements.memoryTypeBits, properties);
 		assert(poolId != UINT32_MAX);
@@ -93,12 +94,12 @@ namespace jv::vk
 			assert(!result);
 		}
 
-		outFreeMemory.memory = dstPage->memory;
-		outFreeMemory.offset = dstPage->size - dstPage->remaining;
+		outMemory.memory = dstPage->memory;
+		outMemory.offset = dstPage->size - dstPage->remaining;
 
 		dstPage->remaining -= size;
 
-		Memory handle{};
+		FreeMemory handle{};
 		handle.unpacked.size = static_cast<uint32_t>(size);
 		handle.unpacked.pageNum = static_cast<uint16_t>(pool.pages.GetCount() - pageNum);
 		handle.unpacked.poolId = static_cast<uint16_t>(poolId);
@@ -108,7 +109,7 @@ namespace jv::vk
 
 	void FreeArena::Free(const uint64_t handle) const
 	{
-		Memory memory{};
+		FreeMemory memory{};
 		memory.handle = handle;
 		const auto& pool = pools[memory.unpacked.poolId];
 		auto& page = pool.pages[memory.unpacked.pageNum];

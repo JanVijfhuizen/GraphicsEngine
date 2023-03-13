@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "JLib/Arena.h"
+#include "Vk/VkFreeArena.h"
 #include "Vk/VkGLFWApp.h"
 #include "Vk/VkInit.h"
 #include "Vk/VkSwapChain.h"
@@ -20,6 +21,7 @@ int main()
 {
 	char c[800]{};
 	char tc[800]{};
+	char vkc[800]{};
 
 	jv::ArenaCreateInfo info{};
 	info.alloc = Alloc;
@@ -31,6 +33,10 @@ int main()
 	info.memory = tc;
 	info.memorySize = sizeof tc;
 	auto tempArena = jv::Arena::Create(info);
+
+	info.memory = vkc;
+	info.memorySize = sizeof vkc;
+	auto vkArena = jv::Arena::Create(info);
 
 	auto glfwApp = jv::vk::GLFWApp::Create("Example App", {800, 600});
 
@@ -45,6 +51,7 @@ int main()
 	const auto vkApp = CreateApp(vkInfo);
 
 	auto swapChain = jv::vk::SwapChain::Create(arena, tempArena, vkApp, glm::ivec2(800, 600));
+	auto freeArena = jv::vk::FreeArena::Create(vkArena, vkApp);
 
 	while(glfwApp.BeginFrame())
 	{
@@ -52,6 +59,7 @@ int main()
 		swapChain.EndFrame(tempArena, vkApp);
 	}
 
+	jv::vk::FreeArena::Destroy(vkArena, vkApp, freeArena);
 	jv::vk::SwapChain::Destroy(arena, vkApp, swapChain);
 	jv::vk::init::DestroyApp(vkApp);
 
