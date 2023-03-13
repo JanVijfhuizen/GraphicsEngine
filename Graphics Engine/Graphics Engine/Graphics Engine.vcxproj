@@ -139,6 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\VkHL\VkVertex.cpp" />
+    <ClCompile Include="Src\JLib\FileLoader.cpp" />
     <ClCompile Include="Src\JLib\PackingFFDH.cpp" />
     <ClCompile Include="Src\VkHL\VkTexture.cpp" />
     <ClCompile Include="Src\Vk\VkShader.cpp" />
@@ -162,6 +164,7 @@
     <ClInclude Include="Include\JLib\Arena.h" />
     <ClInclude Include="Include\JLib\ArrayUtils.h" />
     <ClInclude Include="Include\JLib\Array.h" />
+    <ClInclude Include="Include\JLib\FileLoader.h" />
     <ClInclude Include="Include\JLib\Heap.h" />
     <ClInclude Include="Include\JLib\HeapUtils.h" />
     <ClInclude Include="Include\JLib\Iterator.h" />
@@ -190,6 +193,7 @@
     <ClInclude Include="Include\Vk\VkPipeline.h" />
     <ClInclude Include="Include\Vk\VkShader.h" />
     <ClInclude Include="Include\Vk\VkSwapChain.h" />
+    <ClInclude Include="Include\VkHL\VkVertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
