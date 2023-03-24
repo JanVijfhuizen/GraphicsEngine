@@ -180,7 +180,7 @@ namespace jv::vk
 		freeArena.Free(stagingMemHandle);
 	}
 
-	Image Image::CreateImage(Arena& arena, const FreeArena& freeArena, const App& app, 
+	Image Image::Create(Arena& arena, const FreeArena& freeArena, const App& app, 
 		const ImageCreateInfo& info, glm::ivec3 resolution)
 	{
 		Image image{};
@@ -271,7 +271,7 @@ namespace jv::vk
 		return image;
 	}
 
-	void Image::DestroyImage(const FreeArena& freeArena, const App& app, const Image& image)
+	void Image::Destroy(const FreeArena& freeArena, const App& app, const Image& image)
 	{
 		vkDestroyImage(app.device, image.image, nullptr);
 		freeArena.Free(image.memoryHandle);

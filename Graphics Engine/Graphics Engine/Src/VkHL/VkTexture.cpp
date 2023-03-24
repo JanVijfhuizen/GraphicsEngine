@@ -96,7 +96,7 @@ namespace jv::vk::texture
 		aPixels.ptr = pixels;
 
 		assert(info.usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-		auto image = Image::CreateImage(arena, freeArena, app, info, glm::ivec3(texWidth, texHeight, texChannels));
+		auto image = Image::Create(arena, freeArena, app, info, glm::ivec3(texWidth, texHeight, texChannels));
 		image.FillImage(arena, freeArena, app, aPixels);
 
 		// Free pixels.

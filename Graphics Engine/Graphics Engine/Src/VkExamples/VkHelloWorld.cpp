@@ -1,8 +1,10 @@
 ﻿#include "pch.h"
 #include "VkExamples/VkHelloWorld.h"
 
+#include "Vk/VkImage.h"
 #include "VkHL/VkMesh.h"
 #include "VkHL/VkShapes.h"
+#include "VkHL/VkTexture.h"
 
 namespace jv::vk::example
 {
@@ -10,6 +12,7 @@ namespace jv::vk::example
 	{
 		uint64_t scope;
 		Mesh mesh;
+		Image image;
 	};
 
 	void* OnBegin(Program& program)
@@ -19,11 +22,15 @@ namespace jv::vk::example
 
 		Array<Vertex2d> vertices;
 		Array<VertexIndex> indices;
-		const auto scope = CreateQuadShape(program.tempArena, vertices, indices);
+		const auto tempScope = CreateQuadShape(program.tempArena, vertices, indices);
 
 		helloWorldProgram->mesh = Mesh::Create(program.vkCPUArena, program.vkGPUArena, program.vkApp, vertices, indices);
 
-		program.tempArena.DestroyScope(scope);
+		constexpr ImageCreateInfo imageCreateInfo{};
+		helloWorldProgram->image = texture::Load(program.vkCPUArena, program.vkGPUArena, program.vkApp, 
+			imageCreateInfo, "ExampleArt/logo.png");
+
+		program.tempArena.DestroyScope(tempScope);
 
 		return helloWorldProgram;
 	}
@@ -37,6 +44,7 @@ namespace jv::vk::example
 	{
 		const auto helloWorldProgram = static_cast<HelloWorldProgram*>(userPtr);
 
+		Image::Destroy(program.vkGPUArena, program.vkApp, helloWorldProgram->image);
 		Mesh::Destroy(program.vkGPUArena, helloWorldProgram->mesh, program.vkApp);
 
 		program.arena.DestroyScope(helloWorldProgram->scope);
