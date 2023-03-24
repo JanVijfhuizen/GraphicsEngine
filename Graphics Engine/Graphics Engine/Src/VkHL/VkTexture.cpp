@@ -11,7 +11,7 @@
 #include "JLib/PackingFFDH.h"
 #include "VkHL/VkSubTexture.h"
 
-namespace jv::vk::texture
+namespace jv::vk
 {
 	void GenerateAtlas(Arena& arena, Arena& tempArena, const Array<const char*>& filePaths,
 		const char* imageFilePath, const char* metaFilePath, const uint32_t texChannels)

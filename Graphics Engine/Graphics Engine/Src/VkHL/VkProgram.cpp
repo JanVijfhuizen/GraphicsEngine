@@ -27,6 +27,7 @@ namespace jv::vk
 		const auto vkArenaMem = malloc(programInfo.vkArenaSize);
 
 		Program program{};
+		program.resolution = programInfo.resolution;
 
 		ArenaCreateInfo info{};
 		info.alloc = Alloc;
@@ -61,6 +62,7 @@ namespace jv::vk
 
 		auto swapChain = SwapChain::Create(program.arena, program.tempArena, program.vkApp, programInfo.resolution);
 		program.vkGPUArena = FreeArena::Create(program.vkCPUArena, program.vkApp);
+		program.swapChainRenderPass = swapChain.GetRenderPass();
 
 		void* userPtr = nullptr;
 		if (programInfo.onBegin)

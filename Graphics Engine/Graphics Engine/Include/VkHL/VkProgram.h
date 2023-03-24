@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Vk/VkApp.h"
 #include "Vk/VkFreeArena.h"
+#include "Vk/VkSwapChain.h"
 
 namespace jv::vk
 {
@@ -9,6 +10,9 @@ namespace jv::vk
 	// JV Vulkan Program.
 	struct Program final
 	{
+		// Screen resolution.
+		glm::ivec2 resolution;
+
 		// Vulkan application.
 		App vkApp;
 		// Persistent allocations.
@@ -21,6 +25,8 @@ namespace jv::vk
 		Arena vkCPUArena;
 		// Vulkan GPU allocator.
 		FreeArena vkGPUArena;
+		// Vulkan swap chain render pass.
+		VkRenderPass swapChainRenderPass;
 	};
 
 	struct ProgramInfo final
