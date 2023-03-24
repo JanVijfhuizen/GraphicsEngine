@@ -66,7 +66,7 @@
     <ClCompile Include="Src\VkHL\VkShapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\VkExamples\VkExample.cpp">
+    <ClCompile Include="Src\VkExamples\VkProgram.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -179,7 +179,7 @@
     <ClInclude Include="Include\VkHL\VkShapes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\VkExamples\VkExample.h">
+    <ClInclude Include="Include\VkExamples\VkProgram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

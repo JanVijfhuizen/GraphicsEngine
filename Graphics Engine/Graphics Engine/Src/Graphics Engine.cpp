@@ -1,9 +1,9 @@
 #include "pch.h"
 
-#include "VkExamples/VkExample.h"
+#include "VkExamples/VkProgram.h"
 
 int main()
 {
-	jv::vk::example::Info info{};
+	jv::vk::ProgramInfo info{};
 	Run(info);
 }

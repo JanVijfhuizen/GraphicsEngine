@@ -25,7 +25,7 @@ namespace jv::vk
 		return true;
 	}
 
-	GLFWApp GLFWApp::Create(const char* name, const glm::ivec2 resolution)
+	GLFWApp GLFWApp::Create(const char* name, const glm::ivec2 resolution, const bool fullscreen)
 	{
 		GLFWApp app{};
 
@@ -37,7 +37,7 @@ namespace jv::vk
 
 		// Create window.
 		auto& window = app.window;
-		window = glfwCreateWindow(resolution.x, resolution.y, name, nullptr, nullptr);
+		window = glfwCreateWindow(resolution.x, resolution.y, name, fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 		assert(window);
 
 		glfwMakeContextCurrent(window);
