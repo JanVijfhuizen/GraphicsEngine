@@ -34,17 +34,20 @@ namespace jv::vk::example
 		helloWorldProgram->image = LoadTexture(program.vkCPUArena, program.vkGPUArena, program.vkApp,
 			imageCreateInfo, "Art/logo.png");
 
-		//file::Load(program.tempArena, "Shaders/helloWorldFrag.");
+		const auto vertCode = file::Load(program.tempArena, "Shaders/vert.spv");
+		const auto fragCode = file::Load(program.tempArena, "Shaders/frag.spv");
 
-		VkShaderModule shaderModulesValues[2];
-		shaderModulesValues[0] = CreateShaderModule(program.vkApp, );
-		shaderModulesValues[1] = CreateShaderModule(program.vkApp, );
-		Array<VkShaderModule> shaderModules;
+		PipelineCreateInfo::Module shaderModulesValues[2];
+		shaderModulesValues[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+		shaderModulesValues[0].module = CreateShaderModule(program.vkApp, vertCode.ptr, vertCode.length);
+		shaderModulesValues[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		shaderModulesValues[1].module = CreateShaderModule(program.vkApp, fragCode.ptr, fragCode.length);
+		Array<PipelineCreateInfo::Module> shaderModules;
 		shaderModules.ptr = shaderModulesValues;
 		shaderModules.length = 2;
 
 		PipelineCreateInfo pipelineCreateInfo{};
-		//pipelineCreateInfo.modules = shaderModules;
+		pipelineCreateInfo.modules = shaderModules;
 		pipelineCreateInfo.resolution = program.resolution;
 		pipelineCreateInfo.renderPass = program.swapChainRenderPass;
 		pipelineCreateInfo.getBindingDescriptions = Vertex2d::GetBindingDescriptions;

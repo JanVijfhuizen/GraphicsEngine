@@ -13,7 +13,7 @@
 
 namespace jv::vk
 {
-	void GenerateAtlas(Arena& arena, Arena& tempArena, const Array<const char*>& filePaths,
+	void GenerateTextureAtlas(Arena& arena, Arena& tempArena, const Array<const char*>& filePaths,
 		const char* imageFilePath, const char* metaFilePath, const uint32_t texChannels)
 	{
 		const auto _ = tempArena.CreateScope();
@@ -84,7 +84,7 @@ namespace jv::vk
 		outfile.close();
 	}
 
-	Image Load(Arena& arena, const FreeArena& freeArena, const App& app, const ImageCreateInfo& info, const char* imageFilePath)
+	Image LoadTexture(Arena& arena, const FreeArena& freeArena, const App& app, const ImageCreateInfo& info, const char* imageFilePath)
 	{
 		// Load pixels.
 		int texWidth, texHeight, texChannels;
@@ -105,7 +105,7 @@ namespace jv::vk
 		return image;
 	}
 
-	Array<SubTexture> LoadAtlasMetaData(Arena& arena, const char* metaFilePath)
+	Array<SubTexture> LoadTextureAtlasMetaData(Arena& arena, const char* metaFilePath)
 	{
 		std::ifstream inFile;
 		inFile.open(metaFilePath);
