@@ -5,6 +5,7 @@ namespace jv::vk
 	struct GLFWApp final
 	{
 		GLFWwindow* window = nullptr;
+		bool (*onBeginFrame)(GLFWwindow& window) = nullptr;
 
 		// Returns false when the window is closed.
 		[[nodiscard]] bool BeginFrame() const;

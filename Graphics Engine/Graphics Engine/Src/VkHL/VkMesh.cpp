@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "VkHL/Mesh.h"
+#include "VkHL/VkMesh.h"
 
 namespace jv::vk
 {

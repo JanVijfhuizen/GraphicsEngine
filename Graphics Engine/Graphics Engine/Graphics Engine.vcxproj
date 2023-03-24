@@ -139,7 +139,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Src\VkHL\Mesh.cpp" />
+    <ClCompile Include="Src\VkExamples\VkExample.cpp" />
+    <ClCompile Include="Src\VkHL\VkShapes.cpp" />
+    <ClCompile Include="Src\VkHL\VkMesh.cpp" />
     <ClCompile Include="Src\VkHL\VkVertex.cpp" />
     <ClCompile Include="Src\JLib\FileLoader.cpp" />
     <ClCompile Include="Src\JLib\PackingFFDH.cpp" />
@@ -182,8 +184,9 @@
     <ClInclude Include="Include\JLib\Queue.h" />
     <ClInclude Include="Include\JLib\Vector.h" />
     <ClInclude Include="Include\JLib\VectorUtils.h" />
-    <ClInclude Include="Include\VkHL\Mesh.h" />
+    <ClInclude Include="Include\VkHL\VkMesh.h" />
     <ClInclude Include="Include\VkHL\VkBuffer.h" />
+    <ClInclude Include="Include\VkHL\VkShapes.h" />
     <ClInclude Include="Include\VkHL\VkSubTexture.h" />
     <ClInclude Include="Include\VkHL\VkTexture.h" />
     <ClInclude Include="Include\Vk\VkApp.h" />
@@ -197,6 +200,7 @@
     <ClInclude Include="Include\Vk\VkShader.h" />
     <ClInclude Include="Include\Vk\VkSwapChain.h" />
     <ClInclude Include="Include\VkHL\VkVertex.h" />
+    <ClInclude Include="Include\VkExamples\VkExample.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

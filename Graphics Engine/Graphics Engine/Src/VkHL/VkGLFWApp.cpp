@@ -20,6 +20,8 @@ namespace jv::vk
 			glfwWaitEvents();
 		}
 
+		if(onBeginFrame)
+			return onBeginFrame(*window);
 		return true;
 	}
 

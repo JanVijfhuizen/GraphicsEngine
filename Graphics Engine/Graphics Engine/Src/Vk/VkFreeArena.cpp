@@ -39,7 +39,7 @@ namespace jv::vk
 
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
 		{
-			auto& pool = freeArena.pools[i];
+			auto& pool = freeArena.pools[i] = {};
 			const auto& memType = memProperties.memoryTypes[i];
 			pool.memPropertyFlags = memType.propertyFlags;
 		}
