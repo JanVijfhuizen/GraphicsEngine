@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#include "VkExamples/VkProgram.h"
+#include "VkHL/VkProgram.h"
 
 #include "JLib/Array.h"
 #include "Vk/VkFreeArena.h"
@@ -45,7 +45,7 @@ namespace jv::vk
 
 		info.memory = vkArenaMem;
 		info.memorySize = programInfo.vkArenaSize;
-		auto vkArena = Arena::Create(info);
+		program.vkCPUArena = Arena::Create(info);
 
 		auto glfwApp = GLFWApp::Create(programInfo.name, programInfo.resolution, programInfo.fullscreen);
 
@@ -57,10 +57,10 @@ namespace jv::vk
 		vkInfo.createSurface = GLFWApp::CreateSurface;
 		vkInfo.userPtr = &glfwApp;
 		vkInfo.instanceExtensions = extensions;
-		const auto vkApp = CreateApp(vkInfo);
+		program.vkApp = CreateApp(vkInfo);
 
-		auto swapChain = SwapChain::Create(program.arena, program.tempArena, vkApp, programInfo.resolution);
-		const auto freeArena = FreeArena::Create(vkArena, vkApp);
+		auto swapChain = SwapChain::Create(program.arena, program.tempArena, program.vkApp, programInfo.resolution);
+		program.vkGPUArena = FreeArena::Create(program.vkCPUArena, program.vkApp);
 
 		void* userPtr = nullptr;
 		if (programInfo.onBegin)
@@ -75,33 +75,33 @@ namespace jv::vk
 			if (quit)
 				break;
 
-			swapChain.WaitForImage(vkApp);
+			swapChain.WaitForImage(program.vkApp);
 
 			if(programInfo.onRenderUpdate)
-				quit = !programInfo.onRenderUpdate(program);
+				quit = !programInfo.onRenderUpdate(program, userPtr);
 			if (quit)
 				break;
 
-			auto cmdBuffer = swapChain.BeginFrame(vkApp, true);
+			auto cmdBuffer = swapChain.BeginFrame(program.vkApp, true);
 
 			if (programInfo.onSwapChainRenderUpdate)
-				quit = !programInfo.onSwapChainRenderUpdate(program, cmdBuffer);
+				quit = !programInfo.onSwapChainRenderUpdate(program, userPtr, cmdBuffer);
 			if (quit)
 				break;
 
-			swapChain.EndFrame(program.tempArena, vkApp);
+			swapChain.EndFrame(program.tempArena, program.vkApp);
 			program.frameArena.Clear();
 		}
 
 		if (programInfo.onExit)
 			programInfo.onExit(program, userPtr);
 
-		FreeArena::Destroy(vkArena, vkApp, freeArena);
-		SwapChain::Destroy(program.arena, vkApp, swapChain);
-		init::DestroyApp(vkApp);
+		FreeArena::Destroy(program.vkCPUArena, program.vkApp, program.vkGPUArena);
+		SwapChain::Destroy(program.arena, program.vkApp, swapChain);
+		init::DestroyApp(program.vkApp);
 
 		GLFWApp::Destroy(glfwApp);
-		Arena::Destroy(vkArena);
+		Arena::Destroy(program.vkCPUArena);
 		Arena::Destroy(program.frameArena);
 		Arena::Destroy(program.tempArena);
 		Arena::Destroy(program.arena);

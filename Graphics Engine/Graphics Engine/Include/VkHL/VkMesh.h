@@ -32,7 +32,7 @@ namespace jv::vk
 		// Move vertex/index data to a staging buffer. 
 		void* stagingData;
 		vkMapMemory(app.device, stagingMem.memory, stagingMem.offset, stagingMem.size, 0, &stagingData);
-		memcpy(stagingData, static_cast<const void*>(data.data), bufferInfo.size);
+		memcpy(stagingData, static_cast<const void*>(data.ptr), bufferInfo.size);
 		vkUnmapMemory(app.device, stagingMem.memory);
 
 		bufferInfo.usage = usageFlags | VK_BUFFER_USAGE_TRANSFER_DST_BIT;

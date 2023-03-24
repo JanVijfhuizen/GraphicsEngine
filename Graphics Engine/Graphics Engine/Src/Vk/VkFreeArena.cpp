@@ -102,7 +102,7 @@ namespace jv::vk
 
 		FreeMemory handle{};
 		handle.unpacked.size = static_cast<uint32_t>(size);
-		handle.unpacked.pageNum = static_cast<uint16_t>(pool.pages.GetCount() - pageNum);
+		handle.unpacked.pageNum = static_cast<uint16_t>(pool.pages.GetCount() - pageNum - 1);
 		handle.unpacked.poolId = static_cast<uint16_t>(poolId);
 
 		return handle.handle;

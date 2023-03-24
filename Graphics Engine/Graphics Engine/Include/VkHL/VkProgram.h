@@ -1,16 +1,26 @@
 ﻿#pragma once
+#include "Vk/VkApp.h"
 #include "Vk/VkFreeArena.h"
 
 namespace jv::vk
 {
 	constexpr uint32_t DEFAULT_ARENA_PAGE_SIZE = 4096;
 
+	// JV Vulkan Program.
 	struct Program final
 	{
+		// Vulkan application.
+		App vkApp;
+		// Persistent allocations.
 		Arena arena;
+		// Temporary stack allocations.
 		Arena tempArena;
+		// Per-frame allocations. Cleared automatically at the end of the frame.
 		Arena frameArena;
-		FreeArena freeArena;
+		// Vulkan CPU allocator.
+		Arena vkCPUArena;
+		// Vulkan GPU allocator.
+		FreeArena vkGPUArena;
 	};
 
 	struct ProgramInfo final
@@ -24,12 +34,13 @@ namespace jv::vk
 		uint32_t vkArenaSize = DEFAULT_ARENA_PAGE_SIZE;
 		uint32_t frameArenaSize = DEFAULT_ARENA_PAGE_SIZE;
 
+		// Returns a user defined pointer.
 		void*(*onBegin)(Program& program) = nullptr;
 		bool(*onUpdate)(Program& program, void* userPtr) = nullptr;
 		bool(*onExit)(Program& program, void* userPtr) = nullptr;
 
-		bool(*onRenderUpdate)(Program& program) = nullptr;
-		bool(*onSwapChainRenderUpdate)(Program& program, VkCommandBuffer cmd) = nullptr;
+		bool(*onRenderUpdate)(Program& program, void* userPtr) = nullptr;
+		bool(*onSwapChainRenderUpdate)(Program& program, void* userPtr, VkCommandBuffer cmd) = nullptr;
 	};
 
 	void Run(const ProgramInfo& programInfo);

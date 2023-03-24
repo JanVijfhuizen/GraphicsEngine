@@ -5,8 +5,10 @@
 
 namespace jv::vk
 {
-	void CreateQuadShape(Arena& arena, Array<Vertex2d>& outVertices, Array<VertexIndex>& outIndices, const float scale)
+	uint64_t CreateQuadShape(Arena& arena, Array<Vertex2d>& outVertices, Array<VertexIndex>& outIndices, const float scale)
 	{
+		auto scope = arena.CreateScope();
+
 		outVertices = CreateArray<Vertex2d>(arena, 4);
 		outIndices = CreateArray<VertexIndex>(arena, 6);
 
@@ -29,5 +31,7 @@ namespace jv::vk
 
 		for (auto& vertex : outVertices)
 			vertex.position *= scale;
+
+		return scope;
 	}
 }

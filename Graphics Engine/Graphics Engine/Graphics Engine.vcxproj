@@ -139,7 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Src\VkExamples\VkProgram.cpp" />
+    <ClCompile Include="Src\VkExamples\VkHelloWorld.cpp" />
+    <ClCompile Include="Src\VkHL\VkProgram.cpp" />
     <ClCompile Include="Src\VkHL\VkShapes.cpp" />
     <ClCompile Include="Src\VkHL\VkMesh.cpp" />
     <ClCompile Include="Src\VkHL\VkVertex.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="Include\JLib\Queue.h" />
     <ClInclude Include="Include\JLib\Vector.h" />
     <ClInclude Include="Include\JLib\VectorUtils.h" />
+    <ClInclude Include="Include\VkExamples\VkHelloWorld.h" />
     <ClInclude Include="Include\VkHL\VkMesh.h" />
     <ClInclude Include="Include\VkHL\VkBuffer.h" />
     <ClInclude Include="Include\VkHL\VkShapes.h" />
@@ -200,7 +202,7 @@
     <ClInclude Include="Include\Vk\VkShader.h" />
     <ClInclude Include="Include\Vk\VkSwapChain.h" />
     <ClInclude Include="Include\VkHL\VkVertex.h" />
-    <ClInclude Include="Include\VkExamples\VkProgram.h" />
+    <ClInclude Include="Include\VkHL\VkProgram.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
