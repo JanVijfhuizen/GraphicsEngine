@@ -20,7 +20,7 @@ namespace jv::vk
 		const auto modules = CreateArray<VkPipelineShaderStageCreateInfo>(tempArena, info.modules.length);
 		for (uint32_t i = 0; i < modules.length; ++i)
 		{
-			auto& mod = modules[i];
+			auto& mod = modules[i] = {};
 			auto& infoMod = info.modules[i];
 			mod.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			mod.pName = "main";
