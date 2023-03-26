@@ -33,7 +33,7 @@ namespace jv::vk
 		VkRenderPass renderPass;
 
 		uint32_t frameIndex = 0;
-		uint32_t imageIndex;
+		uint32_t imageIndex = 0;
 
 		// Recreate resolution dependent components of the swap chain.
 		void Recreate(Arena& tempArena, const App& app, glm::ivec2 resolution);

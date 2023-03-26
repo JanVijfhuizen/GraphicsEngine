@@ -20,7 +20,7 @@ namespace jv::vk
 		const auto shapes = CreateArray<glm::ivec2>(tempArena, filePaths.length);
 
 		{
-			size_t i = 0;
+			uint32_t i = 0;
 			for (const auto& path : filePaths)
 			{
 				// Load pixels.
@@ -37,11 +37,11 @@ namespace jv::vk
 
 		glm::ivec2 area;
 		const auto positions = Pack(arena, tempArena, shapes, area);
-		const auto atlasPixels = CreateArray<stbi_uc>(tempArena, static_cast<size_t>(area.x) * area.y * texChannels);
+		const auto atlasPixels = CreateArray<stbi_uc>(tempArena, static_cast<uint32_t>(area.x) * area.y * texChannels);
 
-		const auto rowLength = static_cast<size_t>(area.x) * texChannels;
+		const auto rowLength = static_cast<uint32_t>(area.x) * texChannels;
 
-		for (size_t i = 0; i < filePaths.length; ++i)
+		for (uint32_t i = 0; i < filePaths.length; ++i)
 		{
 			const auto& path = filePaths[i];
 			const auto& position = positions[i];
@@ -52,10 +52,10 @@ namespace jv::vk
 			assert(pixels);
 			assert(texChannels == texChannels2);
 
-			const size_t width = static_cast<size_t>(texWidth) * texChannels;
-			const size_t start = position.y * rowLength + static_cast<size_t>(position.x) * texChannels;
-			for (int y = 0; y < texHeight; ++y)
-				memcpy(&atlasPixels[start + rowLength * y], &pixels[static_cast<size_t>(texWidth) * texChannels * y], width);
+			const uint32_t width = static_cast<uint32_t>(texWidth) * texChannels;
+			const uint32_t start = position.y * rowLength + static_cast<uint32_t>(position.x) * texChannels;
+			for (uint32_t y = 0; y < texHeight; ++y)
+				memcpy(&atlasPixels[start + rowLength * y], &pixels[static_cast<uint32_t>(texWidth) * texChannels * y], width);
 
 			// Free pixels.
 			stbi_image_free(pixels);
@@ -66,7 +66,7 @@ namespace jv::vk
 		std::ofstream outfile;
 		outfile.open(metaFilePath);
 
-		for (size_t i = 0; i < filePaths.length; ++i)
+		for (uint32_t i = 0; i < filePaths.length; ++i)
 		{
 			const auto& shape = shapes[i];
 			const auto& position = positions[i];
@@ -92,7 +92,7 @@ namespace jv::vk
 		assert(pixels);
 
 		Array<unsigned char> aPixels{};
-		aPixels.length = static_cast<size_t>(texWidth) * texHeight * texChannels;
+		aPixels.length = static_cast<uint32_t>(texWidth) * texHeight * texChannels;
 		aPixels.ptr = pixels;
 
 		assert(info.usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
@@ -110,7 +110,7 @@ namespace jv::vk
 		std::ifstream inFile;
 		inFile.open(metaFilePath);
 
-		const size_t lineCount = std::count(
+		const uint32_t lineCount = std::count(
 			std::istreambuf_iterator(inFile), std::istreambuf_iterator<char>(), '\n');
 		inFile.seekg(0, std::ios::beg);
 
@@ -118,7 +118,7 @@ namespace jv::vk
 
 		glm::vec2 lTop;
 		glm::vec2 rBot;
-		size_t i = 0;
+		uint32_t i = 0;
 		while (inFile >> lTop.x >> lTop.y >> rBot.x >> rBot.y)
 		{
 			auto& instance = metaData[i++];

@@ -63,6 +63,7 @@ namespace jv::vk
 		auto swapChain = SwapChain::Create(program.arena, program.tempArena, program.vkApp, programInfo.resolution);
 		program.vkGPUArena = FreeArena::Create(program.vkCPUArena, program.vkApp);
 		program.swapChainRenderPass = swapChain.GetRenderPass();
+		program.frameCount = swapChain.GetLength();
 
 		void* userPtr = nullptr;
 		if (programInfo.onBegin)
@@ -71,6 +72,7 @@ namespace jv::vk
 		while (glfwApp.BeginFrame())
 		{
 			bool quit = false;
+			program.frameIndex = swapChain.GetIndex();
 
 			if (programInfo.onUpdate)
 				quit = !programInfo.onUpdate(program, userPtr);
@@ -94,6 +96,9 @@ namespace jv::vk
 			swapChain.EndFrame(program.tempArena, program.vkApp);
 			program.frameArena.Clear();
 		}
+
+		const auto result = vkDeviceWaitIdle(program.vkApp.device);
+		assert(!result);
 
 		if (programInfo.onExit)
 			programInfo.onExit(program, userPtr);

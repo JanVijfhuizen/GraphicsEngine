@@ -125,6 +125,7 @@ namespace jv::vk
 		cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		vkBeginCommandBuffer(cmd, &cmdBeginInfo);
 
+		auto currentLayout = layout;
 		TransitionLayout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, aspectFlags);
 
 		VkBufferImageCopy region{};
@@ -154,7 +155,7 @@ namespace jv::vk
 			&region
 		);
 
-		TransitionLayout(cmd, layout, aspectFlags);
+		TransitionLayout(cmd, currentLayout, aspectFlags);
 
 		// End recording.
 		result = vkEndCommandBuffer(cmd);

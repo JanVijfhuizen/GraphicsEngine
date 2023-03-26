@@ -114,9 +114,9 @@ namespace jv::vk
 	{
 		Buffer vertexBuffer;
 		Buffer indexBuffer;
-		size_t indexCount;
+		uint32_t indexCount;
 
-		void Draw(VkCommandBuffer cmd, size_t count) const;
+		void Draw(VkCommandBuffer cmd, uint32_t count) const;
 
 		template <typename Vertex>
 		static Mesh Create(Arena& arena, const FreeArena& freeArena, const App& app, 

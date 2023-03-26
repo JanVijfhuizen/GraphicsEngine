@@ -3,12 +3,12 @@
 
 namespace jv::vk
 {
-	void Mesh::Draw(const VkCommandBuffer cmd, const size_t count) const
+	void Mesh::Draw(const VkCommandBuffer cmd, const uint32_t count) const
 	{
 		constexpr VkDeviceSize offset = 0;
 		vkCmdBindVertexBuffers(cmd, 0, 1, &vertexBuffer.buffer, &offset);
 		vkCmdBindIndexBuffer(cmd, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(indexCount), static_cast<uint32_t>(count), 0, 0, 0);
+		vkCmdDrawIndexed(cmd, indexCount, count, 0, 0, 0);
 	}
 
 	void Mesh::Destroy(const FreeArena& freeArena, const Mesh& mesh, const App& app)

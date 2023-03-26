@@ -27,6 +27,10 @@ namespace jv::vk
 		FreeArena vkGPUArena;
 		// Vulkan swap chain render pass.
 		VkRenderPass swapChainRenderPass;
+		// Amount of frames in the swap chain.
+		uint32_t frameCount;
+		// Current frame in the swap chain.
+		uint32_t frameIndex;
 	};
 
 	struct ProgramInfo final
