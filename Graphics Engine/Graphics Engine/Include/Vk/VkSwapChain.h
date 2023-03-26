@@ -33,7 +33,7 @@ namespace jv::vk
 		VkRenderPass renderPass;
 
 		uint32_t frameIndex = 0;
-		uint32_t imageIndex;
+		uint32_t imageIndex = 0;
 
 		// Recreate resolution dependent components of the swap chain.
 		void Recreate(Arena& tempArena, const App& app, glm::ivec2 resolution);
@@ -49,6 +49,7 @@ namespace jv::vk
 		[[nodiscard]] glm::ivec2 GetResolution() const;
 		[[nodiscard]] VkCommandBuffer GetCmdBuffer() const;
 		[[nodiscard]] uint32_t GetIndex() const;
+		[[nodiscard]] VkRenderPass GetRenderPass() const;
 
 		static SwapChain Create(Arena& arena, Arena& tempArena, const App& app, glm::ivec2 resolution);
 		static void Destroy(Arena& arena, const App& app, const SwapChain& swapChain);

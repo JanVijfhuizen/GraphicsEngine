@@ -91,7 +91,7 @@ namespace jv
 			current = current->next;
 		}
 
-		throw std::exception("Pointer not contained in this arena.");
+		throw std::exception("Pointer not in front of this arena.");
 	}
 
 	void Arena::Clear()

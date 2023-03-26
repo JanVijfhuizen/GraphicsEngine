@@ -351,6 +351,11 @@ namespace jv::vk
 		return imageIndex;
 	}
 
+	VkRenderPass SwapChain::GetRenderPass() const
+	{
+		return renderPass;
+	}
+
 	SwapChain SwapChain::Create(Arena& arena, Arena& tempArena, const App& app, const glm::ivec2 resolution)
 	{
 		SwapChain swapChain{};

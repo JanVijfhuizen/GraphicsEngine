@@ -14,7 +14,7 @@ namespace jv::vk
 		for (uint32_t i = 0; i < bindings.length; ++i)
 		{
 			const auto& binding = bindings[i];
-			auto& set = sets[i];
+			auto& set = sets[i] = {};
 
 			set.stageFlags = binding.flag;
 			set.binding = i;

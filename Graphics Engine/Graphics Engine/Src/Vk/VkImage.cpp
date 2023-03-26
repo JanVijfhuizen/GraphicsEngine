@@ -69,7 +69,7 @@ namespace jv::vk
 		layout = newLayout;
 	}
 
-	void Image::FillImage(Arena& arena, FreeArena& freeArena, const App& app, const Array<unsigned char>& pixels)
+	void Image::FillImage(Arena& arena, const FreeArena& freeArena, const App& app, const Array<unsigned char>& pixels)
 	{
 		assert(usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
@@ -125,6 +125,7 @@ namespace jv::vk
 		cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		vkBeginCommandBuffer(cmd, &cmdBeginInfo);
 
+		auto currentLayout = layout;
 		TransitionLayout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, aspectFlags);
 
 		VkBufferImageCopy region{};
@@ -154,7 +155,7 @@ namespace jv::vk
 			&region
 		);
 
-		TransitionLayout(cmd, layout, aspectFlags);
+		TransitionLayout(cmd, currentLayout, aspectFlags);
 
 		// End recording.
 		result = vkEndCommandBuffer(cmd);
@@ -180,7 +181,7 @@ namespace jv::vk
 		freeArena.Free(stagingMemHandle);
 	}
 
-	Image Image::CreateImage(Arena& arena, const FreeArena& freeArena, const App& app, 
+	Image Image::Create(Arena& arena, const FreeArena& freeArena, const App& app, 
 		const ImageCreateInfo& info, glm::ivec3 resolution)
 	{
 		Image image{};
@@ -271,7 +272,7 @@ namespace jv::vk
 		return image;
 	}
 
-	void Image::DestroyImage(const FreeArena& freeArena, const App& app, const Image& image)
+	void Image::Destroy(const FreeArena& freeArena, const App& app, const Image& image)
 	{
 		vkDestroyImage(app.device, image.image, nullptr);
 		freeArena.Free(image.memoryHandle);

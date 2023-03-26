@@ -39,7 +39,7 @@ namespace jv::vk
 
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
 		{
-			auto& pool = freeArena.pools[i];
+			auto& pool = freeArena.pools[i] = {};
 			const auto& memType = memProperties.memoryTypes[i];
 			pool.memPropertyFlags = memType.propertyFlags;
 		}
@@ -96,12 +96,13 @@ namespace jv::vk
 
 		outMemory.memory = dstPage->memory;
 		outMemory.offset = dstPage->size - dstPage->remaining;
+		outMemory.size = size;
 
 		dstPage->remaining -= size;
 
 		FreeMemory handle{};
 		handle.unpacked.size = static_cast<uint32_t>(size);
-		handle.unpacked.pageNum = static_cast<uint16_t>(pool.pages.GetCount() - pageNum);
+		handle.unpacked.pageNum = static_cast<uint16_t>(pool.pages.GetCount() - pageNum - 1);
 		handle.unpacked.poolId = static_cast<uint16_t>(poolId);
 
 		return handle.handle;

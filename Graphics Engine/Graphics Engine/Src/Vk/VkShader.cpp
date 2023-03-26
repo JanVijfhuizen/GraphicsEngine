@@ -5,12 +5,12 @@
 
 namespace jv::vk
 {
-	VkShaderModule CreateShaderModule(const App& app, const char* code)
+	VkShaderModule CreateShaderModule(const App& app, const char* code, const uint64_t length)
 	{
 		VkShaderModuleCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 
-		createInfo.codeSize = strlen(code);
+		createInfo.codeSize = length;
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(code);
 
 		VkShaderModule mod;
