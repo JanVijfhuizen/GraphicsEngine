@@ -10,6 +10,7 @@ namespace jv::vk
 	// Generate a single texture from multiple smaller ones.
 	void GenerateTextureAtlas(Arena& arena, Arena& tempArena, const Array<const char*>& filePaths, const char* imageFilePath, const char* metaFilePath, uint32_t texChannels = 4);
 	[[nodiscard]] Image LoadTexture(Arena& arena, const FreeArena& freeArena, const App& app, const ImageCreateInfo& info, const char* imageFilePath);
+	void FillTexture(Arena& arena, const FreeArena& freeArena, const App& app, Image& image, const char* imageFilePath);
 	// Load coordinates that correspond with a texture atlas.
 	[[nodiscard]] Array<SubTexture> LoadTextureAtlasMetaData(Arena& arena, const char* metaFilePath);
 }

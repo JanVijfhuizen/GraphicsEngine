@@ -105,6 +105,24 @@ namespace jv::vk
 		return image;
 	}
 
+	void FillTexture(Arena& arena, const FreeArena& freeArena, const App& app, Image& image, const char* imageFilePath)
+	{
+		// Load pixels.
+		int texWidth, texHeight, texChannels;
+		stbi_uc* pixels = stbi_load(imageFilePath, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		assert(pixels);
+
+		Array<unsigned char> aPixels{};
+		aPixels.length = static_cast<uint32_t>(texWidth) * texHeight * texChannels;
+		aPixels.ptr = pixels;
+
+		assert(image.usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+		image.FillImage(arena, freeArena, app, aPixels);
+
+		// Free pixels.
+		stbi_image_free(pixels);
+	}
+
 	Array<SubTexture> LoadTextureAtlasMetaData(Arena& arena, const char* metaFilePath)
 	{
 		std::ifstream inFile;
