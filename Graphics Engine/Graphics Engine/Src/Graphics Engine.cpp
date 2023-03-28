@@ -12,6 +12,9 @@ int main()
 		jv::ge::RenderFrame();
 	}
 
+	//auto scene = jv::ge::CreateScene();
+	auto scene2 = jv::ge::CreateScene();
+
 	jv::ge::Resize(glm::ivec2(800), false);
 
 	while (jv::ge::RenderFrame())

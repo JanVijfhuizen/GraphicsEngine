@@ -2,6 +2,9 @@
 #include "GE/GraphicsEngine.h"
 
 #include "JLib/Array.h"
+#include "JLib/LinkedList.h"
+#include "JLib/LinkedListUtils.h"
+#include "Vk/VkFreeArena.h"
 #include "Vk/VkInit.h"
 #include "Vk/VkSwapChain.h"
 #include "VkHL/VkGLFWApp.h"
@@ -9,6 +12,13 @@
 namespace jv::ge
 {
 	constexpr uint32_t ARENA_SIZE = 4096;
+
+	struct Scene final
+	{
+		Arena arena;
+		void* arenaMem;
+		vk::FreeArena freeArena;
+	};
 
 	struct GraphicsEngine final
 	{
@@ -22,6 +32,10 @@ namespace jv::ge
 		vk::GLFWApp glfwApp;
 		vk::App app;
 		vk::SwapChain swapChain;
+
+		uint64_t scope;
+
+		LinkedList<Scene> scenes{};
 	} ge{};
 
 	void* Alloc(const uint32_t size)
@@ -64,6 +78,7 @@ namespace jv::ge
 		ge.app = CreateApp(vkInfo);
 
 		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, info.resolution);
+		ge.scope = ge.arena.CreateScope();
 	}
 
 	void Resize(const glm::ivec2 resolution, const bool fullScreen)
@@ -72,6 +87,46 @@ namespace jv::ge
 
 		ge.glfwApp.Resize(resolution, fullScreen);
 		ge.swapChain.Recreate(ge.tempArena, ge.app, resolution);
+	}
+
+	uint32_t CreateScene()
+	{
+		constexpr uint32_t SCENE_ARENA_SIZE = 512;
+
+		assert(ge.initialized);
+
+		auto& scene = Add(ge.arena, ge.scenes);
+		scene.arenaMem = malloc(SCENE_ARENA_SIZE);
+
+		ArenaCreateInfo arenaInfo{};
+		arenaInfo.alloc = Alloc;
+		arenaInfo.free = Free;
+		arenaInfo.memory = scene.arenaMem;
+		arenaInfo.memorySize = SCENE_ARENA_SIZE;
+		scene.arena = Arena::Create(arenaInfo);
+		scene.freeArena = vk::FreeArena::Create(scene.arena, ge.app);
+
+		return ge.scenes.GetCount() - 1;
+	}
+
+	void ClearScene(const uint32_t handle)
+	{
+		assert(ge.initialized);
+
+		auto& scene = ge.scenes[handle];
+		assert(ge.initialized);
+	}
+
+	void DestroyScenes()
+	{
+		assert(ge.initialized);
+
+		for (auto& scene : ge.scenes)
+		{
+			vk::FreeArena::Destroy(scene.arena, ge.app, scene.freeArena);
+			Arena::Destroy(scene.arena);
+			free(scene.arenaMem);
+		}
 	}
 
 	bool RenderFrame()
@@ -95,6 +150,8 @@ namespace jv::ge
 		const auto result = vkDeviceWaitIdle(ge.app.device);
 		assert(!result);
 
+		DestroyScenes();
+		ge.arena.DestroyScope(ge.scope);
 		vk::SwapChain::Destroy(ge.arena, ge.app, ge.swapChain);
 		vk::init::DestroyApp(ge.app);
 		vk::GLFWApp::Destroy(ge.glfwApp);
@@ -102,5 +159,7 @@ namespace jv::ge
 		Arena::Destroy(ge.arena);
 		free(ge.tempArenaMem);
 		free(ge.arenaMem);
+
+		ge.initialized = false;
 	}
 }

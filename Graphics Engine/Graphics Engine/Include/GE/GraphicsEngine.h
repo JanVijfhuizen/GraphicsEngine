@@ -11,6 +11,8 @@ namespace jv::ge
 
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
+	[[nodiscard]] uint32_t CreateScene();
+	void ClearScene(uint32_t handle);
 	[[nodiscard]] bool RenderFrame();
 	void Shutdown();
 }
