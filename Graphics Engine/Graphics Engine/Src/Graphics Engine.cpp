@@ -1,11 +1,21 @@
 #include "pch.h"
 
-#include "VkExamples/VkHelloWorld.h"
-#include "VkHL/VkProgram.h"
+#include "GE/GraphicsEngine.h"
 
 int main()
 {
-	jv::vk::ProgramInfo info{};
-	jv::vk::example::DefineHelloWorldExample(info);
-	Run(info);
+	jv::ge::CreateInfo info{};
+	Initialize(info);
+
+	for (int i = 0; i < 100; ++i)
+	{
+		jv::ge::RenderFrame();
+	}
+
+	jv::ge::Resize(glm::ivec2(800), false);
+
+	while (jv::ge::RenderFrame())
+		;
+
+	jv::ge::Shutdown();
 }

@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "VkHL/VkProgram.h"
+#include "VkProgram.h"
 
 namespace jv::vk::example
 {
-	void DefineHelloWorldExample(ProgramInfo& info);
+	void DefineHelloWorldExample(ProgramCreateInfo& info);
 }

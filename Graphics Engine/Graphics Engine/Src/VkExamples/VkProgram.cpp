@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#include "VkHL/VkProgram.h"
+#include "VkExamples/VkProgram.h"
 
 #include "JLib/Array.h"
 #include "Vk/VkFreeArena.h"
@@ -7,7 +7,7 @@
 #include "Vk/VkSwapChain.h"
 #include "VkHL/VkGLFWApp.h"
 
-namespace jv::vk
+namespace jv::vk::example
 {
 	void* Alloc(const uint32_t size)
 	{
@@ -19,7 +19,7 @@ namespace jv::vk
 		return free(ptr);
 	}
 
-	void Run(const ProgramInfo& programInfo)
+	void Run(const ProgramCreateInfo& programInfo)
 	{
 		const auto arenaMem = malloc(programInfo.arenaSize);
 		const auto tempArenaMem = malloc(programInfo.tempArenaSize);
@@ -41,7 +41,7 @@ namespace jv::vk
 		program.tempArena = Arena::Create(info);
 
 		info.memory = tempArenaMem;
-		info.memorySize = programInfo.tempArenaSize;
+		info.memorySize = programInfo.frameArenaSize;
 		program.frameArena = Arena::Create(info);
 
 		info.memory = vkArenaMem;

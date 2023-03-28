@@ -3,7 +3,7 @@
 #include "Vk/VkFreeArena.h"
 #include "Vk/VkSwapChain.h"
 
-namespace jv::vk
+namespace jv::vk::example
 {
 	constexpr uint32_t DEFAULT_ARENA_PAGE_SIZE = 4096;
 
@@ -33,7 +33,7 @@ namespace jv::vk
 		uint32_t frameIndex;
 	};
 
-	struct ProgramInfo final
+	struct ProgramCreateInfo final
 	{
 		const char* name = "Default JV VK Program";
 		glm::ivec2 resolution{800, 600};
@@ -41,8 +41,8 @@ namespace jv::vk
 
 		uint32_t arenaSize = DEFAULT_ARENA_PAGE_SIZE;
 		uint32_t tempArenaSize = DEFAULT_ARENA_PAGE_SIZE;
-		uint32_t vkArenaSize = DEFAULT_ARENA_PAGE_SIZE;
 		uint32_t frameArenaSize = DEFAULT_ARENA_PAGE_SIZE;
+		uint32_t vkArenaSize = DEFAULT_ARENA_PAGE_SIZE;
 
 		// Returns a user defined pointer.
 		void*(*onBegin)(Program& program) = nullptr;
@@ -53,5 +53,5 @@ namespace jv::vk
 		bool(*onSwapChainRenderUpdate)(Program& program, void* userPtr, VkCommandBuffer cmd) = nullptr;
 	};
 
-	void Run(const ProgramInfo& programInfo);
+	void Run(const ProgramCreateInfo& programInfo);
 }

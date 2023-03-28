@@ -207,7 +207,7 @@ namespace jv::vk::example
 		return true;
 	}
 
-	void DefineHelloWorldExample(ProgramInfo& info)
+	void DefineHelloWorldExample(ProgramCreateInfo& info)
 	{
 		info.name = "Hello World";
 		info.onBegin = OnBegin;
