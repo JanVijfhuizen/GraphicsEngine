@@ -138,19 +138,23 @@ namespace jv::ge
 			case ImageCreateInfo::Format::color:
 				vkImageCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				resolution.z = 3;
 				break;
 			case ImageCreateInfo::Format::grayScale:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				break;
 			case ImageCreateInfo::Format::depth:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 				break;
 			case ImageCreateInfo::Format::stencil:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
+				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 				break;
 			default:
 				std::cerr << "Format not supported." << std::endl;
