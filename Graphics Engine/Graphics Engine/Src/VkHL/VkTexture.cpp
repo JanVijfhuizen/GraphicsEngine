@@ -91,13 +91,9 @@ namespace jv::vk
 		stbi_uc* pixels = stbi_load(imageFilePath, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 		assert(pixels);
 
-		Array<unsigned char> aPixels{};
-		aPixels.length = static_cast<uint32_t>(texWidth) * texHeight * texChannels;
-		aPixels.ptr = pixels;
-
 		assert(info.usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 		auto image = Image::Create(arena, freeArena, app, info, glm::ivec3(texWidth, texHeight, texChannels));
-		image.FillImage(arena, freeArena, app, aPixels);
+		image.FillImage(arena, freeArena, app, pixels);
 
 		// Free pixels.
 		stbi_image_free(pixels);
@@ -112,12 +108,8 @@ namespace jv::vk
 		stbi_uc* pixels = stbi_load(imageFilePath, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 		assert(pixels);
 
-		Array<unsigned char> aPixels{};
-		aPixels.length = static_cast<uint32_t>(texWidth) * texHeight * texChannels;
-		aPixels.ptr = pixels;
-
 		assert(image.usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-		image.FillImage(arena, freeArena, app, aPixels);
+		image.FillImage(arena, freeArena, app, pixels);
 
 		// Free pixels.
 		stbi_image_free(pixels);

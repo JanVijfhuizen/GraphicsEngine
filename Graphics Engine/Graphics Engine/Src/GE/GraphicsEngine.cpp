@@ -5,6 +5,7 @@
 #include "JLib/LinkedList.h"
 #include "JLib/LinkedListUtils.h"
 #include "Vk/VkFreeArena.h"
+#include "Vk/VkImage.h"
 #include "Vk/VkInit.h"
 #include "Vk/VkSwapChain.h"
 #include "VkHL/VkGLFWApp.h"
@@ -13,11 +14,18 @@ namespace jv::ge
 {
 	constexpr uint32_t ARENA_SIZE = 4096;
 
+	struct Image final
+	{
+		vk::Image image;
+		ImageCreateInfo info;
+	};
+
 	struct Scene final
 	{
 		Arena arena;
 		void* arenaMem;
 		vk::FreeArena freeArena;
+		LinkedList<Image> images{};
 	};
 
 	struct GraphicsEngine final
@@ -95,7 +103,7 @@ namespace jv::ge
 
 		assert(ge.initialized);
 
-		auto& scene = Add(ge.arena, ge.scenes);
+		auto& scene = Add(ge.arena, ge.scenes) = {};
 		scene.arenaMem = malloc(SCENE_ARENA_SIZE);
 
 		ArenaCreateInfo arenaInfo{};
@@ -115,6 +123,66 @@ namespace jv::ge
 
 		auto& scene = ge.scenes[handle];
 		assert(ge.initialized);
+	}
+
+	uint32_t AddImage(const ImageCreateInfo& info, const uint32_t handle)
+	{
+		assert(ge.initialized);
+		auto& scene = ge.scenes[handle];
+
+		vk::ImageCreateInfo vkImageCreateInfo{};
+		glm::vec3 resolution = glm::vec3(info.resolution, 1);
+
+		switch (info.format)
+		{
+			case ImageCreateInfo::Format::color:
+				vkImageCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+				resolution.z = 3;
+				break;
+			case ImageCreateInfo::Format::grayScale:
+				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
+				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+				break;
+			case ImageCreateInfo::Format::depth:
+				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
+				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+				break;
+			case ImageCreateInfo::Format::stencil:
+				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
+				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
+				break;
+			default:
+				std::cerr << "Format not supported." << std::endl;
+		}
+
+		const auto vkImage = vk::Image::Create(scene.arena, scene.freeArena, ge.app, vkImageCreateInfo, resolution);
+		auto& image = Add(scene.arena, scene.images) = {};
+		image.image = vkImage;
+		image.info = info;
+		return scene.images.GetCount() - 1;
+	}
+
+	void FillImage(const uint32_t sceneHandle, const uint32_t imageHandle, unsigned char* pixels)
+	{
+		assert(ge.initialized);
+		auto& scene = ge.scenes[sceneHandle];
+		auto& image = scene.images[imageHandle];
+		image.image.FillImage(scene.arena, scene.freeArena, ge.app, pixels);
+	}
+
+	uint32_t AddMesh(const ImageCreateInfo& info, const uint32_t handle)
+	{
+		assert(ge.initialized);
+		auto& scene = ge.scenes[handle];
+		return 0;
+	}
+
+	uint32_t AddBuffer(const ImageCreateInfo& info, const uint32_t handle)
+	{
+		assert(ge.initialized);
+		auto& scene = ge.scenes[handle];
+		return 0;
 	}
 
 	void DestroyScenes()
@@ -141,6 +209,18 @@ namespace jv::ge
 		ge.swapChain.EndFrame(ge.tempArena, ge.app);
 
 		return true;
+	}
+
+	uint32_t GetFrameCount()
+	{
+		assert(ge.initialized);
+		return ge.swapChain.GetLength();
+	}
+
+	uint32_t GetFrameIndex()
+	{
+		assert(ge.initialized);
+		return ge.swapChain.GetIndex();
 	}
 
 	void Shutdown()
