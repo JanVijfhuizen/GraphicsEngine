@@ -9,6 +9,7 @@
 #include "Vk/VkInit.h"
 #include "Vk/VkSwapChain.h"
 #include "VkHL/VkGLFWApp.h"
+#include "VkHL/VkMesh.h"
 
 namespace jv::ge
 {
@@ -20,12 +21,19 @@ namespace jv::ge
 		ImageCreateInfo info;
 	};
 
+	struct Mesh final
+	{
+		vk::Mesh mesh;
+		MeshCreateInfo info;
+	};
+
 	struct Scene final
 	{
 		Arena arena;
 		void* arenaMem;
 		vk::FreeArena freeArena;
 		LinkedList<Image> images{};
+		LinkedList<Mesh> meshes{};
 	};
 
 	struct GraphicsEngine final
@@ -175,18 +183,38 @@ namespace jv::ge
 		image.image.FillImage(scene.arena, scene.freeArena, ge.app, pixels);
 	}
 
-	uint32_t AddMesh(const ImageCreateInfo& info, const uint32_t handle)
+	uint32_t AddMesh(const MeshCreateInfo& info, const uint32_t handle)
 	{
 		assert(ge.initialized);
 		auto& scene = ge.scenes[handle];
-		return 0;
-	}
 
-	uint32_t AddBuffer(const ImageCreateInfo& info, const uint32_t handle)
-	{
-		assert(ge.initialized);
-		auto& scene = ge.scenes[handle];
-		return 0;
+		Array<uint16_t> indices{};
+		indices.ptr = info.indices;
+		indices.length = info.indicesLength;
+
+		vk::Mesh vkMesh{};
+		if(info.type == MeshCreateInfo::Type::vertex2D)
+		{
+			Array<vk::Vertex2d> v2d{};
+			v2d.length = info.verticesLength;
+			v2d.ptr = reinterpret_cast<vk::Vertex2d*>(info.vertices2d);
+			vkMesh = vk::Mesh::Create(scene.arena, scene.freeArena, ge.app, v2d, indices);
+		}
+		else if(info.type == MeshCreateInfo::Type::vertex3D)
+		{
+			Array<vk::Vertex3d> v3d{};
+			v3d.length = info.verticesLength;
+			v3d.ptr = reinterpret_cast<vk::Vertex3d*>(info.vertices3d);
+			vkMesh = vk::Mesh::Create(scene.arena, scene.freeArena, ge.app, v3d, indices);
+		}
+		else
+			std::cerr << "Vertex type not supported." << std::endl;
+
+		auto& mesh = Add(scene.arena, scene.meshes) = {};
+		mesh.mesh = vkMesh;
+		mesh.info = info;
+			
+		return scene.meshes.GetCount() - 1;
 	}
 
 	void DestroyScenes()
