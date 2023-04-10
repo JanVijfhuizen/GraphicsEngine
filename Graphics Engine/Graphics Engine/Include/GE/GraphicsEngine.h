@@ -2,6 +2,25 @@
 
 namespace jv::ge
 {
+	enum class VertexType
+	{
+		v2D,
+		v3D
+	};
+
+	struct Vertex2D
+	{
+		glm::vec2 position{};
+		glm::vec2 textureCoordinates{};
+	};
+
+	struct Vertex3D
+	{
+		glm::vec3 position{};
+		glm::vec3 normal{ 0, 0, 1 };
+		glm::vec2 textureCoordinates{};
+	};
+
 	struct CreateInfo final
 	{
 		const char* name = "Graphics Engine";
@@ -31,19 +50,6 @@ namespace jv::ge
 
 	struct MeshCreateInfo final
 	{
-		struct Vertex2D
-		{
-			glm::vec2 position{};
-			glm::vec2 textureCoordinates{};
-		};
-
-		struct Vertex3D
-		{
-			glm::vec3 position{};
-			glm::vec3 normal{ 0, 0, 1 };
-			glm::vec2 textureCoordinates{};
-		};
-
 		union
 		{
 			Vertex2D* vertices2d;
@@ -53,11 +59,18 @@ namespace jv::ge
 		uint16_t* indices;
 		uint32_t indicesLength;
 
+		VertexType vertexType = VertexType::v2D;
+	};
+
+	struct BufferCreateInfo final
+	{
 		enum class Type
 		{
-			vertex2D,
-			vertex3D
-		} type = Type::vertex2D;
+			uniform,
+			storage
+		} type = Type::uniform;
+
+		uint32_t size;
 	};
 
 	void Initialize(const CreateInfo& info);
@@ -67,6 +80,8 @@ namespace jv::ge
 	[[nodiscard]] uint32_t AddImage(const ImageCreateInfo& info, uint32_t handle);
 	void FillImage(uint32_t sceneHandle, uint32_t imageHandle, unsigned char* pixels);
 	[[nodiscard]] uint32_t AddMesh(const MeshCreateInfo& info, uint32_t handle);
+	[[nodiscard]] uint32_t AddBuffer(const BufferCreateInfo& info, uint32_t handle);
+	void UpdateBuffer(uint32_t sceneHandle, uint32_t bufferHandle, const void* data, uint32_t size, uint32_t offset);
 	[[nodiscard]] bool RenderFrame();
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();

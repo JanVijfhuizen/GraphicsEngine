@@ -27,6 +27,12 @@ namespace jv::ge
 		MeshCreateInfo info;
 	};
 
+	struct Buffer final
+	{
+		vk::Buffer buffer;
+		BufferCreateInfo info;
+	};
+
 	struct Scene final
 	{
 		Arena arena;
@@ -34,6 +40,7 @@ namespace jv::ge
 		vk::FreeArena freeArena;
 		LinkedList<Image> images{};
 		LinkedList<Mesh> meshes{};
+		LinkedList<Buffer> buffers{};
 	};
 
 	struct GraphicsEngine final
@@ -193,14 +200,14 @@ namespace jv::ge
 		indices.length = info.indicesLength;
 
 		vk::Mesh vkMesh{};
-		if(info.type == MeshCreateInfo::Type::vertex2D)
+		if(info.vertexType == VertexType::v2D)
 		{
 			Array<vk::Vertex2d> v2d{};
 			v2d.length = info.verticesLength;
 			v2d.ptr = reinterpret_cast<vk::Vertex2d*>(info.vertices2d);
 			vkMesh = vk::Mesh::Create(scene.arena, scene.freeArena, ge.app, v2d, indices);
 		}
-		else if(info.type == MeshCreateInfo::Type::vertex3D)
+		else if(info.vertexType == VertexType::v3D)
 		{
 			Array<vk::Vertex3d> v3d{};
 			v3d.length = info.verticesLength;
@@ -215,6 +222,58 @@ namespace jv::ge
 		mesh.info = info;
 			
 		return scene.meshes.GetCount() - 1;
+	}
+
+	uint32_t AddBuffer(const BufferCreateInfo& info, const uint32_t handle)
+	{
+		assert(ge.initialized);
+		auto& scene = ge.scenes[handle];
+
+		VkBufferCreateInfo vertBufferInfo{};
+		vertBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		vertBufferInfo.size = info.size;
+		vertBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		switch (info.type)
+		{
+			case BufferCreateInfo::Type::uniform:
+				vertBufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+				break;
+			case BufferCreateInfo::Type::storage:
+				vertBufferInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+				break;
+			default: 
+				std::cerr << "Buffer type not supported." << std::endl;
+		}
+		
+		vk::Buffer vkBuffer{};
+		const auto result = vkCreateBuffer(ge.app.device, &vertBufferInfo, nullptr, &vkBuffer.buffer);
+		assert(!result);
+
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements(ge.app.device, vkBuffer.buffer, &memRequirements);
+
+		constexpr VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		vkBuffer.memoryHandle = scene.freeArena.Alloc(scene.arena, ge.app, memRequirements, memoryPropertyFlags, 1, vkBuffer.memory);
+
+		auto& buffer = Add(scene.arena, scene.buffers) = {};
+		buffer.buffer = vkBuffer;
+		buffer.info = info;
+
+		return scene.buffers.GetCount() - 1;
+	}
+
+	void UpdateBuffer(const uint32_t sceneHandle, const uint32_t bufferHandle, const void* data, const uint32_t size, const uint32_t offset)
+	{
+		assert(ge.initialized);
+		const auto& scene = ge.scenes[sceneHandle];
+		const auto& buffer = scene.buffers[bufferHandle];
+
+		void* vkData;
+		const auto result = vkMapMemory(ge.app.device, buffer.buffer.memory.memory, buffer.buffer.memory.offset + offset, size, 0, &vkData);
+		assert(!result);
+		memcpy(vkData, data, size);
+		vkUnmapMemory(ge.app.device, buffer.buffer.memory.memory);
 	}
 
 	void DestroyScenes()
