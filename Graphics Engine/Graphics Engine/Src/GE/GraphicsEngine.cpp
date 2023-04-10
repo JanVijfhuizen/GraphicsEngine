@@ -175,9 +175,11 @@ namespace jv::ge
 			}
 		}
 
-		vk::FreeArena::Destroy(scene.arena, ge.app, scene.freeArena);
-		Arena::Destroy(scene.arena);
-		free(scene.arenaMem);
+		scene.arena.Clear();
+		scene.allocations = {};
+		scene.images = {};
+		scene.meshes = {};
+		scene.buffers = {};
 	}
 
 	uint32_t AddImage(const ImageCreateInfo& info, const uint32_t handle)
@@ -326,7 +328,14 @@ namespace jv::ge
 
 		const auto length = ge.scenes.GetCount();
 		for (uint32_t i = 0; i < length; ++i)
+		{
+			auto& scene = ge.scenes[i];
 			ClearScene(i);
+
+			vk::FreeArena::Destroy(scene.arena, ge.app, scene.freeArena);
+			Arena::Destroy(scene.arena);
+			free(scene.arenaMem);
+		}
 	}
 
 	bool RenderFrame()
