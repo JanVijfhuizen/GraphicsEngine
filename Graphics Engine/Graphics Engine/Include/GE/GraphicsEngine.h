@@ -73,6 +73,14 @@ namespace jv::ge
 		uint32_t size;
 	};
 
+	struct ShaderCreateInfo final
+	{
+		const char* vertexCode = nullptr;
+		uint32_t vertexCodeLength;
+		const char* fragmentCode = nullptr;
+		uint32_t fragmentCodeLength;
+	};
+
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] uint32_t CreateScene();
@@ -82,6 +90,7 @@ namespace jv::ge
 	[[nodiscard]] uint32_t AddMesh(const MeshCreateInfo& info, uint32_t handle);
 	[[nodiscard]] uint32_t AddBuffer(const BufferCreateInfo& info, uint32_t handle);
 	void UpdateBuffer(uint32_t sceneHandle, uint32_t bufferHandle, const void* data, uint32_t size, uint32_t offset);
+	[[nodiscard]] uint32_t CreateShader(const ShaderCreateInfo& info);
 	[[nodiscard]] bool RenderFrame();
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();

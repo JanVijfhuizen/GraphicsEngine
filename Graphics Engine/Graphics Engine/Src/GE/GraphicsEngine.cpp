@@ -7,6 +7,7 @@
 #include "Vk/VkFreeArena.h"
 #include "Vk/VkImage.h"
 #include "Vk/VkInit.h"
+#include "Vk/VkShader.h"
 #include "Vk/VkSwapChain.h"
 #include "VkHL/VkGLFWApp.h"
 #include "VkHL/VkMesh.h"
@@ -40,6 +41,12 @@ namespace jv::ge
 		BufferCreateInfo info;
 	};
 
+	struct Shader final
+	{
+		VkShaderModule vertModule = nullptr;
+		VkShaderModule fragModule = nullptr;
+	};
+
 	struct Scene final
 	{
 		Arena arena;
@@ -67,6 +74,7 @@ namespace jv::ge
 		uint64_t scope;
 
 		LinkedList<Scene> scenes{};
+		LinkedList<Shader> shaders{};
 	} ge{};
 
 	void* Alloc(const uint32_t size)
@@ -322,6 +330,16 @@ namespace jv::ge
 		vkUnmapMemory(ge.app.device, buffer.buffer.memory.memory);
 	}
 
+	uint32_t CreateShader(const ShaderCreateInfo& info)
+	{
+		auto& shader = Add(ge.arena, ge.shaders);
+		if(info.vertexCode)
+			shader.vertModule = CreateShaderModule(ge.app, info.vertexCode, info.vertexCodeLength);
+		if (info.fragmentCode)
+			shader.fragModule = CreateShaderModule(ge.app, info.fragmentCode, info.fragmentCodeLength);
+		return ge.shaders.GetCount() - 1;
+	}
+
 	void DestroyScenes()
 	{
 		assert(ge.initialized);
@@ -374,6 +392,15 @@ namespace jv::ge
 		DestroyScenes();
 		ge.arena.DestroyScope(ge.scope);
 		vk::SwapChain::Destroy(ge.arena, ge.app, ge.swapChain);
+
+		for (const auto& shader : ge.shaders)
+		{
+			if (shader.vertModule)
+				vkDestroyShaderModule(ge.app.device, shader.vertModule, nullptr);
+			if(shader.fragModule)
+				vkDestroyShaderModule(ge.app.device, shader.fragModule, nullptr);
+		}
+
 		vk::init::DestroyApp(ge.app);
 		vk::GLFWApp::Destroy(ge.glfwApp);
 		Arena::Destroy(ge.tempArena);
