@@ -11,7 +11,7 @@ namespace jv::vk
 		vkCmdDrawIndexed(cmd, indexCount, count, 0, 0, 0);
 	}
 
-	void Mesh::Destroy(const FreeArena& freeArena, const Mesh& mesh, const App& app)
+	void Mesh::Destroy(const FreeArena& freeArena, const App& app, const Mesh& mesh)
 	{
 		freeArena.Free(mesh.indexBuffer.memoryHandle);
 		freeArena.Free(mesh.vertexBuffer.memoryHandle);

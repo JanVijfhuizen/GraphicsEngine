@@ -129,6 +129,6 @@ namespace jv::vk
 			return mesh;
 		}
 
-		static void Destroy(const FreeArena& freeArena, const Mesh& mesh, const App& app);
+		static void Destroy(const FreeArena& freeArena, const App& app, const Mesh& mesh);
 	};
 }

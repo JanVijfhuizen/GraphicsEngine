@@ -194,7 +194,7 @@ namespace jv::vk::example
 		vkDestroyDescriptorSetLayout(program.vkApp.device, ptr->layout, nullptr);
 		Pipeline::Destroy(ptr->pipeline, program.vkApp);
 		Image::Destroy(program.vkGPUArena, program.vkApp, ptr->image);
-		Mesh::Destroy(program.vkGPUArena, ptr->mesh, program.vkApp);
+		Mesh::Destroy(program.vkGPUArena, program.vkApp, ptr->mesh);
 
 		program.arena.DestroyScope(ptr->scope);
 		program.arena.Free(userPtr);

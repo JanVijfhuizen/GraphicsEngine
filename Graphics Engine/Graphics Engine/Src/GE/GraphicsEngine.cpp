@@ -15,6 +15,13 @@ namespace jv::ge
 {
 	constexpr uint32_t ARENA_SIZE = 4096;
 
+	enum class AllocationType
+	{
+		image,
+		mesh,
+		buffer
+	};
+
 	struct Image final
 	{
 		vk::Image image;
@@ -38,6 +45,7 @@ namespace jv::ge
 		Arena arena;
 		void* arenaMem;
 		vk::FreeArena freeArena;
+		LinkedList<AllocationType> allocations;
 		LinkedList<Image> images{};
 		LinkedList<Mesh> meshes{};
 		LinkedList<Buffer> buffers{};
@@ -179,6 +187,8 @@ namespace jv::ge
 		auto& image = Add(scene.arena, scene.images) = {};
 		image.image = vkImage;
 		image.info = info;
+
+		Add(scene.arena, scene.allocations) = AllocationType::image;
 		return scene.images.GetCount() - 1;
 	}
 
@@ -220,7 +230,8 @@ namespace jv::ge
 		auto& mesh = Add(scene.arena, scene.meshes) = {};
 		mesh.mesh = vkMesh;
 		mesh.info = info;
-			
+
+		Add(scene.arena, scene.allocations) = AllocationType::mesh;
 		return scene.meshes.GetCount() - 1;
 	}
 
@@ -260,6 +271,7 @@ namespace jv::ge
 		buffer.buffer = vkBuffer;
 		buffer.info = info;
 
+		Add(scene.arena, scene.allocations) = AllocationType::buffer;
 		return scene.buffers.GetCount() - 1;
 	}
 
@@ -282,6 +294,35 @@ namespace jv::ge
 
 		for (auto& scene : ge.scenes)
 		{
+			uint32_t imageIndex = 0;
+			uint32_t meshIndex = 0;
+			uint32_t bufferIndex = 0;
+
+			vk::Image image;
+			vk::Mesh mesh;
+			vk::Buffer buffer;
+
+			for (const auto& allocation : scene.allocations)
+			{
+				switch (allocation)
+				{
+					case AllocationType::image:
+						image = scene.images[imageIndex++].image;
+						vk::Image::Destroy(scene.freeArena, ge.app, image);
+						break;
+					case AllocationType::mesh:
+						mesh = scene.meshes[meshIndex++].mesh;
+						vk::Mesh::Destroy(scene.freeArena, ge.app, mesh);
+						break;
+					case AllocationType::buffer:
+						buffer = scene.buffers[bufferIndex++].buffer;
+						vkDestroyBuffer(ge.app.device, buffer.buffer, nullptr);
+						break;
+					default: 
+						std::cerr << "Allocation type not supported." << std::endl;
+				}
+			}
+
 			vk::FreeArena::Destroy(scene.arena, ge.app, scene.freeArena);
 			Arena::Destroy(scene.arena);
 			free(scene.arenaMem);
