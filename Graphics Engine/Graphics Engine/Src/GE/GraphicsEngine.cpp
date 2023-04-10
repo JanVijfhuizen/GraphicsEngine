@@ -145,7 +145,39 @@ namespace jv::ge
 		assert(ge.initialized);
 
 		auto& scene = ge.scenes[handle];
-		assert(ge.initialized);
+
+		uint32_t imageIndex = 0;
+		uint32_t meshIndex = 0;
+		uint32_t bufferIndex = 0;
+
+		vk::Image image;
+		vk::Mesh mesh;
+		vk::Buffer buffer;
+
+		for (const auto& allocation : scene.allocations)
+		{
+			switch (allocation)
+			{
+			case AllocationType::image:
+				image = scene.images[imageIndex++].image;
+				vk::Image::Destroy(scene.freeArena, ge.app, image);
+				break;
+			case AllocationType::mesh:
+				mesh = scene.meshes[meshIndex++].mesh;
+				vk::Mesh::Destroy(scene.freeArena, ge.app, mesh);
+				break;
+			case AllocationType::buffer:
+				buffer = scene.buffers[bufferIndex++].buffer;
+				vkDestroyBuffer(ge.app.device, buffer.buffer, nullptr);
+				break;
+			default:
+				std::cerr << "Allocation type not supported." << std::endl;
+			}
+		}
+
+		vk::FreeArena::Destroy(scene.arena, ge.app, scene.freeArena);
+		Arena::Destroy(scene.arena);
+		free(scene.arenaMem);
 	}
 
 	uint32_t AddImage(const ImageCreateInfo& info, const uint32_t handle)
@@ -292,41 +324,9 @@ namespace jv::ge
 	{
 		assert(ge.initialized);
 
-		for (auto& scene : ge.scenes)
-		{
-			uint32_t imageIndex = 0;
-			uint32_t meshIndex = 0;
-			uint32_t bufferIndex = 0;
-
-			vk::Image image;
-			vk::Mesh mesh;
-			vk::Buffer buffer;
-
-			for (const auto& allocation : scene.allocations)
-			{
-				switch (allocation)
-				{
-					case AllocationType::image:
-						image = scene.images[imageIndex++].image;
-						vk::Image::Destroy(scene.freeArena, ge.app, image);
-						break;
-					case AllocationType::mesh:
-						mesh = scene.meshes[meshIndex++].mesh;
-						vk::Mesh::Destroy(scene.freeArena, ge.app, mesh);
-						break;
-					case AllocationType::buffer:
-						buffer = scene.buffers[bufferIndex++].buffer;
-						vkDestroyBuffer(ge.app.device, buffer.buffer, nullptr);
-						break;
-					default: 
-						std::cerr << "Allocation type not supported." << std::endl;
-				}
-			}
-
-			vk::FreeArena::Destroy(scene.arena, ge.app, scene.freeArena);
-			Arena::Destroy(scene.arena);
-			free(scene.arenaMem);
-		}
+		const auto length = ge.scenes.GetCount();
+		for (uint32_t i = 0; i < length; ++i)
+			ClearScene(i);
 	}
 
 	bool RenderFrame()
