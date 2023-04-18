@@ -167,12 +167,12 @@ namespace jv::vk
 
 		VkRenderPassCreateInfo renderPassCreateInfo{};
 		renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassCreateInfo.attachmentCount = 1;
 		renderPassCreateInfo.pAttachments = &attachmentInfo;
-		renderPassCreateInfo.subpassCount = 1;
+		renderPassCreateInfo.attachmentCount = 1;
 		renderPassCreateInfo.pSubpasses = &subpassDescription;
-		renderPassCreateInfo.dependencyCount = 1;
+		renderPassCreateInfo.subpassCount = 1;
 		renderPassCreateInfo.pDependencies = &subpassDependency;
+		renderPassCreateInfo.dependencyCount = 1;
 
 		const auto renderPassResult = vkCreateRenderPass(app.device, &renderPassCreateInfo, nullptr, &renderPass);
 		assert(!renderPassResult);
@@ -354,6 +354,11 @@ namespace jv::vk
 	VkRenderPass SwapChain::GetRenderPass() const
 	{
 		return renderPass;
+	}
+
+	VkFormat SwapChain::GetFormat() const
+	{
+		return surfaceFormat.format;
 	}
 
 	SwapChain SwapChain::Create(Arena& arena, Arena& tempArena, const App& app, const glm::ivec2 resolution)

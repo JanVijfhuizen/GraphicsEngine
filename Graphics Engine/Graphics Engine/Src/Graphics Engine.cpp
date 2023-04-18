@@ -4,6 +4,18 @@
 
 #include <stb_image.h>
 
+#include "JLib/FileLoader.h"
+
+void* Alloc(const uint32_t size)
+{
+	return malloc(size);
+}
+
+void Free(void* ptr)
+{
+	return free(ptr);
+}
+
 int main()
 {
 	jv::ge::CreateInfo info{};
@@ -51,6 +63,37 @@ int main()
 	const auto mesh = AddMesh(mci, scene);
 
 	jv::ge::Resize(glm::ivec2(800), false);
+
+	jv::ArenaCreateInfo arenaCreateInfo{};
+	arenaCreateInfo.memory = malloc(4096);
+	arenaCreateInfo.memorySize = 4096;
+	arenaCreateInfo.alloc = Alloc;
+	arenaCreateInfo.free = Free;
+	auto arena = jv::Arena::Create(arenaCreateInfo);
+	const auto vertCode = jv::file::Load(arena, "Shaders/vert.spv");
+	const auto fragCode = jv::file::Load(arena, "Shaders/frag.spv");
+
+	jv::ge::ShaderCreateInfo shaderCreateInfo{};
+	shaderCreateInfo.vertexCode = vertCode.ptr;
+	shaderCreateInfo.vertexCodeLength = vertCode.length;
+	shaderCreateInfo.fragmentCode = fragCode.ptr;
+	shaderCreateInfo.fragmentCodeLength = fragCode.length;
+	const auto shader = CreateShader(shaderCreateInfo);
+
+	jv::ge::PipelineCreateInfo::Binding binding{};
+	binding.stage = jv::ge::ShaderStage::fragment;
+	binding.type = jv::ge::BindingType::sampler;
+
+	jv::ge::PipelineCreateInfo::Layout layout{};
+	layout.bindingsCount = 1;
+	layout.bindings = &binding;
+
+	jv::ge::PipelineCreateInfo pipelineCreateInfo{};
+	pipelineCreateInfo.resolution = info.resolution;
+	pipelineCreateInfo.shader = shader;
+	pipelineCreateInfo.layoutCount = 1;
+	pipelineCreateInfo.layouts = &layout;
+	const auto pipeline = CreatePipeline(pipelineCreateInfo);
 
 	while (jv::ge::RenderFrame())
 		;

@@ -94,19 +94,19 @@ namespace jv::ge
 		uint32_t fragmentCodeLength;
 	};
 
-	struct BindingCreateInfo
-	{
-		BindingType type;
-		ShaderStage stage;
-		size_t size = sizeof(int32_t);
-		uint32_t count = 1;
-	};
-
 	struct PipelineCreateInfo final
 	{
+		struct Binding final
+		{
+			BindingType type;
+			ShaderStage stage;
+			size_t size = sizeof(int32_t);
+			uint32_t count = 1;
+		};
+
 		struct Layout final
 		{
-			BindingCreateInfo* bindings;
+			Binding* bindings;
 			uint32_t bindingsCount;
 		};
 
@@ -115,6 +115,8 @@ namespace jv::ge
 		uint32_t layoutCount;
 		glm::ivec2 resolution;
 		VertexType vertexType = VertexType::v2D;
+		bool colorOutput = true;
+		bool depthOutput = false;
 	};
 
 	void Initialize(const CreateInfo& info);

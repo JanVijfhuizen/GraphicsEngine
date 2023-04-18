@@ -52,8 +52,9 @@ namespace jv::ge
 
 	struct Pipeline final
 	{
-		vk::Pipeline pipeline;
 		Array<VkDescriptorSetLayout> layouts;
+		VkRenderPass renderPass;
+		vk::Pipeline pipeline;
 	};
 
 	struct Scene final
@@ -95,6 +96,34 @@ namespace jv::ge
 	void Free(void* ptr)
 	{
 		return free(ptr);
+	}
+
+	VkFormat FindSupportedFormat(const Array<VkFormat>& candidates,
+		const VkImageTiling tiling, const VkFormatFeatureFlags features)
+	{
+		assert(ge.initialized);
+
+		for (const auto& format : candidates)
+		{
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(ge.app.physicalDevice, format, &props);
+
+			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+				return format;
+			if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
+				return format;
+		}
+
+		throw std::exception("Format not available!");
+	}
+
+	VkFormat GetDepthBufferFormat()
+	{
+		VkFormat values[]{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+		Array<VkFormat> formats{};
+		formats.ptr = values;
+		formats.length = sizeof values / sizeof(VkFormat);
+		return FindSupportedFormat(formats, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 	}
 
 	void Initialize(const CreateInfo& info)
@@ -399,11 +428,93 @@ namespace jv::ge
 			layout = CreateLayout(ge.tempArena, ge.app, bindings);
 		}
 
-		vk::PipelineCreateInfo pipelineCreateInfo{};
-		pipelineCreateInfo.modules = modules;
-		pipelineCreateInfo.resolution = info.resolution;
-		pipelineCreateInfo.renderPass = program.swapChainRenderPass;
+		const auto& shader = ge.shaders[info.shader];
+
+		VkAttachmentReference colorAttachmentRef{};
+		colorAttachmentRef.attachment = 0;
+		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentDescription attachmentDescriptions[2]{};
 		
+		VkAttachmentDescription attachmentInfo = attachmentDescriptions[0];
+		attachmentInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		attachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		attachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachmentInfo.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachmentInfo.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		attachmentInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		attachmentInfo.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		attachmentInfo.format = ge.swapChain.GetFormat();
+
+		VkAttachmentDescription depthAttachment = attachmentDescriptions[info.colorOutput];
+		depthAttachment.format = GetDepthBufferFormat();
+		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depthAttachmentRef{};
+		depthAttachmentRef.attachment = info.colorOutput;
+		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpassDescription{};
+		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpassDescription.colorAttachmentCount = info.colorOutput;
+		subpassDescription.pColorAttachments = &colorAttachmentRef;
+
+		VkSubpassDependency subpassDependency{};
+		subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		subpassDependency.dstSubpass = 0;
+		subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		subpassDependency.srcAccessMask = 0;
+		subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		if (info.depthOutput)
+		{
+			subpassDescription.pDepthStencilAttachment = &depthAttachmentRef;
+			subpassDependency.srcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			subpassDependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			subpassDependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		}
+
+		VkRenderPassCreateInfo renderPassCreateInfo{};
+		renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassCreateInfo.pAttachments = &attachmentInfo;
+		renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(info.colorOutput) + info.depthOutput;
+		renderPassCreateInfo.pSubpasses = &subpassDescription;
+		renderPassCreateInfo.subpassCount = 1;
+		renderPassCreateInfo.pDependencies = &subpassDependency;
+		renderPassCreateInfo.dependencyCount = 1;
+
+		const auto renderPassResult = vkCreateRenderPass(ge.app.device, &renderPassCreateInfo, nullptr, &pipeline.renderPass);
+		assert(!renderPassResult);
+
+		vk::PipelineCreateInfo::Module modules[2]{};
+		uint32_t moduleCount = 0;
+		{
+			if(shader.vertModule)
+			{
+				auto& mod = modules[moduleCount++];
+				mod.stage = VK_SHADER_STAGE_VERTEX_BIT;
+				mod.module = shader.vertModule;
+			}
+			if (shader.fragModule)
+			{
+				auto& mod = modules[moduleCount++];
+				mod.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+				mod.module = shader.fragModule;
+			}
+		}
+
+		vk::PipelineCreateInfo pipelineCreateInfo{};
+		pipelineCreateInfo.modules.ptr = modules;
+		pipelineCreateInfo.modules.length = moduleCount;
+		pipelineCreateInfo.resolution = info.resolution;
+		pipelineCreateInfo.renderPass = pipeline.renderPass;
 		pipelineCreateInfo.layouts.ptr = pipeline.layouts.ptr;
 		pipelineCreateInfo.layouts.length = info.layoutCount;
 
@@ -422,7 +533,6 @@ namespace jv::ge
 		}
 
 		pipeline.pipeline = vk::Pipeline::Create(pipelineCreateInfo, ge.tempArena, ge.app);
-
 		return ge.pipeline.GetCount() - 1;
 	}
 
@@ -481,6 +591,8 @@ namespace jv::ge
 
 		for (const auto& pipeline : ge.pipeline)
 		{
+			vk::Pipeline::Destroy(pipeline.pipeline, ge.app);
+			vkDestroyRenderPass(ge.app.device, pipeline.renderPass, nullptr);
 			for (const auto& layout : pipeline.layouts)
 				vkDestroyDescriptorSetLayout(ge.app.device, layout, nullptr);
 		}
