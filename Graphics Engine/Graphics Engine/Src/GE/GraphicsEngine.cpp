@@ -2,11 +2,14 @@
 #include "GE/GraphicsEngine.h"
 
 #include "JLib/Array.h"
+#include "JLib/ArrayUtils.h"
 #include "JLib/LinkedList.h"
 #include "JLib/LinkedListUtils.h"
 #include "Vk/VkFreeArena.h"
 #include "Vk/VkImage.h"
 #include "Vk/VkInit.h"
+#include "Vk/VkLayout.h"
+#include "Vk/VkPipeline.h"
 #include "Vk/VkShader.h"
 #include "Vk/VkSwapChain.h"
 #include "VkHL/VkGLFWApp.h"
@@ -47,6 +50,12 @@ namespace jv::ge
 		VkShaderModule fragModule = nullptr;
 	};
 
+	struct Pipeline final
+	{
+		vk::Pipeline pipeline;
+		Array<VkDescriptorSetLayout> layouts;
+	};
+
 	struct Scene final
 	{
 		Arena arena;
@@ -75,6 +84,7 @@ namespace jv::ge
 
 		LinkedList<Scene> scenes{};
 		LinkedList<Shader> shaders{};
+		LinkedList<Pipeline> pipeline{};
 	} ge{};
 
 	void* Alloc(const uint32_t size)
@@ -332,12 +342,88 @@ namespace jv::ge
 
 	uint32_t CreateShader(const ShaderCreateInfo& info)
 	{
+		assert(ge.initialized);
 		auto& shader = Add(ge.arena, ge.shaders);
 		if(info.vertexCode)
 			shader.vertModule = CreateShaderModule(ge.app, info.vertexCode, info.vertexCodeLength);
 		if (info.fragmentCode)
 			shader.fragModule = CreateShaderModule(ge.app, info.fragmentCode, info.fragmentCodeLength);
 		return ge.shaders.GetCount() - 1;
+	}
+
+	uint32_t CreatePipeline(const PipelineCreateInfo& info)
+	{
+		assert(ge.initialized);
+		auto& pipeline = Add(ge.arena, ge.pipeline);
+		pipeline.layouts = CreateArray<VkDescriptorSetLayout>(ge.arena, info.layoutCount);
+
+		for (uint32_t i = 0; i < info.layoutCount; ++i)
+		{
+			const auto& layoutInfo = info.layouts[i];
+			auto& layout = pipeline.layouts[i];
+			const auto bindings = CreateArray<vk::Binding>(ge.tempArena, layoutInfo.bindingsCount);
+
+			for (uint32_t j = 0; j < layoutInfo.bindingsCount; ++j)
+			{
+				auto& binding = bindings[j] = {};
+				const auto& bindingInfo = layoutInfo.bindings[j];
+
+				switch (bindingInfo.type)
+				{
+				case BindingType::uniformBuffer:
+					binding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+					break;
+				case BindingType::storageBuffer:
+					binding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+					break;
+				case BindingType::sampler:
+					binding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					break;
+				default:
+					std::cerr << "Binding type not supported." << std::endl;
+				}
+
+				switch (bindingInfo.stage)
+				{
+				case ShaderStage::vertex:
+					binding.flag = VK_SHADER_STAGE_VERTEX_BIT;
+					break;
+				case ShaderStage::fragment:
+					binding.flag = VK_SHADER_STAGE_FRAGMENT_BIT;
+					break;
+				default:
+					std::cerr << "Binding stage not supported." << std::endl;
+				}
+			}
+
+			layout = CreateLayout(ge.tempArena, ge.app, bindings);
+		}
+
+		vk::PipelineCreateInfo pipelineCreateInfo{};
+		pipelineCreateInfo.modules = modules;
+		pipelineCreateInfo.resolution = info.resolution;
+		pipelineCreateInfo.renderPass = program.swapChainRenderPass;
+		
+		pipelineCreateInfo.layouts.ptr = pipeline.layouts.ptr;
+		pipelineCreateInfo.layouts.length = info.layoutCount;
+
+		switch (info.vertexType)
+		{
+			case VertexType::v2D:
+				pipelineCreateInfo.getBindingDescriptions = vk::Vertex2d::GetBindingDescriptions;
+				pipelineCreateInfo.getAttributeDescriptions = vk::Vertex2d::GetAttributeDescriptions;
+				break;
+			case VertexType::v3D:
+				pipelineCreateInfo.getBindingDescriptions = vk::Vertex3d::GetBindingDescriptions;
+				pipelineCreateInfo.getAttributeDescriptions = vk::Vertex3d::GetAttributeDescriptions;
+				break;
+			default:
+				std::cerr << "Vertex type not supported." << std::endl;
+		}
+
+		pipeline.pipeline = vk::Pipeline::Create(pipelineCreateInfo, ge.tempArena, ge.app);
+
+		return ge.pipeline.GetCount() - 1;
 	}
 
 	void DestroyScenes()
@@ -392,6 +478,12 @@ namespace jv::ge
 		DestroyScenes();
 		ge.arena.DestroyScope(ge.scope);
 		vk::SwapChain::Destroy(ge.arena, ge.app, ge.swapChain);
+
+		for (const auto& pipeline : ge.pipeline)
+		{
+			for (const auto& layout : pipeline.layouts)
+				vkDestroyDescriptorSetLayout(ge.app.device, layout, nullptr);
+		}
 
 		for (const auto& shader : ge.shaders)
 		{

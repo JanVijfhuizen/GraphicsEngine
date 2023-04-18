@@ -8,6 +8,19 @@ namespace jv::ge
 		v3D
 	};
 
+	enum class BindingType
+	{
+		uniformBuffer,
+		storageBuffer,
+		sampler
+	};
+
+	enum class ShaderStage
+	{
+		vertex,
+		fragment
+	};
+
 	struct Vertex2D
 	{
 		glm::vec2 position{};
@@ -81,6 +94,29 @@ namespace jv::ge
 		uint32_t fragmentCodeLength;
 	};
 
+	struct BindingCreateInfo
+	{
+		BindingType type;
+		ShaderStage stage;
+		size_t size = sizeof(int32_t);
+		uint32_t count = 1;
+	};
+
+	struct PipelineCreateInfo final
+	{
+		struct Layout final
+		{
+			BindingCreateInfo* bindings;
+			uint32_t bindingsCount;
+		};
+
+		uint32_t shader;
+		Layout* layouts;
+		uint32_t layoutCount;
+		glm::ivec2 resolution;
+		VertexType vertexType = VertexType::v2D;
+	};
+
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] uint32_t CreateScene();
@@ -91,6 +127,7 @@ namespace jv::ge
 	[[nodiscard]] uint32_t AddBuffer(const BufferCreateInfo& info, uint32_t handle);
 	void UpdateBuffer(uint32_t sceneHandle, uint32_t bufferHandle, const void* data, uint32_t size, uint32_t offset);
 	[[nodiscard]] uint32_t CreateShader(const ShaderCreateInfo& info);
+	[[nodiscard]] uint32_t CreatePipeline(const PipelineCreateInfo& info);
 	[[nodiscard]] bool RenderFrame();
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();
