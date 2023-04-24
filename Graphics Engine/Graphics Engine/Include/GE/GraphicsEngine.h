@@ -88,9 +88,8 @@ namespace jv::ge
 
 	struct PoolCreateInfo final
 	{
-		BindingType* types;
-		uint32_t typeCount;
-		uint32_t setCount;
+		uint32_t layout;
+		uint32_t capacity;
 	};
 
 	struct ShaderCreateInfo final

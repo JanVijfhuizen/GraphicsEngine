@@ -94,6 +94,11 @@ int main()
 	pipelineCreateInfo.layouts = &layout;
 	const auto pipeline = CreatePipeline(pipelineCreateInfo);
 
+	jv::ge::PoolCreateInfo poolCreateInfo{};
+	poolCreateInfo.layout = layout;
+	poolCreateInfo.capacity = 20;
+	const auto pool = AddPool(poolCreateInfo, scene);
+
 	// todo render call, descriptor pools, semaphores
 
 	while (jv::ge::RenderFrame())

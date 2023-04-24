@@ -48,7 +48,8 @@ namespace jv::ge
 
 	struct Pool final
 	{
-
+		VkDescriptorPool pool;
+		Array<VkDescriptorSet> sets;
 	};
 
 	struct Shader final
@@ -60,6 +61,7 @@ namespace jv::ge
 	struct Layout final
 	{
 		VkDescriptorSetLayout layout;
+		Array<BindingType> bindings;
 	};
 
 	struct Pipeline final
@@ -236,7 +238,7 @@ namespace jv::ge
 				break;
 			case AllocationType::pool:
 				pool = scene.pools[poolIndex++];
-				// todo
+				vkDestroyDescriptorPool(ge.app.device, pool.pool, nullptr);
 				break;
 			default:
 				std::cerr << "Allocation type not supported." << std::endl;
@@ -400,17 +402,17 @@ namespace jv::ge
 
 	uint32_t AddPool(const PoolCreateInfo& info, const uint32_t handle)
 	{
-		/*
 		assert(ge.initialized);
+		const auto& layout = ge.layouts[info.layout];
 		auto& scene = ge.scenes[handle];
 		auto& pool = Add(scene.arena, scene.pools) = {};
 
 		const auto scope = ge.tempArena.CreateScope();
-		const auto sizes = CreateArray<VkDescriptorPoolSize>(ge.tempArena, info.typeCount);
-		for (uint32_t i = 0; i < info.typeCount; ++i)
+		const auto sizes = CreateArray<VkDescriptorPoolSize>(ge.tempArena, layout.bindings.length);
+		for (uint32_t i = 0; i < layout.bindings.length; ++i)
 		{
-			auto size = sizes[i];
-			switch (info.types[i])
+			auto& size = sizes[i];
+			switch (layout.bindings[i])
 			{
 				case BindingType::uniformBuffer:
 					size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -424,7 +426,7 @@ namespace jv::ge
 			default: 
 				std::cerr << "Binding type not supported." << std::endl;
 			}
-			size.descriptorCount = info.setCount;
+			size.descriptorCount = info.capacity;
 		}
 
 		// Create descriptor pool.
@@ -432,31 +434,28 @@ namespace jv::ge
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = sizes.length;
 		poolInfo.pPoolSizes = sizes.ptr;
-		poolInfo.maxSets = info.setCount;
+		poolInfo.maxSets = info.capacity;
 
-		VkDescriptorPool vkPool;
-		auto result = vkCreateDescriptorPool(ge.app.device, &poolInfo, nullptr, &vkPool);
+		auto result = vkCreateDescriptorPool(ge.app.device, &poolInfo, nullptr, &pool.pool);
 		assert(!result);
 
-		auto layouts = CreateArray<VkDescriptorSetLayout>(ge.tempArena, program.frameCount);
-		for (auto& layout : layouts)
-			layout = ptr->layout;
+		const auto vkLayouts = CreateArray<VkDescriptorSetLayout>(ge.tempArena, info.capacity);
+		for (auto& vkLayout : vkLayouts)
+			vkLayout = layout.layout;
 
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = vkPool;
-		allocInfo.descriptorSetCount = layouts.length;
-		allocInfo.pSetLayouts = layouts.ptr;
+		allocInfo.descriptorPool = pool.pool;
+		allocInfo.descriptorSetCount = vkLayouts.length;
+		allocInfo.pSetLayouts = vkLayouts.ptr;
 
-		auto sets = CreateArray<VkDescriptorSet>(ge.arena, program.frameCount);
-		result = vkAllocateDescriptorSets(ge.app.device, &allocInfo, sets.ptr);
+		pool.sets = CreateArray<VkDescriptorSet>(scene.arena, info.capacity);
+		result = vkAllocateDescriptorSets(ge.app.device, &allocInfo, pool.sets.ptr);
 		assert(!result);
 		
 		ge.tempArena.DestroyScope(scope);
 		Add(scene.arena, scene.allocations) = AllocationType::pool;
 		return scene.pools.GetCount() - 1;
-		*/
-		return -1;
 	}
 
 	void UpdateBuffer(const uint32_t sceneHandle, const uint32_t bufferHandle, const void* data, const uint32_t size, const uint32_t offset)
@@ -524,6 +523,9 @@ namespace jv::ge
 		}
 
 		layout.layout = CreateLayout(ge.tempArena, ge.app, bindings);
+		layout.bindings = CreateArray<BindingType>(ge.arena, info.bindingsCount);
+		for (uint32_t i = 0; i < info.bindingsCount; ++i)
+			layout.bindings[i] = info.bindings[i].type;
 		return ge.layouts.GetCount() - 1;
 	}
 
