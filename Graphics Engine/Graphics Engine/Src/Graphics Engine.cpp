@@ -77,14 +77,16 @@ int main()
 	shaderCreateInfo.fragmentCodeLength = fragCode.length;
 	const auto shader = CreateShader(shaderCreateInfo);
 
-	jv::ge::PipelineCreateInfo::Binding binding{};
+	jv::ge::LayoutCreateInfo::Binding binding{};
 	binding.stage = jv::ge::ShaderStage::fragment;
 	binding.type = jv::ge::BindingType::sampler;
 
-	jv::ge::PipelineCreateInfo::Layout layout{};
-	layout.bindingsCount = 1;
-	layout.bindings = &binding;
+	jv::ge::LayoutCreateInfo layoutCreateInfo{};
+	layoutCreateInfo.bindings = &binding;
+	layoutCreateInfo.bindingsCount = 1;
 
+	auto layout = CreateLayout(layoutCreateInfo);
+	
 	jv::ge::PipelineCreateInfo pipelineCreateInfo{};
 	pipelineCreateInfo.resolution = info.resolution;
 	pipelineCreateInfo.shader = shader;

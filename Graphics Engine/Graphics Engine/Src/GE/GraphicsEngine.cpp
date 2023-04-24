@@ -23,7 +23,8 @@ namespace jv::ge
 	{
 		image,
 		mesh,
-		buffer
+		buffer,
+		pool
 	};
 
 	struct Image final
@@ -45,10 +46,20 @@ namespace jv::ge
 		BufferCreateInfo info;
 	};
 
+	struct Pool final
+	{
+
+	};
+
 	struct Shader final
 	{
 		VkShaderModule vertModule = nullptr;
 		VkShaderModule fragModule = nullptr;
+	};
+
+	struct Layout final
+	{
+		VkDescriptorSetLayout layout;
 	};
 
 	struct Pipeline final
@@ -67,6 +78,7 @@ namespace jv::ge
 		LinkedList<Image> images{};
 		LinkedList<Mesh> meshes{};
 		LinkedList<Buffer> buffers{};
+		LinkedList<Pool> pools{};
 	};
 
 	struct GraphicsEngine final
@@ -86,7 +98,8 @@ namespace jv::ge
 
 		LinkedList<Scene> scenes{};
 		LinkedList<Shader> shaders{};
-		LinkedList<Pipeline> pipeline{};
+		LinkedList<Layout> layouts{};
+		LinkedList<Pipeline> pipelines{};
 	} ge{};
 
 	void* Alloc(const uint32_t size)
@@ -197,10 +210,12 @@ namespace jv::ge
 		uint32_t imageIndex = 0;
 		uint32_t meshIndex = 0;
 		uint32_t bufferIndex = 0;
+		uint32_t poolIndex = 0;
 
 		Image image;
 		Mesh mesh;
 		Buffer buffer;
+		Pool pool;
 
 		for (const auto& allocation : scene.allocations)
 		{
@@ -218,6 +233,10 @@ namespace jv::ge
 			case AllocationType::buffer:
 				buffer = scene.buffers[bufferIndex++];
 				vkDestroyBuffer(ge.app.device, buffer.buffer.buffer, nullptr);
+				break;
+			case AllocationType::pool:
+				pool = scene.pools[poolIndex++];
+				// todo
 				break;
 			default:
 				std::cerr << "Allocation type not supported." << std::endl;
@@ -379,6 +398,67 @@ namespace jv::ge
 		return scene.buffers.GetCount() - 1;
 	}
 
+	uint32_t AddPool(const PoolCreateInfo& info, const uint32_t handle)
+	{
+		/*
+		assert(ge.initialized);
+		auto& scene = ge.scenes[handle];
+		auto& pool = Add(scene.arena, scene.pools) = {};
+
+		const auto scope = ge.tempArena.CreateScope();
+		const auto sizes = CreateArray<VkDescriptorPoolSize>(ge.tempArena, info.typeCount);
+		for (uint32_t i = 0; i < info.typeCount; ++i)
+		{
+			auto size = sizes[i];
+			switch (info.types[i])
+			{
+				case BindingType::uniformBuffer:
+					size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+					break;
+				case BindingType::storageBuffer:
+					size.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+					break;
+				case BindingType::sampler:
+					size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					break;
+			default: 
+				std::cerr << "Binding type not supported." << std::endl;
+			}
+			size.descriptorCount = info.setCount;
+		}
+
+		// Create descriptor pool.
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = sizes.length;
+		poolInfo.pPoolSizes = sizes.ptr;
+		poolInfo.maxSets = info.setCount;
+
+		VkDescriptorPool vkPool;
+		auto result = vkCreateDescriptorPool(ge.app.device, &poolInfo, nullptr, &vkPool);
+		assert(!result);
+
+		auto layouts = CreateArray<VkDescriptorSetLayout>(ge.tempArena, program.frameCount);
+		for (auto& layout : layouts)
+			layout = ptr->layout;
+
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = vkPool;
+		allocInfo.descriptorSetCount = layouts.length;
+		allocInfo.pSetLayouts = layouts.ptr;
+
+		auto sets = CreateArray<VkDescriptorSet>(ge.arena, program.frameCount);
+		result = vkAllocateDescriptorSets(ge.app.device, &allocInfo, sets.ptr);
+		assert(!result);
+		
+		ge.tempArena.DestroyScope(scope);
+		Add(scene.arena, scene.allocations) = AllocationType::pool;
+		return scene.pools.GetCount() - 1;
+		*/
+		return -1;
+	}
+
 	void UpdateBuffer(const uint32_t sceneHandle, const uint32_t bufferHandle, const void* data, const uint32_t size, const uint32_t offset)
 	{
 		assert(ge.initialized);
@@ -403,52 +483,61 @@ namespace jv::ge
 		return ge.shaders.GetCount() - 1;
 	}
 
+	uint32_t CreateLayout(const LayoutCreateInfo& info)
+	{
+		assert(ge.initialized);
+		auto& layout = Add(ge.arena, ge.layouts);
+
+		const auto bindings = CreateArray<vk::Binding>(ge.tempArena, info.bindingsCount);
+
+		for (uint32_t j = 0; j < info.bindingsCount; ++j)
+		{
+			auto& binding = bindings[j] = {};
+			const auto& bindingInfo = info.bindings[j];
+
+			switch (bindingInfo.type)
+			{
+			case BindingType::uniformBuffer:
+				binding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				break;
+			case BindingType::storageBuffer:
+				binding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+				break;
+			case BindingType::sampler:
+				binding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				break;
+			default:
+				std::cerr << "Binding type not supported." << std::endl;
+			}
+
+			switch (bindingInfo.stage)
+			{
+			case ShaderStage::vertex:
+				binding.flag = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStage::fragment:
+				binding.flag = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			default:
+				std::cerr << "Binding stage not supported." << std::endl;
+			}
+		}
+
+		layout.layout = CreateLayout(ge.tempArena, ge.app, bindings);
+		return ge.layouts.GetCount() - 1;
+	}
+
 	uint32_t CreatePipeline(const PipelineCreateInfo& info)
 	{
 		assert(ge.initialized);
-		auto& pipeline = Add(ge.arena, ge.pipeline);
+		auto& pipeline = Add(ge.arena, ge.pipelines);
 		pipeline.layouts = CreateArray<VkDescriptorSetLayout>(ge.arena, info.layoutCount);
 
 		for (uint32_t i = 0; i < info.layoutCount; ++i)
 		{
-			const auto& layoutInfo = info.layouts[i];
+			const auto& layoutIndex = info.layouts[i];
 			auto& layout = pipeline.layouts[i];
-			const auto bindings = CreateArray<vk::Binding>(ge.tempArena, layoutInfo.bindingsCount);
-
-			for (uint32_t j = 0; j < layoutInfo.bindingsCount; ++j)
-			{
-				auto& binding = bindings[j] = {};
-				const auto& bindingInfo = layoutInfo.bindings[j];
-
-				switch (bindingInfo.type)
-				{
-				case BindingType::uniformBuffer:
-					binding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-					break;
-				case BindingType::storageBuffer:
-					binding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-					break;
-				case BindingType::sampler:
-					binding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-					break;
-				default:
-					std::cerr << "Binding type not supported." << std::endl;
-				}
-
-				switch (bindingInfo.stage)
-				{
-				case ShaderStage::vertex:
-					binding.flag = VK_SHADER_STAGE_VERTEX_BIT;
-					break;
-				case ShaderStage::fragment:
-					binding.flag = VK_SHADER_STAGE_FRAGMENT_BIT;
-					break;
-				default:
-					std::cerr << "Binding stage not supported." << std::endl;
-				}
-			}
-
-			layout = CreateLayout(ge.tempArena, ge.app, bindings);
+			layout = ge.layouts[layoutIndex].layout;
 		}
 
 		const auto& shader = ge.shaders[info.shader];
@@ -557,7 +646,7 @@ namespace jv::ge
 		}
 
 		pipeline.pipeline = vk::Pipeline::Create(pipelineCreateInfo, ge.tempArena, ge.app);
-		return ge.pipeline.GetCount() - 1;
+		return ge.pipelines.GetCount() - 1;
 	}
 
 	void DestroyScenes()
@@ -613,13 +702,14 @@ namespace jv::ge
 		ge.arena.DestroyScope(ge.scope);
 		vk::SwapChain::Destroy(ge.arena, ge.app, ge.swapChain);
 
-		for (const auto& pipeline : ge.pipeline)
+		for (const auto& pipeline : ge.pipelines)
 		{
 			vk::Pipeline::Destroy(pipeline.pipeline, ge.app);
 			vkDestroyRenderPass(ge.app.device, pipeline.renderPass, nullptr);
-			for (const auto& layout : pipeline.layouts)
-				vkDestroyDescriptorSetLayout(ge.app.device, layout, nullptr);
 		}
+
+		for (const auto& layout : ge.layouts)
+			vkDestroyDescriptorSetLayout(ge.app.device, layout.layout, nullptr);
 
 		for (const auto& shader : ge.shaders)
 		{

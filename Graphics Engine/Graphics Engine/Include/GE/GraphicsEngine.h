@@ -86,6 +86,13 @@ namespace jv::ge
 		uint32_t size;
 	};
 
+	struct PoolCreateInfo final
+	{
+		BindingType* types;
+		uint32_t typeCount;
+		uint32_t setCount;
+	};
+
 	struct ShaderCreateInfo final
 	{
 		const char* vertexCode = nullptr;
@@ -94,7 +101,7 @@ namespace jv::ge
 		uint32_t fragmentCodeLength;
 	};
 
-	struct PipelineCreateInfo final
+	struct LayoutCreateInfo final
 	{
 		struct Binding final
 		{
@@ -104,14 +111,14 @@ namespace jv::ge
 			uint32_t count = 1;
 		};
 
-		struct Layout final
-		{
-			Binding* bindings;
-			uint32_t bindingsCount;
-		};
+		Binding* bindings;
+		uint32_t bindingsCount;
+	};
 
+	struct PipelineCreateInfo final
+	{
 		uint32_t shader;
-		Layout* layouts;
+		uint32_t* layouts;
 		uint32_t layoutCount;
 		glm::ivec2 resolution;
 		VertexType vertexType = VertexType::v2D;
@@ -128,8 +135,10 @@ namespace jv::ge
 	void FillImage(uint32_t sceneHandle, uint32_t imageHandle, unsigned char* pixels);
 	[[nodiscard]] uint32_t AddMesh(const MeshCreateInfo& info, uint32_t handle);
 	[[nodiscard]] uint32_t AddBuffer(const BufferCreateInfo& info, uint32_t handle);
+	[[nodiscard]] uint32_t AddPool(const PoolCreateInfo& info, uint32_t handle);
 	void UpdateBuffer(uint32_t sceneHandle, uint32_t bufferHandle, const void* data, uint32_t size, uint32_t offset);
 	[[nodiscard]] uint32_t CreateShader(const ShaderCreateInfo& info);
+	[[nodiscard]] uint32_t CreateLayout(const LayoutCreateInfo& info);
 	[[nodiscard]] uint32_t CreatePipeline(const PipelineCreateInfo& info);
 	[[nodiscard]] bool RenderFrame();
 	[[nodiscard]] uint32_t GetFrameCount();
