@@ -29,6 +29,7 @@ namespace jv::ge
 	struct Image final
 	{
 		vk::Image image;
+		VkImageView view;
 		ImageCreateInfo info;
 	};
 
@@ -197,25 +198,26 @@ namespace jv::ge
 		uint32_t meshIndex = 0;
 		uint32_t bufferIndex = 0;
 
-		vk::Image image;
-		vk::Mesh mesh;
-		vk::Buffer buffer;
+		Image image;
+		Mesh mesh;
+		Buffer buffer;
 
 		for (const auto& allocation : scene.allocations)
 		{
 			switch (allocation)
 			{
 			case AllocationType::image:
-				image = scene.images[imageIndex++].image;
-				vk::Image::Destroy(scene.freeArena, ge.app, image);
+				image = scene.images[imageIndex++];
+				vkDestroyImageView(ge.app.device, image.view, nullptr);
+				vk::Image::Destroy(scene.freeArena, ge.app, image.image);
 				break;
 			case AllocationType::mesh:
-				mesh = scene.meshes[meshIndex++].mesh;
-				vk::Mesh::Destroy(scene.freeArena, ge.app, mesh);
+				mesh = scene.meshes[meshIndex++];
+				vk::Mesh::Destroy(scene.freeArena, ge.app, mesh.mesh);
 				break;
 			case AllocationType::buffer:
-				buffer = scene.buffers[bufferIndex++].buffer;
-				vkDestroyBuffer(ge.app.device, buffer.buffer, nullptr);
+				buffer = scene.buffers[bufferIndex++];
+				vkDestroyBuffer(ge.app.device, buffer.buffer.buffer, nullptr);
 				break;
 			default:
 				std::cerr << "Allocation type not supported." << std::endl;
@@ -265,8 +267,29 @@ namespace jv::ge
 		}
 
 		const auto vkImage = vk::Image::Create(scene.arena, scene.freeArena, ge.app, vkImageCreateInfo, resolution);
+
+		VkImageViewCreateInfo viewCreateInfo{};
+		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.subresourceRange.aspectMask = vkImage.aspectFlags;
+		viewCreateInfo.subresourceRange.baseMipLevel = 0;
+		viewCreateInfo.subresourceRange.levelCount = 1;
+		viewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		viewCreateInfo.subresourceRange.layerCount = 1;
+		viewCreateInfo.image = vkImage.image;
+		viewCreateInfo.format = vkImage.format;
+
+		VkImageView view;
+		const auto result = vkCreateImageView(ge.app.device, &viewCreateInfo, nullptr, &view);
+		assert(!result);
+
 		auto& image = Add(scene.arena, scene.images) = {};
 		image.image = vkImage;
+		image.view = view;
 		image.info = info;
 
 		Add(scene.arena, scene.allocations) = AllocationType::image;
@@ -517,6 +540,7 @@ namespace jv::ge
 		pipelineCreateInfo.renderPass = pipeline.renderPass;
 		pipelineCreateInfo.layouts.ptr = pipeline.layouts.ptr;
 		pipelineCreateInfo.layouts.length = info.layoutCount;
+		pipelineCreateInfo.pushConstantSize = info.pushConstantSize;
 
 		switch (info.vertexType)
 		{

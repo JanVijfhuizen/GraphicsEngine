@@ -1,9 +1,6 @@
 #include "pch.h"
-
 #include "GE/GraphicsEngine.h"
-
 #include <stb_image.h>
-
 #include "JLib/FileLoader.h"
 
 void* Alloc(const uint32_t size)
@@ -94,6 +91,8 @@ int main()
 	pipelineCreateInfo.layoutCount = 1;
 	pipelineCreateInfo.layouts = &layout;
 	const auto pipeline = CreatePipeline(pipelineCreateInfo);
+
+	// todo render call, descriptor pools, semaphores
 
 	while (jv::ge::RenderFrame())
 		;

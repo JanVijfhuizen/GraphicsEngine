@@ -117,6 +117,7 @@ namespace jv::ge
 		VertexType vertexType = VertexType::v2D;
 		bool colorOutput = true;
 		bool depthOutput = false;
+		uint32_t pushConstantSize = 0;
 	};
 
 	void Initialize(const CreateInfo& info);
