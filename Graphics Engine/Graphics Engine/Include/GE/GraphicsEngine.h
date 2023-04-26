@@ -45,6 +45,7 @@ namespace jv::ge
 
 	struct ImageCreateInfo final
 	{
+		Resource scene;
 		enum class Format
 		{
 			color,
@@ -52,19 +53,18 @@ namespace jv::ge
 			depth,
 			stencil
 		} format = Format::color;
-
 		enum class Usage
 		{
 			read,
 			write,
 			readWrite
 		} usage = Usage::readWrite;
-		
 		glm::ivec2 resolution;
 	};
 
 	struct MeshCreateInfo final
 	{
+		Resource scene;
 		union
 		{
 			Vertex2D* vertices2d;
@@ -73,23 +73,23 @@ namespace jv::ge
 		uint32_t verticesLength;
 		uint16_t* indices;
 		uint32_t indicesLength;
-
 		VertexType vertexType = VertexType::v2D;
 	};
 
 	struct BufferCreateInfo final
 	{
+		Resource scene;
 		enum class Type
 		{
 			uniform,
 			storage
 		} type = Type::uniform;
-
 		uint32_t size;
 	};
 
 	struct PoolCreateInfo final
 	{
+		Resource scene;
 		Resource layout;
 		uint32_t capacity;
 	};
@@ -111,7 +111,6 @@ namespace jv::ge
 			size_t size = sizeof(int32_t);
 			uint32_t count = 1;
 		};
-
 		Binding* bindings;
 		uint32_t bindingsCount;
 	};
@@ -130,12 +129,12 @@ namespace jv::ge
 
 	struct SamplerCreateInfo final
 	{
+		Resource scene;
 		enum class Filter
 		{
 			nearest,
 			linear
 		} filter = Filter::nearest;
-
 		enum class AddressMode
 		{
 			repeat,
@@ -145,7 +144,6 @@ namespace jv::ge
 			mirroredClampToBorder,
 			mirroredClampToEdge
 		};
-
 		AddressMode addressModeU = AddressMode::repeat;
 		AddressMode addressModeV = AddressMode::repeat;
 		AddressMode addressModeW = AddressMode::repeat;
@@ -158,14 +156,12 @@ namespace jv::ge
 			Resource image;
 			Resource sampler;
 		};
-
 		struct Buffer final
 		{
 			Resource buffer;
 			uint32_t range;
 			uint32_t offset = 0;
 		};
-
 		struct Write final 
 		{
 			BindingType type;
@@ -176,25 +172,32 @@ namespace jv::ge
 			};
 			uint32_t index;
 		};
-
 		Resource pool;
 		uint32_t descriptorIndex;
 		Write* writes;
 		uint32_t writeCount;
 	};
 
+	struct BufferUpdateInfo final
+	{
+		Resource buffer;
+		const void* data;
+		uint32_t size;
+		uint32_t offset = 0;
+	};
+
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] Resource CreateScene();
-	void ClearScene(Resource sceneHandle);
-	[[nodiscard]] Resource AddImage(const ImageCreateInfo& info, Resource sceneHandle);
-	void FillImage(Resource imageHandle, unsigned char* pixels);
-	[[nodiscard]] Resource AddMesh(const MeshCreateInfo& info, Resource sceneHandle);
-	[[nodiscard]] Resource AddBuffer(const BufferCreateInfo& info, Resource sceneHandle);
-	[[nodiscard]] Resource AddSampler(const SamplerCreateInfo& info, Resource sceneHandle);
-	[[nodiscard]] Resource AddPool(const PoolCreateInfo& info, Resource sceneHandle);
+	void ClearScene(Resource scene);
+	[[nodiscard]] Resource AddImage(const ImageCreateInfo& info);
+	void FillImage(Resource image, unsigned char* pixels);
+	[[nodiscard]] Resource AddMesh(const MeshCreateInfo& info);
+	[[nodiscard]] Resource AddBuffer(const BufferCreateInfo& info);
+	[[nodiscard]] Resource AddSampler(const SamplerCreateInfo& info);
+	[[nodiscard]] Resource AddPool(const PoolCreateInfo& info);
 	void Bind(const BindInfo& info);
-	void UpdateBuffer(Resource bufferHandle, const void* data, uint32_t size, uint32_t offset);
+	void UpdateBuffer(const BufferUpdateInfo& info);
 	[[nodiscard]] Resource CreateShader(const ShaderCreateInfo& info);
 	[[nodiscard]] Resource CreateLayout(const LayoutCreateInfo& info);
 	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);

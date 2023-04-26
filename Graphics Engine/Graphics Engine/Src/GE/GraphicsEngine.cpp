@@ -264,10 +264,10 @@ namespace jv::ge
 		scene->buffers = {};
 	}
 
-	Resource AddImage(const ImageCreateInfo& info, const Resource sceneHandle)
+	Resource AddImage(const ImageCreateInfo& info)
 	{
 		assert(ge.initialized);
-		const auto scene = static_cast<Scene*>(sceneHandle);
+		const auto scene = static_cast<Scene*>(info.scene);
 		auto& image = Add(scene->arena, scene->images) = {};
 
 		vk::ImageCreateInfo vkImageCreateInfo{};
@@ -330,18 +330,18 @@ namespace jv::ge
 		return &image;
 	}
 
-	void FillImage(const Resource imageHandle, unsigned char* pixels)
+	void FillImage(const Resource image, unsigned char* pixels)
 	{
 		assert(ge.initialized);
-		const auto image = static_cast<Image*>(imageHandle);
-		const auto scene = image->scene;
-		image->image.FillImage(scene->arena, scene->freeArena, ge.app, pixels);
+		const auto pImage = static_cast<Image*>(image);
+		const auto scene = pImage->scene;
+		pImage->image.FillImage(scene->arena, scene->freeArena, ge.app, pixels);
 	}
 
-	Resource AddMesh(const MeshCreateInfo& info, const Resource sceneHandle)
+	Resource AddMesh(const MeshCreateInfo& info)
 	{
 		assert(ge.initialized);
-		const auto scene = static_cast<Scene*>(sceneHandle);
+		const auto scene = static_cast<Scene*>(info.scene);
 		auto& mesh = Add(scene->arena, scene->meshes) = {};
 
 		Array<uint16_t> indices{};
@@ -373,10 +373,10 @@ namespace jv::ge
 		return &mesh;
 	}
 
-	Resource AddBuffer(const BufferCreateInfo& info, const Resource sceneHandle)
+	Resource AddBuffer(const BufferCreateInfo& info)
 	{
 		assert(ge.initialized);
-		const auto scene = static_cast<Scene*>(sceneHandle);
+		const auto scene = static_cast<Scene*>(info.scene);
 		auto& buffer = Add(scene->arena, scene->buffers) = {};
 
 		VkBufferCreateInfo vertBufferInfo{};
@@ -437,10 +437,10 @@ namespace jv::ge
 		return addressMode;
 	}
 
-	Resource AddSampler(const SamplerCreateInfo& info, const Resource sceneHandle)
+	Resource AddSampler(const SamplerCreateInfo& info)
 	{
 		assert(ge.initialized);
-		const auto scene = static_cast<Scene*>(sceneHandle);
+		const auto scene = static_cast<Scene*>(info.scene);
 		auto& sampler = Add(scene->arena, scene->samplers) = {};
 
 		VkPhysicalDeviceProperties properties{};
@@ -484,11 +484,11 @@ namespace jv::ge
 		return &sampler;
 	}
 
-	Resource AddPool(const PoolCreateInfo& info, const Resource sceneHandle)
+	Resource AddPool(const PoolCreateInfo& info)
 	{
 		assert(ge.initialized);
 		const auto layout = static_cast<Layout*>(info.layout);
-		const auto scene = static_cast<Scene*>(sceneHandle);
+		const auto scene = static_cast<Scene*>(info.scene);
 		auto& pool = Add(scene->arena, scene->pools) = {};
 
 		const auto scope = ge.tempArena.CreateScope();
@@ -608,15 +608,15 @@ namespace jv::ge
 		ge.tempArena.DestroyScope(scope);
 	}
 
-	void UpdateBuffer(const Resource bufferHandle, const void* data, const uint32_t size, const uint32_t offset)
+	void UpdateBuffer(const BufferUpdateInfo& info)
 	{
 		assert(ge.initialized);
-		const auto buffer = static_cast<Buffer*>(bufferHandle);
+		const auto buffer = static_cast<Buffer*>(info.buffer);
 
 		void* vkData;
-		const auto result = vkMapMemory(ge.app.device, buffer->buffer.memory.memory, buffer->buffer.memory.offset + offset, size, 0, &vkData);
+		const auto result = vkMapMemory(ge.app.device, buffer->buffer.memory.memory, buffer->buffer.memory.offset + info.offset, info.size, 0, &vkData);
 		assert(!result);
-		memcpy(vkData, data, size);
+		memcpy(vkData, info.data, info.size);
 		vkUnmapMemory(ge.app.device, buffer->buffer.memory.memory);
 	}
 

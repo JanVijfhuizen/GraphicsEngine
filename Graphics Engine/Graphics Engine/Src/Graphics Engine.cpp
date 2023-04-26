@@ -31,17 +31,23 @@ int main()
 
 	jv::ge::ImageCreateInfo ici{};
 	ici.resolution = { texWidth, texHeight };
-	const auto image = AddImage(ici, scene);
+	ici.scene = scene;
+	const auto image = AddImage(ici);
 	jv::ge::FillImage(image, pixels);
 
 	stbi_image_free(pixels);
 
 	jv::ge::BufferCreateInfo bci{};
 	bci.size = 48;
-	const auto buffer = AddBuffer(bci, scene2);
+	bci.scene = scene2;
+	const auto buffer = AddBuffer(bci);
 
 	uint64_t ui = 8;
-	jv::ge::UpdateBuffer(buffer, &ui, sizeof ui, 0);
+	jv::ge::BufferUpdateInfo bui;
+	bui.buffer = buffer;
+	bui.data = &ui;
+	bui.size = sizeof ui;
+	UpdateBuffer(bui);
 
 	jv::ge::Vertex2D vertices[4]
 	{
@@ -57,7 +63,8 @@ int main()
 	mci.indicesLength = 6;
 	mci.vertices2d = vertices;
 	mci.indices = indices;
-	const auto mesh = AddMesh(mci, scene);
+	mci.scene = scene;
+	const auto mesh = AddMesh(mci);
 
 	jv::ge::Resize(glm::ivec2(800), false);
 
@@ -95,12 +102,14 @@ int main()
 	const auto pipeline = CreatePipeline(pipelineCreateInfo);
 
 	jv::ge::SamplerCreateInfo samplerCreateInfo{};
-	const auto sampler = AddSampler(samplerCreateInfo, scene);
+	samplerCreateInfo.scene = scene;
+	const auto sampler = AddSampler(samplerCreateInfo);
 
 	jv::ge::PoolCreateInfo poolCreateInfo{};
 	poolCreateInfo.layout = layout;
 	poolCreateInfo.capacity = 20;
-	const auto pool = AddPool(poolCreateInfo, scene);
+	poolCreateInfo.scene = scene;
+	const auto pool = AddPool(poolCreateInfo);
 
 	jv::ge::BindInfo::Write write{};
 	write.type = jv::ge::BindingType::sampler;
