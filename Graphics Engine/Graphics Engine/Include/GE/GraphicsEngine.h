@@ -87,7 +87,7 @@ namespace jv::ge
 		uint32_t size;
 	};
 
-	struct PoolCreateInfo final
+	struct DescriptorPoolCreateInfo final
 	{
 		Resource scene;
 		Resource layout;
@@ -149,7 +149,7 @@ namespace jv::ge
 		AddressMode addressModeW = AddressMode::repeat;
 	};
 
-	struct BindInfo final
+	struct WriteInfo final
 	{
 		struct Image final
 		{
@@ -162,7 +162,7 @@ namespace jv::ge
 			uint32_t range;
 			uint32_t offset = 0;
 		};
-		struct Write final 
+		struct Binding final 
 		{
 			BindingType type;
 			union
@@ -174,8 +174,8 @@ namespace jv::ge
 		};
 		Resource pool;
 		uint32_t descriptorIndex;
-		Write* writes;
-		uint32_t writeCount;
+		Binding* bindings;
+		uint32_t bindingCount;
 	};
 
 	struct BufferUpdateInfo final
@@ -195,8 +195,8 @@ namespace jv::ge
 	[[nodiscard]] Resource AddMesh(const MeshCreateInfo& info);
 	[[nodiscard]] Resource AddBuffer(const BufferCreateInfo& info);
 	[[nodiscard]] Resource AddSampler(const SamplerCreateInfo& info);
-	[[nodiscard]] Resource AddPool(const PoolCreateInfo& info);
-	void Bind(const BindInfo& info);
+	[[nodiscard]] Resource AddDescriptorPool(const DescriptorPoolCreateInfo& info);
+	void Write(const WriteInfo& info);
 	void UpdateBuffer(const BufferUpdateInfo& info);
 	[[nodiscard]] Resource CreateShader(const ShaderCreateInfo& info);
 	[[nodiscard]] Resource CreateLayout(const LayoutCreateInfo& info);

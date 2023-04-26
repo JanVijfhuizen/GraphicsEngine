@@ -29,25 +29,25 @@ int main()
 	int texWidth, texHeight, texChannels2;
 	stbi_uc* pixels = stbi_load("Art/logo.png", &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
 
-	jv::ge::ImageCreateInfo ici{};
-	ici.resolution = { texWidth, texHeight };
-	ici.scene = scene;
-	const auto image = AddImage(ici);
+	jv::ge::ImageCreateInfo imageCreateInfo{};
+	imageCreateInfo.resolution = { texWidth, texHeight };
+	imageCreateInfo.scene = scene;
+	const auto image = AddImage(imageCreateInfo);
 	jv::ge::FillImage(image, pixels);
 
 	stbi_image_free(pixels);
 
-	jv::ge::BufferCreateInfo bci{};
-	bci.size = 48;
-	bci.scene = scene2;
-	const auto buffer = AddBuffer(bci);
+	jv::ge::BufferCreateInfo bufferCreateInfo{};
+	bufferCreateInfo.size = 48;
+	bufferCreateInfo.scene = scene2;
+	const auto buffer = AddBuffer(bufferCreateInfo);
 
-	uint64_t ui = 8;
-	jv::ge::BufferUpdateInfo bui;
-	bui.buffer = buffer;
-	bui.data = &ui;
-	bui.size = sizeof ui;
-	UpdateBuffer(bui);
+	uint64_t bufferData = 8;
+	jv::ge::BufferUpdateInfo bufferUpdateInfo;
+	bufferUpdateInfo.buffer = buffer;
+	bufferUpdateInfo.data = &bufferData;
+	bufferUpdateInfo.size = sizeof bufferData;
+	UpdateBuffer(bufferUpdateInfo);
 
 	jv::ge::Vertex2D vertices[4]
 	{
@@ -58,13 +58,13 @@ int main()
 	};
 	uint16_t indices[6]{0, 1, 2, 0, 2, 3};
 
-	jv::ge::MeshCreateInfo mci{};
-	mci.verticesLength = 4;
-	mci.indicesLength = 6;
-	mci.vertices2d = vertices;
-	mci.indices = indices;
-	mci.scene = scene;
-	const auto mesh = AddMesh(mci);
+	jv::ge::MeshCreateInfo meshCreateInfo{};
+	meshCreateInfo.verticesLength = 4;
+	meshCreateInfo.indicesLength = 6;
+	meshCreateInfo.vertices2d = vertices;
+	meshCreateInfo.indices = indices;
+	meshCreateInfo.scene = scene;
+	const auto mesh = AddMesh(meshCreateInfo);
 
 	jv::ge::Resize(glm::ivec2(800), false);
 
@@ -84,12 +84,12 @@ int main()
 	shaderCreateInfo.fragmentCodeLength = fragCode.length;
 	const auto shader = CreateShader(shaderCreateInfo);
 
-	jv::ge::LayoutCreateInfo::Binding binding{};
-	binding.stage = jv::ge::ShaderStage::fragment;
-	binding.type = jv::ge::BindingType::sampler;
+	jv::ge::LayoutCreateInfo::Binding bindingCreateInfo{};
+	bindingCreateInfo.stage = jv::ge::ShaderStage::fragment;
+	bindingCreateInfo.type = jv::ge::BindingType::sampler;
 
 	jv::ge::LayoutCreateInfo layoutCreateInfo{};
-	layoutCreateInfo.bindings = &binding;
+	layoutCreateInfo.bindings = &bindingCreateInfo;
 	layoutCreateInfo.bindingsCount = 1;
 
 	auto layout = CreateLayout(layoutCreateInfo);
@@ -105,23 +105,23 @@ int main()
 	samplerCreateInfo.scene = scene;
 	const auto sampler = AddSampler(samplerCreateInfo);
 
-	jv::ge::PoolCreateInfo poolCreateInfo{};
+	jv::ge::DescriptorPoolCreateInfo poolCreateInfo{};
 	poolCreateInfo.layout = layout;
 	poolCreateInfo.capacity = 20;
 	poolCreateInfo.scene = scene;
-	const auto pool = AddPool(poolCreateInfo);
+	const auto pool = AddDescriptorPool(poolCreateInfo);
 
-	jv::ge::BindInfo::Write write{};
-	write.type = jv::ge::BindingType::sampler;
-	write.image.image = image;
-	write.image.sampler = sampler;
+	jv::ge::WriteInfo::Binding writeBindingInfo{};
+	writeBindingInfo.type = jv::ge::BindingType::sampler;
+	writeBindingInfo.image.image = image;
+	writeBindingInfo.image.sampler = sampler;
 
-	jv::ge::BindInfo bindInfo{};
-	bindInfo.pool = pool;
-	bindInfo.descriptorIndex = 0;
-	bindInfo.writes = &write;
-	bindInfo.writeCount = 1;
-	Bind(bindInfo);
+	jv::ge::WriteInfo writeInfo{};
+	writeInfo.pool = pool;
+	writeInfo.descriptorIndex = 0;
+	writeInfo.bindings = &writeBindingInfo;
+	writeInfo.bindingCount = 1;
+	Write(writeInfo);
 
 	// todo render call, semaphores
 

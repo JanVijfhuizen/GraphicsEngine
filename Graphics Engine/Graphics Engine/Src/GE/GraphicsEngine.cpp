@@ -53,7 +53,7 @@ namespace jv::ge
 		VkSampler sampler;
 	};
 
-	struct Pool final
+	struct DescriptorPool final
 	{
 		VkDescriptorPool pool;
 		Array<VkDescriptorSet> sets;
@@ -88,7 +88,7 @@ namespace jv::ge
 		LinkedList<Mesh> meshes{};
 		LinkedList<Buffer> buffers{};
 		LinkedList<Sampler> samplers{};
-		LinkedList<Pool> pools{};
+		LinkedList<DescriptorPool> descriptorPools{};
 	};
 
 	struct GraphicsEngine final
@@ -225,7 +225,7 @@ namespace jv::ge
 		Mesh mesh;
 		Buffer buffer;
 		Sampler sampler;
-		Pool pool;
+		DescriptorPool descriptorPool;
 
 		for (const auto& allocation : scene->allocations)
 		{
@@ -249,8 +249,8 @@ namespace jv::ge
 				vkDestroySampler(ge.app.device, sampler.sampler, nullptr);
 				break;
 			case AllocationType::pool:
-				pool = scene->pools[poolIndex++];
-				vkDestroyDescriptorPool(ge.app.device, pool.pool, nullptr);
+				descriptorPool = scene->descriptorPools[poolIndex++];
+				vkDestroyDescriptorPool(ge.app.device, descriptorPool.pool, nullptr);
 				break;
 			default:
 				std::cerr << "Allocation type not supported." << std::endl;
@@ -484,12 +484,12 @@ namespace jv::ge
 		return &sampler;
 	}
 
-	Resource AddPool(const PoolCreateInfo& info)
+	Resource AddDescriptorPool(const DescriptorPoolCreateInfo& info)
 	{
 		assert(ge.initialized);
 		const auto layout = static_cast<Layout*>(info.layout);
 		const auto scene = static_cast<Scene*>(info.scene);
-		auto& pool = Add(scene->arena, scene->pools) = {};
+		auto& pool = Add(scene->arena, scene->descriptorPools) = {};
 
 		const auto scope = ge.tempArena.CreateScope();
 		const auto sizes = CreateArray<VkDescriptorPoolSize>(ge.tempArena, layout->bindings.length);
@@ -542,17 +542,17 @@ namespace jv::ge
 		return &pool;
 	}
 
-	void Bind(const BindInfo& info)
+	void Write(const WriteInfo& info)
 	{
 		assert(ge.initialized);
 		const auto scope = ge.tempArena.CreateScope();
-		const auto pool = static_cast<Pool*>(info.pool);
+		const auto pool = static_cast<DescriptorPool*>(info.pool);
 		const auto& descriptorSet = pool->sets[info.descriptorIndex];
 
-		const auto writes = CreateArray<VkWriteDescriptorSet>(ge.tempArena, info.writeCount);
-		for (uint32_t i = 0; i < info.writeCount; ++i)
+		const auto writes = CreateArray<VkWriteDescriptorSet>(ge.tempArena, info.bindingCount);
+		for (uint32_t i = 0; i < info.bindingCount; ++i)
 		{
-			const auto& writeInfo = info.writes[i];
+			const auto& writeInfo = info.bindings[i];
 			auto& write = writes[i] = {};
 			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			write.dstBinding = writeInfo.index;
