@@ -33,6 +33,7 @@ namespace jv::ge
 		vk::Image image;
 		VkImageView view;
 		ImageCreateInfo info;
+		struct Scene* scene;
 	};
 
 	struct Mesh final
@@ -190,10 +191,9 @@ namespace jv::ge
 		ge.swapChain.Recreate(ge.tempArena, ge.app, resolution);
 	}
 
-	uint32_t CreateScene()
+	Resource CreateScene()
 	{
 		constexpr uint32_t SCENE_ARENA_SIZE = 512;
-
 		assert(ge.initialized);
 
 		auto& scene = Add(ge.arena, ge.scenes) = {};
@@ -207,14 +207,13 @@ namespace jv::ge
 		scene.arena = Arena::Create(arenaInfo);
 		scene.freeArena = vk::FreeArena::Create(scene.arena, ge.app);
 
-		return ge.scenes.GetCount() - 1;
+		return &scene;
 	}
 
-	void ClearScene(const uint32_t handle)
+	void ClearScene(const Resource sceneHandle)
 	{
 		assert(ge.initialized);
-
-		auto& scene = ge.scenes[handle];
+		const auto scene = static_cast<Scene*>(sceneHandle);
 
 		uint32_t imageIndex = 0;
 		uint32_t meshIndex = 0;
@@ -228,29 +227,29 @@ namespace jv::ge
 		Sampler sampler;
 		Pool pool;
 
-		for (const auto& allocation : scene.allocations)
+		for (const auto& allocation : scene->allocations)
 		{
 			switch (allocation)
 			{
 			case AllocationType::image:
-				image = scene.images[imageIndex++];
+				image = scene->images[imageIndex++];
 				vkDestroyImageView(ge.app.device, image.view, nullptr);
-				vk::Image::Destroy(scene.freeArena, ge.app, image.image);
+				vk::Image::Destroy(scene->freeArena, ge.app, image.image);
 				break;
 			case AllocationType::mesh:
-				mesh = scene.meshes[meshIndex++];
-				vk::Mesh::Destroy(scene.freeArena, ge.app, mesh.mesh);
+				mesh = scene->meshes[meshIndex++];
+				vk::Mesh::Destroy(scene->freeArena, ge.app, mesh.mesh);
 				break;
 			case AllocationType::buffer:
-				buffer = scene.buffers[bufferIndex++];
+				buffer = scene->buffers[bufferIndex++];
 				vkDestroyBuffer(ge.app.device, buffer.buffer.buffer, nullptr);
 				break;
 			case AllocationType::sampler:
-				sampler = scene.samplers[samplerIndex++];
+				sampler = scene->samplers[samplerIndex++];
 				vkDestroySampler(ge.app.device, sampler.sampler, nullptr);
 				break;
 			case AllocationType::pool:
-				pool = scene.pools[poolIndex++];
+				pool = scene->pools[poolIndex++];
 				vkDestroyDescriptorPool(ge.app.device, pool.pool, nullptr);
 				break;
 			default:
@@ -258,17 +257,18 @@ namespace jv::ge
 			}
 		}
 
-		scene.arena.Clear();
-		scene.allocations = {};
-		scene.images = {};
-		scene.meshes = {};
-		scene.buffers = {};
+		scene->arena.Clear();
+		scene->allocations = {};
+		scene->images = {};
+		scene->meshes = {};
+		scene->buffers = {};
 	}
 
-	uint32_t AddImage(const ImageCreateInfo& info, const uint32_t handle)
+	Resource AddImage(const ImageCreateInfo& info, const Resource sceneHandle)
 	{
 		assert(ge.initialized);
-		auto& scene = ge.scenes[handle];
+		const auto scene = static_cast<Scene*>(sceneHandle);
+		auto& image = Add(scene->arena, scene->images) = {};
 
 		vk::ImageCreateInfo vkImageCreateInfo{};
 		glm::vec3 resolution = glm::vec3(info.resolution, 1);
@@ -300,7 +300,7 @@ namespace jv::ge
 				std::cerr << "Format not supported." << std::endl;
 		}
 
-		const auto vkImage = vk::Image::Create(scene.arena, scene.freeArena, ge.app, vkImageCreateInfo, resolution);
+		const auto vkImage = vk::Image::Create(scene->arena, scene->freeArena, ge.app, vkImageCreateInfo, resolution);
 
 		VkImageViewCreateInfo viewCreateInfo{};
 		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -321,27 +321,28 @@ namespace jv::ge
 		const auto result = vkCreateImageView(ge.app.device, &viewCreateInfo, nullptr, &view);
 		assert(!result);
 
-		auto& image = Add(scene.arena, scene.images) = {};
 		image.image = vkImage;
 		image.view = view;
 		image.info = info;
+		image.scene = scene;
 
-		Add(scene.arena, scene.allocations) = AllocationType::image;
-		return scene.images.GetCount() - 1;
+		Add(scene->arena, scene->allocations) = AllocationType::image;
+		return &image;
 	}
 
-	void FillImage(const uint32_t sceneHandle, const uint32_t imageHandle, unsigned char* pixels)
+	void FillImage(const Resource imageHandle, unsigned char* pixels)
 	{
 		assert(ge.initialized);
-		auto& scene = ge.scenes[sceneHandle];
-		auto& image = scene.images[imageHandle];
-		image.image.FillImage(scene.arena, scene.freeArena, ge.app, pixels);
+		const auto image = static_cast<Image*>(imageHandle);
+		const auto scene = image->scene;
+		image->image.FillImage(scene->arena, scene->freeArena, ge.app, pixels);
 	}
 
-	uint32_t AddMesh(const MeshCreateInfo& info, const uint32_t handle)
+	Resource AddMesh(const MeshCreateInfo& info, const Resource sceneHandle)
 	{
 		assert(ge.initialized);
-		auto& scene = ge.scenes[handle];
+		const auto scene = static_cast<Scene*>(sceneHandle);
+		auto& mesh = Add(scene->arena, scene->meshes) = {};
 
 		Array<uint16_t> indices{};
 		indices.ptr = info.indices;
@@ -353,30 +354,30 @@ namespace jv::ge
 			Array<vk::Vertex2d> v2d{};
 			v2d.length = info.verticesLength;
 			v2d.ptr = reinterpret_cast<vk::Vertex2d*>(info.vertices2d);
-			vkMesh = vk::Mesh::Create(scene.arena, scene.freeArena, ge.app, v2d, indices);
+			vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, v2d, indices);
 		}
 		else if(info.vertexType == VertexType::v3D)
 		{
 			Array<vk::Vertex3d> v3d{};
 			v3d.length = info.verticesLength;
 			v3d.ptr = reinterpret_cast<vk::Vertex3d*>(info.vertices3d);
-			vkMesh = vk::Mesh::Create(scene.arena, scene.freeArena, ge.app, v3d, indices);
+			vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, v3d, indices);
 		}
 		else
 			std::cerr << "Vertex type not supported." << std::endl;
-
-		auto& mesh = Add(scene.arena, scene.meshes) = {};
+		
 		mesh.mesh = vkMesh;
 		mesh.info = info;
 
-		Add(scene.arena, scene.allocations) = AllocationType::mesh;
-		return scene.meshes.GetCount() - 1;
+		Add(scene->arena, scene->allocations) = AllocationType::mesh;
+		return &mesh;
 	}
 
-	uint32_t AddBuffer(const BufferCreateInfo& info, const uint32_t handle)
+	Resource AddBuffer(const BufferCreateInfo& info, const Resource sceneHandle)
 	{
 		assert(ge.initialized);
-		auto& scene = ge.scenes[handle];
+		const auto scene = static_cast<Scene*>(sceneHandle);
+		auto& buffer = Add(scene->arena, scene->buffers) = {};
 
 		VkBufferCreateInfo vertBufferInfo{};
 		vertBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -403,14 +404,13 @@ namespace jv::ge
 		vkGetBufferMemoryRequirements(ge.app.device, vkBuffer.buffer, &memRequirements);
 
 		constexpr VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-		vkBuffer.memoryHandle = scene.freeArena.Alloc(scene.arena, ge.app, memRequirements, memoryPropertyFlags, 1, vkBuffer.memory);
+		vkBuffer.memoryHandle = scene->freeArena.Alloc(scene->arena, ge.app, memRequirements, memoryPropertyFlags, 1, vkBuffer.memory);
 
-		auto& buffer = Add(scene.arena, scene.buffers) = {};
 		buffer.buffer = vkBuffer;
 		buffer.info = info;
 
-		Add(scene.arena, scene.allocations) = AllocationType::buffer;
-		return scene.buffers.GetCount() - 1;
+		Add(scene->arena, scene->allocations) = AllocationType::buffer;
+		return &buffer;
 	}
 
 	VkSamplerAddressMode GetAddressMode(const SamplerCreateInfo::AddressMode mode)
@@ -437,11 +437,11 @@ namespace jv::ge
 		return addressMode;
 	}
 
-	uint32_t AddSampler(const SamplerCreateInfo& info, const uint32_t handle)
+	Resource AddSampler(const SamplerCreateInfo& info, const Resource sceneHandle)
 	{
 		assert(ge.initialized);
-		auto& scene = ge.scenes[handle];
-		auto& sampler = Add(scene.arena, scene.samplers) = {};
+		const auto scene = static_cast<Scene*>(sceneHandle);
+		auto& sampler = Add(scene->arena, scene->samplers) = {};
 
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(ge.app.physicalDevice, &properties);
@@ -480,23 +480,23 @@ namespace jv::ge
 		const auto result = vkCreateSampler(ge.app.device, &samplerInfo, nullptr, &sampler.sampler);
 		assert(!result);
 
-		Add(scene.arena, scene.allocations) = AllocationType::sampler;
-		return scene.samplers.GetCount() - 1;
+		Add(scene->arena, scene->allocations) = AllocationType::sampler;
+		return &sampler;
 	}
 
-	uint32_t AddPool(const PoolCreateInfo& info, const uint32_t handle)
+	Resource AddPool(const PoolCreateInfo& info, const Resource sceneHandle)
 	{
 		assert(ge.initialized);
-		const auto& layout = ge.layouts[info.layout];
-		auto& scene = ge.scenes[handle];
-		auto& pool = Add(scene.arena, scene.pools) = {};
+		const auto layout = static_cast<Layout*>(info.layout);
+		const auto scene = static_cast<Scene*>(sceneHandle);
+		auto& pool = Add(scene->arena, scene->pools) = {};
 
 		const auto scope = ge.tempArena.CreateScope();
-		const auto sizes = CreateArray<VkDescriptorPoolSize>(ge.tempArena, layout.bindings.length);
-		for (uint32_t i = 0; i < layout.bindings.length; ++i)
+		const auto sizes = CreateArray<VkDescriptorPoolSize>(ge.tempArena, layout->bindings.length);
+		for (uint32_t i = 0; i < layout->bindings.length; ++i)
 		{
 			auto& size = sizes[i];
-			switch (layout.bindings[i])
+			switch (layout->bindings[i])
 			{
 				case BindingType::uniformBuffer:
 					size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -525,7 +525,7 @@ namespace jv::ge
 
 		const auto vkLayouts = CreateArray<VkDescriptorSetLayout>(ge.tempArena, info.capacity);
 		for (auto& vkLayout : vkLayouts)
-			vkLayout = layout.layout;
+			vkLayout = layout->layout;
 
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -533,21 +533,21 @@ namespace jv::ge
 		allocInfo.descriptorSetCount = vkLayouts.length;
 		allocInfo.pSetLayouts = vkLayouts.ptr;
 
-		pool.sets = CreateArray<VkDescriptorSet>(scene.arena, info.capacity);
+		pool.sets = CreateArray<VkDescriptorSet>(scene->arena, info.capacity);
 		result = vkAllocateDescriptorSets(ge.app.device, &allocInfo, pool.sets.ptr);
 		assert(!result);
 		
 		ge.tempArena.DestroyScope(scope);
-		Add(scene.arena, scene.allocations) = AllocationType::pool;
-		return scene.pools.GetCount() - 1;
+		Add(scene->arena, scene->allocations) = AllocationType::pool;
+		return &pool;
 	}
 
-	void Bind(const BindInfo& info, const uint32_t handle)
+	void Bind(const BindInfo& info)
 	{
 		assert(ge.initialized);
 		const auto scope = ge.tempArena.CreateScope();
-		const auto& scene = ge.scenes[handle];
-		const auto& descriptorSet = scene.pools[info.pool].sets[info.descriptorIndex];
+		const auto pool = static_cast<Pool*>(info.pool);
+		const auto& descriptorSet = pool->sets[info.descriptorIndex];
 
 		const auto writes = CreateArray<VkWriteDescriptorSet>(ge.tempArena, info.writeCount);
 		for (uint32_t i = 0; i < info.writeCount; ++i)
@@ -562,17 +562,17 @@ namespace jv::ge
 
 			VkDescriptorBufferInfo* bufferInfo;
 			VkDescriptorImageInfo* imageInfo;
-			Buffer buffer{};
-			Sampler sampler{};
-			Image image{};
+			Buffer* buffer{};
+			Sampler* sampler{};
+			Image* image{};
 
 			switch (writeInfo.type)
 			{
 				case BindingType::uniformBuffer:
 					bufferInfo = ge.tempArena.New<VkDescriptorBufferInfo>();
 					*bufferInfo = {};
-					buffer = scene.buffers[writeInfo.buffer.buffer];
-					bufferInfo->buffer = buffer.buffer.buffer;
+					buffer = static_cast<Buffer*>(writeInfo.buffer.buffer);
+					bufferInfo->buffer = buffer->buffer.buffer;
 					bufferInfo->offset = writeInfo.buffer.offset;
 					bufferInfo->range = writeInfo.buffer.range;
 					write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -581,8 +581,8 @@ namespace jv::ge
 				case BindingType::storageBuffer:
 					bufferInfo = ge.tempArena.New<VkDescriptorBufferInfo>();
 					*bufferInfo = {};
-					buffer = scene.buffers[writeInfo.buffer.buffer];
-					bufferInfo->buffer = buffer.buffer.buffer;
+					buffer = static_cast<Buffer*>(writeInfo.buffer.buffer);
+					bufferInfo->buffer = buffer->buffer.buffer;
 					bufferInfo->offset = writeInfo.buffer.offset;
 					bufferInfo->range = writeInfo.buffer.range;
 					write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -591,11 +591,11 @@ namespace jv::ge
 				case BindingType::sampler:
 					imageInfo = ge.tempArena.New<VkDescriptorImageInfo>();
 					*imageInfo = {};
-					sampler = scene.samplers[writeInfo.image.sampler];
-					image = scene.images[writeInfo.image.image];
-					imageInfo->imageLayout = image.image.layout;
-					imageInfo->imageView = image.view;
-					imageInfo->sampler = sampler.sampler;
+					sampler = static_cast<Sampler*>(writeInfo.image.sampler);
+					image = static_cast<Image*>(writeInfo.image.image);
+					imageInfo->imageLayout = image->image.layout;
+					imageInfo->imageView = image->view;
+					imageInfo->sampler = sampler->sampler;
 					write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 					write.pImageInfo = imageInfo;
 					break;
@@ -608,20 +608,19 @@ namespace jv::ge
 		ge.tempArena.DestroyScope(scope);
 	}
 
-	void UpdateBuffer(const uint32_t sceneHandle, const uint32_t bufferHandle, const void* data, const uint32_t size, const uint32_t offset)
+	void UpdateBuffer(const Resource bufferHandle, const void* data, const uint32_t size, const uint32_t offset)
 	{
 		assert(ge.initialized);
-		const auto& scene = ge.scenes[sceneHandle];
-		const auto& buffer = scene.buffers[bufferHandle];
+		const auto buffer = static_cast<Buffer*>(bufferHandle);
 
 		void* vkData;
-		const auto result = vkMapMemory(ge.app.device, buffer.buffer.memory.memory, buffer.buffer.memory.offset + offset, size, 0, &vkData);
+		const auto result = vkMapMemory(ge.app.device, buffer->buffer.memory.memory, buffer->buffer.memory.offset + offset, size, 0, &vkData);
 		assert(!result);
 		memcpy(vkData, data, size);
-		vkUnmapMemory(ge.app.device, buffer.buffer.memory.memory);
+		vkUnmapMemory(ge.app.device, buffer->buffer.memory.memory);
 	}
 
-	uint32_t CreateShader(const ShaderCreateInfo& info)
+	Resource CreateShader(const ShaderCreateInfo& info)
 	{
 		assert(ge.initialized);
 		auto& shader = Add(ge.arena, ge.shaders);
@@ -629,10 +628,10 @@ namespace jv::ge
 			shader.vertModule = CreateShaderModule(ge.app, info.vertexCode, info.vertexCodeLength);
 		if (info.fragmentCode)
 			shader.fragModule = CreateShaderModule(ge.app, info.fragmentCode, info.fragmentCodeLength);
-		return ge.shaders.GetCount() - 1;
+		return &shader;
 	}
 
-	uint32_t CreateLayout(const LayoutCreateInfo& info)
+	Resource CreateLayout(const LayoutCreateInfo& info)
 	{
 		assert(ge.initialized);
 		auto& layout = Add(ge.arena, ge.layouts);
@@ -676,10 +675,10 @@ namespace jv::ge
 		layout.bindings = CreateArray<BindingType>(ge.arena, info.bindingsCount);
 		for (uint32_t i = 0; i < info.bindingsCount; ++i)
 			layout.bindings[i] = info.bindings[i].type;
-		return ge.layouts.GetCount() - 1;
+		return &layout;
 	}
 
-	uint32_t CreatePipeline(const PipelineCreateInfo& info)
+	Resource CreatePipeline(const PipelineCreateInfo& info)
 	{
 		assert(ge.initialized);
 		auto& pipeline = Add(ge.arena, ge.pipelines);
@@ -687,12 +686,11 @@ namespace jv::ge
 
 		for (uint32_t i = 0; i < info.layoutCount; ++i)
 		{
-			const auto& layoutIndex = info.layouts[i];
-			auto& layout = pipeline.layouts[i];
-			layout = ge.layouts[layoutIndex].layout;
+			const auto layout = static_cast<Layout*>(info.layouts[i]);
+			pipeline.layouts[i] = layout->layout;
 		}
 
-		const auto& shader = ge.shaders[info.shader];
+		const auto shader = static_cast<Shader*>(info.shader);
 
 		VkAttachmentReference colorAttachmentRef{};
 		colorAttachmentRef.attachment = 0;
@@ -760,17 +758,17 @@ namespace jv::ge
 		vk::PipelineCreateInfo::Module modules[2]{};
 		uint32_t moduleCount = 0;
 		{
-			if(shader.vertModule)
+			if(shader->vertModule)
 			{
 				auto& mod = modules[moduleCount++];
 				mod.stage = VK_SHADER_STAGE_VERTEX_BIT;
-				mod.module = shader.vertModule;
+				mod.module = shader->vertModule;
 			}
-			if (shader.fragModule)
+			if (shader->fragModule)
 			{
 				auto& mod = modules[moduleCount++];
 				mod.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-				mod.module = shader.fragModule;
+				mod.module = shader->fragModule;
 			}
 		}
 
@@ -798,7 +796,7 @@ namespace jv::ge
 		}
 
 		pipeline.pipeline = vk::Pipeline::Create(pipelineCreateInfo, ge.tempArena, ge.app);
-		return ge.pipelines.GetCount() - 1;
+		return &pipeline;
 	}
 
 	void DestroyScenes()
@@ -809,7 +807,7 @@ namespace jv::ge
 		for (uint32_t i = 0; i < length; ++i)
 		{
 			auto& scene = ge.scenes[i];
-			ClearScene(i);
+			ClearScene(&scene);
 
 			vk::FreeArena::Destroy(scene.arena, ge.app, scene.freeArena);
 			Arena::Destroy(scene.arena);

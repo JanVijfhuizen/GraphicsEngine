@@ -2,6 +2,8 @@
 
 namespace jv::ge
 {
+	using Resource = void*;
+
 	enum class VertexType
 	{
 		v2D,
@@ -88,7 +90,7 @@ namespace jv::ge
 
 	struct PoolCreateInfo final
 	{
-		uint32_t layout;
+		Resource layout;
 		uint32_t capacity;
 	};
 
@@ -116,8 +118,8 @@ namespace jv::ge
 
 	struct PipelineCreateInfo final
 	{
-		uint32_t shader;
-		uint32_t* layouts;
+		Resource shader;
+		Resource* layouts;
 		uint32_t layoutCount;
 		glm::ivec2 resolution;
 		VertexType vertexType = VertexType::v2D;
@@ -153,13 +155,13 @@ namespace jv::ge
 	{
 		struct Image final
 		{
-			uint32_t image;
-			uint32_t sampler;
+			Resource image;
+			Resource sampler;
 		};
 
 		struct Buffer final
 		{
-			uint32_t buffer;
+			Resource buffer;
 			uint32_t range;
 			uint32_t offset = 0;
 		};
@@ -175,7 +177,7 @@ namespace jv::ge
 			uint32_t index;
 		};
 
-		uint32_t pool;
+		Resource pool;
 		uint32_t descriptorIndex;
 		Write* writes;
 		uint32_t writeCount;
@@ -183,19 +185,19 @@ namespace jv::ge
 
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
-	[[nodiscard]] uint32_t CreateScene();
-	void ClearScene(uint32_t handle);
-	[[nodiscard]] uint32_t AddImage(const ImageCreateInfo& info, uint32_t handle);
-	void FillImage(uint32_t sceneHandle, uint32_t imageHandle, unsigned char* pixels);
-	[[nodiscard]] uint32_t AddMesh(const MeshCreateInfo& info, uint32_t handle);
-	[[nodiscard]] uint32_t AddBuffer(const BufferCreateInfo& info, uint32_t handle);
-	[[nodiscard]] uint32_t AddSampler(const SamplerCreateInfo& info, uint32_t handle);
-	[[nodiscard]] uint32_t AddPool(const PoolCreateInfo& info, uint32_t handle);
-	void Bind(const BindInfo& info, uint32_t handle);
-	void UpdateBuffer(uint32_t sceneHandle, uint32_t bufferHandle, const void* data, uint32_t size, uint32_t offset);
-	[[nodiscard]] uint32_t CreateShader(const ShaderCreateInfo& info);
-	[[nodiscard]] uint32_t CreateLayout(const LayoutCreateInfo& info);
-	[[nodiscard]] uint32_t CreatePipeline(const PipelineCreateInfo& info);
+	[[nodiscard]] Resource CreateScene();
+	void ClearScene(Resource sceneHandle);
+	[[nodiscard]] Resource AddImage(const ImageCreateInfo& info, Resource sceneHandle);
+	void FillImage(Resource imageHandle, unsigned char* pixels);
+	[[nodiscard]] Resource AddMesh(const MeshCreateInfo& info, Resource sceneHandle);
+	[[nodiscard]] Resource AddBuffer(const BufferCreateInfo& info, Resource sceneHandle);
+	[[nodiscard]] Resource AddSampler(const SamplerCreateInfo& info, Resource sceneHandle);
+	[[nodiscard]] Resource AddPool(const PoolCreateInfo& info, Resource sceneHandle);
+	void Bind(const BindInfo& info);
+	void UpdateBuffer(Resource bufferHandle, const void* data, uint32_t size, uint32_t offset);
+	[[nodiscard]] Resource CreateShader(const ShaderCreateInfo& info);
+	[[nodiscard]] Resource CreateLayout(const LayoutCreateInfo& info);
+	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);
 	[[nodiscard]] bool RenderFrame();
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();

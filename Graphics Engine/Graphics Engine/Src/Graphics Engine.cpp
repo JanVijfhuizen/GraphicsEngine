@@ -32,7 +32,7 @@ int main()
 	jv::ge::ImageCreateInfo ici{};
 	ici.resolution = { texWidth, texHeight };
 	const auto image = AddImage(ici, scene);
-	jv::ge::FillImage(scene, image, pixels);
+	jv::ge::FillImage(image, pixels);
 
 	stbi_image_free(pixels);
 
@@ -41,7 +41,7 @@ int main()
 	const auto buffer = AddBuffer(bci, scene2);
 
 	uint64_t ui = 8;
-	jv::ge::UpdateBuffer(scene2, buffer, &ui, sizeof ui, 0);
+	jv::ge::UpdateBuffer(buffer, &ui, sizeof ui, 0);
 
 	jv::ge::Vertex2D vertices[4]
 	{
@@ -112,7 +112,7 @@ int main()
 	bindInfo.descriptorIndex = 0;
 	bindInfo.writes = &write;
 	bindInfo.writeCount = 1;
-	Bind(bindInfo, scene);
+	Bind(bindInfo);
 
 	// todo render call, semaphores
 
