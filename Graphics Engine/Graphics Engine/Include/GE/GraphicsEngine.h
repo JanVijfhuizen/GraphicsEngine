@@ -126,6 +126,29 @@ namespace jv::ge
 		uint32_t pushConstantSize = 0;
 	};
 
+	struct SamplerCreateInfo final
+	{
+		enum class Filter
+		{
+			nearest,
+			linear
+		} filter = Filter::nearest;
+
+		enum class AddressMode
+		{
+			repeat,
+			mirroredRepeat,
+			clampToEdge,
+			clampToBorder,
+			mirroredClampToBorder,
+			mirroredClampToEdge
+		};
+
+		AddressMode addressModeU = AddressMode::repeat;
+		AddressMode addressModeV = AddressMode::repeat;
+		AddressMode addressModeW = AddressMode::repeat;
+	};
+
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] uint32_t CreateScene();
@@ -134,6 +157,7 @@ namespace jv::ge
 	void FillImage(uint32_t sceneHandle, uint32_t imageHandle, unsigned char* pixels);
 	[[nodiscard]] uint32_t AddMesh(const MeshCreateInfo& info, uint32_t handle);
 	[[nodiscard]] uint32_t AddBuffer(const BufferCreateInfo& info, uint32_t handle);
+	[[nodiscard]] uint32_t AddSampler(const SamplerCreateInfo& info, uint32_t handle);
 	[[nodiscard]] uint32_t AddPool(const PoolCreateInfo& info, uint32_t handle);
 	void UpdateBuffer(uint32_t sceneHandle, uint32_t bufferHandle, const void* data, uint32_t size, uint32_t offset);
 	[[nodiscard]] uint32_t CreateShader(const ShaderCreateInfo& info);

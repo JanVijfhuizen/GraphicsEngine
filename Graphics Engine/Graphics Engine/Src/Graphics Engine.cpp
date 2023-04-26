@@ -94,6 +94,9 @@ int main()
 	pipelineCreateInfo.layouts = &layout;
 	const auto pipeline = CreatePipeline(pipelineCreateInfo);
 
+	jv::ge::SamplerCreateInfo samplerCreateInfo{};
+	const auto sampler = AddSampler(samplerCreateInfo, scene);
+
 	jv::ge::PoolCreateInfo poolCreateInfo{};
 	poolCreateInfo.layout = layout;
 	poolCreateInfo.capacity = 20;

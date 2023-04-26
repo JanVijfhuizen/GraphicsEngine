@@ -24,6 +24,7 @@ namespace jv::ge
 		image,
 		mesh,
 		buffer,
+		sampler,
 		pool
 	};
 
@@ -44,6 +45,11 @@ namespace jv::ge
 	{
 		vk::Buffer buffer;
 		BufferCreateInfo info;
+	};
+
+	struct Sampler final
+	{
+		VkSampler sampler;
 	};
 
 	struct Pool final
@@ -80,6 +86,7 @@ namespace jv::ge
 		LinkedList<Image> images{};
 		LinkedList<Mesh> meshes{};
 		LinkedList<Buffer> buffers{};
+		LinkedList<Sampler> samplers{};
 		LinkedList<Pool> pools{};
 	};
 
@@ -212,11 +219,13 @@ namespace jv::ge
 		uint32_t imageIndex = 0;
 		uint32_t meshIndex = 0;
 		uint32_t bufferIndex = 0;
+		uint32_t samplerIndex = 0;
 		uint32_t poolIndex = 0;
 
 		Image image;
 		Mesh mesh;
 		Buffer buffer;
+		Sampler sampler;
 		Pool pool;
 
 		for (const auto& allocation : scene.allocations)
@@ -235,6 +244,10 @@ namespace jv::ge
 			case AllocationType::buffer:
 				buffer = scene.buffers[bufferIndex++];
 				vkDestroyBuffer(ge.app.device, buffer.buffer.buffer, nullptr);
+				break;
+			case AllocationType::sampler:
+				sampler = scene.samplers[samplerIndex++];
+				vkDestroySampler(ge.app.device, sampler.sampler, nullptr);
 				break;
 			case AllocationType::pool:
 				pool = scene.pools[poolIndex++];
@@ -398,6 +411,77 @@ namespace jv::ge
 
 		Add(scene.arena, scene.allocations) = AllocationType::buffer;
 		return scene.buffers.GetCount() - 1;
+	}
+
+	VkSamplerAddressMode GetAddressMode(const SamplerCreateInfo::AddressMode mode)
+	{
+		VkSamplerAddressMode addressMode{};
+		switch (mode)
+		{
+		case SamplerCreateInfo::AddressMode::repeat:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+			break;
+		case SamplerCreateInfo::AddressMode::mirroredRepeat:
+			break;
+		case SamplerCreateInfo::AddressMode::clampToEdge:
+			break;
+		case SamplerCreateInfo::AddressMode::clampToBorder:
+			break;
+		case SamplerCreateInfo::AddressMode::mirroredClampToBorder:
+			break;
+		case SamplerCreateInfo::AddressMode::mirroredClampToEdge:
+			break;
+		default:
+			std::cerr << "Address mode not supported." << std::endl;
+		}
+		return addressMode;
+	}
+
+	uint32_t AddSampler(const SamplerCreateInfo& info, const uint32_t handle)
+	{
+		assert(ge.initialized);
+		auto& scene = ge.scenes[handle];
+		auto& sampler = Add(scene.arena, scene.samplers) = {};
+
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(ge.app.physicalDevice, &properties);
+
+		VkFilter filter{};
+		switch (info.filter)
+		{
+		case SamplerCreateInfo::Filter::nearest:
+			filter = VK_FILTER_NEAREST;
+			break;
+		case SamplerCreateInfo::Filter::linear:
+			filter = VK_FILTER_LINEAR;
+			break;
+		default:
+			std::cerr << "Filter type not supported." << std::endl;
+		}
+
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = filter;
+		samplerInfo.minFilter = filter;
+		samplerInfo.addressModeU = GetAddressMode(info.addressModeU);
+		samplerInfo.addressModeV = GetAddressMode(info.addressModeV);
+		samplerInfo.addressModeW = GetAddressMode(info.addressModeW);
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0;
+		samplerInfo.maxLod = 0;
+
+		const auto result = vkCreateSampler(ge.app.device, &samplerInfo, nullptr, &sampler.sampler);
+		assert(!result);
+
+		Add(scene.arena, scene.allocations) = AllocationType::sampler;
+		return scene.samplers.GetCount() - 1;
 	}
 
 	uint32_t AddPool(const PoolCreateInfo& info, const uint32_t handle)
