@@ -149,6 +149,38 @@ namespace jv::ge
 		AddressMode addressModeW = AddressMode::repeat;
 	};
 
+	struct BindInfo final
+	{
+		struct Image final
+		{
+			uint32_t image;
+			uint32_t sampler;
+		};
+
+		struct Buffer final
+		{
+			uint32_t buffer;
+			uint32_t range;
+			uint32_t offset = 0;
+		};
+
+		struct Write final 
+		{
+			BindingType type;
+			union
+			{
+				Image image;
+				Buffer buffer{};
+			};
+			uint32_t index;
+		};
+
+		uint32_t pool;
+		uint32_t descriptorIndex;
+		Write* writes;
+		uint32_t writeCount;
+	};
+
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] uint32_t CreateScene();
@@ -159,6 +191,7 @@ namespace jv::ge
 	[[nodiscard]] uint32_t AddBuffer(const BufferCreateInfo& info, uint32_t handle);
 	[[nodiscard]] uint32_t AddSampler(const SamplerCreateInfo& info, uint32_t handle);
 	[[nodiscard]] uint32_t AddPool(const PoolCreateInfo& info, uint32_t handle);
+	void Bind(const BindInfo& info, uint32_t handle);
 	void UpdateBuffer(uint32_t sceneHandle, uint32_t bufferHandle, const void* data, uint32_t size, uint32_t offset);
 	[[nodiscard]] uint32_t CreateShader(const ShaderCreateInfo& info);
 	[[nodiscard]] uint32_t CreateLayout(const LayoutCreateInfo& info);

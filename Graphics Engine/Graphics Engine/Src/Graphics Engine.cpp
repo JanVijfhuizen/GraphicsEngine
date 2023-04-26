@@ -102,7 +102,19 @@ int main()
 	poolCreateInfo.capacity = 20;
 	const auto pool = AddPool(poolCreateInfo, scene);
 
-	// todo render call, descriptor pools, semaphores
+	jv::ge::BindInfo::Write write{};
+	write.type = jv::ge::BindingType::sampler;
+	write.image.image = image;
+	write.image.sampler = sampler;
+
+	jv::ge::BindInfo bindInfo{};
+	bindInfo.pool = pool;
+	bindInfo.descriptorIndex = 0;
+	bindInfo.writes = &write;
+	bindInfo.writeCount = 1;
+	Bind(bindInfo, scene);
+
+	// todo render call, semaphores
 
 	while (jv::ge::RenderFrame())
 		;

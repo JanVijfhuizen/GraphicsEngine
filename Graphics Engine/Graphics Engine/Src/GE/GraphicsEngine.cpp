@@ -542,6 +542,72 @@ namespace jv::ge
 		return scene.pools.GetCount() - 1;
 	}
 
+	void Bind(const BindInfo& info, const uint32_t handle)
+	{
+		assert(ge.initialized);
+		const auto scope = ge.tempArena.CreateScope();
+		const auto& scene = ge.scenes[handle];
+		const auto& descriptorSet = scene.pools[info.pool].sets[info.descriptorIndex];
+
+		const auto writes = CreateArray<VkWriteDescriptorSet>(ge.tempArena, info.writeCount);
+		for (uint32_t i = 0; i < info.writeCount; ++i)
+		{
+			const auto& writeInfo = info.writes[i];
+			auto& write = writes[i] = {};
+			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			write.dstBinding = writeInfo.index;
+			write.dstSet = descriptorSet;
+			write.descriptorCount = 1;
+			write.dstArrayElement = 0;
+
+			VkDescriptorBufferInfo* bufferInfo;
+			VkDescriptorImageInfo* imageInfo;
+			Buffer buffer{};
+			Sampler sampler{};
+			Image image{};
+
+			switch (writeInfo.type)
+			{
+				case BindingType::uniformBuffer:
+					bufferInfo = ge.tempArena.New<VkDescriptorBufferInfo>();
+					*bufferInfo = {};
+					buffer = scene.buffers[writeInfo.buffer.buffer];
+					bufferInfo->buffer = buffer.buffer.buffer;
+					bufferInfo->offset = writeInfo.buffer.offset;
+					bufferInfo->range = writeInfo.buffer.range;
+					write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+					write.pBufferInfo = bufferInfo;
+					break;
+				case BindingType::storageBuffer:
+					bufferInfo = ge.tempArena.New<VkDescriptorBufferInfo>();
+					*bufferInfo = {};
+					buffer = scene.buffers[writeInfo.buffer.buffer];
+					bufferInfo->buffer = buffer.buffer.buffer;
+					bufferInfo->offset = writeInfo.buffer.offset;
+					bufferInfo->range = writeInfo.buffer.range;
+					write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+					write.pBufferInfo = bufferInfo;
+					break;
+				case BindingType::sampler:
+					imageInfo = ge.tempArena.New<VkDescriptorImageInfo>();
+					*imageInfo = {};
+					sampler = scene.samplers[writeInfo.image.sampler];
+					image = scene.images[writeInfo.image.image];
+					imageInfo->imageLayout = image.image.layout;
+					imageInfo->imageView = image.view;
+					imageInfo->sampler = sampler.sampler;
+					write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					write.pImageInfo = imageInfo;
+					break;
+				default:
+					std::cerr << "Binding type not supported." << std::endl;
+			}
+		}
+
+		vkUpdateDescriptorSets(ge.app.device, writes.length, writes.ptr, 0, nullptr);
+		ge.tempArena.DestroyScope(scope);
+	}
+
 	void UpdateBuffer(const uint32_t sceneHandle, const uint32_t bufferHandle, const void* data, const uint32_t size, const uint32_t offset)
 	{
 		assert(ge.initialized);
