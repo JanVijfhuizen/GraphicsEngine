@@ -91,7 +91,7 @@ namespace jv::ge
 	struct RenderTargetSwap final
 	{
 		FrameBuffer* frameBuffer;
-		uint32_t drawCount = 0;
+		uint32_t drawIndex = 0;
 	};
 
 	struct Scene final
@@ -133,6 +133,7 @@ namespace jv::ge
 
 		LinkedList<RenderTargetSwap> renderTargetSwaps{};
 		LinkedList<DrawInfo> draws{};
+		uint32_t swapChainRenderTargetDrawIndex = 0;
 	} ge{};
 
 	void* Alloc(const uint32_t size)
@@ -883,9 +884,16 @@ namespace jv::ge
 
 	void SetRenderTarget(const Resource frameBuffer)
 	{
+		if(ge.swapChainRenderTargetDrawIndex != 0)
+			std::cerr << "Swap chain already set as render target." << std::endl;
 		auto& renderTargetSwap = Add(ge.frameArena, ge.renderTargetSwaps);
 		renderTargetSwap.frameBuffer = static_cast<FrameBuffer*>(frameBuffer);
-		renderTargetSwap.drawCount = ge.draws.GetCount();
+		renderTargetSwap.drawIndex = ge.draws.GetCount();
+	}
+
+	void SetRenderTargetToSwapChain()
+	{
+		ge.swapChainRenderTargetDrawIndex = ge.draws.GetCount();
 	}
 
 	void Draw(const DrawInfo& info)
@@ -918,11 +926,41 @@ namespace jv::ge
 			return false;
 
 		ge.swapChain.WaitForImage(ge.app);
+
+		const auto draws = ToArray(ge.frameArena, ge.draws);
+		const auto swaps = ToArray(ge.frameArena, ge.renderTargetSwaps);
+
+		uint32_t drawIndex = 0;
+
+		// Make sure that nothing is being drawn to the swap chain before the other frame buffers.
+		if (swaps.length > 0)
+		{
+			drawIndex = swaps[0].drawIndex;
+			if(drawIndex != 0)
+				std::cerr << "Cannot draw to the swap chain before drawing to frame buffers. Draws made will be ignored." << std::endl;
+
+			for (uint32_t i = 0; i < swaps.length - 1; ++i)
+			{
+				const auto swap = swaps[i];
+				const auto nextSwap = swaps[i + 1];
+
+				// Swap frame buffer.
+
+				while (drawIndex < nextSwap.drawIndex)
+				{
+					const auto& draw = draws[drawIndex++];
+
+				}
+
+				// End draw.
+			}
+		}
+
 		const auto cmd = ge.swapChain.BeginFrame(ge.app, true);
 
-		// semi temp
-		for (const auto& draw : ge.draws)
+		for (uint32_t i = drawIndex; i < draws.length; ++i)
 		{
+			const auto& draw = draws[i];
 			const auto pipeline = static_cast<Pipeline*>(draw.pipeline);
 			const auto mesh = static_cast<Mesh*>(draw.mesh);
 			pipeline->pipeline.Bind(cmd);
@@ -939,6 +977,7 @@ namespace jv::ge
 		ge.frameArena.Clear();
 		ge.draws = {};
 		ge.renderTargetSwaps = {};
+		ge.swapChainRenderTargetDrawIndex = 0;
 		return true;
 	}
 

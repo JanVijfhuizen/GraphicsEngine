@@ -229,7 +229,8 @@ namespace jv::ge
 	[[nodiscard]] Resource CreateRenderPass(const RenderPassCreateInfo& info);
 	[[nodiscard]] Resource CreateFrameBuffer(const FrameBufferCreateInfo& info);
 	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);
-	void SetRenderTarget(Resource frameBuffer = nullptr);
+	void SetRenderTarget(Resource frameBuffer);
+	void SetRenderTargetToSwapChain();
 	void Draw(const DrawInfo& info);
 	[[nodiscard]] bool RenderFrame();
 	[[nodiscard]] uint32_t GetFrameCount();
