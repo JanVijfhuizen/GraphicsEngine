@@ -172,8 +172,7 @@ namespace jv::ge
 			};
 			uint32_t index;
 		};
-		Resource pool;
-		uint32_t descriptorIndex;
+		Resource descriptorSet;
 		Binding* bindings;
 		uint32_t bindingCount;
 	};
@@ -186,6 +185,15 @@ namespace jv::ge
 		uint32_t offset = 0;
 	};
 
+	struct DrawInfo final
+	{
+		Resource descriptorSets[4]{};
+		uint32_t descriptorSetCount;
+		Resource mesh;
+		Resource pipeline;
+		uint32_t instanceCount = 1;
+	};
+
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] Resource CreateScene();
@@ -196,11 +204,13 @@ namespace jv::ge
 	[[nodiscard]] Resource AddBuffer(const BufferCreateInfo& info);
 	[[nodiscard]] Resource AddSampler(const SamplerCreateInfo& info);
 	[[nodiscard]] Resource AddDescriptorPool(const DescriptorPoolCreateInfo& info);
+	[[nodiscard]] Resource GetDescriptorSet(Resource pool, uint32_t index);
 	void Write(const WriteInfo& info);
 	void UpdateBuffer(const BufferUpdateInfo& info);
 	[[nodiscard]] Resource CreateShader(const ShaderCreateInfo& info);
 	[[nodiscard]] Resource CreateLayout(const LayoutCreateInfo& info);
 	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);
+	void Draw(const DrawInfo& info);
 	[[nodiscard]] bool RenderFrame();
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();

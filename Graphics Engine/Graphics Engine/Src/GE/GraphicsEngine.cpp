@@ -99,6 +99,8 @@ namespace jv::ge
 		void* arenaMem;
 		Arena tempArena;
 		void* tempArenaMem;
+		Arena frameArena;
+		void* frameArenaMem;
 
 		vk::GLFWApp glfwApp;
 		vk::App app;
@@ -110,6 +112,8 @@ namespace jv::ge
 		LinkedList<Shader> shaders{};
 		LinkedList<Layout> layouts{};
 		LinkedList<Pipeline> pipelines{};
+
+		LinkedList<DrawInfo> draws{};
 	} ge{};
 
 	void* Alloc(const uint32_t size)
@@ -157,6 +161,7 @@ namespace jv::ge
 
 		ge.arenaMem = malloc(ARENA_SIZE);
 		ge.tempArenaMem = malloc(ARENA_SIZE);
+		ge.frameArenaMem = malloc(ARENA_SIZE);
 
 		ArenaCreateInfo arenaInfo{};
 		arenaInfo.alloc = Alloc;
@@ -166,6 +171,8 @@ namespace jv::ge
 		ge.arena = Arena::Create(arenaInfo);
 		arenaInfo.memory = ge.tempArenaMem;
 		ge.tempArena = Arena::Create(arenaInfo);
+		arenaInfo.memory = ge.frameArenaMem;
+		ge.frameArena = Arena::Create(arenaInfo);
 
 		ge.glfwApp = vk::GLFWApp::Create(info.name, info.resolution, info.fullscreen);
 
@@ -542,12 +549,16 @@ namespace jv::ge
 		return &pool;
 	}
 
+	Resource GetDescriptorSet(const Resource pool, const uint32_t index)
+	{
+		return static_cast<DescriptorPool*>(pool)->sets[index];
+	}
+
 	void Write(const WriteInfo& info)
 	{
 		assert(ge.initialized);
 		const auto scope = ge.tempArena.CreateScope();
-		const auto pool = static_cast<DescriptorPool*>(info.pool);
-		const auto& descriptorSet = pool->sets[info.descriptorIndex];
+		const auto& descriptorSet = static_cast<VkDescriptorSet>(info.descriptorSet);
 
 		const auto writes = CreateArray<VkWriteDescriptorSet>(ge.tempArena, info.bindingCount);
 		for (uint32_t i = 0; i < info.bindingCount; ++i)
@@ -799,6 +810,11 @@ namespace jv::ge
 		return &pipeline;
 	}
 
+	void Draw(const DrawInfo& info)
+	{
+		Add(ge.frameArena, ge.draws) = info;
+	}
+
 	void DestroyScenes()
 	{
 		assert(ge.initialized);
@@ -823,9 +839,26 @@ namespace jv::ge
 			return false;
 
 		ge.swapChain.WaitForImage(ge.app);
-		auto cmdBuffer = ge.swapChain.BeginFrame(ge.app, true);
+		const auto cmdBuffer = ge.swapChain.BeginFrame(ge.app, true);
+
+		// semi temp
+		for (const auto& draw : ge.draws)
+		{
+			const auto pipeline = static_cast<Pipeline*>(draw.pipeline);
+			const auto mesh = static_cast<Mesh*>(draw.mesh);
+			pipeline->pipeline.Bind(cmdBuffer);
+
+			const auto descriptorSets = reinterpret_cast<const VkDescriptorSet*>(draw.descriptorSets);
+
+			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,
+				0, draw.descriptorSetCount, descriptorSets, 0, nullptr);
+			mesh->mesh.Draw(cmdBuffer, draw.instanceCount);
+		}
+
 		ge.swapChain.EndFrame(ge.tempArena, ge.app);
 
+		ge.frameArena.Clear();
+		ge.draws = {};
 		return true;
 	}
 
@@ -871,8 +904,10 @@ namespace jv::ge
 
 		vk::init::DestroyApp(ge.app);
 		vk::GLFWApp::Destroy(ge.glfwApp);
+		Arena::Destroy(ge.frameArena);
 		Arena::Destroy(ge.tempArena);
 		Arena::Destroy(ge.arena);
+		free(ge.frameArenaMem);
 		free(ge.tempArenaMem);
 		free(ge.arenaMem);
 

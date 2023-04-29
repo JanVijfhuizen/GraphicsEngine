@@ -51,10 +51,10 @@ int main()
 
 	jv::ge::Vertex2D vertices[4]
 	{
-		glm::vec2{ -1, -1 },
-		glm::vec2{ -1, 1 },
-		glm::vec2{ 1, 1 },
-		glm::vec2{ 1, -1 }
+		{glm::vec2{ -1, -1 }, glm::vec2{0, 0}},
+		{glm::vec2{ -1, 1 },glm::vec2{0, 1}},
+		{glm::vec2{ 1, 1 }, glm::vec2{1, 1}},
+		{glm::vec2{ 1, -1 }, glm::vec2{1, 0}}
 	};
 	uint16_t indices[6]{0, 1, 2, 0, 2, 3};
 
@@ -117,8 +117,7 @@ int main()
 	writeBindingInfo.image.sampler = sampler;
 
 	jv::ge::WriteInfo writeInfo{};
-	writeInfo.pool = pool;
-	writeInfo.descriptorIndex = 0;
+	writeInfo.descriptorSet = jv::ge::GetDescriptorSet(pool, 0);
 	writeInfo.bindings = &writeBindingInfo;
 	writeInfo.bindingCount = 1;
 	Write(writeInfo);
@@ -126,7 +125,15 @@ int main()
 	// todo render call, semaphores
 
 	while (jv::ge::RenderFrame())
-		;
+	{
+		jv::ge::DrawInfo drawInfo{};
+		drawInfo.pipeline = pipeline;
+		drawInfo.mesh = mesh;
+		drawInfo.descriptorSetCount = 1;
+		drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(pool, 0);
+		drawInfo.instanceCount = 1;
+		Draw(drawInfo);
+	}
 
 	jv::ge::Shutdown();
 }
