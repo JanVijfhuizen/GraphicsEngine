@@ -884,8 +884,12 @@ namespace jv::ge
 
 	void SetRenderTarget(const Resource frameBuffer)
 	{
+#ifdef _DEBUG
+		if(ge.draws.GetCount() > 0 && ge.renderTargetSwaps.GetCount() == 0)
+			std::cerr << "Cannot swap render targets since you've already drawn to the swap chain." << std::endl;
 		if(ge.swapChainRenderTargetDrawIndex != 0)
 			std::cerr << "Swap chain already set as render target." << std::endl;
+#endif
 		auto& renderTargetSwap = Add(ge.frameArena, ge.renderTargetSwaps);
 		renderTargetSwap.frameBuffer = static_cast<FrameBuffer*>(frameBuffer);
 		renderTargetSwap.drawIndex = ge.draws.GetCount();
@@ -935,10 +939,6 @@ namespace jv::ge
 		// Make sure that nothing is being drawn to the swap chain before the other frame buffers.
 		if (swaps.length > 0)
 		{
-			drawIndex = swaps[0].drawIndex;
-			if(drawIndex != 0)
-				std::cerr << "Cannot draw to the swap chain before drawing to frame buffers. Draws made will be ignored." << std::endl;
-
 			for (uint32_t i = 0; i < swaps.length - 1; ++i)
 			{
 				const auto swap = swaps[i];
