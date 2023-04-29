@@ -88,6 +88,12 @@ namespace jv::ge
 		vk::Pipeline pipeline;
 	};
 
+	struct RenderTargetSwap final
+	{
+		FrameBuffer* frameBuffer;
+		uint32_t drawCount = 0;
+	};
+
 	struct Scene final
 	{
 		Arena arena;
@@ -125,6 +131,7 @@ namespace jv::ge
 		LinkedList<FrameBuffer> frameBuffers{};
 		LinkedList<Pipeline> pipelines{};
 
+		LinkedList<RenderTargetSwap> renderTargetSwaps{};
 		LinkedList<DrawInfo> draws{};
 	} ge{};
 
@@ -874,6 +881,13 @@ namespace jv::ge
 		return &pipeline;
 	}
 
+	void SetRenderTarget(const Resource frameBuffer)
+	{
+		auto& renderTargetSwap = Add(ge.frameArena, ge.renderTargetSwaps);
+		renderTargetSwap.frameBuffer = static_cast<FrameBuffer*>(frameBuffer);
+		renderTargetSwap.drawCount = ge.draws.GetCount();
+	}
+
 	void Draw(const DrawInfo& info)
 	{
 		assert(ge.initialized);
@@ -904,26 +918,27 @@ namespace jv::ge
 			return false;
 
 		ge.swapChain.WaitForImage(ge.app);
-		const auto cmdBuffer = ge.swapChain.BeginFrame(ge.app, true);
+		const auto cmd = ge.swapChain.BeginFrame(ge.app, true);
 
 		// semi temp
 		for (const auto& draw : ge.draws)
 		{
 			const auto pipeline = static_cast<Pipeline*>(draw.pipeline);
 			const auto mesh = static_cast<Mesh*>(draw.mesh);
-			pipeline->pipeline.Bind(cmdBuffer);
+			pipeline->pipeline.Bind(cmd);
 
 			const auto descriptorSets = reinterpret_cast<const VkDescriptorSet*>(draw.descriptorSets);
 
-			vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,
+			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,
 				0, draw.descriptorSetCount, descriptorSets, 0, nullptr);
-			mesh->mesh.Draw(cmdBuffer, draw.instanceCount);
+			mesh->mesh.Draw(cmd, draw.instanceCount);
 		}
 
 		ge.swapChain.EndFrame(ge.tempArena, ge.app);
 
 		ge.frameArena.Clear();
 		ge.draws = {};
+		ge.renderTargetSwaps = {};
 		return true;
 	}
 
