@@ -93,12 +93,16 @@ int main()
 	layoutCreateInfo.bindingsCount = 1;
 
 	auto layout = CreateLayout(layoutCreateInfo);
-	
+
+	jv::ge::RenderPassCreateInfo renderPassCreateInfo{};
+	const auto renderPass = CreateRenderPass(renderPassCreateInfo);
+
 	jv::ge::PipelineCreateInfo pipelineCreateInfo{};
 	pipelineCreateInfo.resolution = info.resolution;
 	pipelineCreateInfo.shader = shader;
 	pipelineCreateInfo.layoutCount = 1;
 	pipelineCreateInfo.layouts = &layout;
+	pipelineCreateInfo.renderPass = renderPass;
 	const auto pipeline = CreatePipeline(pipelineCreateInfo);
 
 	jv::ge::SamplerCreateInfo samplerCreateInfo{};

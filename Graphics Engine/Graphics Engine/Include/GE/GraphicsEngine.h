@@ -115,15 +115,26 @@ namespace jv::ge
 		uint32_t bindingsCount;
 	};
 
+	struct RenderPassCreateInfo final
+	{
+		enum class DrawTarget
+		{
+			image,
+			swapChain
+		} target = DrawTarget::swapChain;
+
+		bool colorOutput = true;
+		bool depthOutput = false;
+	};
+
 	struct PipelineCreateInfo final
 	{
 		Resource shader;
 		Resource* layouts;
+		Resource renderPass;
 		uint32_t layoutCount;
 		glm::ivec2 resolution;
 		VertexType vertexType = VertexType::v2D;
-		bool colorOutput = true;
-		bool depthOutput = false;
 		uint32_t pushConstantSize = 0;
 	};
 
@@ -209,6 +220,7 @@ namespace jv::ge
 	void UpdateBuffer(const BufferUpdateInfo& info);
 	[[nodiscard]] Resource CreateShader(const ShaderCreateInfo& info);
 	[[nodiscard]] Resource CreateLayout(const LayoutCreateInfo& info);
+	[[nodiscard]] Resource CreateRenderPass(const RenderPassCreateInfo& info);
 	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);
 	void Draw(const DrawInfo& info);
 	[[nodiscard]] bool RenderFrame();

@@ -71,10 +71,14 @@ namespace jv::ge
 		Array<BindingType> bindings;
 	};
 
+	struct RenderPass final
+	{
+		VkRenderPass renderPass;
+	};
+
 	struct Pipeline final
 	{
 		Array<VkDescriptorSetLayout> layouts;
-		VkRenderPass renderPass;
 		vk::Pipeline pipeline;
 	};
 
@@ -111,6 +115,7 @@ namespace jv::ge
 		LinkedList<Scene> scenes{};
 		LinkedList<Shader> shaders{};
 		LinkedList<Layout> layouts{};
+		LinkedList<RenderPass> renderPasses{};
 		LinkedList<Pipeline> pipelines{};
 
 		LinkedList<DrawInfo> draws{};
@@ -689,26 +694,17 @@ namespace jv::ge
 		return &layout;
 	}
 
-	Resource CreatePipeline(const PipelineCreateInfo& info)
+	Resource CreateRenderPass(const RenderPassCreateInfo& info)
 	{
 		assert(ge.initialized);
-		auto& pipeline = Add(ge.arena, ge.pipelines);
-		pipeline.layouts = CreateArray<VkDescriptorSetLayout>(ge.arena, info.layoutCount);
-
-		for (uint32_t i = 0; i < info.layoutCount; ++i)
-		{
-			const auto layout = static_cast<Layout*>(info.layouts[i]);
-			pipeline.layouts[i] = layout->layout;
-		}
-
-		const auto shader = static_cast<Shader*>(info.shader);
+		auto& renderPass = Add(ge.arena, ge.renderPasses);
 
 		VkAttachmentReference colorAttachmentRef{};
 		colorAttachmentRef.attachment = 0;
 		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentDescription attachmentDescriptions[2]{};
-		
+
 		VkAttachmentDescription attachmentInfo = attachmentDescriptions[0];
 		attachmentInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -716,8 +712,19 @@ namespace jv::ge
 		attachmentInfo.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachmentInfo.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachmentInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachmentInfo.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		attachmentInfo.format = ge.swapChain.GetFormat();
+
+		switch (info.target)
+		{
+			case RenderPassCreateInfo::DrawTarget::image:
+				attachmentInfo.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				break;
+			case RenderPassCreateInfo::DrawTarget::swapChain:
+				attachmentInfo.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+				break;
+			default:
+				std::cerr << "Draw target not supported." << std::endl;
+		}
 
 		VkAttachmentDescription depthAttachment = attachmentDescriptions[info.colorOutput];
 		depthAttachment.format = GetDepthBufferFormat();
@@ -762,9 +769,26 @@ namespace jv::ge
 		renderPassCreateInfo.subpassCount = 1;
 		renderPassCreateInfo.pDependencies = &subpassDependency;
 		renderPassCreateInfo.dependencyCount = 1;
-
-		const auto renderPassResult = vkCreateRenderPass(ge.app.device, &renderPassCreateInfo, nullptr, &pipeline.renderPass);
+		
+		const auto renderPassResult = vkCreateRenderPass(ge.app.device, &renderPassCreateInfo, nullptr, &renderPass.renderPass);
 		assert(!renderPassResult);
+		
+		return &renderPass;
+	}
+
+	Resource CreatePipeline(const PipelineCreateInfo& info)
+	{
+		assert(ge.initialized);
+		auto& pipeline = Add(ge.arena, ge.pipelines);
+		pipeline.layouts = CreateArray<VkDescriptorSetLayout>(ge.arena, info.layoutCount);
+
+		for (uint32_t i = 0; i < info.layoutCount; ++i)
+		{
+			const auto layout = static_cast<Layout*>(info.layouts[i]);
+			pipeline.layouts[i] = layout->layout;
+		}
+
+		const auto shader = static_cast<Shader*>(info.shader);
 
 		vk::PipelineCreateInfo::Module modules[2]{};
 		uint32_t moduleCount = 0;
@@ -787,7 +811,7 @@ namespace jv::ge
 		pipelineCreateInfo.modules.ptr = modules;
 		pipelineCreateInfo.modules.length = moduleCount;
 		pipelineCreateInfo.resolution = info.resolution;
-		pipelineCreateInfo.renderPass = pipeline.renderPass;
+		pipelineCreateInfo.renderPass = static_cast<RenderPass*>(info.renderPass)->renderPass;
 		pipelineCreateInfo.layouts.ptr = pipeline.layouts.ptr;
 		pipelineCreateInfo.layouts.length = info.layoutCount;
 		pipelineCreateInfo.pushConstantSize = info.pushConstantSize;
@@ -812,6 +836,7 @@ namespace jv::ge
 
 	void Draw(const DrawInfo& info)
 	{
+		assert(ge.initialized);
 		Add(ge.frameArena, ge.draws) = info;
 	}
 
@@ -886,10 +911,10 @@ namespace jv::ge
 		vk::SwapChain::Destroy(ge.arena, ge.app, ge.swapChain);
 
 		for (const auto& pipeline : ge.pipelines)
-		{
 			vk::Pipeline::Destroy(pipeline.pipeline, ge.app);
-			vkDestroyRenderPass(ge.app.device, pipeline.renderPass, nullptr);
-		}
+
+		for (const auto& renderPass : ge.renderPasses)
+			vkDestroyRenderPass(ge.app.device, renderPass.renderPass, nullptr);
 
 		for (const auto& layout : ge.layouts)
 			vkDestroyDescriptorSetLayout(ge.app.device, layout.layout, nullptr);
