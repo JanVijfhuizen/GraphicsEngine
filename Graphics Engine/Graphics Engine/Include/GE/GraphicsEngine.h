@@ -127,6 +127,12 @@ namespace jv::ge
 		bool depthOutput = false;
 	};
 
+	struct FrameBufferCreateInfo final
+	{
+		Resource* images;
+		Resource renderPass;
+	};
+
 	struct PipelineCreateInfo final
 	{
 		Resource shader;
@@ -221,6 +227,7 @@ namespace jv::ge
 	[[nodiscard]] Resource CreateShader(const ShaderCreateInfo& info);
 	[[nodiscard]] Resource CreateLayout(const LayoutCreateInfo& info);
 	[[nodiscard]] Resource CreateRenderPass(const RenderPassCreateInfo& info);
+	[[nodiscard]] Resource CreateFrameBuffer(const FrameBufferCreateInfo& info);
 	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);
 	void Draw(const DrawInfo& info);
 	[[nodiscard]] bool RenderFrame();

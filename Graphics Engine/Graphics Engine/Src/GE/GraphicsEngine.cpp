@@ -74,6 +74,12 @@ namespace jv::ge
 	struct RenderPass final
 	{
 		VkRenderPass renderPass;
+		RenderPassCreateInfo info;
+	};
+
+	struct FrameBuffer final
+	{
+		VkFramebuffer frameBuffer;
 	};
 
 	struct Pipeline final
@@ -116,6 +122,7 @@ namespace jv::ge
 		LinkedList<Shader> shaders{};
 		LinkedList<Layout> layouts{};
 		LinkedList<RenderPass> renderPasses{};
+		LinkedList<FrameBuffer> frameBuffers{};
 		LinkedList<Pipeline> pipelines{};
 
 		LinkedList<DrawInfo> draws{};
@@ -726,7 +733,7 @@ namespace jv::ge
 				std::cerr << "Draw target not supported." << std::endl;
 		}
 
-		VkAttachmentDescription depthAttachment = attachmentDescriptions[info.colorOutput];
+		auto& depthAttachment = attachmentDescriptions[info.colorOutput];
 		depthAttachment.format = GetDepthBufferFormat();
 		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -772,8 +779,41 @@ namespace jv::ge
 		
 		const auto renderPassResult = vkCreateRenderPass(ge.app.device, &renderPassCreateInfo, nullptr, &renderPass.renderPass);
 		assert(!renderPassResult);
-		
+
+		renderPass.info = info;
 		return &renderPass;
+	}
+
+	Resource CreateFrameBuffer(const FrameBufferCreateInfo& info)
+	{
+		assert(ge.initialized);
+		auto& frameBuffer = Add(ge.arena, ge.frameBuffers);
+		const auto renderPass = static_cast<RenderPass*>(info.renderPass);
+		const auto scope = ge.tempArena.CreateScope();
+		
+		const auto images = CreateArray<Image*>(ge.tempArena, 
+			static_cast<uint32_t>(renderPass->info.colorOutput) + renderPass->info.depthOutput);
+		for (uint32_t i = 0; i < images.length; ++i)
+			images[i] = static_cast<Image*>(info.images[i]);
+
+		VkFramebufferCreateInfo frameBufferCreateInfo{};
+		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		frameBufferCreateInfo.layers = 1;
+		frameBufferCreateInfo.attachmentCount = 1;
+		frameBufferCreateInfo.renderPass = renderPass->renderPass;
+		frameBufferCreateInfo.width = images[0]->info.resolution.x;
+		frameBufferCreateInfo.height = images[0]->info.resolution.y;
+
+		const auto views = CreateArray<VkImageView>(ge.tempArena, images.length);
+		for (uint32_t i = 0; i < views.length; ++i)
+			views[i] = images[i]->view;
+
+		frameBufferCreateInfo.pAttachments = views.ptr;
+		const auto frameBufferResult = vkCreateFramebuffer(ge.app.device, &frameBufferCreateInfo, nullptr, &frameBuffer.frameBuffer);
+		assert(!frameBufferResult);
+
+		ge.tempArena.DestroyScope(scope);
+		return &frameBuffer;
 	}
 
 	Resource CreatePipeline(const PipelineCreateInfo& info)
@@ -915,6 +955,9 @@ namespace jv::ge
 
 		for (const auto& renderPass : ge.renderPasses)
 			vkDestroyRenderPass(ge.app.device, renderPass.renderPass, nullptr);
+
+		for (const auto& frameBuffer : ge.frameBuffers)
+			vkDestroyFramebuffer(ge.app.device, frameBuffer.frameBuffer, nullptr);
 
 		for (const auto& layout : ge.layouts)
 			vkDestroyDescriptorSetLayout(ge.app.device, layout.layout, nullptr);
