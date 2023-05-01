@@ -14,6 +14,7 @@
 #include "Vk/VkSwapChain.h"
 #include "VkHL/VkGLFWApp.h"
 #include "VkHL/VkMesh.h"
+#include "VkHL/VkVertex.h"
 
 namespace jv::ge
 {
@@ -259,7 +260,7 @@ namespace jv::ge
 				vk::Image::Destroy(scene->freeArena, ge.app, allocation.image.image);
 				break;
 			case Allocation::Type::mesh:
-				vk::Mesh::Destroy(scene->freeArena, ge.app, allocation.mesh.mesh);
+				vk::Mesh::Destroy(scene->arena, scene->freeArena, ge.app, allocation.mesh.mesh, false);
 				break;
 			case Allocation::Type::buffer:
 				vkDestroyBuffer(ge.app.device, allocation.buffer.buffer.buffer, nullptr);
@@ -368,17 +369,15 @@ namespace jv::ge
 		vk::Mesh vkMesh{};
 		if(info.vertexType == VertexType::v2D)
 		{
-			Array<vk::Vertex2d> v2d{};
-			v2d.length = info.verticesLength;
-			v2d.ptr = reinterpret_cast<vk::Vertex2d*>(info.vertices2d);
-			vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, v2d, indices);
+			void* ptr = info.vertices2d;
+			const uint32_t size = sizeof(Vertex2D) * info.verticesLength;
+			vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, &ptr, &size, 1, indices);
 		}
 		else if(info.vertexType == VertexType::v3D)
 		{
-			Array<vk::Vertex3d> v3d{};
-			v3d.length = info.verticesLength;
-			v3d.ptr = reinterpret_cast<vk::Vertex3d*>(info.vertices3d);
-			vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, v3d, indices);
+			void* ptr = info.vertices3d;
+			const uint32_t size = sizeof(Vertex3D) * info.verticesLength;
+			vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, &ptr, &size, 1, indices);
 		}
 		else
 			std::cerr << "Vertex type not supported." << std::endl;
@@ -919,7 +918,7 @@ namespace jv::ge
 
 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,
 			0, info.descriptorSetCount, descriptorSets, 0, nullptr);
-		mesh->mesh.Draw(cmd, info.instanceCount);
+		mesh->mesh.Draw(ge.tempArena, cmd, info.instanceCount);
 	}
 
 	bool RenderFrame(RenderFrameInfo& info)

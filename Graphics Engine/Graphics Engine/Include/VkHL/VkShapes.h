@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "VkMesh.h"
 #include "VkVertex.h"
 #include "JLib/Array.h"
 

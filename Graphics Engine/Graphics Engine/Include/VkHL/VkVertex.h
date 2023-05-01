@@ -3,8 +3,6 @@
 
 namespace jv::vk
 {
-	typedef uint16_t VertexIndex;
-
 	// Defines a vertex point in a mesh.
 	struct Vertex2d final
 	{

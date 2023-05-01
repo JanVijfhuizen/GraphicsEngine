@@ -66,12 +66,6 @@
     <ClCompile Include="Src\VkHL\VkShapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\VkExamples\VkProgram.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\VkExamples\VkHelloWorld.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Src\GE\GraphicsEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -183,12 +177,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\VkHL\VkShapes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\VkExamples\VkProgram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\VkExamples\VkHelloWorld.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\GE\GraphicsEngine.h">
