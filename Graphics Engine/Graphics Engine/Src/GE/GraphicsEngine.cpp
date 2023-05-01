@@ -19,15 +19,6 @@ namespace jv::ge
 {
 	constexpr uint32_t ARENA_SIZE = 4096;
 
-	enum class AllocationType
-	{
-		image,
-		mesh,
-		buffer,
-		sampler,
-		pool
-	};
-
 	struct Image final
 	{
 		vk::Image image;
@@ -57,6 +48,27 @@ namespace jv::ge
 	{
 		VkDescriptorPool pool;
 		Array<VkDescriptorSet> sets;
+	};
+
+	struct Allocation final
+	{
+		union
+		{
+			Image image;
+			Mesh mesh;
+			Buffer buffer;
+			Sampler sampler;
+			DescriptorPool pool;
+		};
+
+		enum class Type
+		{
+			image,
+			mesh,
+			buffer,
+			sampler,
+			pool
+		} type;
 	};
 
 	struct Shader final
@@ -100,12 +112,7 @@ namespace jv::ge
 		Arena arena;
 		void* arenaMem;
 		vk::FreeArena freeArena;
-		LinkedList<AllocationType> allocations;
-		LinkedList<Image> images{};
-		LinkedList<Mesh> meshes{};
-		LinkedList<Buffer> buffers{};
-		LinkedList<Sampler> samplers{};
-		LinkedList<DescriptorPool> descriptorPools{};
+		LinkedList<Allocation> allocations;
 	};
 
 	struct GraphicsEngine final
@@ -242,43 +249,26 @@ namespace jv::ge
 	{
 		assert(ge.initialized);
 		const auto scene = static_cast<Scene*>(sceneHandle);
-
-		uint32_t imageIndex = 0;
-		uint32_t meshIndex = 0;
-		uint32_t bufferIndex = 0;
-		uint32_t samplerIndex = 0;
-		uint32_t poolIndex = 0;
-
-		Image image;
-		Mesh mesh;
-		Buffer buffer;
-		Sampler sampler;
-		DescriptorPool descriptorPool;
-
+		
 		for (const auto& allocation : scene->allocations)
 		{
-			switch (allocation)
+			switch (allocation.type)
 			{
-			case AllocationType::image:
-				image = scene->images[imageIndex++];
-				vkDestroyImageView(ge.app.device, image.view, nullptr);
-				vk::Image::Destroy(scene->freeArena, ge.app, image.image);
+			case Allocation::Type::image:
+				vkDestroyImageView(ge.app.device, allocation.image.view, nullptr);
+				vk::Image::Destroy(scene->freeArena, ge.app, allocation.image.image);
 				break;
-			case AllocationType::mesh:
-				mesh = scene->meshes[meshIndex++];
-				vk::Mesh::Destroy(scene->freeArena, ge.app, mesh.mesh);
+			case Allocation::Type::mesh:
+				vk::Mesh::Destroy(scene->freeArena, ge.app, allocation.mesh.mesh);
 				break;
-			case AllocationType::buffer:
-				buffer = scene->buffers[bufferIndex++];
-				vkDestroyBuffer(ge.app.device, buffer.buffer.buffer, nullptr);
+			case Allocation::Type::buffer:
+				vkDestroyBuffer(ge.app.device, allocation.buffer.buffer.buffer, nullptr);
 				break;
-			case AllocationType::sampler:
-				sampler = scene->samplers[samplerIndex++];
-				vkDestroySampler(ge.app.device, sampler.sampler, nullptr);
+			case Allocation::Type::sampler:
+				vkDestroySampler(ge.app.device, allocation.sampler.sampler, nullptr);
 				break;
-			case AllocationType::pool:
-				descriptorPool = scene->descriptorPools[poolIndex++];
-				vkDestroyDescriptorPool(ge.app.device, descriptorPool.pool, nullptr);
+			case Allocation::Type::pool:
+				vkDestroyDescriptorPool(ge.app.device, allocation.pool.pool, nullptr);
 				break;
 			default:
 				std::cerr << "Allocation type not supported." << std::endl;
@@ -287,16 +277,15 @@ namespace jv::ge
 
 		scene->arena.Clear();
 		scene->allocations = {};
-		scene->images = {};
-		scene->meshes = {};
-		scene->buffers = {};
 	}
 
 	Resource AddImage(const ImageCreateInfo& info)
 	{
 		assert(ge.initialized);
 		const auto scene = static_cast<Scene*>(info.scene);
-		auto& image = Add(scene->arena, scene->images) = {};
+		auto& allocation = Add(scene->arena, scene->allocations) = {};
+		allocation.type = Allocation::Type::image;
+		auto& image = allocation.image = {};
 
 		vk::ImageCreateInfo vkImageCreateInfo{};
 		glm::vec3 resolution = glm::vec3(info.resolution, 1);
@@ -353,8 +342,6 @@ namespace jv::ge
 		image.view = view;
 		image.info = info;
 		image.scene = scene;
-
-		Add(scene->arena, scene->allocations) = AllocationType::image;
 		return &image;
 	}
 
@@ -370,7 +357,9 @@ namespace jv::ge
 	{
 		assert(ge.initialized);
 		const auto scene = static_cast<Scene*>(info.scene);
-		auto& mesh = Add(scene->arena, scene->meshes) = {};
+		auto& allocation = Add(scene->arena, scene->allocations) = {};
+		allocation.type = Allocation::Type::mesh;
+		auto& mesh = allocation.mesh = {};
 
 		Array<uint16_t> indices{};
 		indices.ptr = info.indices;
@@ -393,11 +382,9 @@ namespace jv::ge
 		}
 		else
 			std::cerr << "Vertex type not supported." << std::endl;
-		
+
 		mesh.mesh = vkMesh;
 		mesh.info = info;
-
-		Add(scene->arena, scene->allocations) = AllocationType::mesh;
 		return &mesh;
 	}
 
@@ -405,7 +392,9 @@ namespace jv::ge
 	{
 		assert(ge.initialized);
 		const auto scene = static_cast<Scene*>(info.scene);
-		auto& buffer = Add(scene->arena, scene->buffers) = {};
+		auto& allocation = Add(scene->arena, scene->allocations) = {};
+		allocation.type = Allocation::Type::buffer;
+		auto& buffer = allocation.buffer = {};
 
 		VkBufferCreateInfo vertBufferInfo{};
 		vertBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -436,8 +425,6 @@ namespace jv::ge
 
 		buffer.buffer = vkBuffer;
 		buffer.info = info;
-
-		Add(scene->arena, scene->allocations) = AllocationType::buffer;
 		return &buffer;
 	}
 
@@ -469,7 +456,9 @@ namespace jv::ge
 	{
 		assert(ge.initialized);
 		const auto scene = static_cast<Scene*>(info.scene);
-		auto& sampler = Add(scene->arena, scene->samplers) = {};
+		auto& allocation = Add(scene->arena, scene->allocations) = {};
+		allocation.type = Allocation::Type::sampler;
+		auto& sampler = allocation.sampler = {};
 
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(ge.app.physicalDevice, &properties);
@@ -507,8 +496,6 @@ namespace jv::ge
 
 		const auto result = vkCreateSampler(ge.app.device, &samplerInfo, nullptr, &sampler.sampler);
 		assert(!result);
-
-		Add(scene->arena, scene->allocations) = AllocationType::sampler;
 		return &sampler;
 	}
 
@@ -517,7 +504,9 @@ namespace jv::ge
 		assert(ge.initialized);
 		const auto layout = static_cast<Layout*>(info.layout);
 		const auto scene = static_cast<Scene*>(info.scene);
-		auto& pool = Add(scene->arena, scene->descriptorPools) = {};
+		auto& allocation = Add(scene->arena, scene->allocations) = {};
+		allocation.type = Allocation::Type::pool;
+		auto& pool = allocation.pool = {};
 
 		const auto scope = ge.tempArena.CreateScope();
 		const auto sizes = CreateArray<VkDescriptorPoolSize>(ge.tempArena, layout->bindings.length);
@@ -566,7 +555,6 @@ namespace jv::ge
 		assert(!result);
 		
 		ge.tempArena.DestroyScope(scope);
-		Add(scene->arena, scene->allocations) = AllocationType::pool;
 		return &pool;
 	}
 
@@ -968,8 +956,8 @@ namespace jv::ge
 			const VkClearValue clearColor = { 0.f, 0.f, 0.f, 0.f };
 
 			const auto frameBuffer = static_cast<FrameBuffer*>(info.frameBuffer);
-			const auto& image = frameBuffer->images[0];
-			const auto resolution = image->info.resolution;
+			const auto& image0 = frameBuffer->images[0];
+			const auto resolution = image0->info.resolution;
 			const auto extent = VkExtent2D{static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y)};
 
 			VkRenderPassBeginInfo renderPassBeginInfo{};
