@@ -80,6 +80,8 @@ namespace jv::ge
 	struct FrameBuffer final
 	{
 		VkFramebuffer frameBuffer;
+		ImageCreateInfo info;
+		RenderPass* renderPass;
 	};
 
 	struct Pipeline final
@@ -820,6 +822,9 @@ namespace jv::ge
 		const auto frameBufferResult = vkCreateFramebuffer(ge.app.device, &frameBufferCreateInfo, nullptr, &frameBuffer.frameBuffer);
 		assert(!frameBufferResult);
 
+		frameBuffer.info = images[0]->info;
+		frameBuffer.renderPass = renderPass;
+
 		ge.tempArena.DestroyScope(scope);
 		return &frameBuffer;
 	}
@@ -939,12 +944,42 @@ namespace jv::ge
 		// Make sure that nothing is being drawn to the swap chain before the other frame buffers.
 		if (swaps.length > 0)
 		{
+			const auto cmdBuffers = CreateArray<VkCommandBuffer>(ge.tempArena, swaps.length - 1);
+
+			VkCommandBufferAllocateInfo cmdBufferAllocInfo{};
+			cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			cmdBufferAllocInfo.commandPool = ge.app.commandPool;
+			cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			cmdBufferAllocInfo.commandBufferCount = swaps.length - 1;
+
+			auto result = vkAllocateCommandBuffers(ge.app.device, &cmdBufferAllocInfo, cmdBuffers.ptr);
+			assert(!result);
+
 			for (uint32_t i = 0; i < swaps.length - 1; ++i)
 			{
 				const auto swap = swaps[i];
 				const auto nextSwap = swaps[i + 1];
+				const auto cmdBuffer = cmdBuffers[i];
 
 				// Swap frame buffer.
+				VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+				cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				cmdBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+				vkBeginCommandBuffer(cmdBuffer, &cmdBufferBeginInfo);
+
+				const VkClearValue clearColor = { 0.f, 0.f, 0.f, 0.f };
+				const auto resolution = swap.frameBuffer->info.resolution;
+
+				VkRenderPassBeginInfo renderPassBeginInfo{};
+				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				renderPassBeginInfo.renderArea.offset = { 0, 0 };
+				renderPassBeginInfo.renderPass = swap.frameBuffer->renderPass->renderPass;
+				renderPassBeginInfo.framebuffer = swap.frameBuffer->frameBuffer;
+				renderPassBeginInfo.renderArea.extent = VkExtent2D{static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y)};
+				renderPassBeginInfo.clearValueCount = 1;
+				renderPassBeginInfo.pClearValues = &clearColor;
+
+				vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 				while (drawIndex < nextSwap.drawIndex)
 				{
@@ -953,6 +988,24 @@ namespace jv::ge
 				}
 
 				// End draw.
+				vkCmdEndRenderPass(cmdBuffer);
+				result = vkEndCommandBuffer(cmdBuffer);
+				assert(!result);
+				/*
+				VkSubmitInfo submitInfo{};
+				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+				submitInfo.commandBufferCount = 1;
+				submitInfo.pCommandBuffers = &cmdBuffer;
+				submitInfo.waitSemaphoreCount = static_cast<uint32_t>(allWaitSemaphores.length);
+				submitInfo.pWaitSemaphores = allWaitSemaphores.ptr;
+				submitInfo.signalSemaphoreCount = 1;
+				submitInfo.pSignalSemaphores = &frame.renderFinishedSemaphore;
+				submitInfo.pWaitDstStageMask = waitStages.ptr;
+
+				vkResetFences(app.device, 1, &frame.inFlightFence);
+				result = vkQueueSubmit(app.queues[App::renderQueue], 1, &submitInfo, frame.inFlightFence);
+				assert(!result);
+				*/
 			}
 		}
 
