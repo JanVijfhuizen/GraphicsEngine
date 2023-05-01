@@ -20,7 +20,9 @@ int main()
 
 	for (int i = 0; i < 100; ++i)
 	{
-		jv::ge::RenderFrame();
+		jv::ge::RenderFrameInfo renderFrameInfo{};
+		const auto result = RenderFrame(renderFrameInfo);
+		assert(result);
 	}
 
 	const auto scene = jv::ge::CreateScene();
@@ -126,9 +128,8 @@ int main()
 	writeInfo.bindingCount = 1;
 	Write(writeInfo);
 
-	// todo render call, semaphores
-
-	while (jv::ge::RenderFrame())
+	bool quit = false;
+	while (!quit)
 	{
 		jv::ge::DrawInfo drawInfo{};
 		drawInfo.pipeline = pipeline;
@@ -137,6 +138,9 @@ int main()
 		drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(pool, 0);
 		drawInfo.instanceCount = 1;
 		Draw(drawInfo);
+
+		jv::ge::RenderFrameInfo renderFrameInfo{};
+		quit = !RenderFrame(renderFrameInfo);
 	}
 
 	jv::ge::Shutdown();

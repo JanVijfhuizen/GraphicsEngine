@@ -211,6 +211,14 @@ namespace jv::ge
 		uint32_t instanceCount = 1;
 	};
 
+	struct RenderFrameInfo final
+	{
+		Resource frameBuffer = nullptr;
+		Resource* waitSemaphores = nullptr;
+		uint32_t waitSemaphoreCount = 0;
+		Resource signalSemaphore = nullptr;
+	};
+
 	void Initialize(const CreateInfo& info);
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] Resource CreateScene();
@@ -228,11 +236,10 @@ namespace jv::ge
 	[[nodiscard]] Resource CreateLayout(const LayoutCreateInfo& info);
 	[[nodiscard]] Resource CreateRenderPass(const RenderPassCreateInfo& info);
 	[[nodiscard]] Resource CreateFrameBuffer(const FrameBufferCreateInfo& info);
+	[[nodiscard]] Resource CreateSemaphore();
 	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);
-	void SetRenderTarget(Resource frameBuffer);
-	void SetRenderTargetToSwapChain();
 	void Draw(const DrawInfo& info);
-	[[nodiscard]] bool RenderFrame();
+	[[nodiscard]] bool RenderFrame(RenderFrameInfo& info);
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();
 	void Shutdown();

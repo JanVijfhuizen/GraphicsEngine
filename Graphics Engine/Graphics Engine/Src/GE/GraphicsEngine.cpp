@@ -80,25 +80,19 @@ namespace jv::ge
 	struct FrameBuffer final
 	{
 		VkFramebuffer frameBuffer;
-		VkExtent2D extent;
+		Array<Image*> images;
 		RenderPass* renderPass;
+	};
+
+	struct Semaphore final
+	{
+		VkSemaphore semaphore;
 	};
 
 	struct Pipeline final
 	{
 		Array<VkDescriptorSetLayout> layouts;
 		vk::Pipeline pipeline;
-	};
-
-	struct RenderTargetSwap final
-	{
-		FrameBuffer* frameBuffer;
-		uint32_t drawIndex = 0;
-	};
-
-	struct Semaphore final
-	{
-		VkSemaphore semaphore;
 	};
 
 	struct Scene final
@@ -112,13 +106,6 @@ namespace jv::ge
 		LinkedList<Buffer> buffers{};
 		LinkedList<Sampler> samplers{};
 		LinkedList<DescriptorPool> descriptorPools{};
-	};
-
-	struct Frame final
-	{
-		Arena arena;
-		void* arenaMem;
-		LinkedList<Semaphore> semaphores{};
 	};
 
 	struct GraphicsEngine final
@@ -136,19 +123,17 @@ namespace jv::ge
 		vk::App app;
 		vk::SwapChain swapChain;
 		uint64_t scope;
-
-		Array<Frame> frames{};
-
+		
 		LinkedList<Scene> scenes{};
 		LinkedList<Shader> shaders{};
 		LinkedList<Layout> layouts{};
 		LinkedList<RenderPass> renderPasses{};
 		LinkedList<FrameBuffer> frameBuffers{};
+		LinkedList<Semaphore> semaphores{};
 		LinkedList<Pipeline> pipelines{};
-
-		LinkedList<RenderTargetSwap> renderTargetSwaps{};
+		
 		LinkedList<DrawInfo> draws{};
-		uint32_t swapChainRenderTargetDrawIndex = 0;
+		bool waitedForImage = false;
 	} ge{};
 
 	void* Alloc(const uint32_t size)
@@ -224,15 +209,6 @@ namespace jv::ge
 		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, info.resolution);
 
 		ge.scope = ge.arena.CreateScope();
-
-		ge.frames = CreateArray<Frame>(ge.arena, ge.swapChain.GetLength());
-		for (auto& frame : ge.frames)
-		{
-			frame = {};
-			frame.arenaMem = malloc(ARENA_SIZE);
-			arenaInfo.memory = ge.tempArenaMem;
-			frame.arena = Arena::Create(arenaInfo);
-		}
 	}
 
 	void Resize(const glm::ivec2 resolution, const bool fullScreen)
@@ -845,12 +821,24 @@ namespace jv::ge
 		const auto frameBufferResult = vkCreateFramebuffer(ge.app.device, &frameBufferCreateInfo, nullptr, &frameBuffer.frameBuffer);
 		assert(!frameBufferResult);
 
-		const auto resolution = images[0]->info.resolution;
-		frameBuffer.extent = VkExtent2D{ static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y) };
+		frameBuffer.images = CreateArray<Image*>(ge.arena, images.length);
+		for (uint32_t i = 0; i < images.length; ++i)
+			frameBuffer.images[i] = images[i];
 		frameBuffer.renderPass = renderPass;
 
 		ge.tempArena.DestroyScope(scope);
 		return &frameBuffer;
+	}
+
+	Resource CreateSemaphore()
+	{
+		assert(ge.initialized);
+		auto& semaphore = Add(ge.arena, ge.semaphores);
+		VkSemaphoreCreateInfo semaphoreCreateInfo{};
+		semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		const auto result = vkCreateSemaphore(ge.app.device, &semaphoreCreateInfo, nullptr, &semaphore.semaphore);
+		assert(!result);
+		return &semaphore;
 	}
 
 	Resource CreatePipeline(const PipelineCreateInfo& info)
@@ -911,24 +899,6 @@ namespace jv::ge
 		return &pipeline;
 	}
 
-	void SetRenderTarget(const Resource frameBuffer)
-	{
-#ifdef _DEBUG
-		if(ge.draws.GetCount() > 0 && ge.renderTargetSwaps.GetCount() == 0)
-			std::cerr << "Cannot swap render targets since you've already drawn to the swap chain." << std::endl;
-		if(ge.swapChainRenderTargetDrawIndex != 0)
-			std::cerr << "Swap chain already set as render target." << std::endl;
-#endif
-		auto& renderTargetSwap = Add(ge.frameArena, ge.renderTargetSwaps);
-		renderTargetSwap.frameBuffer = static_cast<FrameBuffer*>(frameBuffer);
-		renderTargetSwap.drawIndex = ge.draws.GetCount();
-	}
-
-	void SetRenderTargetToSwapChain()
-	{
-		ge.swapChainRenderTargetDrawIndex = ge.draws.GetCount();
-	}
-
 	void Draw(const DrawInfo& info)
 	{
 		assert(ge.initialized);
@@ -951,110 +921,107 @@ namespace jv::ge
 		}
 	}
 
-	bool RenderFrame()
+	void DrawInstances(const DrawInfo& info, const VkCommandBuffer cmd)
+	{
+		const auto pipeline = static_cast<Pipeline*>(info.pipeline);
+		const auto mesh = static_cast<Mesh*>(info.mesh);
+		pipeline->pipeline.Bind(cmd);
+
+		const auto descriptorSets = reinterpret_cast<const VkDescriptorSet*>(info.descriptorSets);
+
+		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,
+			0, info.descriptorSetCount, descriptorSets, 0, nullptr);
+		mesh->mesh.Draw(cmd, info.instanceCount);
+	}
+
+	bool RenderFrame(RenderFrameInfo& info)
 	{
 		assert(ge.initialized);
 
-		if (!ge.glfwApp.BeginFrame())
-			return false;
-
-		ge.swapChain.WaitForImage(ge.app);
+		if(!ge.waitedForImage)
+		{
+			if (!ge.glfwApp.BeginFrame())
+				return false;
+			ge.swapChain.WaitForImage(ge.app);
+		}
 
 		const auto draws = ToArray(ge.frameArena, ge.draws);
-		Add(ge.tempArena, ge.renderTargetSwaps) = {};
-		const auto swaps = ToArray(ge.frameArena, ge.renderTargetSwaps);
 
-		uint32_t drawIndex = 0;
-
-		// Make sure that nothing is being drawn to the swap chain before the other frame buffers.
-		if (swaps.length > 1)
+		if(info.frameBuffer)
 		{
-			const auto cmdBuffers = CreateArray<VkCommandBuffer>(ge.tempArena, swaps.length - 1);
-
+			VkCommandBuffer cmd;
 			VkCommandBufferAllocateInfo cmdBufferAllocInfo{};
 			cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 			cmdBufferAllocInfo.commandPool = ge.app.commandPool;
 			cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			cmdBufferAllocInfo.commandBufferCount = swaps.length - 1;
+			cmdBufferAllocInfo.commandBufferCount = 1;
 
-			auto result = vkAllocateCommandBuffers(ge.app.device, &cmdBufferAllocInfo, cmdBuffers.ptr);
+			auto result = vkAllocateCommandBuffers(ge.app.device, &cmdBufferAllocInfo, &cmd);
 			assert(!result);
 
-			for (uint32_t i = 0; i < swaps.length - 1; ++i)
-			{
-				const auto swap = swaps[i];
-				const auto nextSwap = swaps[i + 1];
-				const auto cmdBuffer = cmdBuffers[i];
+			VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+			cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			cmdBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+			vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+			vkBeginCommandBuffer(cmd, &cmdBufferBeginInfo);
 
-				// Swap frame buffer.
-				VkCommandBufferBeginInfo cmdBufferBeginInfo{};
-				cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				cmdBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-				vkBeginCommandBuffer(cmdBuffer, &cmdBufferBeginInfo);
+			const VkClearValue clearColor = { 0.f, 0.f, 0.f, 0.f };
 
-				const VkClearValue clearColor = { 0.f, 0.f, 0.f, 0.f };
+			const auto frameBuffer = static_cast<FrameBuffer*>(info.frameBuffer);
+			const auto& image = frameBuffer->images[0];
+			const auto resolution = image->info.resolution;
+			const auto extent = VkExtent2D{static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y)};
 
-				VkRenderPassBeginInfo renderPassBeginInfo{};
-				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-				renderPassBeginInfo.renderArea.offset = { 0, 0 };
-				renderPassBeginInfo.renderPass = swap.frameBuffer->renderPass->renderPass;
-				renderPassBeginInfo.framebuffer = swap.frameBuffer->frameBuffer;
-				renderPassBeginInfo.renderArea.extent = swap.frameBuffer->extent;
-				renderPassBeginInfo.clearValueCount = 1;
-				renderPassBeginInfo.pClearValues = &clearColor;
+			VkRenderPassBeginInfo renderPassBeginInfo{};
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.renderArea.offset = { 0, 0 };
+			renderPassBeginInfo.renderPass = frameBuffer->renderPass->renderPass;
+			renderPassBeginInfo.framebuffer = frameBuffer->frameBuffer;
+			renderPassBeginInfo.renderArea.extent = extent;
+			renderPassBeginInfo.clearValueCount = 1;
+			renderPassBeginInfo.pClearValues = &clearColor;
 
-				vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			vkCmdBeginRenderPass(cmd, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-				while (drawIndex < nextSwap.drawIndex)
-				{
-					const auto& draw = draws[drawIndex++];
+			for (auto& draw : draws)
+				DrawInstances(draw, cmd);
 
-				}
+			vkCmdEndRenderPass(cmd);
+			result = vkEndCommandBuffer(cmd);
+			assert(!result);
 
-				// End draw.
-				vkCmdEndRenderPass(cmdBuffer);
-				result = vkEndCommandBuffer(cmdBuffer);
-				assert(!result);
-				/*
-				VkSubmitInfo submitInfo{};
-				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-				submitInfo.commandBufferCount = 1;
-				submitInfo.pCommandBuffers = &cmdBuffer;
-				submitInfo.waitSemaphoreCount = static_cast<uint32_t>(allWaitSemaphores.length);
-				submitInfo.pWaitSemaphores = allWaitSemaphores.ptr;
-				submitInfo.signalSemaphoreCount = 1;
-				submitInfo.pSignalSemaphores = &frame.renderFinishedSemaphore;
-				submitInfo.pWaitDstStageMask = waitStages.ptr;
+			const auto waitStages = CreateArray<VkPipelineStageFlags>(ge.tempArena, info.waitSemaphoreCount);
+			for (auto& waitStage : waitStages)
+				waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-				vkResetFences(app.device, 1, &frame.inFlightFence);
-				result = vkQueueSubmit(app.queues[App::renderQueue], 1, &submitInfo, frame.inFlightFence);
-				assert(!result);
-				*/
-			}
+			const auto waitSemaphores = CreateArray<VkSemaphore>(ge.tempArena, info.waitSemaphoreCount);
+			for (uint32_t i = 0; i < info.waitSemaphoreCount; ++i)
+				waitSemaphores[i] = static_cast<Semaphore*>(info.waitSemaphores[i])->semaphore;
+
+			VkSubmitInfo submitInfo{};
+			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &cmd;
+			submitInfo.waitSemaphoreCount = info.waitSemaphoreCount;
+			submitInfo.pWaitSemaphores = waitSemaphores.ptr;
+			submitInfo.signalSemaphoreCount = info.signalSemaphore ? 1 : 0;
+			submitInfo.pSignalSemaphores = &static_cast<Semaphore*>(info.signalSemaphore)->semaphore;
+			submitInfo.pWaitDstStageMask = waitStages.ptr;
+			
+			result = vkQueueSubmit(ge.app.queues[vk::App::renderQueue], 1, &submitInfo, nullptr);
+			assert(!result);
 		}
-
-		const auto cmd = ge.swapChain.BeginFrame(ge.app, true);
-
-		for (uint32_t i = drawIndex; i < draws.length; ++i)
+		else
 		{
-			const auto& draw = draws[i];
-			const auto pipeline = static_cast<Pipeline*>(draw.pipeline);
-			const auto mesh = static_cast<Mesh*>(draw.mesh);
-			pipeline->pipeline.Bind(cmd);
-
-			const auto descriptorSets = reinterpret_cast<const VkDescriptorSet*>(draw.descriptorSets);
-
-			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,
-				0, draw.descriptorSetCount, descriptorSets, 0, nullptr);
-			mesh->mesh.Draw(cmd, draw.instanceCount);
+			const auto cmd = ge.swapChain.BeginFrame(ge.app, true);
+			for (auto& draw : draws)
+				DrawInstances(draw, cmd);
+			ge.swapChain.EndFrame(ge.tempArena, ge.app);
+			ge.waitedForImage = false;
 		}
-
-		ge.swapChain.EndFrame(ge.tempArena, ge.app);
 
 		ge.frameArena.Clear();
 		ge.draws = {};
-		ge.renderTargetSwaps = {};
-		ge.swapChainRenderTargetDrawIndex = 0;
 		return true;
 	}
 
@@ -1079,13 +1046,6 @@ namespace jv::ge
 
 		DestroyScenes();
 
-		for (const auto& frame : ge.frames)
-		{
-			for (const auto& semaphore : frame.semaphores)
-				vkDestroySemaphore(ge.app.device, semaphore.semaphore, nullptr);
-			free(frame.arenaMem);
-		}
-
 		ge.arena.DestroyScope(ge.scope);
 		vk::SwapChain::Destroy(ge.arena, ge.app, ge.swapChain);
 
@@ -1094,6 +1054,9 @@ namespace jv::ge
 
 		for (const auto& renderPass : ge.renderPasses)
 			vkDestroyRenderPass(ge.app.device, renderPass.renderPass, nullptr);
+
+		for (const auto& semaphore : ge.semaphores)
+			vkDestroySemaphore(ge.app.device, semaphore.semaphore, nullptr);
 
 		for (const auto& frameBuffer : ge.frameBuffers)
 			vkDestroyFramebuffer(ge.app.device, frameBuffer.frameBuffer, nullptr);
