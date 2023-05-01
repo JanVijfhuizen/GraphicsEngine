@@ -80,7 +80,7 @@ namespace jv::ge
 	struct FrameBuffer final
 	{
 		VkFramebuffer frameBuffer;
-		ImageCreateInfo info;
+		VkExtent2D extent;
 		RenderPass* renderPass;
 	};
 
@@ -96,6 +96,11 @@ namespace jv::ge
 		uint32_t drawIndex = 0;
 	};
 
+	struct Semaphore final
+	{
+		VkSemaphore semaphore;
+	};
+
 	struct Scene final
 	{
 		Arena arena;
@@ -107,6 +112,13 @@ namespace jv::ge
 		LinkedList<Buffer> buffers{};
 		LinkedList<Sampler> samplers{};
 		LinkedList<DescriptorPool> descriptorPools{};
+	};
+
+	struct Frame final
+	{
+		Arena arena;
+		void* arenaMem;
+		LinkedList<Semaphore> semaphores{};
 	};
 
 	struct GraphicsEngine final
@@ -123,8 +135,9 @@ namespace jv::ge
 		vk::GLFWApp glfwApp;
 		vk::App app;
 		vk::SwapChain swapChain;
-
 		uint64_t scope;
+
+		Array<Frame> frames{};
 
 		LinkedList<Scene> scenes{};
 		LinkedList<Shader> shaders{};
@@ -209,7 +222,17 @@ namespace jv::ge
 		ge.app = CreateApp(vkInfo);
 
 		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, info.resolution);
+
 		ge.scope = ge.arena.CreateScope();
+
+		ge.frames = CreateArray<Frame>(ge.arena, ge.swapChain.GetLength());
+		for (auto& frame : ge.frames)
+		{
+			frame = {};
+			frame.arenaMem = malloc(ARENA_SIZE);
+			arenaInfo.memory = ge.tempArenaMem;
+			frame.arena = Arena::Create(arenaInfo);
+		}
 	}
 
 	void Resize(const glm::ivec2 resolution, const bool fullScreen)
@@ -822,7 +845,8 @@ namespace jv::ge
 		const auto frameBufferResult = vkCreateFramebuffer(ge.app.device, &frameBufferCreateInfo, nullptr, &frameBuffer.frameBuffer);
 		assert(!frameBufferResult);
 
-		frameBuffer.info = images[0]->info;
+		const auto resolution = images[0]->info.resolution;
+		frameBuffer.extent = VkExtent2D{ static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y) };
 		frameBuffer.renderPass = renderPass;
 
 		ge.tempArena.DestroyScope(scope);
@@ -937,12 +961,13 @@ namespace jv::ge
 		ge.swapChain.WaitForImage(ge.app);
 
 		const auto draws = ToArray(ge.frameArena, ge.draws);
+		Add(ge.tempArena, ge.renderTargetSwaps) = {};
 		const auto swaps = ToArray(ge.frameArena, ge.renderTargetSwaps);
 
 		uint32_t drawIndex = 0;
 
 		// Make sure that nothing is being drawn to the swap chain before the other frame buffers.
-		if (swaps.length > 0)
+		if (swaps.length > 1)
 		{
 			const auto cmdBuffers = CreateArray<VkCommandBuffer>(ge.tempArena, swaps.length - 1);
 
@@ -968,14 +993,13 @@ namespace jv::ge
 				vkBeginCommandBuffer(cmdBuffer, &cmdBufferBeginInfo);
 
 				const VkClearValue clearColor = { 0.f, 0.f, 0.f, 0.f };
-				const auto resolution = swap.frameBuffer->info.resolution;
 
 				VkRenderPassBeginInfo renderPassBeginInfo{};
 				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 				renderPassBeginInfo.renderArea.offset = { 0, 0 };
 				renderPassBeginInfo.renderPass = swap.frameBuffer->renderPass->renderPass;
 				renderPassBeginInfo.framebuffer = swap.frameBuffer->frameBuffer;
-				renderPassBeginInfo.renderArea.extent = VkExtent2D{static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y)};
+				renderPassBeginInfo.renderArea.extent = swap.frameBuffer->extent;
 				renderPassBeginInfo.clearValueCount = 1;
 				renderPassBeginInfo.pClearValues = &clearColor;
 
@@ -1054,6 +1078,14 @@ namespace jv::ge
 		assert(!result);
 
 		DestroyScenes();
+
+		for (const auto& frame : ge.frames)
+		{
+			for (const auto& semaphore : frame.semaphores)
+				vkDestroySemaphore(ge.app.device, semaphore.semaphore, nullptr);
+			free(frame.arenaMem);
+		}
+
 		ge.arena.DestroyScope(ge.scope);
 		vk::SwapChain::Destroy(ge.arena, ge.app, ge.swapChain);
 
