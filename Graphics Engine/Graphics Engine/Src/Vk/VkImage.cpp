@@ -69,7 +69,7 @@ namespace jv::vk
 		layout = newLayout;
 	}
 
-	void Image::FillImage(Arena& arena, const FreeArena& freeArena, const App& app, const Array<unsigned char>& pixels)
+	void Image::FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels)
 	{
 		assert(usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
@@ -96,7 +96,7 @@ namespace jv::vk
 		// Copy pixels to staging buffer.
 		void* data;
 		vkMapMemory(app.device, stagingMem.memory, stagingMem.offset, imageSize, 0, &data);
-		memcpy(data, pixels.ptr, imageSize);
+		memcpy(data, pixels, imageSize);
 		vkUnmapMemory(app.device, stagingMem.memory);
 		
 		// Record and execute copy. 

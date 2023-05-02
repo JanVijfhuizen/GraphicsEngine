@@ -1,13 +1,12 @@
 ﻿#include "pch.h"
 #include "VkHL/VkShapes.h"
-
 #include "JLib/ArrayUtils.h"
 
 namespace jv::vk
 {
 	uint64_t CreateQuadShape(Arena& arena, Array<Vertex2d>& outVertices, Array<VertexIndex>& outIndices, const float scale)
 	{
-		auto scope = arena.CreateScope();
+		const auto scope = arena.CreateScope();
 
 		outVertices = CreateArray<Vertex2d>(arena, 4);
 		outIndices = CreateArray<VertexIndex>(arena, 6);

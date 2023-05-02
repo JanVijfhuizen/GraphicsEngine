@@ -7,6 +7,6 @@ namespace jv::vk
 	{
 		VkBuffer buffer;
 		Memory memory;
-		uint32_t memoryHandle;
+		uint64_t memoryHandle;
 	};
 }

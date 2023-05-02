@@ -69,4 +69,14 @@ namespace jv
 		while (linkedList.values)
 			Pop(arena, linkedList);
 	}
+
+	template <typename T>
+	Array<T> ToArray(Arena& arena, const LinkedList<T>& linkedList)
+	{
+		const auto arr = CreateArray<T>(arena, linkedList.GetCount());
+		uint32_t i = arr.length;
+		for (auto& t : linkedList)
+			arr[--i] = t;
+		return arr;
+	}
 }

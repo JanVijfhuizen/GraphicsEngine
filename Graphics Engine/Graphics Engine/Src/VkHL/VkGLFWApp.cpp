@@ -25,7 +25,15 @@ namespace jv::vk
 		return true;
 	}
 
-	GLFWApp GLFWApp::Create(const char* name, const glm::ivec2 resolution, const bool fullscreen)
+	void GLFWApp::Resize(const glm::ivec2 resolution, const bool fullScreen) const
+	{
+		const auto monitor = glfwGetPrimaryMonitor();
+		const auto mode = glfwGetVideoMode(monitor);
+		glfwSetWindowMonitor(window, fullScreen ? monitor : nullptr, 100, 100, resolution.x, resolution.y, mode->refreshRate);
+		glfwMakeContextCurrent(window);
+	}
+
+	GLFWApp GLFWApp::Create(const char* name, const glm::ivec2 resolution, const bool fullScreen)
 	{
 		GLFWApp app{};
 
@@ -37,10 +45,13 @@ namespace jv::vk
 
 		// Create window.
 		auto& window = app.window;
-		window = glfwCreateWindow(resolution.x, resolution.y, name, fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+		window = glfwCreateWindow(resolution.x, resolution.y, name, fullScreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 		assert(window);
 
 		glfwMakeContextCurrent(window);
+
+		app.fullScreen = fullScreen;
+		app.resolution = resolution;
 		return app;
 	}
 
