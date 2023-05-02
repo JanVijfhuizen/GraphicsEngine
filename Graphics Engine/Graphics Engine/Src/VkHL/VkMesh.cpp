@@ -124,16 +124,16 @@ namespace jv::vk
 	}
 
 	Mesh Mesh::Create(Arena& arena, const FreeArena& freeArena, const App& app, 
-		void** vertices, const uint32_t* verticesSizes, const uint32_t vertexCount,
+		void** attributes, const uint32_t* attributeSizes, const uint32_t attributeCount,
 		const Array<VertexIndex>& indices)
 	{
 		Mesh mesh{};
 		mesh.indexBuffer = CreateVertexBuffer(arena, freeArena, app, indices.ptr, indices.length * sizeof(VertexIndex), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 		mesh.indexCount = indices.length;
 
-		mesh.vertexBuffers = CreateArray<Buffer>(arena, vertexCount);
-		for (uint32_t i = 0; i < vertexCount; ++i)
-			mesh.vertexBuffers[i] = CreateVertexBuffer(arena, freeArena, app, vertices[i], verticesSizes[i], VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+		mesh.vertexBuffers = CreateArray<Buffer>(arena, attributeCount);
+		for (uint32_t i = 0; i < attributeCount; ++i)
+			mesh.vertexBuffers[i] = CreateVertexBuffer(arena, freeArena, app, attributes[i], attributeSizes[i], VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 		return mesh;
 	}
 
