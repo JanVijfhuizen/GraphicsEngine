@@ -3,6 +3,7 @@
 #include "JLib/ArrayUtils.h"
 #include "JLib/LinkedList.h"
 #include "JLib/LinkedListUtils.h"
+#include "JLib/Math.h"
 #include "JLib/VectorUtils.h"
 
 namespace ge
@@ -34,6 +35,23 @@ namespace ge
 			arr[index++] = i;
 		}
 		return arr;
+	}
+
+	uint32_t CalculateDepthComplexity(const RenderGraphCreateInfo& info,
+		const jv::Array<ResourceMetaData>& resourceMetaDatas, const jv::Array<NodeMetaData>& nodeMetaDatas, 
+		const uint32_t index, uint32_t depth)
+	{
+		if (nodeMetaDatas[index].remaining == 0)
+			return depth;
+
+		const auto& node = info.nodes[index];
+		for (uint32_t i = 0; i < node.inResourceCount; ++i)
+		{
+			const auto& src = resourceMetaDatas[i].src;
+			depth = jv::Max(depth, CalculateDepthComplexity(info, resourceMetaDatas, nodeMetaDatas, src, depth + node.inResourceCount));
+		}
+			
+		return depth;
 	}
 
 	RenderGraph RenderGraph::Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info)
@@ -111,17 +129,26 @@ namespace ge
 				continue;
 			}
 
+			const auto complexities = jv::CreateArray<uint32_t>(tempArena, node.inResourceCount);
+
 			for (uint32_t i = 0; i < node.inResourceCount; ++i)
 			{
 				const auto& resource = node.inResources[i];
-				const auto& resourceMetaData = resourceMetaDatas[resource];
+				auto& resourceMetaData = resourceMetaDatas[resource];
 				const auto& src = resourceMetaData.src;
-				
+
+				const auto complexity = CalculateDepthComplexity(info, resourceMetaDatas, nodeMetaDatas, src, 0);
+				complexities[i] = complexity;
+
 				if (resourceMetaData.processed)
 					continue;
 				open.Add() = src;
 			}
 		}
+
+		// Check if every node has actually been used.
+		for (const auto& metaData : nodeMetaDatas)
+			assert(metaData.remaining == 0);
 
 		tempArena.DestroyScope(tempScope);
 		return graph;
