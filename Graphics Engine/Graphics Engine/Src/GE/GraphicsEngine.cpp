@@ -1024,6 +1024,13 @@ namespace jv::ge
 		return ge.swapChain.GetIndex();
 	}
 
+	void DeviceWaitIdle()
+	{
+		assert(ge.initialized);
+		const auto result = vkDeviceWaitIdle(ge.app.device);
+		assert(!result);
+	}
+
 	void Shutdown()
 	{
 		assert(ge.initialized);

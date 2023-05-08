@@ -1,4 +1,5 @@
 #pragma once
+#include "ArrayUtils.h"
 #include "LinkedList.h"
 #include "Arena.h"
 

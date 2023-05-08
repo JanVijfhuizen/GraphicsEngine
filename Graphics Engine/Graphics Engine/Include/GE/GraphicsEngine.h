@@ -242,5 +242,6 @@ namespace jv::ge
 	[[nodiscard]] bool RenderFrame(RenderFrameInfo& info);
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();
+	void DeviceWaitIdle();
 	void Shutdown();
 }

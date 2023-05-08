@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "GE/GraphicsEngine.h"
 #include <stb_image.h>
+
+#include "JLib/ArrayUtils.h"
 #include "JLib/FileLoader.h"
+#include "RenderGraph/RenderGraph.h"
 
 void* Alloc(const uint32_t size)
 {
@@ -127,6 +130,100 @@ int main()
 	writeInfo.bindings = &writeBindingInfo;
 	writeInfo.bindingCount = 1;
 	Write(writeInfo);
+
+	{
+		const auto mem = malloc(4096);
+
+		jv::ArenaCreateInfo arenaInfo{};
+		arenaInfo.alloc = Alloc;
+		arenaInfo.free = Free;
+		arenaInfo.memory = mem;
+		arenaInfo.memorySize = 4096;
+		auto tempArena = jv::Arena::Create(arenaInfo);
+		const auto tempScope = tempArena.CreateScope();
+
+		const auto resources = jv::CreateArray<ge::RenderGraphResourceInfo>(tempArena, 10);
+		const auto nodes = jv::CreateArray<ge::RenderGraphNodeInfo>(tempArena, 9);
+
+		uint32_t n0OutResource = 0;
+		nodes[0].inResourceCount = 0;
+		nodes[0].outResourceCount = 1;
+		nodes[0].outResources = &n0OutResource;
+
+		uint32_t n1OutResources[2];
+		n1OutResources[0] = 1;
+		n1OutResources[1] = 2;
+		nodes[1].inResourceCount = 0;
+		nodes[1].outResourceCount = 2;
+		nodes[1].outResources = n1OutResources;
+
+		uint32_t n2InResources[2];
+		uint32_t n2OutResource = 3;
+		n2InResources[0] = 2;
+		n2InResources[1] = 4;
+		nodes[2].inResourceCount = 2;
+		nodes[2].inResources = n2InResources;
+		nodes[2].outResourceCount = 1;
+		nodes[2].outResources = &n2OutResource;
+
+		uint32_t n3OutResource = 4;
+		nodes[3].inResourceCount = 0;
+		nodes[3].outResourceCount = 1;
+		nodes[3].outResources = &n3OutResource;
+
+		uint32_t n4InResources[2];
+		uint32_t n4OutResource = 5;
+		n4InResources[0] = n0OutResource;
+		n4InResources[1] = n1OutResources[0];
+		nodes[4].inResourceCount = 2;
+		nodes[4].inResources = n4InResources;
+		nodes[4].outResourceCount = 1;
+		nodes[4].outResources = &n4OutResource;
+
+		uint32_t n5InResources[2];
+		uint32_t n5OutResource = 6;
+		n5InResources[0] = n4OutResource;
+		n5InResources[1] = n1OutResources[0];
+		nodes[5].inResourceCount = 2;
+		nodes[5].inResources = n5InResources;
+		nodes[5].outResourceCount = 1;
+		nodes[5].outResources = &n5OutResource;
+
+		uint32_t n6InResources[3];
+		uint32_t n6OutResource = 7;
+		n6InResources[0] = n1OutResources[0];
+		n6InResources[1] = n1OutResources[1];
+		n6InResources[2] = n2OutResource;
+		nodes[6].inResourceCount = 3;
+		nodes[6].inResources = n6InResources;
+		nodes[6].outResourceCount = 1;
+		nodes[6].outResources = &n6OutResource;
+
+		uint32_t n8OutResource = 8;
+
+		uint32_t n7InResources[3];
+		n7InResources[0] = n5OutResource;
+		n7InResources[1] = n6OutResource;
+		n7InResources[2] = n8OutResource;
+		nodes[7].inResourceCount = 3;
+		nodes[7].inResources = n7InResources;
+		nodes[7].outResourceCount = 0;
+
+		nodes[8].inResourceCount = 0;
+		nodes[8].outResourceCount = 1;
+		nodes[8].outResources = &n8OutResource;
+
+		ge::RenderGraphCreateInfo renderGraphCreateInfo{};
+		renderGraphCreateInfo.resources = resources.ptr;
+		renderGraphCreateInfo.resourceCount = 10;
+		renderGraphCreateInfo.nodes = nodes.ptr;
+		renderGraphCreateInfo.nodeCount = 9;
+		const auto graph = ge::RenderGraph::Create(arena, tempArena, renderGraphCreateInfo);
+
+		ge::RenderGraph::Destroy(arena, graph);
+		free(mem);
+		tempArena.DestroyScope(tempScope);
+	}
 
 	bool quit = false;
 	while (!quit)

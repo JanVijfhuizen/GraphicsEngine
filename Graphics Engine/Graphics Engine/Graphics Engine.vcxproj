@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Src\GE\GraphicsEngine.cpp" />
+    <ClCompile Include="Src\RenderGraph\RenderGraph.cpp" />
     <ClCompile Include="Src\VkHL\VkShapes.cpp" />
     <ClCompile Include="Src\VkHL\VkMesh.cpp" />
     <ClCompile Include="Src\VkHL\VkVertex.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="Include\Vk\VkShader.h" />
     <ClInclude Include="Include\Vk\VkSwapChain.h" />
     <ClInclude Include="Include\VkHL\VkVertex.h" />
+    <ClInclude Include="Include\RenderGraph\RenderGraph.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
