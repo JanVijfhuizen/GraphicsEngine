@@ -11,6 +11,7 @@ namespace ge
 	{
 		uint32_t src = 0;
 		jv::LinkedList<uint32_t> dsts{};
+		bool processed = false;
 	};
 
 	struct NodeMetaData final
@@ -66,52 +67,44 @@ namespace ge
 
 		// The ordered list of execution for when the render graph executes.
 		auto ordered = jv::CreateVector<uint32_t>(tempArena, info.nodeCount);
-		const auto contained = jv::CreateArray<bool>(tempArena, info.nodeCount);
-		for (auto& b : contained)
-			b = false;
-		contained[leafs[0]] = true;
 
 		while(open.count > 0)
 		{
 			const auto current = open[open.count - 1];
-			auto& currentMetaData = nodeMetaDatas[current];
+			const auto& currentMetaData = nodeMetaDatas[current];
 			const auto& node = info.nodes[current];
 
 			if(currentMetaData.remaining == 0)
 			{
-				std::cout << "h" << std::endl;
-				for (unsigned ordered1 : ordered)
-				{
-					std::cout << ordered1 << std::endl;
-				}
-
 				ordered.Add() = current;
 				open.RemoveAt(open.count - 1);
 
-				bool parentContained = false;
 				for (uint32_t i = 0; i < node.outResourceCount; ++i)
 				{
 					const auto& resource = node.outResources[i];
-					const auto& resourceMetaData = resourceMetaDatas[resource];
+					auto& resourceMetaData = resourceMetaDatas[resource];
+					resourceMetaData.processed = true;
 
 					for (const auto& dst : resourceMetaData.dsts)
 					{
-						--nodeMetaDatas[dst].remaining;
-						if (contained[dst])
+						auto& parentNodeMetaData = nodeMetaDatas[dst];
+						--parentNodeMetaData.remaining;
+					}
+				}
+				
+				for (uint32_t i = 0; i < node.outResourceCount; ++i)
+				{
+					const auto& resource = node.outResources[i];
+					auto& resourceMetaData = resourceMetaDatas[resource];
+
+					if(open.count == 0)
+					{
+						const uint32_t count = resourceMetaData.dsts.GetCount();
+						if(count > 0)
 						{
-							parentContained = true;
+							open.Add() = resourceMetaData.dsts[count - 1];
 							break;
 						}
-					}
-
-					if (parentContained)
-						break;
-
-					for (const auto& dst : resourceMetaData.dsts)
-					{
-						auto& dstContained = contained[dst];
-						open.Add() = dst;
-						dstContained = true;
 					}
 				}
 
@@ -123,12 +116,10 @@ namespace ge
 				const auto& resource = node.inResources[i];
 				const auto& resourceMetaData = resourceMetaDatas[resource];
 				const auto& src = resourceMetaData.src;
-
-				auto& srcContained = contained[src];
-				if (srcContained)
+				
+				if (resourceMetaData.processed)
 					continue;
 				open.Add() = src;
-				srcContained = true;
 			}
 		}
 
