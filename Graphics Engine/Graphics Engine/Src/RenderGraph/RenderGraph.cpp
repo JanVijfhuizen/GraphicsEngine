@@ -14,19 +14,22 @@ namespace ge
 		uint32_t src = 0;
 		jv::LinkedList<uint32_t> dsts{};
 		bool processed = false;
+		uint32_t usesRemaining;
+		uint32_t freeIndex;
 	};
 
 	struct NodeMetaData final
 	{
-		uint32_t remaining;
+		uint32_t inputsRemaining;
 		uint32_t complexity;
+		uint32_t availabilityIndex;
 	};
 
 	uint32_t CalculateDepthComplexity(const RenderGraphCreateInfo& info,
 		const jv::Array<ResourceMetaData>& resourceMetaDatas, const jv::Array<NodeMetaData>& nodeMetaDatas, 
 		const uint32_t index, uint32_t depth)
 	{
-		if (nodeMetaDatas[index].remaining > 0)
+		if (nodeMetaDatas[index].inputsRemaining > 0)
 		{
 			const auto& node = info.nodes[index];
 			for (uint32_t i = 0; i < node.inResourceCount; ++i)
@@ -55,7 +58,8 @@ namespace ge
 		uint32_t start = -1;
 		for (uint32_t i = 0; i < info.nodeCount; ++i)
 		{
-			if(info.nodes[i].outResourceCount == 0)
+			const auto& node = info.nodes[i];
+			if(node.outResourceCount == 0)
 			{
 				start = i;
 				break;
@@ -78,13 +82,18 @@ namespace ge
 		{
 			const auto& node = info.nodes[i];
 			auto& metaData = nodeMetaDatas[i] = {};
-			metaData.remaining = node.inResourceCount;
+			metaData.inputsRemaining = node.inResourceCount;
 
 			for (uint32_t j = 0; j < node.inResourceCount; ++j)
 				Add(tempArena, resourceMetaDatas[node.inResources[j]].dsts) = i;
 			for (uint32_t j = 0; j < node.outResourceCount; ++j)
 				resourceMetaDatas[node.outResources[j]].src = i;
+			if (node.inResourceCount == 0)
+				metaData.availabilityIndex = 0;
 		}
+
+		for (auto& metaData : resourceMetaDatas)
+			metaData.usesRemaining = metaData.dsts.GetCount();
 
 		// The ordered list of execution for when the render graph executes.
 		auto ordered = jv::CreateVector<uint32_t>(tempArena, info.nodeCount);
@@ -96,10 +105,19 @@ namespace ge
 			const auto& node = info.nodes[current];
 
 			// If the current node is ready to be processed.
-			if(currentMetaData.remaining == 0)
+			if(currentMetaData.inputsRemaining == 0)
 			{
 				ordered.Add() = current;
 				open.RemoveAt(open.count - 1);
+
+				for (uint32_t i = 0; i < node.inResourceCount; ++i)
+				{
+					const auto& resource = node.inResources[i];
+					auto& resourceMetaData = resourceMetaDatas[resource];
+					--resourceMetaData.usesRemaining;
+					if (resourceMetaData.usesRemaining == 0)
+						resourceMetaData.freeIndex = ordered.count;
+				}
 
 				for (uint32_t i = 0; i < node.outResourceCount; ++i)
 				{
@@ -110,7 +128,9 @@ namespace ge
 					for (const auto& dst : resourceMetaData.dsts)
 					{
 						auto& parentNodeMetaData = nodeMetaDatas[dst];
-						--parentNodeMetaData.remaining;
+						--parentNodeMetaData.inputsRemaining;
+						if (parentNodeMetaData.inputsRemaining == 0)
+							parentNodeMetaData.availabilityIndex = ordered.count;
 					}
 				}
 
