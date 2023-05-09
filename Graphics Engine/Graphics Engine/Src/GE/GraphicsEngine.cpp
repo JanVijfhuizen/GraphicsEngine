@@ -932,7 +932,7 @@ namespace jv::ge
 			ge.swapChain.WaitForImage(ge.app);
 		}
 
-		const auto draws = ToArray(ge.frameArena, ge.draws);
+		const auto draws = ToArray(ge.frameArena, ge.draws, false);
 
 		if(info.frameBuffer)
 		{

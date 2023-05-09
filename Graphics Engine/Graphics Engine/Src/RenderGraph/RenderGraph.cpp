@@ -222,7 +222,7 @@ namespace ge
 			pool.info = resource;
 		}
 
-		const auto resourcePool = ToArray(tempArena, resourceTypes);
+		const auto resourcePool = ToArray(tempArena, resourceTypes, true);
 		const auto poolStates = jv::CreateArray<jv::Array<uint32_t>>(tempArena, ordered.length);
 
 		// Calculate minimum pool capacities.
@@ -257,7 +257,64 @@ namespace ge
 		}
 
 		// Calculate batches.
-		
+		jv::LinkedList<jv::LinkedList<uint32_t>> batches{};
+
+		const auto batched = jv::CreateArray<bool>(tempArena, ordered.length);
+		for (auto& b : batched)
+			b = false;
+		const auto maximumPoolState = jv::CreateArray<uint32_t>(tempArena, resourcePool.length);
+		for (uint32_t i = 0; i < ordered.length; ++i)
+		{
+			if (batched[i])
+				continue;
+
+			auto& batch = Add(tempArena, batches) = {};
+			Add(tempArena, batch) = i;
+			auto& poolState = poolStates[i];
+			for (uint32_t j = 0; j < resourcePool.length; ++j)
+				maximumPoolState[j] = poolState[j];
+
+			for (uint32_t j = i + 1; j < ordered.length; ++j)
+			{
+				if (batched[j])
+					continue;
+
+				auto& otherPoolState = poolStates[j];
+				for (uint32_t k = 0; k < resourcePool.length; ++k)
+					maximumPoolState[k] = jv::Max(maximumPoolState[k], otherPoolState[k]);
+
+				const auto& nodeMetaData = nodeMetaDatas[ordered[j]];
+				if(!batched[j] && nodeMetaData.availabilityIndex <= i)
+				{
+					bool fit = true;
+					for (uint32_t k = 0; k < resourcePool.length; ++k)
+						if(maximumPoolState[k] + otherPoolState[k] > resourcePool[k].capacity)
+						{
+							fit = false;
+							break;
+						}
+
+					if(fit)
+					{
+						for (uint32_t k = 0; k < resourcePool.length; ++k)
+							maximumPoolState[k] += otherPoolState[k];
+						Add(tempArena, batch) = j;
+						batched[j] = true;
+					}
+				}
+			}
+		}
+
+		for (const auto& batch : batches)
+		{
+			std::cout << "batch: ";
+			for (const auto& i : batch)
+			{
+				std::cout << ordered[i] << ", ";
+			}
+
+			std::cout << std::endl;
+		}
 
 		tempArena.DestroyScope(tempScope);
 		return graph;
