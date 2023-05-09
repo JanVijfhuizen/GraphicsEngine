@@ -281,6 +281,7 @@ namespace ge
 
 				auto& otherPoolState = poolStates[j];
 
+				const auto& node = info.nodes[ordered[j]];
 				const auto& nodeMetaData = nodeMetaDatas[ordered[j]];
 				if(!batched[j] && nodeMetaData.availabilityIndex <= i)
 				{
@@ -288,7 +289,7 @@ namespace ge
 					for (uint32_t k = 0; k < resourcePool.length; ++k)
 					{
 						const auto& capacity = resourcePool[k].capacity;
-						if (maximumPoolState[k] + otherPoolState[k] > capacity)
+						if (maximumPoolState[k] + node.outResourceCount > capacity)
 						{
 							fit = false;
 							break;
@@ -299,7 +300,7 @@ namespace ge
 					if(fit)
 					{
 						for (uint32_t k = 0; k < resourcePool.length; ++k)
-							maximumPoolState[k] += otherPoolState[k];
+							maximumPoolState[k] += node.outResourceCount;
 						Add(tempArena, batch) = j;
 						batched[j] = true;
 					}
@@ -309,8 +310,9 @@ namespace ge
 					maximumPoolState[k] = jv::Max(maximumPoolState[k], otherPoolState[k]);
 			}
 		}
-
-		for (const auto& batch : batches)
+		
+		const auto orderedBatches = ToArray(tempArena, batches, false);
+		for (const auto& batch : orderedBatches)
 		{
 			std::cout << "batch: ";
 			for (const auto& i : batch)
