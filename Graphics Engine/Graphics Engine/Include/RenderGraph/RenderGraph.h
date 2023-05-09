@@ -10,6 +10,9 @@ namespace ge
 			depth
 		} type = Type::color;
 		glm::ivec2 resolution;
+
+		[[nodiscard]] bool operator ==(const RenderGraphResourceInfo& other) const;
+		[[nodiscard]] bool operator !=(const RenderGraphResourceInfo& other) const;
 	};
 
 	struct RenderGraphNodeInfo final

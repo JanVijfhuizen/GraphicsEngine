@@ -50,6 +50,16 @@ namespace ge
 		return a > b;
 	}
 
+	bool RenderGraphResourceInfo::operator==(const RenderGraphResourceInfo& other) const
+	{
+		return other.resolution == resolution && other.type == type;
+	}
+
+	bool RenderGraphResourceInfo::operator!=(const RenderGraphResourceInfo& other) const
+	{
+		return !(other == *this);
+	}
+
 	RenderGraph RenderGraph::Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info)
 	{
 		RenderGraph graph{};
@@ -175,6 +185,27 @@ namespace ge
 
 				tempArena.DestroyScope(complexitiesScope);
 			}
+		}
+
+		// Define the different resource types that are being used.
+		jv::LinkedList<RenderGraphResourceInfo> resourceTypes{};
+		for (uint32_t i = 0; i < info.resourceCount; ++i)
+		{
+			const auto& resource = info.resources[i];
+
+			bool fit = false;
+			for (const auto& resourceType : resourceTypes)
+			{
+				if (resourceType == resource)
+				{
+					fit = true;
+					break;
+				}
+			}
+
+			if (fit)
+				continue;
+			Add(tempArena, resourceTypes) = resource;
 		}
 
 		tempArena.DestroyScope(tempScope);
