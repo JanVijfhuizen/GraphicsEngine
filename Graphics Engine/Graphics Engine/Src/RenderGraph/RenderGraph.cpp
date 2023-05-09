@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "RenderGraph/RenderGraph.h"
 #include "JLib/ArrayUtils.h"
+#include "JLib/LinearSort.h"
 #include "JLib/LinkedList.h"
 #include "JLib/LinkedListUtils.h"
 #include "JLib/Math.h"
@@ -18,40 +19,32 @@ namespace ge
 	struct NodeMetaData final
 	{
 		uint32_t remaining;
+		uint32_t complexity;
 	};
-
-	jv::Array<uint32_t> GetLeafs(jv::Arena& arena, const RenderGraphCreateInfo& info)
-	{
-		uint32_t count = 0;
-		for (uint32_t i = 0; i < info.nodeCount; ++i)
-			count += info.nodes[i].inResourceCount == 0;
-		const auto arr = jv::CreateArray<uint32_t>(arena, count);
-		uint32_t index = 0;
-		for (uint32_t i = 0; i < info.nodeCount; ++i)
-		{
-			const auto& node = info.nodes[i];
-			if (node.inResourceCount > 0)
-				continue;
-			arr[index++] = i;
-		}
-		return arr;
-	}
 
 	uint32_t CalculateDepthComplexity(const RenderGraphCreateInfo& info,
 		const jv::Array<ResourceMetaData>& resourceMetaDatas, const jv::Array<NodeMetaData>& nodeMetaDatas, 
 		const uint32_t index, uint32_t depth)
 	{
-		if (nodeMetaDatas[index].remaining == 0)
-			return depth;
-
-		const auto& node = info.nodes[index];
-		for (uint32_t i = 0; i < node.inResourceCount; ++i)
+		if (nodeMetaDatas[index].remaining > 0)
 		{
-			const auto& src = resourceMetaDatas[i].src;
-			depth = jv::Max(depth, CalculateDepthComplexity(info, resourceMetaDatas, nodeMetaDatas, src, depth + node.inResourceCount));
+			const auto& node = info.nodes[index];
+			for (uint32_t i = 0; i < node.inResourceCount; ++i)
+			{
+				const auto& src = resourceMetaDatas[i].src;
+				// Ignores out resource count, but it's relatively rare that something has multiple outputs that are used separately,
+				// and it would make this function many times more expensive to write checks for that.
+				depth = jv::Max(depth, CalculateDepthComplexity(info, resourceMetaDatas, nodeMetaDatas, src, depth + node.inResourceCount));
+			}
 		}
-			
+
+		nodeMetaDatas[index].complexity = depth;
 		return depth;
+	}
+
+	bool ComplexitiesComparer(uint32_t& a, uint32_t& b)
+	{
+		return a > b;
 	}
 
 	RenderGraph RenderGraph::Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info)
@@ -59,10 +52,20 @@ namespace ge
 		RenderGraph graph{};
 		const auto tempScope = tempArena.CreateScope();
 
+		uint32_t start = -1;
+		for (uint32_t i = 0; i < info.nodeCount; ++i)
+		{
+			if(info.nodes[i].outResourceCount == 0)
+			{
+				start = i;
+				break;
+			}
+		}
+		assert(start != -1);
+
 		// Calculate graph starting points.
-		const auto leafs = GetLeafs(arena, info);
 		auto open = jv::CreateVector<uint32_t>(tempArena, info.nodeCount);
-		open.Add() = leafs[0];
+		open.Add() = start;
 
 		// Define meta data for resources and nodes.
 		const auto resourceMetaDatas = jv::CreateArray<ResourceMetaData>(tempArena, info.resourceCount);
@@ -92,6 +95,7 @@ namespace ge
 			const auto& currentMetaData = nodeMetaDatas[current];
 			const auto& node = info.nodes[current];
 
+			// If the current node is ready to be processed.
 			if(currentMetaData.remaining == 0)
 			{
 				ordered.Add() = current;
@@ -109,46 +113,49 @@ namespace ge
 						--parentNodeMetaData.remaining;
 					}
 				}
-				
-				for (uint32_t i = 0; i < node.outResourceCount; ++i)
-				{
-					const auto& resource = node.outResources[i];
-					auto& resourceMetaData = resourceMetaDatas[resource];
-
-					if(open.count == 0)
-					{
-						const uint32_t count = resourceMetaData.dsts.GetCount();
-						if(count > 0)
-						{
-							open.Add() = resourceMetaData.dsts[count - 1];
-							break;
-						}
-					}
-				}
 
 				continue;
 			}
 
-			const auto complexities = jv::CreateArray<uint32_t>(tempArena, node.inResourceCount);
-
-			for (uint32_t i = 0; i < node.inResourceCount; ++i)
+			// If the node has further inputs.
+			if(node.inResourceCount > 0)
 			{
-				const auto& resource = node.inResources[i];
-				auto& resourceMetaData = resourceMetaDatas[resource];
-				const auto& src = resourceMetaData.src;
+				// Sort based on depth complexity (resource bandwidth) to find the most complex path first, to minimize resource usage.
+				const auto complexitiesScope = tempArena.CreateScope();
+				const auto complexities = jv::CreateArray<uint32_t>(tempArena, node.inResourceCount);
+				const auto complexitiesIndices = jv::CreateArray<uint32_t>(tempArena, node.inResourceCount);
 
-				const auto complexity = CalculateDepthComplexity(info, resourceMetaDatas, nodeMetaDatas, src, 0);
-				complexities[i] = complexity;
+				for (uint32_t i = 0; i < complexitiesIndices.length; ++i)
+					complexitiesIndices[i] = i;
 
-				if (resourceMetaData.processed)
-					continue;
-				open.Add() = src;
+				for (uint32_t i = 0; i < node.inResourceCount; ++i)
+				{
+					const auto& resource = node.inResources[i];
+					auto& resourceMetaData = resourceMetaDatas[resource];
+					const auto& src = resourceMetaData.src;
+
+					complexities[i] = CalculateDepthComplexity(info, resourceMetaDatas, nodeMetaDatas, src, 0);
+				}
+
+				jv::ExtLinearSort(complexities.ptr, complexitiesIndices.ptr, node.inResourceCount, ComplexitiesComparer);
+
+				// Add the most complex child to the stack.
+				for (uint32_t i = 0; i < node.inResourceCount; ++i)
+				{
+					const auto& resource = node.inResources[complexitiesIndices[i]];
+					auto& resourceMetaData = resourceMetaDatas[resource];
+					const auto& src = resourceMetaData.src;
+
+					if (!resourceMetaData.processed)
+					{
+						open.Add() = src;
+						break;
+					}
+				}
+
+				tempArena.DestroyScope(complexitiesScope);
 			}
 		}
-
-		// Check if every node has actually been used.
-		for (const auto& metaData : nodeMetaDatas)
-			assert(metaData.remaining == 0);
 
 		tempArena.DestroyScope(tempScope);
 		return graph;
