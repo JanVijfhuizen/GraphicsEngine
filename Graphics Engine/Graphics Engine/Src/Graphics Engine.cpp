@@ -142,8 +142,8 @@ int main()
 		auto tempArena = jv::Arena::Create(arenaInfo);
 		const auto tempScope = tempArena.CreateScope();
 
-		const auto resources = jv::CreateArray<ge::RenderGraphResourceInfo>(tempArena, 10);
-		const auto nodes = jv::CreateArray<ge::RenderGraphNodeInfo>(tempArena, 9);
+		const auto resources = jv::CreateArray<ge::RenderGraphResourceInfo>(tempArena, 13);
+		const auto nodes = jv::CreateArray<ge::RenderGraphNodeInfo>(tempArena, 10);
 
 		uint32_t n0OutResource = 0;
 		nodes[0].inResourceCount = 0;
@@ -200,12 +200,16 @@ int main()
 		nodes[6].outResources = &n6OutResource;
 
 		uint32_t n8OutResource = 8;
+		uint32_t n9OutResources[]{9, 10, 11};
 
-		uint32_t n7InResources[3];
+		uint32_t n7InResources[6];
 		n7InResources[0] = n5OutResource;
 		n7InResources[1] = n6OutResource;
 		n7InResources[2] = n8OutResource;
-		nodes[7].inResourceCount = 3;
+		n7InResources[3] = n9OutResources[0];
+		n7InResources[4] = n9OutResources[1];
+		n7InResources[5] = n9OutResources[2];
+		nodes[7].inResourceCount = 6;
 		nodes[7].inResources = n7InResources;
 		nodes[7].outResourceCount = 0;
 
@@ -213,11 +217,15 @@ int main()
 		nodes[8].outResourceCount = 1;
 		nodes[8].outResources = &n8OutResource;
 
+		nodes[9].inResourceCount = 0;
+		nodes[9].outResourceCount = 3;
+		nodes[9].outResources = n9OutResources;
+
 		ge::RenderGraphCreateInfo renderGraphCreateInfo{};
 		renderGraphCreateInfo.resources = resources.ptr;
-		renderGraphCreateInfo.resourceCount = 10;
+		renderGraphCreateInfo.resourceCount = resources.length;
 		renderGraphCreateInfo.nodes = nodes.ptr;
-		renderGraphCreateInfo.nodeCount = 9;
+		renderGraphCreateInfo.nodeCount = nodes.length;
 		const auto graph = ge::RenderGraph::Create(arena, tempArena, renderGraphCreateInfo);
 
 		ge::RenderGraph::Destroy(arena, graph);

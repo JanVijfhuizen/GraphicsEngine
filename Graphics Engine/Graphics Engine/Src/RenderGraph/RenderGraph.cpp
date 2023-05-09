@@ -280,19 +280,21 @@ namespace ge
 					continue;
 
 				auto& otherPoolState = poolStates[j];
-				for (uint32_t k = 0; k < resourcePool.length; ++k)
-					maximumPoolState[k] = jv::Max(maximumPoolState[k], otherPoolState[k]);
 
 				const auto& nodeMetaData = nodeMetaDatas[ordered[j]];
 				if(!batched[j] && nodeMetaData.availabilityIndex <= i)
 				{
 					bool fit = true;
 					for (uint32_t k = 0; k < resourcePool.length; ++k)
-						if(maximumPoolState[k] + otherPoolState[k] > resourcePool[k].capacity)
+					{
+						const auto& capacity = resourcePool[k].capacity;
+						if (maximumPoolState[k] + otherPoolState[k] > capacity)
 						{
 							fit = false;
 							break;
 						}
+					}
+						
 
 					if(fit)
 					{
@@ -302,6 +304,9 @@ namespace ge
 						batched[j] = true;
 					}
 				}
+
+				for (uint32_t k = 0; k < resourcePool.length; ++k)
+					maximumPoolState[k] = jv::Max(maximumPoolState[k], otherPoolState[k]);
 			}
 		}
 
