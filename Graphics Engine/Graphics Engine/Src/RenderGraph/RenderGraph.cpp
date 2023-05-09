@@ -223,31 +223,41 @@ namespace ge
 		}
 
 		const auto resourcePool = ToArray(tempArena, resourceTypes);
+		const auto poolStates = jv::CreateArray<jv::Array<uint32_t>>(tempArena, ordered.length);
 
 		// Calculate minimum pool capacities.
-		uint32_t j = 0;
-		for (const auto& index : ordered)
 		{
-			const auto& node = info.nodes[index];
-			for (uint32_t i = 0; i < node.outResourceCount; ++i)
+			uint32_t j = 0;
+			for (const auto& index : ordered)
 			{
-				const auto& resourceMetaData = resourceMetaDatas[node.outResources[i]];
-				auto& pool = resourcePool[resourceMetaData.poolId];
-				++pool.currentUsage;
-				if (pool.currentUsage > pool.capacity)
-					pool.capacity = pool.currentUsage;
-			}
+				const auto& node = info.nodes[index];
+				for (uint32_t i = 0; i < node.outResourceCount; ++i)
+				{
+					const auto& resourceMetaData = resourceMetaDatas[node.outResources[i]];
+					auto& pool = resourcePool[resourceMetaData.poolId];
+					++pool.currentUsage;
+					if (pool.currentUsage > pool.capacity)
+						pool.capacity = pool.currentUsage;
+				}
 
-			for (uint32_t i = 0; i < node.inResourceCount; ++i)
-			{
-				const auto& resourceMetaData = resourceMetaDatas[node.inResources[i]];
-				auto& pool = resourcePool[resourceMetaData.poolId];
-				if(resourceMetaData.freeIndex == j + 1)
-					--pool.currentUsage;
-			}
+				auto& poolState = poolStates[j] = jv::CreateArray<uint32_t>(tempArena, resourcePool.length);
+				for (uint32_t i = 0; i < resourcePool.length; ++i)
+					poolState[i] = resourcePool[i].currentUsage;
 
-			++j;
+				for (uint32_t i = 0; i < node.inResourceCount; ++i)
+				{
+					const auto& resourceMetaData = resourceMetaDatas[node.inResources[i]];
+					auto& pool = resourcePool[resourceMetaData.poolId];
+					if (resourceMetaData.freeIndex == j + 1)
+						--pool.currentUsage;
+				}
+
+				++j;
+			}
 		}
+
+		// Calculate batches.
+		
 
 		tempArena.DestroyScope(tempScope);
 		return graph;
