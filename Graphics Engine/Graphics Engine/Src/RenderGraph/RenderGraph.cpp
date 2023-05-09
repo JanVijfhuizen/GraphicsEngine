@@ -16,6 +16,7 @@ namespace ge
 		bool processed = false;
 		uint32_t usesRemaining;
 		uint32_t freeIndex;
+		uint32_t poolId;
 	};
 
 	struct NodeMetaData final
@@ -23,6 +24,13 @@ namespace ge
 		uint32_t inputsRemaining;
 		uint32_t complexity;
 		uint32_t availabilityIndex;
+	};
+
+	struct ResourcePool final
+	{
+		RenderGraphResourceInfo info{};
+		uint32_t currentUsage = 0;
+		uint32_t capacity = 0;
 	};
 
 	uint32_t CalculateDepthComplexity(const RenderGraphCreateInfo& info,
@@ -188,24 +196,57 @@ namespace ge
 		}
 
 		// Define the different resource types that are being used.
-		jv::LinkedList<RenderGraphResourceInfo> resourceTypes{};
+		jv::LinkedList<ResourcePool> resourceTypes{};
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
 		{
 			const auto& resource = info.resources[i];
 
 			bool fit = false;
+			uint32_t j = 0;
+
 			for (const auto& resourceType : resourceTypes)
 			{
-				if (resourceType == resource)
+				if (resourceType.info == resource)
 				{
 					fit = true;
 					break;
 				}
+
+				++j;
 			}
 
+			resourceMetaDatas[i].poolId = j;
 			if (fit)
 				continue;
-			Add(tempArena, resourceTypes) = resource;
+			auto& pool = Add(tempArena, resourceTypes) = {};
+			pool.info = resource;
+		}
+
+		const auto resourcePool = ToArray(tempArena, resourceTypes);
+
+		// Calculate minimum pool capacities.
+		uint32_t j = 0;
+		for (const auto& index : ordered)
+		{
+			const auto& node = info.nodes[index];
+			for (uint32_t i = 0; i < node.outResourceCount; ++i)
+			{
+				const auto& resourceMetaData = resourceMetaDatas[node.outResources[i]];
+				auto& pool = resourcePool[resourceMetaData.poolId];
+				++pool.currentUsage;
+				if (pool.currentUsage > pool.capacity)
+					pool.capacity = pool.currentUsage;
+			}
+
+			for (uint32_t i = 0; i < node.inResourceCount; ++i)
+			{
+				const auto& resourceMetaData = resourceMetaDatas[node.inResources[i]];
+				auto& pool = resourcePool[resourceMetaData.poolId];
+				if(resourceMetaData.freeIndex == j + 1)
+					--pool.currentUsage;
+			}
+
+			++j;
 		}
 
 		tempArena.DestroyScope(tempScope);
