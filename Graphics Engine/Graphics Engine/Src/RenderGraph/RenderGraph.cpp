@@ -83,36 +83,48 @@ namespace ge
 				tempArena.DestroyScope(tempLoopScope);
 			}
 
-			// Check for nodes that can be executed while also giving off a positive or neutral satisfaction.
-			bool positiveSatisfactionNodeExecuted = false;
-			for (uint32_t i = 0; i < info.nodeCount; ++i)
+			// If no positive nodes have been found, execute the least satisfying node.
+			uint32_t current = root;
+			while(true)
 			{
-				const auto& metaData = nodeMetaDatas[i];
-				if (metaData.satisfaction < -FLT_EPSILON)
-					continue;
+				const auto& node = info.nodes[current];
 
-				const auto& node = info.nodes[i];
-				bool executable = true;
-				for (uint32_t j = 0; j < node.inResourceCount; ++j)
+				uint32_t optimalChild = -1;
+				float optimalChildSatisfaction = -FLT_EPSILON;
+				for (uint32_t i = 0; i < node.inResourceCount; ++i)
 				{
-					const auto& resourceMetaData = resourceMetaDatas[node.inResources[j]];
-					if(!executed[resourceMetaData.src])
+					const auto& resourceMetaData = resourceMetaDatas[node.inResources[i]];
+					const uint32_t src = resourceMetaData.src;
+					if (executed[src])
+						continue;
+
+					const auto& nodeMetaData = nodeMetaDatas[src];
+					const float satisfaction = nodeMetaData.satisfaction;
+
+					// If a positive node has been found.
+					if((satisfaction >= -FLT_EPSILON && satisfaction >= optimalChildSatisfaction) ||
+						satisfaction < -FLT_EPSILON && satisfaction <= optimalChildSatisfaction && optimalChildSatisfaction < 0)
 					{
-						executable = false;
-						break;
+						optimalChild = src;
+						optimalChildSatisfaction = satisfaction;
 					}
 				}
 
-				if(executable)
+				if (optimalChild != -1)
 				{
-					executeOrder.Add() = i;
-					positiveSatisfactionNodeExecuted = true;
-					executed[i] = true;
+					current = optimalChild;
+					continue;
 				}
-			}
 
-			if (positiveSatisfactionNodeExecuted)
-				continue;
+				executeOrder.Add() = current;
+				executed[current] = true;
+				break;
+			}
+		}
+
+		for (unsigned order : executeOrder)
+		{
+			std::cout << order << std::endl;
 		}
 
 		tempArena.DestroyScope(tempScope);
@@ -165,12 +177,16 @@ namespace ge
 
 		DefineResourceMetaData(tempArena, resourceMetaDatas.ptr, info);
 		DefineNodeMetaData(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, info);
-		const uint32_t rootIndex = FindRoot(info);
+		const uint32_t root = FindRoot(info);
 
+		/*
 		for (int i = 0; i < info.nodeCount; ++i)
 		{
 			std::cout << nodeMetaDatas[i].satisfaction << std::endl;
 		}
+		*/
+
+		FindPath(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, root, info);
 
 		tempArena.DestroyScope(tempScope);
 		return graph;
