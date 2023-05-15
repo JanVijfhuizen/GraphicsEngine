@@ -2,6 +2,7 @@
 #include "RenderGraph/RenderGraph.h"
 #include "JLib/ArrayUtils.h"
 #include "JLib/LinkedListUtils.h"
+#include "JLib/VectorUtils.h"
 
 namespace ge
 {
@@ -57,6 +58,8 @@ namespace ge
 
 	void FindPath(jv::Arena& tempArena, NodeMetaData* nodeMetaDatas, ResourceMetaData* resourceMetaDatas, const uint32_t root, const RenderGraphCreateInfo& info)
 	{
+		auto executeOrder = jv::CreateVector<uint32_t>(tempArena, info.nodeCount);
+
 		const auto tempScope = tempArena.CreateScope();
 		const auto executed = jv::CreateArray<bool>(tempArena, info.nodeCount);
 		for (auto& b : executed)
@@ -79,9 +82,38 @@ namespace ge
 
 				tempArena.DestroyScope(tempLoopScope);
 			}
-		}
 
-		
+			// Check for nodes that can be executed while also giving off a positive or neutral satisfaction.
+			bool positiveSatisfactionNodeExecuted = false;
+			for (uint32_t i = 0; i < info.nodeCount; ++i)
+			{
+				const auto& metaData = nodeMetaDatas[i];
+				if (metaData.satisfaction < -FLT_EPSILON)
+					continue;
+
+				const auto& node = info.nodes[i];
+				bool executable = true;
+				for (uint32_t j = 0; j < node.inResourceCount; ++j)
+				{
+					const auto& resourceMetaData = resourceMetaDatas[node.inResources[j]];
+					if(!executed[resourceMetaData.src])
+					{
+						executable = false;
+						break;
+					}
+				}
+
+				if(executable)
+				{
+					executeOrder.Add() = i;
+					positiveSatisfactionNodeExecuted = true;
+					executed[i] = true;
+				}
+			}
+
+			if (positiveSatisfactionNodeExecuted)
+				continue;
+		}
 
 		tempArena.DestroyScope(tempScope);
 	}
