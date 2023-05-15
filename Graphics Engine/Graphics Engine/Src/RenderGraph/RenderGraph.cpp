@@ -2,19 +2,19 @@
 #include "RenderGraph/RenderGraph.h"
 #include "JLib/ArrayUtils.h"
 #include "JLib/LinkedListUtils.h"
-#include "JLib/Math.h"
 
 namespace ge
 {
 	struct NodeMetaData final
 	{
-		uint32_t bandWidth = 0;
+		float satisfaction = 0;
 	};
 
 	struct ResourceMetaData final
 	{
 		uint32_t src;
 		jv::LinkedList<uint32_t> dsts{};
+		uint32_t dstsCount;
 	};
 
 	bool RenderGraphResourceInfo::operator==(const RenderGraphResourceInfo& other) const
@@ -27,7 +27,66 @@ namespace ge
 		return !(other == *this);
 	}
 
-	void DefineResourceConnections(jv::Arena& arena, ResourceMetaData* metaDatas, const RenderGraphCreateInfo& info)
+	float UpdateSatisfaction(ResourceMetaData* resourceMetaDatas, bool* visited, bool* executed,
+		const uint32_t current, const RenderGraphCreateInfo& info)
+	{
+		if (visited[current])
+			return 0;
+		visited[current] = true;
+
+		const auto& node = info.nodes[current];
+
+		auto satisfaction = -static_cast<float>(node.outResourceCount);
+		for (uint32_t j = 0; j < node.inResourceCount; ++j)
+		{
+			const auto& resourceMetaData = resourceMetaDatas[node.inResources[j]];
+			satisfaction += 1.f / static_cast<float>(resourceMetaData.dstsCount);
+			if (executed[resourceMetaData.src])
+				continue;
+			satisfaction += UpdateSatisfaction(resourceMetaDatas, visited, executed, resourceMetaData.src, info);
+		}
+
+		return satisfaction;
+	}
+
+	void DefineNodeMetaData(jv::Arena& tempArena, NodeMetaData* metaDatas, ResourceMetaData* resourceMetaDatas, const RenderGraphCreateInfo& info)
+	{
+		for (uint32_t i = 0; i < info.nodeCount; ++i)
+			metaDatas[i] = {};
+	}
+
+	void FindPath(jv::Arena& tempArena, NodeMetaData* nodeMetaDatas, ResourceMetaData* resourceMetaDatas, const uint32_t root, const RenderGraphCreateInfo& info)
+	{
+		const auto tempScope = tempArena.CreateScope();
+		const auto executed = jv::CreateArray<bool>(tempArena, info.nodeCount);
+		for (auto& b : executed)
+			b = false;
+
+		while(!executed[root])
+		{
+			// Update satisfaction.
+			for (uint32_t i = 0; i < info.nodeCount; ++i)
+			{
+				auto& metaData = nodeMetaDatas[i];
+
+				const auto tempLoopScope = tempArena.CreateScope();
+				const auto visited = jv::CreateArray<bool>(tempArena, info.nodeCount);
+				for (auto& b : visited)
+					b = false;
+
+				const float satisfaction = UpdateSatisfaction(resourceMetaDatas, visited.ptr, executed.ptr, i, info);
+				metaData.satisfaction = satisfaction;
+
+				tempArena.DestroyScope(tempLoopScope);
+			}
+		}
+
+		
+
+		tempArena.DestroyScope(tempScope);
+	}
+
+	void DefineResourceMetaData(jv::Arena& arena, ResourceMetaData* metaDatas, const RenderGraphCreateInfo& info)
 	{
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
 			metaDatas[i] = {};
@@ -48,6 +107,12 @@ namespace ge
 				Add(arena, metaDatas[resourceIndex].dsts) = i;
 			}
 		}
+
+		for (uint32_t i = 0; i < info.resourceCount; ++i)
+		{
+			auto& metaData = metaDatas[i];
+			metaData.dstsCount = metaData.dsts.GetCount();
+		}
 	}
 
 	uint32_t FindRoot(const RenderGraphCreateInfo& info)
@@ -58,23 +123,6 @@ namespace ge
 		return root;
 	}
 
-	uint32_t DefineBandWidths(NodeMetaData* nodeMetaDatas, ResourceMetaData* resourceMetaDatas, const RenderGraphCreateInfo& info, const uint32_t current)
-	{
-		const auto& node = info.nodes[current];
-
-		uint32_t bandWidth = node.inResourceCount + node.outResourceCount;
-		for (uint32_t i = 0; i < node.inResourceCount; ++i)
-		{
-			const auto& resourceMetaData = resourceMetaDatas[node.inResources[i]];
-			uint32_t childBandWidth = DefineBandWidths(nodeMetaDatas, resourceMetaDatas, info, resourceMetaData.src);
-			bandWidth = jv::Max(bandWidth, childBandWidth);
-		}
-
-		auto& currentMetaData = nodeMetaDatas[current];
-		currentMetaData.bandWidth = jv::Max(currentMetaData.bandWidth, bandWidth);
-		return bandWidth;
-	}
-
 	RenderGraph RenderGraph::Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info)
 	{
 		RenderGraph graph{};
@@ -83,9 +131,14 @@ namespace ge
 		const auto nodeMetaDatas = jv::CreateArray<NodeMetaData>(tempArena, info.nodeCount);
 		const auto resourceMetaDatas = jv::CreateArray<ResourceMetaData>(tempArena, info.resourceCount);
 
-		DefineResourceConnections(tempArena, resourceMetaDatas.ptr, info);
+		DefineResourceMetaData(tempArena, resourceMetaDatas.ptr, info);
+		DefineNodeMetaData(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, info);
 		const uint32_t rootIndex = FindRoot(info);
-		DefineBandWidths(nodeMetaDatas.ptr, resourceMetaDatas.ptr, info, rootIndex);
+
+		for (int i = 0; i < info.nodeCount; ++i)
+		{
+			std::cout << nodeMetaDatas[i].satisfaction << std::endl;
+		}
 
 		tempArena.DestroyScope(tempScope);
 		return graph;
