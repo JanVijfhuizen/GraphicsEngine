@@ -2,18 +2,7 @@
 
 namespace ge
 {
-	struct RenderGraphResourceInfo final
-	{
-		enum class Type
-		{
-			color,
-			depth
-		} type = Type::color;
-		glm::ivec2 resolution;
-
-		[[nodiscard]] bool operator ==(const RenderGraphResourceInfo& other) const;
-		[[nodiscard]] bool operator !=(const RenderGraphResourceInfo& other) const;
-	};
+	typedef uint64_t ResourceMaskDescription;
 
 	struct RenderGraphNodeInfo final
 	{
@@ -25,7 +14,7 @@ namespace ge
 
 	struct RenderGraphCreateInfo final
 	{
-		RenderGraphResourceInfo* resources;
+		ResourceMaskDescription* resources;
 		uint32_t resourceCount;
 		RenderGraphNodeInfo* nodes;
 		uint32_t nodeCount;

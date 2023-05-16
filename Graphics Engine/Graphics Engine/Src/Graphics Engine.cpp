@@ -142,7 +142,7 @@ int main()
 		auto tempArena = jv::Arena::Create(arenaInfo);
 		const auto tempScope = tempArena.CreateScope();
 
-		const auto resources = jv::CreateArray<ge::RenderGraphResourceInfo>(tempArena, 11);
+		const auto resources = jv::CreateArray<ge::ResourceMaskDescription>(tempArena, 11);
 		const auto nodes = jv::CreateArray<ge::RenderGraphNodeInfo>(tempArena, 10);
 
 		uint32_t n0OutResource = 0;
