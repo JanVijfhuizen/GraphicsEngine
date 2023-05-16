@@ -9,6 +9,7 @@ namespace ge
 	struct NodeMetaData final
 	{
 		float satisfaction = 0;
+		bool satisfies;
 	};
 
 	struct ResourceMetaData final
@@ -29,7 +30,7 @@ namespace ge
 	}
 
 	float UpdateSatisfaction(ResourceMetaData* resourceMetaDatas, bool* visited, bool* executed,
-		const uint32_t current, const RenderGraphCreateInfo& info)
+		const uint32_t current, const RenderGraphCreateInfo& info, bool* outSatisfies)
 	{
 		if (visited[current])
 			return 0;
@@ -38,13 +39,19 @@ namespace ge
 		const auto& node = info.nodes[current];
 
 		auto satisfaction = -static_cast<float>(node.outResourceCount);
+
 		for (uint32_t j = 0; j < node.inResourceCount; ++j)
 		{
 			const auto& resourceMetaData = resourceMetaDatas[node.inResources[j]];
 			satisfaction += 1.f / static_cast<float>(resourceMetaData.dstsCount);
 			if (executed[resourceMetaData.src])
+			{
+				*outSatisfies = true;
 				continue;
-			satisfaction += UpdateSatisfaction(resourceMetaDatas, visited, executed, resourceMetaData.src, info);
+			}
+
+			bool satisfies = false;
+			satisfaction += UpdateSatisfaction(resourceMetaDatas, visited, executed, resourceMetaData.src, info, &satisfies);
 		}
 
 		return satisfaction;
@@ -77,8 +84,10 @@ namespace ge
 				for (auto& b : visited)
 					b = false;
 
-				const float satisfaction = UpdateSatisfaction(resourceMetaDatas, visited.ptr, executed.ptr, i, info);
+				bool satisfies = false;
+				const float satisfaction = UpdateSatisfaction(resourceMetaDatas, visited.ptr, executed.ptr, i, info, &satisfies);
 				metaData.satisfaction = satisfaction;
+				metaData.satisfies = satisfies;
 
 				tempArena.DestroyScope(tempLoopScope);
 			}
@@ -91,6 +100,8 @@ namespace ge
 
 				uint32_t optimalChild = -1;
 				float optimalChildSatisfaction = -FLT_EPSILON;
+				bool optimalChildSatisfies = false;
+
 				for (uint32_t i = 0; i < node.inResourceCount; ++i)
 				{
 					const auto& resourceMetaData = resourceMetaDatas[node.inResources[i]];
@@ -101,12 +112,19 @@ namespace ge
 					const auto& nodeMetaData = nodeMetaDatas[src];
 					const float satisfaction = nodeMetaData.satisfaction;
 
-					// If a positive node has been found.
-					if((satisfaction >= -FLT_EPSILON && satisfaction >= optimalChildSatisfaction) ||
-						satisfaction < -FLT_EPSILON && satisfaction <= optimalChildSatisfaction && optimalChildSatisfaction < 0)
+					if (optimalChildSatisfies && satisfaction < 0)
+						continue;
+
+					// If a more positive node is found.
+
+					const bool satisfactionCheck = nodeMetaData.satisfies && !optimalChildSatisfies;
+					const bool positiveCheck = nodeMetaData.satisfaction >= optimalChildSatisfaction;
+
+					if(satisfactionCheck || optimalChildSatisfies && positiveCheck || !optimalChildSatisfies && !positiveCheck)
 					{
 						optimalChild = src;
 						optimalChildSatisfaction = satisfaction;
+						optimalChildSatisfies = nodeMetaData.satisfies;
 					}
 				}
 
