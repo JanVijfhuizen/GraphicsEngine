@@ -245,7 +245,7 @@ namespace jv::vk
 		assert(!result);
 		result = vkAcquireNextImageKHR(app.device,
 			swapChain, UINT64_MAX, frame.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
-		assert(!result);
+		assert(!result || result == VK_SUBOPTIMAL_KHR);
 
 		auto& image = images[imageIndex];
 		if (image.fence)

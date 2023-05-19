@@ -9,7 +9,7 @@ namespace ge
 	struct NodeMetaData final
 	{
 		float satisfaction = 0;
-		bool satisfies;
+		float complexity = 0;
 	};
 
 	struct ResourceMetaData final
@@ -25,32 +25,30 @@ namespace ge
 		uint32_t capacity;
 	};
 
-	float UpdateSatisfaction(ResourceMetaData* resourceMetaDatas, bool* visited, bool* executed,
-		const uint32_t current, const RenderGraphCreateInfo& info, bool* outSatisfies)
+	void UpdateNodeMetaData(ResourceMetaData* resourceMetaDatas, bool* visited, bool* executed,
+		const uint32_t current, const RenderGraphCreateInfo& info, float* outSatisfaction, float* outComplexity)
 	{
 		if (visited[current])
-			return 0;
+			return;
 		visited[current] = true;
 
 		const auto& node = info.nodes[current];
 
 		auto satisfaction = -static_cast<float>(node.outResourceCount);
+		auto complexity = static_cast<float>(node.inResourceCount + node.outResourceCount);
 
 		for (uint32_t j = 0; j < node.inResourceCount; ++j)
 		{
 			const auto& resourceMetaData = resourceMetaDatas[node.inResources[j]];
 			satisfaction += 1.f / static_cast<float>(resourceMetaData.dstsCount);
 			if (executed[resourceMetaData.src])
-			{
-				*outSatisfies = true;
 				continue;
-			}
-
-			bool satisfies = false;
-			satisfaction += UpdateSatisfaction(resourceMetaDatas, visited, executed, resourceMetaData.src, info, &satisfies);
+			
+			UpdateNodeMetaData(resourceMetaDatas, visited, executed, resourceMetaData.src, info, &satisfaction, &complexity);
 		}
 
-		return satisfaction;
+		*outSatisfaction = satisfaction;
+		*outComplexity = complexity;
 	}
 
 	void DefineNodeMetaData(NodeMetaData* metaDatas, const RenderGraphCreateInfo& info)
@@ -116,10 +114,8 @@ namespace ge
 				for (auto& b : visited)
 					b = false;
 
-				bool satisfies = false;
-				const float satisfaction = UpdateSatisfaction(resourceMetaDatas, visited.ptr, executed.ptr, i, info, &satisfies);
-				metaData.satisfaction = satisfaction;
-				metaData.satisfies = satisfies;
+				UpdateNodeMetaData(resourceMetaDatas, visited.ptr, executed.ptr, i, info, 
+					&metaData.satisfaction, &metaData.complexity);
 
 				tempArena.DestroyScope(tempLoopScope);
 			}
@@ -131,8 +127,8 @@ namespace ge
 				const auto& node = info.nodes[current];
 
 				uint32_t optimalChild = -1;
-				float optimalChildSatisfaction = -FLT_EPSILON;
-				bool optimalChildSatisfies = false;
+				float optimalChildSatisfaction = -FLT_MAX;
+				float optimalChildComplexity = 0;
 
 				for (uint32_t i = 0; i < node.inResourceCount; ++i)
 				{
@@ -142,22 +138,20 @@ namespace ge
 						continue;
 
 					const auto& nodeMetaData = nodeMetaDatas[src];
-					const float satisfaction = nodeMetaData.satisfaction;
 
-					if (optimalChildSatisfies && satisfaction < 0)
+					const bool equal = fabs(nodeMetaData.satisfaction - optimalChildSatisfaction) < FLT_EPSILON;
+					bool valid = false;
+					if (equal && nodeMetaDatas->complexity > optimalChildComplexity)
+						valid = true;
+					if (!equal && nodeMetaData.satisfaction > optimalChildSatisfaction)
+						valid = true;
+
+					if (!valid)
 						continue;
 
-					// If a more positive node is found.
-
-					const bool satisfactionCheck = nodeMetaData.satisfies && !optimalChildSatisfies;
-					const bool positiveCheck = nodeMetaData.satisfaction >= optimalChildSatisfaction;
-
-					if(satisfactionCheck || optimalChildSatisfies && positiveCheck || !optimalChildSatisfies && !positiveCheck)
-					{
-						optimalChild = src;
-						optimalChildSatisfaction = satisfaction;
-						optimalChildSatisfies = nodeMetaData.satisfies;
-					}
+					optimalChild = src;
+					optimalChildSatisfaction = nodeMetaData.satisfaction;
+					optimalChildComplexity = nodeMetaData.complexity;
 				}
 
 				if (optimalChild != -1)
@@ -176,69 +170,6 @@ namespace ge
 		return executeOrder;
 	}
 
-	jv::Vector<Pool> DefinePools(jv::Arena& tempArena, NodeMetaData* nodeMetaDatas, ResourceMetaData* resourceMetaDatas, 
-		const jv::Vector<uint32_t>& path, const RenderGraphCreateInfo& info)
-	{
-		auto pools = jv::CreateVector<Pool>(tempArena, info.resourceCount);
-		const auto tempScope = tempArena.CreateScope();
-		const auto poolIndices = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
-
-		// Define all resource types.
-		for (uint32_t i = 0; i < info.resourceCount; ++i)
-		{
-			const auto& resource = info.resources[i];
-
-			uint32_t poolIndex = pools.count;
-			for (uint32_t j = 0; j < pools.count; ++j)
-			{
-				if (pools[j].mask == resource)
-				{
-					poolIndex = j;
-					break;
-				}
-			}
-
-			poolIndices[i] = poolIndex;
-			if (poolIndex != pools.count)
-				continue;
-
-			auto& pool = pools.Add() = {};
-			pool.mask = resource;
-		}
-
-		const auto poolUsage = jv::CreateArray<uint32_t>(tempArena, pools.count);
-		const auto resourceUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
-		for (auto& usage : poolUsage)
-			usage = 0;
-		for (uint32_t i = 0; i < info.resourceCount; ++i)
-			resourceUsagesRemaining[i] = resourceMetaDatas[i].dstsCount;
-
-		for (const auto& nodeIndex : path)
-		{
-			const auto& node = info.nodes[nodeIndex];
-			for (uint32_t i = 0; i < node.inResourceCount; ++i)
-			{
-				const auto resourceIndex = node.inResources[i];
-				const auto poolIndex = poolIndices[resourceIndex];
-				const auto& pool = pools[poolIndex];
-				if (--resourceUsagesRemaining[resourceIndex] == 0)
-					--poolUsage[poolIndex];
-			}
-			for (uint32_t i = 0; i < node.outResourceCount; ++i)
-			{
-				const auto resourceIndex = node.outResources[i];
-				const auto poolIndex = poolIndices[resourceIndex];
-				auto& pool = pools[poolIndex];
-
-				if (++poolUsage[poolIndex] > pool.capacity)
-					pool.capacity = poolUsage[poolIndex];
-			}
-		}
-
-		tempArena.DestroyScope(tempScope);
-		return pools;
-	}
-
 	RenderGraph RenderGraph::Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info)
 	{
 		RenderGraph graph{};
@@ -252,20 +183,11 @@ namespace ge
 		const uint32_t root = FindRoot(info);
 
 		const auto path = FindPath(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, root, info);
-		const auto pools = DefinePools(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, info);
 
 		for (unsigned node : path)
 		{
 			std::cout << node << std::endl;
 		}
-
-		std::cout << std::endl;
-
-		for (auto& pool : pools)
-		{
-			std::cout << pool.capacity << std::endl;
-		}
-
 		tempArena.DestroyScope(tempScope);
 		return graph;
 	}
