@@ -25,7 +25,7 @@ namespace ge
 		uint32_t capacity;
 	};
 
-	void UpdateNodeMetaData(ResourceMetaData* resourceMetaDatas, bool* visited, bool* executed,
+	void UpdateNodeMetaData(ResourceMetaData* resourceMetaDatas, uint32_t* resourceUsages, bool* visited, bool* executed,
 		const uint32_t current, const RenderGraphCreateInfo& info, float* outSatisfaction, float* outComplexity)
 	{
 		if (visited[current])
@@ -40,11 +40,11 @@ namespace ge
 		for (uint32_t j = 0; j < node.inResourceCount; ++j)
 		{
 			const auto& resourceMetaData = resourceMetaDatas[node.inResources[j]];
-			satisfaction += 1.f / static_cast<float>(resourceMetaData.dstsCount);
+			satisfaction += 1.f / static_cast<float>(resourceUsages[j]);
 			if (executed[resourceMetaData.src])
 				continue;
 			
-			UpdateNodeMetaData(resourceMetaDatas, visited, executed, resourceMetaData.src, info, &satisfaction, &complexity);
+			UpdateNodeMetaData(resourceMetaDatas, resourceUsages, visited, executed, resourceMetaData.src, info, &satisfaction, &complexity);
 		}
 
 		*outSatisfaction = satisfaction;
@@ -101,6 +101,9 @@ namespace ge
 		const auto executed = jv::CreateArray<bool>(tempArena, info.nodeCount);
 		for (auto& b : executed)
 			b = false;
+		const auto resourceUsages = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		for (uint32_t i = 0; i < info.resourceCount; ++i)
+			resourceUsages[i] = resourceMetaDatas[i].dstsCount;
 
 		while(!executed[root])
 		{
@@ -114,7 +117,7 @@ namespace ge
 				for (auto& b : visited)
 					b = false;
 
-				UpdateNodeMetaData(resourceMetaDatas, visited.ptr, executed.ptr, i, info, 
+				UpdateNodeMetaData(resourceMetaDatas, resourceUsages.ptr, visited.ptr, executed.ptr, i, info,
 					&metaData.satisfaction, &metaData.complexity);
 
 				tempArena.DestroyScope(tempLoopScope);
@@ -162,6 +165,13 @@ namespace ge
 
 				executeOrder.Add() = current;
 				executed[current] = true;
+				
+				for (uint32_t i = 0; i < node.inResourceCount; ++i)
+				{
+					const uint32_t resourceIndex = node.inResources[i];
+					--resourceUsages[resourceIndex];
+				}
+
 				break;
 			}
 		}
