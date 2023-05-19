@@ -325,7 +325,7 @@ namespace jv::vk
 		result = vkQueuePresentKHR(app.queues[App::presentQueue], &presentInfo);
 		frameIndex = (frameIndex + 1) % frames.length;
 
-		if (result)
+		if (result && result != VK_SUBOPTIMAL_KHR)
 			Recreate(tempArena, app, GetResolution());
 
 		tempArena.DestroyScope(scope);
