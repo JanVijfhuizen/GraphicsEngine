@@ -25,6 +25,12 @@ namespace ge
 		uint32_t capacity;
 	};
 
+	struct DefinedPools final
+	{
+		jv::Array<Pool> pools{};
+		jv::Array<uint32_t> poolIndices{};
+	};
+
 	void UpdateNodeMetaData(ResourceMetaData* resourceMetaDatas, uint32_t* resourceUsages, bool* visited, bool* executed,
 		const uint32_t current, const RenderGraphCreateInfo& info, float* outSatisfaction, float* outComplexity)
 	{
@@ -94,7 +100,8 @@ namespace ge
 		return root;
 	}
 
-	jv::Vector<uint32_t> FindPath(jv::Arena& tempArena, NodeMetaData* nodeMetaDatas, ResourceMetaData* resourceMetaDatas, const uint32_t root, const RenderGraphCreateInfo& info)
+	jv::Vector<uint32_t> FindPath(jv::Arena& tempArena, NodeMetaData* nodeMetaDatas, 
+		ResourceMetaData* resourceMetaDatas, const uint32_t root, const RenderGraphCreateInfo& info)
 	{
 		auto executeOrder = jv::CreateVector<uint32_t>(tempArena, info.nodeCount);
 		const auto tempScope = tempArena.CreateScope();
@@ -180,12 +187,12 @@ namespace ge
 		return executeOrder;
 	}
 
-	jv::Vector<Pool> DefinePools(jv::Arena& tempArena, NodeMetaData* nodeMetaDatas, ResourceMetaData* resourceMetaDatas,
+	DefinedPools DefinePools(jv::Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
 		const jv::Vector<uint32_t>& path, const RenderGraphCreateInfo& info)
 	{
 		auto pools = jv::CreateVector<Pool>(tempArena, info.resourceCount);
-		const auto tempScope = tempArena.CreateScope();
 		const auto poolIndices = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		const auto tempScope = tempArena.CreateScope();
 
 		// Define all resource types.
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
@@ -239,7 +246,46 @@ namespace ge
 		}
 
 		tempArena.DestroyScope(tempScope);
-		return pools;
+
+		DefinedPools definedPools{};
+		definedPools.pools.ptr = pools.ptr;
+		definedPools.pools.length = pools.count;
+		definedPools.poolIndices = poolIndices;
+		return definedPools;
+	}
+
+	jv::Vector<uint32_t> OptimizePath(jv::Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
+		const jv::Vector<uint32_t>& path, const DefinedPools& pools, const RenderGraphCreateInfo& info)
+	{
+		const auto tempScope = tempArena.CreateScope();
+		const auto resourcesAvailable = jv::CreateArray<bool>(tempArena, info.resourceCount);
+		for (auto& available : resourcesAvailable)
+			available = false;
+		const auto poolsCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
+		const auto currentPoolsCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
+		for (uint32_t i = 0; i < currentPoolsCapacity.length; ++i)
+			poolsCapacity[i] = pools.pools[i].capacity;
+
+		const auto resourceUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		for (uint32_t i = 0; i < info.resourceCount; ++i)
+			resourceUsagesRemaining[i] = resourceMetaDatas[i].dstsCount;
+
+		for (uint32_t i = 0; i < path.length; ++i)
+		{
+			for (uint32_t j = 0; j < poolsCapacity.length; ++j)
+				poolsCapacity[j] = currentPoolsCapacity[j];
+
+			const auto& node = info.nodes[path[i]];
+
+			for (uint32_t j = 0; j < node.outResourceCount; ++j)
+			{
+				const uint32_t resourceIndex = node.outResources[j];
+				resourcesAvailable[resourceIndex] = true;
+			}
+		}
+
+		tempArena.DestroyScope(tempScope);
+		return {};
 	}
 
 	RenderGraph RenderGraph::Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info)
@@ -255,19 +301,16 @@ namespace ge
 		const uint32_t root = FindRoot(info);
 
 		const auto path = FindPath(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, root, info);
-		const auto pools = DefinePools(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, info);
+		const auto definedPools = DefinePools(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, info);
 
-		for (unsigned node : path)
+		const auto optimizedPath = OptimizePath(tempArena, 
+			nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, definedPools, info);
+
+		for (unsigned node : optimizedPath)
 		{
 			std::cout << node << std::endl;
 		}
 
-		std::cout << std::endl;
-
-		for (auto pool : pools)
-		{
-			std::cout << pool.capacity << std::endl;
-		}
 		tempArena.DestroyScope(tempScope);
 		return graph;
 	}
