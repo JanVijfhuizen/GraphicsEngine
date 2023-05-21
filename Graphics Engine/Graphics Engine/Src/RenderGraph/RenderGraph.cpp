@@ -258,30 +258,104 @@ namespace ge
 		const jv::Vector<uint32_t>& path, const DefinedPools& pools, const RenderGraphCreateInfo& info)
 	{
 		const auto tempScope = tempArena.CreateScope();
-		const auto resourcesAvailable = jv::CreateArray<bool>(tempArena, info.resourceCount);
-		for (auto& available : resourcesAvailable)
-			available = false;
+
+		// Track pool capacity.
 		const auto poolsCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
 		const auto currentPoolsCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
 		for (uint32_t i = 0; i < currentPoolsCapacity.length; ++i)
-			poolsCapacity[i] = pools.pools[i].capacity;
+			currentPoolsCapacity[i] = pools.pools[i].capacity;
 
+		// Track resource usage.
 		const auto resourceUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		const auto currentResourceUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
-			resourceUsagesRemaining[i] = resourceMetaDatas[i].dstsCount;
+			currentResourceUsagesRemaining[i] = resourceMetaDatas[i].dstsCount;
+		
+		const auto poolsBatchCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
+		const auto poolsBatchMinCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
 
-		for (uint32_t i = 0; i < path.length; ++i)
+		auto open = jv::CreateVector<uint32_t>(tempArena, path.count);
+		open.count = path.count;
+		for (uint32_t i = 0; i < path.count; ++i)
+			open[i] = path[i];
+		auto batch = jv::CreateVector<uint32_t>(tempArena, path.count);
+
+		while(open.count > 0)
 		{
-			for (uint32_t j = 0; j < poolsCapacity.length; ++j)
-				poolsCapacity[j] = currentPoolsCapacity[j];
-
-			const auto& node = info.nodes[path[i]];
-
-			for (uint32_t j = 0; j < node.outResourceCount; ++j)
+			// Update pool capacity.
+			for (uint32_t i = 0; i < poolsCapacity.length; ++i)
 			{
-				const uint32_t resourceIndex = node.outResources[j];
-				resourcesAvailable[resourceIndex] = true;
+				poolsCapacity[i] = currentPoolsCapacity[i];
+				poolsBatchMinCapacity[i] = poolsBatchCapacity[i] = currentPoolsCapacity[i];
 			}
+
+			// Update resource usage.
+			for (uint32_t i = 0; i < currentResourceUsagesRemaining.length; ++i)
+				resourceUsagesRemaining[i] = currentResourceUsagesRemaining[i];
+
+			// Try to batch nodes.
+			for (uint32_t i = 0; i < path.length; ++i)
+			{
+				const uint32_t nodeIndex = path[i];
+				const auto& node = info.nodes[nodeIndex];
+
+				// Check for available capacity.
+				bool fit = true;
+				for (uint32_t j = 0; j < node.outResourceCount; ++j)
+				{
+					const uint32_t resourceIndex = node.outResources[j];
+					const uint32_t poolIndex = pools.poolIndices[resourceIndex];
+					auto& minCapacity = poolsBatchMinCapacity[poolIndex];
+
+					if (minCapacity == 0)
+					{
+						fit = false;
+						break;
+					}
+
+					// Decrease pool remaining capacity.
+					--poolsCapacity[poolIndex];
+					if (poolsCapacity[poolIndex] < minCapacity)
+						--minCapacity;
+				}
+
+				if (!fit)
+					break;
+
+				// Check if leaf.
+				bool isLeaf = true;
+				for (uint32_t j = 0; j < node.inResourceCount; ++j)
+					if (currentResourceUsagesRemaining[j] > 0)
+					{
+						isLeaf = false;
+						break;
+					}
+
+				// Add if leaf.
+				if (isLeaf)
+					batch.Add() = nodeIndex;
+
+				// Increase pool capacity based on inputs.
+				for (uint32_t j = 0; j < node.inResourceCount; ++j)
+				{
+					const uint32_t resourceIndex = node.inResources[j];
+					const uint32_t poolIndex = pools.poolIndices[resourceIndex];
+
+					if(--resourceUsagesRemaining[resourceIndex] == 0)
+						++poolsCapacity[poolIndex];
+				}
+			}
+
+			for (int32_t i = static_cast<int32_t>(batch.count) - 1; i >= 0; --i)
+				open.RemoveAt(batch[i]);
+
+			// temp.
+			break;
+		}
+
+		for (unsigned& batch1 : batch)
+		{
+			std::cout << batch1 << std::endl;
 		}
 
 		tempArena.DestroyScope(tempScope);
