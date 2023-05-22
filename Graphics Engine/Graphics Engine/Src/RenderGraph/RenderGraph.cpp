@@ -4,7 +4,7 @@
 #include "JLib/LinkedListUtils.h"
 #include "JLib/VectorUtils.h"
 
-namespace ge
+namespace jv::rg
 {
 	struct NodeMetaData final
 	{
@@ -15,20 +15,20 @@ namespace ge
 	struct ResourceMetaData final
 	{
 		uint32_t src;
-		jv::LinkedList<uint32_t> dsts{};
+		LinkedList<uint32_t> dsts{};
 		uint32_t dstsCount;
 	};
 
 	struct DefinedPools final
 	{
-		jv::Array<RenderGraph::Pool> pools{};
-		jv::Array<uint32_t> poolIndices{};
+		Array<RenderGraph::Pool> pools{};
+		Array<uint32_t> poolIndices{};
 	};
 
 	struct DefinedBatches final
 	{
-		jv::Array<uint32_t> nodeIndices{};
-		jv::Array<uint32_t> batchIndices{};
+		Array<uint32_t> nodeIndices{};
+		Array<uint32_t> batchIndices{};
 	};
 
 	void UpdateNodeMetaData(ResourceMetaData* resourceMetaDatas, uint32_t* resourceUsages, bool* visited, bool* executed,
@@ -63,7 +63,7 @@ namespace ge
 			metaDatas[i] = {};
 	}
 
-	void DefineResourceMetaData(jv::Arena& arena, ResourceMetaData* metaDatas, const RenderGraphCreateInfo& info)
+	void DefineResourceMetaData(Arena& arena, ResourceMetaData* metaDatas, const RenderGraphCreateInfo& info)
 	{
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
 			metaDatas[i] = {};
@@ -100,15 +100,15 @@ namespace ge
 		return root;
 	}
 
-	jv::Vector<uint32_t> FindPath(jv::Arena& tempArena, NodeMetaData* nodeMetaDatas, 
+	Vector<uint32_t> FindPath(Arena& tempArena, NodeMetaData* nodeMetaDatas, 
 		ResourceMetaData* resourceMetaDatas, const uint32_t root, const RenderGraphCreateInfo& info)
 	{
-		auto executeOrder = jv::CreateVector<uint32_t>(tempArena, info.nodeCount);
+		auto executeOrder = CreateVector<uint32_t>(tempArena, info.nodeCount);
 		const auto tempScope = tempArena.CreateScope();
-		const auto executed = jv::CreateArray<bool>(tempArena, info.nodeCount);
+		const auto executed = CreateArray<bool>(tempArena, info.nodeCount);
 		for (auto& b : executed)
 			b = false;
-		const auto resourceUsages = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		const auto resourceUsages = CreateArray<uint32_t>(tempArena, info.resourceCount);
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
 			resourceUsages[i] = resourceMetaDatas[i].dstsCount;
 
@@ -120,7 +120,7 @@ namespace ge
 				auto& metaData = nodeMetaDatas[i];
 
 				const auto tempLoopScope = tempArena.CreateScope();
-				const auto visited = jv::CreateArray<bool>(tempArena, info.nodeCount);
+				const auto visited = CreateArray<bool>(tempArena, info.nodeCount);
 				for (auto& b : visited)
 					b = false;
 
@@ -187,11 +187,11 @@ namespace ge
 		return executeOrder;
 	}
 
-	DefinedPools DefinePools(jv::Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
-		const jv::Vector<uint32_t>& path, const RenderGraphCreateInfo& info)
+	DefinedPools DefinePools(Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
+		const Vector<uint32_t>& path, const RenderGraphCreateInfo& info)
 	{
-		auto pools = jv::CreateVector<RenderGraph::Pool>(tempArena, info.resourceCount);
-		const auto poolIndices = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		auto pools = CreateVector<RenderGraph::Pool>(tempArena, info.resourceCount);
+		const auto poolIndices = CreateArray<uint32_t>(tempArena, info.resourceCount);
 		const auto tempScope = tempArena.CreateScope();
 
 		// Define all resource types.
@@ -217,8 +217,8 @@ namespace ge
 			pool.resourceMaskDescription = resource;
 		}
 
-		const auto poolUsage = jv::CreateArray<uint32_t>(tempArena, pools.count);
-		const auto resourceUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		const auto poolUsage = CreateArray<uint32_t>(tempArena, pools.count);
+		const auto resourceUsagesRemaining = CreateArray<uint32_t>(tempArena, info.resourceCount);
 		for (auto& usage : poolUsage)
 			usage = 0;
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
@@ -254,36 +254,36 @@ namespace ge
 		return definedPools;
 	}
 
-	DefinedBatches DefineBatches(jv::Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
-		const jv::Vector<uint32_t>& path, const DefinedPools& pools, const RenderGraphCreateInfo& info)
+	DefinedBatches DefineBatches(Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
+		const Vector<uint32_t>& path, const DefinedPools& pools, const RenderGraphCreateInfo& info)
 	{
-		auto optimizedPath = jv::CreateVector<uint32_t>(tempArena, path.length);
-		auto optimizedPathIndices = jv::CreateVector<uint32_t>(tempArena, path.length);
+		auto optimizedPath = CreateVector<uint32_t>(tempArena, path.length);
+		auto optimizedPathIndices = CreateVector<uint32_t>(tempArena, path.length);
 
 		const auto tempScope = tempArena.CreateScope();
 
 		// Track pool capacity.
-		const auto poolsCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
-		const auto poolsCurrentCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
+		const auto poolsCapacity = CreateArray<uint32_t>(tempArena, pools.pools.length);
+		const auto poolsCurrentCapacity = CreateArray<uint32_t>(tempArena, pools.pools.length);
 		for (uint32_t i = 0; i < poolsCurrentCapacity.length; ++i)
 			poolsCurrentCapacity[i] = pools.pools[i].capacity;
 
 		// Track resource usage.
-		const auto resourceUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
-		const auto resourceCurrentUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		const auto resourceUsagesRemaining = CreateArray<uint32_t>(tempArena, info.resourceCount);
+		const auto resourceCurrentUsagesRemaining = CreateArray<uint32_t>(tempArena, info.resourceCount);
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
 			resourceCurrentUsagesRemaining[i] = resourceMetaDatas[i].dstsCount;
-		const auto resourcesReady = jv::CreateArray<bool>(tempArena, info.resourceCount);
+		const auto resourcesReady = CreateArray<bool>(tempArena, info.resourceCount);
 		for (auto& ready : resourcesReady)
 			ready = false;
 
-		const auto poolsMinCapacity = jv::CreateArray<uint32_t>(tempArena, pools.pools.length);
+		const auto poolsMinCapacity = CreateArray<uint32_t>(tempArena, pools.pools.length);
 
-		auto open = jv::CreateVector<uint32_t>(tempArena, path.count);
+		auto open = CreateVector<uint32_t>(tempArena, path.count);
 		open.count = path.count;
 		for (uint32_t i = 0; i < path.count; ++i)
 			open[i] = path[i];
-		auto batch = jv::CreateVector<uint32_t>(tempArena, path.count);
+		auto batch = CreateVector<uint32_t>(tempArena, path.count);
 
 		while(open.count > 0)
 		{
@@ -394,13 +394,13 @@ namespace ge
 		return definedBatches;
 	}
 
-	RenderGraph RenderGraph::Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info)
+	RenderGraph RenderGraph::Create(Arena& arena, Arena& tempArena, const RenderGraphCreateInfo& info)
 	{
 		RenderGraph graph{};
 		const auto tempScope = tempArena.CreateScope();
 		
-		const auto nodeMetaDatas = jv::CreateArray<NodeMetaData>(tempArena, info.nodeCount);
-		const auto resourceMetaDatas = jv::CreateArray<ResourceMetaData>(tempArena, info.resourceCount);
+		const auto nodeMetaDatas = CreateArray<NodeMetaData>(tempArena, info.nodeCount);
+		const auto resourceMetaDatas = CreateArray<ResourceMetaData>(tempArena, info.resourceCount);
 
 		DefineNodeMetaData(nodeMetaDatas.ptr, info);
 		DefineResourceMetaData(tempArena, resourceMetaDatas.ptr, info);
@@ -411,17 +411,17 @@ namespace ge
 		const auto definedBatches = DefineBatches(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, definedPools, info);
 
 		graph.scope = arena.CreateScope();
-		graph.pools = jv::CreateArray<Pool>(arena, definedPools.pools.length);
+		graph.pools = CreateArray<Pool>(arena, definedPools.pools.length);
 		for (uint32_t i = 0; i < graph.pools.length; ++i)
 			graph.pools[i] = definedPools.pools[i];
-		graph.batches = jv::CreateArray<Batch>(arena, definedBatches.batchIndices.length);
+		graph.batches = CreateArray<Batch>(arena, definedBatches.batchIndices.length);
 
 		uint32_t i = 0;
 		for (uint32_t j = 0; j < graph.batches.length; ++j)
 		{
 			auto& batch = graph.batches[j] = {};
 			const uint32_t batchIndex = definedBatches.batchIndices[j];
-			batch.passes = jv::CreateArray<Pass>(arena, batchIndex - i);
+			batch.passes = CreateArray<Pass>(arena, batchIndex - i);
 
 			for (uint32_t k = 0; k < batch.passes.length; ++k)
 			{
@@ -429,11 +429,11 @@ namespace ge
 				pass.index = definedBatches.nodeIndices[i + k];
 				const auto& node = info.nodes[pass.index];
 
-				pass.inResourcePools = jv::CreateArray<uint32_t>(arena, node.inResourceCount);
+				pass.inResourcePools = CreateArray<uint32_t>(arena, node.inResourceCount);
 				for (uint32_t l = 0; l < pass.inResourcePools.length; ++l)
 					pass.inResourcePools[l] = definedPools.poolIndices[node.inResources[l]];
 
-				pass.outResourcePools = jv::CreateArray<uint32_t>(arena, node.outResourceCount);
+				pass.outResourcePools = CreateArray<uint32_t>(arena, node.outResourceCount);
 				for (uint32_t l = 0; l < pass.outResourcePools.length; ++l)
 					pass.outResourcePools[l] = definedPools.poolIndices[node.outResources[l]];
 			}
@@ -445,7 +445,7 @@ namespace ge
 		return graph;
 	}
 
-	void RenderGraph::Destroy(jv::Arena& arena, const RenderGraph& renderGraph)
+	void RenderGraph::Destroy(Arena& arena, const RenderGraph& renderGraph)
 	{
 	}
 }

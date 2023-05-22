@@ -1,7 +1,7 @@
 #pragma once
 #include "JLib/Array.h"
 
-namespace ge
+namespace jv::rg
 {
 	typedef uint64_t ResourceMaskDescription;
 

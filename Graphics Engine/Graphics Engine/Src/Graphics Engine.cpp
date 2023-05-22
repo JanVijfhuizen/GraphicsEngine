@@ -142,8 +142,8 @@ int main()
 		auto tempArena = jv::Arena::Create(arenaInfo);
 		const auto tempScope = tempArena.CreateScope();
 
-		const auto resources = jv::CreateArray<ge::ResourceMaskDescription>(tempArena, 11);
-		const auto nodes = jv::CreateArray<ge::RenderGraphNodeInfo>(tempArena, 10);
+		const auto resources = jv::CreateArray<jv::rg::ResourceMaskDescription>(tempArena, 11);
+		const auto nodes = jv::CreateArray<jv::rg::RenderGraphNodeInfo>(tempArena, 10);
 
 		uint32_t n0OutResource = 0;
 		nodes[0].inResourceCount = 0;
@@ -219,14 +219,14 @@ int main()
 		nodes[9].outResourceCount = 1;
 		nodes[9].outResources = &n9OutResource;
 
-		ge::RenderGraphCreateInfo renderGraphCreateInfo{};
+		jv::rg::RenderGraphCreateInfo renderGraphCreateInfo{};
 		renderGraphCreateInfo.resources = resources.ptr;
 		renderGraphCreateInfo.resourceCount = resources.length;
 		renderGraphCreateInfo.nodes = nodes.ptr;
 		renderGraphCreateInfo.nodeCount = nodes.length;
-		const auto graph = ge::RenderGraph::Create(arena, tempArena, renderGraphCreateInfo);
+		const auto graph = jv::rg::RenderGraph::Create(arena, tempArena, renderGraphCreateInfo);
 
-		ge::RenderGraph::Destroy(arena, graph);
+		jv::rg::RenderGraph::Destroy(arena, graph);
 		free(mem);
 		tempArena.DestroyScope(tempScope);
 	}
