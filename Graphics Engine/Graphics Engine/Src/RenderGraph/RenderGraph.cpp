@@ -31,6 +31,12 @@ namespace ge
 		jv::Array<uint32_t> poolIndices{};
 	};
 
+	struct DefinedBatches final
+	{
+		jv::Array<uint32_t> nodeIndices{};
+		jv::Array<uint32_t> batchIndices{};
+	};
+
 	void UpdateNodeMetaData(ResourceMetaData* resourceMetaDatas, uint32_t* resourceUsages, bool* visited, bool* executed,
 		const uint32_t current, const RenderGraphCreateInfo& info, float* outSatisfaction, float* outComplexity)
 	{
@@ -254,7 +260,7 @@ namespace ge
 		return definedPools;
 	}
 
-	jv::Vector<uint32_t> OptimizePath(jv::Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
+	DefinedBatches DefineBatches(jv::Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
 		const jv::Vector<uint32_t>& path, const DefinedPools& pools, const RenderGraphCreateInfo& info)
 	{
 		auto optimizedPath = jv::CreateVector<uint32_t>(tempArena, path.length);
@@ -384,20 +390,14 @@ namespace ge
 			batch.Clear();
 		}
 
-		for (unsigned& batch1 : optimizedPath)
-		{
-			std::cout << batch1 << std::endl;
-		}
-
-		std::cout << std::endl;
-
-		for (unsigned& batch1 : optimizedPathIndices)
-		{
-			std::cout << batch1 << std::endl;
-		}
-
 		tempArena.DestroyScope(tempScope);
-		return {};
+
+		DefinedBatches definedBatches{};
+		definedBatches.nodeIndices.ptr = optimizedPath.ptr;
+		definedBatches.nodeIndices.length = optimizedPath.count;
+		definedBatches.batchIndices.ptr = optimizedPathIndices.ptr;
+		definedBatches.batchIndices.length = optimizedPathIndices.count;
+		return definedBatches;
 	}
 
 	RenderGraph RenderGraph::Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info)
@@ -422,10 +422,17 @@ namespace ge
 
 		std::cout << std::endl;
 
-		const auto optimizedPath = OptimizePath(tempArena, 
+		const auto definedBatches = DefineBatches(tempArena, 
 			nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, definedPools, info);
 
-		for (unsigned node : optimizedPath)
+		for (unsigned node : definedBatches.nodeIndices)
+		{
+			std::cout << node << std::endl;
+		}
+
+		std::cout << std::endl;
+
+		for (unsigned node : definedBatches.batchIndices)
 		{
 			std::cout << node << std::endl;
 		}
