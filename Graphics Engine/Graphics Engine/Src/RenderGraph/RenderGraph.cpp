@@ -270,8 +270,9 @@ namespace ge
 
 		// Track resource usage.
 		const auto resourceUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
+		const auto resourceCurrentUsagesRemaining = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
 		for (uint32_t i = 0; i < info.resourceCount; ++i)
-			resourceUsagesRemaining[i] = resourceMetaDatas[i].dstsCount;
+			resourceCurrentUsagesRemaining[i] = resourceMetaDatas[i].dstsCount;
 		const auto resourcesReady = jv::CreateArray<bool>(tempArena, info.resourceCount);
 		for (auto& ready : resourcesReady)
 			ready = false;
@@ -292,7 +293,10 @@ namespace ge
 				poolsCapacity[i] = poolsCurrentCapacity[i];
 				poolsMinCapacity[i] = poolsCurrentCapacity[i];
 			}
-			
+
+			for (uint32_t i = 0; i < resourceUsagesRemaining.length; ++i)
+				resourceUsagesRemaining[i] = resourceCurrentUsagesRemaining[i];
+
 			// Try to batch nodes.
 			for (uint32_t i = 0; i < open.count; ++i)
 			{
@@ -332,11 +336,21 @@ namespace ge
 						break;
 					}
 
+				// Increase pool remaining capacity.
+				if (!isLeaf)
+				{
+					for (uint32_t j = 0; j < node.inResourceCount; ++j)
+					{
+						const uint32_t resourceIndex = node.inResources[j];
+						const uint32_t poolIndex = pools.poolIndices[resourceIndex];
+						if (--resourceUsagesRemaining[resourceIndex] == 0)
+							++poolsCapacity[poolIndex];
+					}
+				}
+
 				// Add if leaf.
 				if (isLeaf)
 					batch.Add() = i;
-
-				// todo increase pool capacity again based on inputs.
 			}
 
 			// Remove nodes that have now been traveled to.
@@ -353,7 +367,7 @@ namespace ge
 				{
 					const uint32_t resourceIndex = node.inResources[j];
 					const uint32_t poolIndex = pools.poolIndices[resourceIndex];
-					if (--resourceUsagesRemaining[resourceIndex] == 0)
+					if (--resourceCurrentUsagesRemaining[resourceIndex] == 0)
 						++poolsCurrentCapacity[poolIndex];
 				}
 
