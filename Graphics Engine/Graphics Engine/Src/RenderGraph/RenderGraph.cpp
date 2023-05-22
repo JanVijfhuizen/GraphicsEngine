@@ -19,15 +19,9 @@ namespace ge
 		uint32_t dstsCount;
 	};
 
-	struct Pool final
-	{
-		ResourceMaskDescription mask;
-		uint32_t capacity;
-	};
-
 	struct DefinedPools final
 	{
-		jv::Array<Pool> pools{};
+		jv::Array<RenderGraph::Pool> pools{};
 		jv::Array<uint32_t> poolIndices{};
 	};
 
@@ -196,7 +190,7 @@ namespace ge
 	DefinedPools DefinePools(jv::Arena& tempArena, const NodeMetaData* nodeMetaDatas, const ResourceMetaData* resourceMetaDatas,
 		const jv::Vector<uint32_t>& path, const RenderGraphCreateInfo& info)
 	{
-		auto pools = jv::CreateVector<Pool>(tempArena, info.resourceCount);
+		auto pools = jv::CreateVector<RenderGraph::Pool>(tempArena, info.resourceCount);
 		const auto poolIndices = jv::CreateArray<uint32_t>(tempArena, info.resourceCount);
 		const auto tempScope = tempArena.CreateScope();
 
@@ -208,7 +202,7 @@ namespace ge
 			uint32_t poolIndex = pools.count;
 			for (uint32_t j = 0; j < pools.count; ++j)
 			{
-				if (pools[j].mask == resource)
+				if (pools[j].resourceMaskDescription == resource)
 				{
 					poolIndex = j;
 					break;
@@ -220,7 +214,7 @@ namespace ge
 				continue;
 
 			auto& pool = pools.Add() = {};
-			pool.mask = resource;
+			pool.resourceMaskDescription = resource;
 		}
 
 		const auto poolUsage = jv::CreateArray<uint32_t>(tempArena, pools.count);
@@ -414,27 +408,37 @@ namespace ge
 
 		const auto path = FindPath(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, root, info);
 		const auto definedPools = DefinePools(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, info);
+		const auto definedBatches = DefineBatches(tempArena, nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, definedPools, info);
 
-		for (unsigned node : path)
+		graph.scope = arena.CreateScope();
+		graph.pools = jv::CreateArray<Pool>(arena, definedPools.pools.length);
+		for (uint32_t i = 0; i < graph.pools.length; ++i)
+			graph.pools[i] = definedPools.pools[i];
+		graph.batches = jv::CreateArray<Batch>(arena, definedBatches.batchIndices.length);
+
+		uint32_t i = 0;
+		for (uint32_t j = 0; j < graph.batches.length; ++j)
 		{
-			std::cout << node << std::endl;
-		}
+			auto& batch = graph.batches[j] = {};
+			const uint32_t batchIndex = definedBatches.batchIndices[j];
+			batch.passes = jv::CreateArray<Pass>(arena, batchIndex - i);
 
-		std::cout << std::endl;
+			for (uint32_t k = 0; k < batch.passes.length; ++k)
+			{
+				auto& pass = batch.passes[k] = {};
+				pass.index = definedBatches.nodeIndices[i + k];
+				const auto& node = info.nodes[pass.index];
 
-		const auto definedBatches = DefineBatches(tempArena, 
-			nodeMetaDatas.ptr, resourceMetaDatas.ptr, path, definedPools, info);
+				pass.inResourcePools = jv::CreateArray<uint32_t>(arena, node.inResourceCount);
+				for (uint32_t l = 0; l < pass.inResourcePools.length; ++l)
+					pass.inResourcePools[l] = definedPools.poolIndices[node.inResources[l]];
 
-		for (unsigned node : definedBatches.nodeIndices)
-		{
-			std::cout << node << std::endl;
-		}
+				pass.outResourcePools = jv::CreateArray<uint32_t>(arena, node.outResourceCount);
+				for (uint32_t l = 0; l < pass.outResourcePools.length; ++l)
+					pass.outResourcePools[l] = definedPools.poolIndices[node.outResources[l]];
+			}
 
-		std::cout << std::endl;
-
-		for (unsigned node : definedBatches.batchIndices)
-		{
-			std::cout << node << std::endl;
+			i = batchIndex;
 		}
 
 		tempArena.DestroyScope(tempScope);
