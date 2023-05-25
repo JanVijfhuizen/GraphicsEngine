@@ -245,7 +245,7 @@ namespace jv::vk
 		assert(!result);
 		result = vkAcquireNextImageKHR(app.device,
 			swapChain, UINT64_MAX, frame.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
-		assert(!result);
+		assert(!result || result == VK_SUBOPTIMAL_KHR);
 
 		auto& image = images[imageIndex];
 		if (image.fence)
@@ -325,7 +325,7 @@ namespace jv::vk
 		result = vkQueuePresentKHR(app.queues[App::presentQueue], &presentInfo);
 		frameIndex = (frameIndex + 1) % frames.length;
 
-		if (result)
+		if (result && result != VK_SUBOPTIMAL_KHR)
 			Recreate(tempArena, app, GetResolution());
 
 		tempArena.DestroyScope(scope);

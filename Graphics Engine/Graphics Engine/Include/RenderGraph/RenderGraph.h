@@ -1,16 +1,9 @@
 #pragma once
+#include "JLib/Array.h"
 
-namespace ge
+namespace jv::rg
 {
-	struct RenderGraphResourceInfo final
-	{
-		enum class Type
-		{
-			color,
-			depth
-		} type = Type::color;
-		glm::ivec2 resolution;
-	};
+	typedef uint64_t ResourceMaskDescription;
 
 	struct RenderGraphNodeInfo final
 	{
@@ -22,15 +15,43 @@ namespace ge
 
 	struct RenderGraphCreateInfo final
 	{
-		RenderGraphResourceInfo* resources;
+		ResourceMaskDescription* resources;
 		uint32_t resourceCount;
 		RenderGraphNodeInfo* nodes;
 		uint32_t nodeCount;
 	};
 
+	struct RenderGraphResource
+	{
+		uint32_t pool;
+		uint32_t instance;
+	};
+
 	struct RenderGraph final
 	{
-		[[nodiscard]] static RenderGraph Create(jv::Arena& arena, jv::Arena& tempArena, const RenderGraphCreateInfo& info);
-		static void Destroy(jv::Arena& arena, const RenderGraph& renderGraph);
+		struct Pass final
+		{
+			Array<RenderGraphResource> inResources{};
+			Array<RenderGraphResource> outResources{};
+			uint32_t nodeIndex;
+		};
+
+		struct Batch final
+		{
+			Array<Pass> passes{};
+		};
+
+		struct Pool final
+		{
+			ResourceMaskDescription resourceMaskDescription;
+			uint32_t capacity;
+		};
+
+		uint64_t scope;
+		Array<Pool> pools{};
+		Array<Batch> batches{};
+
+		[[nodiscard]] static RenderGraph Create(Arena& arena, Arena& tempArena, const RenderGraphCreateInfo& info);
+		static void Destroy(Arena& arena, const RenderGraph& renderGraph);
 	};
 }

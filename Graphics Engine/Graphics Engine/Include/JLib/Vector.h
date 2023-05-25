@@ -17,8 +17,10 @@ namespace jv
 
 		T& Add();
 		void RemoveAt(uint32_t i);
+		void RemoveAtOrdered(uint32_t i);
 		[[nodiscard]] T& Peek() const;
 		T Pop();
+		void Clear();
 	};
 
 	template <typename T>
@@ -62,6 +64,15 @@ namespace jv
 	}
 
 	template <typename T>
+	void Vector<T>::RemoveAtOrdered(const uint32_t i)
+	{
+		assert(count > i);
+		--count;
+		for (uint32_t j = i; j < count; ++j)
+			ptr[j] = ptr[j + 1];
+	}
+
+	template <typename T>
 	T& Vector<T>::Peek() const
 	{
 		return ptr[count - 1];
@@ -72,5 +83,11 @@ namespace jv
 	{
 		assert(count > 0);
 		return ptr[--count];
+	}
+
+	template <typename T>
+	void Vector<T>::Clear()
+	{
+		count = 0;
 	}
 }

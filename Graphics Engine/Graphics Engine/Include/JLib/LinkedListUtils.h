@@ -72,12 +72,27 @@ namespace jv
 	}
 
 	template <typename T>
-	Array<T> ToArray(Arena& arena, const LinkedList<T>& linkedList)
+	Array<T> ToArray(Arena& arena, const LinkedList<T>& linkedList, const bool keepEnumerationOrder)
 	{
 		const auto arr = CreateArray<T>(arena, linkedList.GetCount());
-		uint32_t i = arr.length;
-		for (auto& t : linkedList)
-			arr[--i] = t;
+
+		{
+			uint32_t i = arr.length;
+			for (auto& t : linkedList)
+				arr[--i] = t;
+		}
+
+		if(keepEnumerationOrder)
+		{
+			const uint32_t half = arr.length / 2;
+			for (uint32_t i = 0; i < half; ++i)
+			{
+				T temp = arr[i];
+				auto& other = arr[arr.length - 1 - i];
+				arr[i] = other;
+				other = temp;
+			}
+		}
 		return arr;
 	}
 }
