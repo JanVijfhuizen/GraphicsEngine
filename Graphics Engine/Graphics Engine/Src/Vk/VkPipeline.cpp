@@ -84,11 +84,24 @@ namespace jv::vk
 		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		rasterizer.depthClampEnable = VK_FALSE;
 		rasterizer.rasterizerDiscardEnable = VK_FALSE;
-		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1;
 		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
+
+		switch (info.topology) {
+			case PipelineCreateInfo::Topology::triangle:
+				rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+				break;
+			case PipelineCreateInfo::Topology::line:
+				rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
+				break;
+			case PipelineCreateInfo::Topology::points:
+				rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
+				break;
+			default:
+				std::cerr << "Vertex type not supported." << std::endl;
+		}
 
 		VkPipelineMultisampleStateCreateInfo multiSampling{};
 		multiSampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
