@@ -31,6 +31,12 @@ namespace jv::rg
 		Array<uint32_t> batchIndices{};
 	};
 
+	struct DefinedAllocations final
+	{
+		LinkedList<RenderGraphResource> allocations{};
+		LinkedList<RenderGraphResource> deallocations{};
+	};
+
 	void UpdateNodeMetaData(ResourceMetaData* resourceMetaDatas, uint32_t* resourceUsages, bool* visited, bool* executed,
 		const uint32_t current, const RenderGraphCreateInfo& info, float* outSatisfaction, float* outComplexity)
 	{
@@ -278,7 +284,6 @@ namespace jv::rg
 			ready = false;
 
 		const auto poolsMinCapacity = CreateArray<uint32_t>(tempArena, pools.pools.length);
-
 		auto open = CreateVector<uint32_t>(tempArena, path.count);
 		open.count = path.count;
 		for (uint32_t i = 0; i < path.count; ++i)
@@ -394,6 +399,82 @@ namespace jv::rg
 		return definedBatches;
 	}
 
+	Array<DefinedAllocations> DefineAllocations(Arena& tempArena, const ResourceMetaData* resourceMetaDatas, const DefinedPools& pools, 
+		const DefinedBatches& batches, const RenderGraphCreateInfo& info)
+	{
+		const auto allocations = CreateArray<DefinedAllocations>(tempArena, batches.nodeIndices.length);
+		const auto resourceUsagesRemaining = CreateArray<uint32_t>(tempArena, info.resourceCount);
+		for (uint32_t i = 0; i < info.resourceCount; ++i)
+			resourceUsagesRemaining[i] = resourceMetaDatas[i].dstsCount;
+
+		const auto instancePools = CreateArray<Vector<uint32_t>>(tempArena, pools.pools.length);
+		for (uint32_t i = 0; i < instancePools.length; ++i)
+		{
+			auto& instancePool = instancePools[i] = CreateVector<uint32_t>(tempArena, pools.pools[i].capacity);
+			instancePool.count = instancePool.length;
+			for (uint32_t j = 0; j < instancePool.length; ++j)
+				instancePool[j] = j;
+		}
+
+		const auto assignedInstances = CreateArray<LinkedList<RenderGraphResource>>(
+			tempArena, info.nodeCount);
+		for (auto& assignedInstance : assignedInstances)
+			assignedInstance = {};
+
+		uint32_t current = 0;
+		for (uint32_t i = 0; i < batches.batchIndices.length; ++i)
+		{
+			const uint32_t batchIndex = batches.batchIndices[i];
+
+			uint32_t prevCurrent = current;
+			while (current < batchIndex)
+			{
+				auto& definedAllocation = allocations[current] = {};
+
+				const uint32_t nodeIndex = batches.nodeIndices[current];
+				const auto& node = info.nodes[nodeIndex];
+
+				for (uint32_t j = 0; j < node.outResourceCount; ++j)
+				{
+					const uint32_t resourceIndex = node.outResources[j];
+					const uint32_t poolIndex = pools.poolIndices[resourceIndex];
+					RenderGraphResource allocation{};
+					allocation.pool = poolIndex;
+					allocation.instance = instancePools[poolIndex].Pop();
+					Add(tempArena, definedAllocation.allocations) = allocation;
+
+					auto& resourceMetaData = resourceMetaDatas[resourceIndex];
+					for (const auto& dst : resourceMetaData.dsts)
+						Add(tempArena, assignedInstances[dst]) = allocation;
+				}
+
+				++current;
+			}
+
+			while (prevCurrent < batchIndex)
+			{
+				auto& definedAllocation = allocations[prevCurrent];
+				const uint32_t nodeIndex = batches.nodeIndices[prevCurrent];
+				const auto& node = info.nodes[nodeIndex];
+
+				for (uint32_t j = 0; j < node.inResourceCount; ++j)
+				{
+					const uint32_t resourceIndex = node.inResources[j];
+					const auto& poolInstance = assignedInstances[nodeIndex][j];
+					Add(tempArena, definedAllocation.deallocations) = poolInstance;
+					if (--resourceUsagesRemaining[resourceIndex] > 0)
+						continue;
+
+					instancePools[poolInstance.pool].Add() = poolInstance.instance;
+				}
+
+				++prevCurrent;
+			}
+		}
+
+		return allocations;
+	}
+
 	RenderGraph RenderGraph::Create(Arena& arena, Arena& tempArena, const RenderGraphCreateInfo& info)
 	{
 		RenderGraph graph{};
@@ -416,6 +497,9 @@ namespace jv::rg
 			graph.pools[i] = definedPools.pools[i];
 		graph.batches = CreateArray<Batch>(arena, definedBatches.batchIndices.length);
 
+		const auto allocations = DefineAllocations(tempArena, 
+			resourceMetaDatas.ptr, definedPools, definedBatches, info);
+
 		uint32_t i = 0;
 		for (uint32_t j = 0; j < graph.batches.length; ++j)
 		{
@@ -426,16 +510,11 @@ namespace jv::rg
 			for (uint32_t k = 0; k < batch.passes.length; ++k)
 			{
 				auto& pass = batch.passes[k] = {};
-				pass.index = definedBatches.nodeIndices[i + k];
-				const auto& node = info.nodes[pass.index];
+				pass.nodeIndex = definedBatches.nodeIndices[i + k];
+				const auto& node = info.nodes[pass.nodeIndex];
 
-				pass.inResourcePools = CreateArray<uint32_t>(arena, node.inResourceCount);
-				for (uint32_t l = 0; l < pass.inResourcePools.length; ++l)
-					pass.inResourcePools[l] = definedPools.poolIndices[node.inResources[l]];
-
-				pass.outResourcePools = CreateArray<uint32_t>(arena, node.outResourceCount);
-				for (uint32_t l = 0; l < pass.outResourcePools.length; ++l)
-					pass.outResourcePools[l] = definedPools.poolIndices[node.outResources[l]];
+				pass.inResources = ToArray(arena, allocations[i + k].deallocations, false);
+				pass.outResources = ToArray(arena, allocations[i + k].allocations, false);
 			}
 
 			i = batchIndex;

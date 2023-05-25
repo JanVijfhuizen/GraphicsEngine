@@ -226,6 +226,25 @@ int main()
 		renderGraphCreateInfo.nodeCount = nodes.length;
 		const auto graph = jv::rg::RenderGraph::Create(arena, tempArena, renderGraphCreateInfo);
 
+		for (auto& batch : graph.batches)
+		{
+			std::cout << "batch: " << std::endl;
+			for (auto& pass : batch.passes)
+			{
+				std::cout << "node: " << pass.nodeIndex << std::endl;
+				std::cout << "--in--: " << std::endl;
+				for (auto& resource : pass.inResources)
+				{
+					std::cout << resource.pool << " " << resource.instance << std::endl;
+				}
+				std::cout << "--out--: " << std::endl;
+				for (auto& resource : pass.outResources)
+				{
+					std::cout << resource.pool << " " << resource.instance << std::endl;
+				}
+			}
+		}
+
 		jv::rg::RenderGraph::Destroy(arena, graph);
 		free(mem);
 		tempArena.DestroyScope(tempScope);
