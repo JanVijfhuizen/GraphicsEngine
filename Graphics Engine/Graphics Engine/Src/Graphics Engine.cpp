@@ -66,7 +66,7 @@ int main()
 	jv::ge::MeshCreateInfo meshCreateInfo{};
 	meshCreateInfo.verticesLength = 4;
 	meshCreateInfo.indicesLength = 6;
-	meshCreateInfo.vertices2d = vertices;
+	meshCreateInfo.vertices = vertices;
 	meshCreateInfo.indices = indices;
 	meshCreateInfo.scene = scene;
 	const auto mesh = AddMesh(meshCreateInfo);

@@ -354,7 +354,7 @@ namespace jv::ge
 		pImage->image.FillImage(scene->arena, scene->freeArena, ge.app, pixels);
 	}
 
-	Resource AddMesh(const MeshCreateInfo& info)
+	Resource AddMesh(MeshCreateInfo& info)
 	{
 		assert(ge.initialized);
 		const auto scene = static_cast<Scene*>(info.scene);
@@ -367,21 +367,36 @@ namespace jv::ge
 		indices.length = info.indicesLength;
 
 		vk::Mesh vkMesh{};
-		if(info.vertexType == VertexType::v2D)
-		{
-			void* ptr = info.vertices2d;
-			const uint32_t size = sizeof(Vertex2D) * info.verticesLength;
-			vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, &ptr, &size, 1, indices);
-		}
-		else if(info.vertexType == VertexType::v3D)
-		{
-			void* ptr = info.vertices3d;
-			const uint32_t size = sizeof(Vertex3D) * info.verticesLength;
-			vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, &ptr, &size, 1, indices);
-		}
-		else
-			std::cerr << "Vertex type not supported." << std::endl;
+		
+		uint32_t size = info.verticesLength;
 
+		switch (info.vertexType)
+		{
+			case VertexType::v2D:
+				size *= sizeof(Vertex2D);
+				break;
+			case VertexType::v3D:
+				size *= sizeof(Vertex3D);
+				break;
+			case VertexType::p2D:
+				size *= sizeof(VertexPoint2D);
+				break;
+			case VertexType::p3D:
+				size *= sizeof(VertexPoint3D);
+				break;
+			case VertexType::l2D:
+				size *= sizeof(VertexPoint2D);
+				break;
+			case VertexType::l3D:
+				size *= sizeof(VertexPoint3D);
+				break;
+			default: 
+				std::cerr << "Vertex type not supported." << std::endl;
+		}
+
+		void** ptr = &info.vertices;
+
+		vkMesh = vk::Mesh::Create(scene->arena, scene->freeArena, ge.app, ptr, &size, 1, indices);
 		mesh.mesh = vkMesh;
 		mesh.info = info;
 		return &mesh;
@@ -873,10 +888,32 @@ namespace jv::ge
 			case VertexType::v2D:
 				pipelineCreateInfo.getBindingDescriptions = vk::Vertex2d::GetBindingDescriptions;
 				pipelineCreateInfo.getAttributeDescriptions = vk::Vertex2d::GetAttributeDescriptions;
+				pipelineCreateInfo.topology = vk::PipelineCreateInfo::Topology::triangle;
 				break;
 			case VertexType::v3D:
 				pipelineCreateInfo.getBindingDescriptions = vk::Vertex3d::GetBindingDescriptions;
 				pipelineCreateInfo.getAttributeDescriptions = vk::Vertex3d::GetAttributeDescriptions;
+				pipelineCreateInfo.topology = vk::PipelineCreateInfo::Topology::triangle;
+				break;
+			case VertexType::p2D:
+				pipelineCreateInfo.getBindingDescriptions = vk::GetBindingDescriptionsV2DPoint;
+				pipelineCreateInfo.getAttributeDescriptions = vk::GetAttributeDescriptionsV2DPoint;
+				pipelineCreateInfo.topology = vk::PipelineCreateInfo::Topology::points;
+				break;
+			case VertexType::p3D:
+				pipelineCreateInfo.getBindingDescriptions = vk::GetBindingDescriptionsV3DPoint;
+				pipelineCreateInfo.getAttributeDescriptions = vk::GetAttributeDescriptionsV3DPoint;
+				pipelineCreateInfo.topology = vk::PipelineCreateInfo::Topology::points;
+				break;
+			case VertexType::l2D:
+				pipelineCreateInfo.getBindingDescriptions = vk::GetBindingDescriptionsV3DPoint;
+				pipelineCreateInfo.getAttributeDescriptions = vk::GetAttributeDescriptionsV3DPoint;
+				pipelineCreateInfo.topology = vk::PipelineCreateInfo::Topology::line;
+				break;
+			case VertexType::l3D:
+				pipelineCreateInfo.getBindingDescriptions = vk::GetBindingDescriptionsV3DPoint;
+				pipelineCreateInfo.getAttributeDescriptions = vk::GetAttributeDescriptionsV3DPoint;
+				pipelineCreateInfo.topology = vk::PipelineCreateInfo::Topology::line;
 				break;
 			default:
 				std::cerr << "Vertex type not supported." << std::endl;

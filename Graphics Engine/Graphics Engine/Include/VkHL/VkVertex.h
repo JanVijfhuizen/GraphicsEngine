@@ -3,6 +3,14 @@
 
 namespace jv::vk
 {
+	using Vertex2dPoint = glm::vec2;
+	using Vertex3dPoint = glm::vec3;
+
+	[[nodiscard]] Array<VkVertexInputBindingDescription> GetBindingDescriptionsV2DPoint(Arena& arena);
+	[[nodiscard]] Array<VkVertexInputAttributeDescription> GetAttributeDescriptionsV2DPoint(Arena& arena);
+	[[nodiscard]] Array<VkVertexInputBindingDescription> GetBindingDescriptionsV3DPoint(Arena& arena);
+	[[nodiscard]] Array<VkVertexInputAttributeDescription> GetAttributeDescriptionsV3DPoint(Arena& arena);
+
 	// Defines a vertex point in a mesh.
 	struct Vertex2d final
 	{

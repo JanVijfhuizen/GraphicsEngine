@@ -7,7 +7,11 @@ namespace jv::ge
 	enum class VertexType
 	{
 		v2D,
-		v3D
+		v3D,
+		l2D,
+		l3D,
+		p2D,
+		p3D
 	};
 
 	enum class BindingType
@@ -23,18 +27,21 @@ namespace jv::ge
 		fragment
 	};
 
-	struct Vertex2D
+	struct Vertex2D final
 	{
 		glm::vec2 position{};
 		glm::vec2 textureCoordinates{};
 	};
 
-	struct Vertex3D
+	struct Vertex3D final
 	{
 		glm::vec3 position{};
 		glm::vec3 normal{ 0, 0, 1 };
 		glm::vec2 textureCoordinates{};
 	};
+
+	using VertexPoint2D = glm::vec2;
+	using VertexPoint3D = glm::vec3;
 
 	struct CreateInfo final
 	{
@@ -65,11 +72,7 @@ namespace jv::ge
 	struct MeshCreateInfo final
 	{
 		Resource scene;
-		union
-		{
-			Vertex2D* vertices2d;
-			Vertex3D* vertices3d;
-		};
+		void* vertices;
 		uint32_t verticesLength;
 		uint16_t* indices;
 		uint32_t indicesLength;
@@ -225,7 +228,7 @@ namespace jv::ge
 	void ClearScene(Resource scene);
 	[[nodiscard]] Resource AddImage(const ImageCreateInfo& info);
 	void FillImage(Resource image, unsigned char* pixels);
-	[[nodiscard]] Resource AddMesh(const MeshCreateInfo& info);
+	[[nodiscard]] Resource AddMesh(MeshCreateInfo& info);
 	[[nodiscard]] Resource AddBuffer(const BufferCreateInfo& info);
 	[[nodiscard]] Resource AddSampler(const SamplerCreateInfo& info);
 	[[nodiscard]] Resource AddDescriptorPool(const DescriptorPoolCreateInfo& info);

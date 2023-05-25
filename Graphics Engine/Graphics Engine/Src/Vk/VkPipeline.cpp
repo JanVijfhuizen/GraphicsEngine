@@ -40,8 +40,22 @@ namespace jv::vk
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+		switch (info.topology)
+		{
+			case PipelineCreateInfo::Topology::triangle:
+				inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+				break;
+			case PipelineCreateInfo::Topology::line:
+				inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+				break;
+			case PipelineCreateInfo::Topology::points:
+				inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+				break;
+			default: 
+				std::cerr << "Vertex type not supported." << std::endl;
+		}
 
 		VkViewport viewport{};
 		viewport.x = 0;

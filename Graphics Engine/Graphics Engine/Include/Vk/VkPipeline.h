@@ -7,12 +7,20 @@ namespace jv::vk
 
 	struct PipelineCreateInfo final
 	{
+		enum class Topology
+		{
+			triangle,
+			line,
+			points
+		};
+
 		struct Module final
 		{
 			VkShaderModule module = VK_NULL_HANDLE;
 			VkShaderStageFlagBits stage = VK_SHADER_STAGE_ALL;
 		};
 
+		Topology topology = Topology::triangle;
 		Array<Module> modules;
 		glm::ivec2 resolution;
 		VkRenderPass renderPass;
