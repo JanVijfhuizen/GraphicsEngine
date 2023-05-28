@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{70434014-b717-40d0-b782-624fc03535b9}</ProjectGuid>
-    <RootNamespace>GraphicsEngine</RootNamespace>
+    <ProjectGuid>{9069f31b-0740-44dc-bad9-09deb9e8abd0}</ProjectGuid>
+    <RootNamespace>Game</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -40,13 +40,13 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -104,16 +104,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Ext/vulkan-1.2.189.0/Include;$(SolutionDir)Ext;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\include;$(ProjectDir)/Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Ext/vulkan-1.2.189.0/Include;$(ProjectDir)/Include;$(SolutionDir)Ext;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)Graphics Engine/Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\x64\Debug;$(SolutionDir)Ext/vulkan-1.2.189.0\Lib;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Graphics Engine.lib;glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\Debug;$(SolutionDir)Ext/vulkan-1.2.189.0\Lib;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -124,86 +122,20 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Ext/vulkan-1.2.189.0/Include;$(SolutionDir)Ext;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\include;$(ProjectDir)/Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Ext/vulkan-1.2.189.0/Include;$(ProjectDir)/Include;$(SolutionDir)Ext;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)Graphics Engine/Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\x64\Release;$(SolutionDir)Ext/vulkan-1.2.189.0\Lib;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Ext/vulkan-1.2.189.0\Lib;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Src\GE\GETest.cpp" />
-    <ClCompile Include="Src\GE\GraphicsEngine.cpp" />
-    <ClCompile Include="Src\RenderGraph\RenderGraph.cpp" />
-    <ClCompile Include="Src\VkHL\VkShapes.cpp" />
-    <ClCompile Include="Src\VkHL\VkMesh.cpp" />
-    <ClCompile Include="Src\VkHL\VkVertex.cpp" />
-    <ClCompile Include="Src\JLib\FileLoader.cpp" />
-    <ClCompile Include="Src\JLib\PackingFFDH.cpp" />
-    <ClCompile Include="Src\VkHL\VkTexture.cpp" />
-    <ClCompile Include="Src\Vk\VkShader.cpp" />
-    <ClCompile Include="Src\Vk\VkPipeline.cpp" />
-    <ClCompile Include="Src\Vk\VkLayout.cpp" />
-    <ClCompile Include="Src\Vk\VkImage.cpp" />
-    <ClCompile Include="Src\VkHL\VkGLFWApp.cpp" />
-    <ClCompile Include="Src\Vk\VkSwapChain.cpp" />
-    <ClCompile Include="Src\Vk\VkFreeArena.cpp" />
-    <ClCompile Include="Src\Vk\VkInit.cpp" />
-    <ClCompile Include="Src\JLib\Arena.cpp" />
-    <ClCompile Include="Src\pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Include\GE\GETest.h" />
-    <ClInclude Include="Include\GE\GraphicsEngine.h" />
-    <ClInclude Include="Include\JLib\Arena.h" />
-    <ClInclude Include="Include\JLib\ArrayUtils.h" />
-    <ClInclude Include="Include\JLib\Array.h" />
-    <ClInclude Include="Include\JLib\FileLoader.h" />
-    <ClInclude Include="Include\JLib\Heap.h" />
-    <ClInclude Include="Include\JLib\HeapUtils.h" />
-    <ClInclude Include="Include\JLib\Iterator.h" />
-    <ClInclude Include="Include\JLib\KeyPair.h" />
-    <ClInclude Include="Include\JLib\LinearSort.h" />
-    <ClInclude Include="Include\JLib\LinkedList.h" />
-    <ClInclude Include="Include\JLib\LinkedListUtils.h" />
-    <ClInclude Include="Include\JLib\MapUtils.h" />
-    <ClInclude Include="Include\JLib\Math.h" />
-    <ClInclude Include="Include\JLib\Map.h" />
-    <ClInclude Include="Include\JLib\PackingFFDH.h" />
-    <ClInclude Include="Include\JLib\QueueUtils.h" />
-    <ClInclude Include="Include\pch.h" />
-    <ClInclude Include="Include\JLib\Queue.h" />
-    <ClInclude Include="Include\JLib\Vector.h" />
-    <ClInclude Include="Include\JLib\VectorUtils.h" />
-    <ClInclude Include="Include\VkHL\VkMesh.h" />
-    <ClInclude Include="Include\VkHL\VkBuffer.h" />
-    <ClInclude Include="Include\VkHL\VkShapes.h" />
-    <ClInclude Include="Include\VkHL\VkSubTexture.h" />
-    <ClInclude Include="Include\VkHL\VkTexture.h" />
-    <ClInclude Include="Include\Vk\VkApp.h" />
-    <ClInclude Include="Include\Vk\VkFreeArena.h" />
-    <ClInclude Include="Include\VkHL\VkGLFWApp.h" />
-    <ClInclude Include="Include\Vk\VkImage.h" />
-    <ClInclude Include="Include\Vk\VkInit.h" />
-    <ClInclude Include="Include\Vk\VkLayout.h" />
-    <ClInclude Include="Include\Vk\VkMemory.h" />
-    <ClInclude Include="Include\Vk\VkPipeline.h" />
-    <ClInclude Include="Include\Vk\VkShader.h" />
-    <ClInclude Include="Include\Vk\VkSwapChain.h" />
-    <ClInclude Include="Include\VkHL\VkVertex.h" />
-    <ClInclude Include="Include\RenderGraph\RenderGraph.h" />
+    <ClCompile Include="Game.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
