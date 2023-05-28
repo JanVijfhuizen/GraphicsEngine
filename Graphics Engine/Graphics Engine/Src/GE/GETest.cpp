@@ -15,7 +15,7 @@ void* Alloc(const uint32_t size)
 void Free(void* ptr)
 {
 	return free(ptr);
-};
+}
 
 void getest()
 {
