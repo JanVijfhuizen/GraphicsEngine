@@ -3,6 +3,7 @@
 
 #include "JLib/Arena.h"
 #include "JLib/ArrayUtils.h"
+#include "JLib/Math.h"
 #include "JLib/VectorUtils.h"
 
 #define MAX_PARTY_SIZE 4
@@ -10,6 +11,7 @@
 #define MAX_TIER 7
 #define NEW_GAME_MONSTER_SELECTION_COUNT 3
 #define NEW_GAME_ARTIFACT_SELECTION_COUNT 4
+#define NEW_RUN_QUEST_SELECTION_COUNT 3
 
 struct PlayerState final
 {
@@ -28,9 +30,16 @@ struct GameState final
 struct MonsterCard final
 {
 	uint32_t tier;
+	bool unique = false;
 };
 
 struct ArtifactCard final
+{
+	uint32_t tier;
+	bool unique = false;
+};
+
+struct QuestCard final
 {
 	uint32_t tier;
 };
@@ -66,14 +75,31 @@ int ExecuteGameLoop(PlayerState* playerState)
 	auto frameArena = jv::Arena::Create(arenaInfo);
 
 	const auto monsters = jv::CreateArray<MonsterCard>(arena, 30);
+
+	// temp.
 	for (auto& monster : monsters)
 	{
-		monster.tier = rand() % 8;
+		monster.tier = 1 + rand() % 7;
+		monster.unique = false;
 	}
+
+	// temp.
+	for (int i = 0; i < NEW_GAME_MONSTER_SELECTION_COUNT; ++i)
+	{
+		monsters[i].tier = 1;
+	}
+
 	const auto artifacts = jv::CreateArray<ArtifactCard>(arena, 30);
 	for (auto& artifact : artifacts)
 	{
-		artifact.tier = rand() % 8;
+		artifact.tier = 1 + rand() % 7;
+		artifact.unique = false;
+	}
+
+	// temp.
+	for (int i = 0; i < NEW_GAME_ARTIFACT_SELECTION_COUNT; ++i)
+	{
+		artifacts[i].tier = 1;
 	}
 
 	// Select dungeon tier.
@@ -95,6 +121,8 @@ int ExecuteGameLoop(PlayerState* playerState)
 		const auto& monster = monsters[i];
 		if (monster.tier > tier)
 			continue;
+		if (monster.unique)
+			continue;
 		monsterIds.Add() = i;
 	}
 	std::cout << "Finished setting up monster deck." << std::endl;
@@ -105,6 +133,8 @@ int ExecuteGameLoop(PlayerState* playerState)
 	{
 		const auto& artifact = artifacts[i];
 		if (artifact.tier > tier)
+			continue;
+		if (artifact.unique)
 			continue;
 		artifactIds.Add() = i;
 	}
@@ -188,6 +218,10 @@ int ExecuteGameLoop(PlayerState* playerState)
 		playerState->artifactCounts[0] = 1;
 
 		tempArena.DestroyScope(tempScope);
+
+		// Shuffle decks again.
+		Shuffle(monsterIds.ptr, monsterIds.count);
+		Shuffle(artifactIds.ptr, artifactIds.count);
 	}
 
 	std::cout << "Current party: " << std::endl;
@@ -202,6 +236,60 @@ int ExecuteGameLoop(PlayerState* playerState)
 		{
 			std::cout << "Artifact Id: " << playerState->artifactsIds[j + i * MAX_ARTIFACTS_PER_CHARACTER] << std::endl;
 		}
+	}
+
+	uint32_t questChoice = 0;
+	{
+		const auto tempScope = tempArena.CreateScope();
+		const auto quests = jv::CreateArray<QuestCard>(arena, 30);
+		for (auto& quest : quests)
+		{
+			quest.tier = rand() % 8;
+		}
+
+		// temp.
+		for (int i = 0; i < NEW_RUN_QUEST_SELECTION_COUNT; ++i)
+		{
+			quests[i].tier = 1;
+		}
+
+		// Set up monster deck.
+		auto questIds = jv::CreateVector<uint32_t>(arena, monsters.length);
+		for (uint32_t i = 0; i < quests.length; ++i)
+		{
+			const auto& quest = quests[i];
+			if (quest.tier > tier)
+				continue;
+			questIds.Add() = i;
+		}
+
+		Shuffle(questIds.ptr, questIds.count);
+
+		std::cout << "Finished setting up quest deck." << std::endl;
+
+		const auto questSelectionCount = jv::Min<uint32_t>(NEW_RUN_QUEST_SELECTION_COUNT, questIds.count);
+		assert(questSelectionCount > 0);
+
+		for (uint32_t i = 0; i < questSelectionCount; ++i)
+			std::cout << "Quest " << questIds[i] << std::endl;
+		
+		while (true)
+		{
+			std::cout << "Choose one of these quests to pursue:" << std::endl;
+
+			for (uint32_t i = 0; i < questSelectionCount; ++i)
+				std::cout << i << ": " << questIds[i] << std::endl;
+
+			std::cin >> questChoice;
+			if (questChoice <= questSelectionCount)
+				break;
+
+			std::cout << "Invalid quest selected." << std::endl;
+		}
+
+		std::cout << "quest " << questIds[questChoice] << " selected." << std::endl;
+
+		tempArena.DestroyScope(tempScope);
 	}
 
 	bool quit = false;
