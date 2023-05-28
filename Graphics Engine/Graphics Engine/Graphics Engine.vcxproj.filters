@@ -72,6 +72,9 @@
     <ClCompile Include="Src\RenderGraph\RenderGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\GE\GETest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\JLib\Arena.h">
@@ -186,6 +189,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\RenderGraph\RenderGraph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\GE\GETest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
