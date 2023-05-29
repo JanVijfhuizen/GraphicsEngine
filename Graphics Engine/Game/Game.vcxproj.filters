@@ -53,5 +53,11 @@
     <ClInclude Include="Include\Cards\Card.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Dice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Cards\RoomCard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

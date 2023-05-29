@@ -6,6 +6,7 @@
 #include "States/PlayerState.h"
 #include "Utils/Shuffle.h"
 #include "Library.h"
+#include "Cards/RoomCard.h"
 #include "States/GameState.h"
 
 void* Alloc(const uint32_t size)
@@ -16,6 +17,35 @@ void* Alloc(const uint32_t size)
 void Free(void* ptr)
 {
 	return free(ptr);
+}
+
+uint32_t RollDice(const game::Dice* dice, const uint32_t count)
+{
+	uint32_t result = 0;
+	for (uint32_t i = 0; i < count; ++i)
+	{
+		const auto& die = dice[i];
+		uint32_t dieSize = 0;
+		switch (die.dType)
+		{
+			case game::Dice::Type::d4:
+				dieSize = 4;
+				break;
+			case game::Dice::Type::d6:
+				dieSize = 6;
+				break;
+			case game::Dice::Type::d20:
+				dieSize = 20;
+				break;
+			default:
+				std::cerr << "Die type not supported" << std::endl;
+				break;
+		}
+
+		for (uint32_t j = 0; j < die.count; ++j)
+			result += 1 + rand() % dieSize;
+	}
+	return result;
 }
 
 int ExecuteGameLoop(game::PlayerState* playerState)
@@ -258,6 +288,22 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 
 		tempArena.DestroyScope(tempScope);
 	}
+	const auto& quest = library.quests[questChoice];
+
+	library.rooms = jv::CreateArray<game::RoomCard>(arena, 30);
+
+	// temp.
+	for (auto& room : library.rooms)
+	{
+		room = {};
+	}
+
+	// Decide on the amount of rooms.
+	const uint32_t roomCount = quest.minRoomCount + RollDice(&quest.roomCountDice, 1);
+	const auto roomIds = jv::CreateArray<uint32_t>(arena, library.rooms.length);
+	for (uint32_t i = 0; i < roomIds.length; ++i)
+		roomIds[i] = i;
+	Shuffle(roomIds.ptr, roomIds.length);
 
 	game::GameState gameState{};
 	gameState.playerState = playerState;
@@ -278,7 +324,6 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 			artifacts.onGameStart(&gameState, false);
 	}
 
-	const auto& quest = library.quests[questChoice];
 	if (quest.onGameStart)
 		quest.onGameStart(&gameState, false);
 

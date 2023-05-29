@@ -151,6 +151,8 @@
     <ClInclude Include="Include\Cards\Card.h" />
     <ClInclude Include="Include\Cards\MonsterCard.h" />
     <ClInclude Include="Include\Cards\QuestCard.h" />
+    <ClInclude Include="Include\Cards\RoomCard.h" />
+    <ClInclude Include="Include\Dice.h" />
     <ClInclude Include="Include\Library.h" />
     <ClInclude Include="Include\Macros.h" />
     <ClInclude Include="Include\pch_game.h" />
