@@ -140,7 +140,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Src\Game.cpp" />
-    <ClCompile Include="Src\Library.cpp" />
     <ClCompile Include="Src\pch_game.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch_game.h</PrecompiledHeaderFile>
@@ -149,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Cards\ArtifactCard.h" />
+    <ClInclude Include="Include\Cards\Card.h" />
     <ClInclude Include="Include\Cards\MonsterCard.h" />
     <ClInclude Include="Include\Cards\QuestCard.h" />
     <ClInclude Include="Include\Library.h" />

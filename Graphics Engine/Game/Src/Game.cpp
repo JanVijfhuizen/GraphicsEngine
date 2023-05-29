@@ -6,6 +6,7 @@
 #include "States/PlayerState.h"
 #include "Utils/Shuffle.h"
 #include "Library.h"
+#include "States/GameState.h"
 
 void* Alloc(const uint32_t size)
 {
@@ -37,7 +38,47 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 	arenaInfo.memory = frameArenaMem;
 	auto frameArena = jv::Arena::Create(arenaInfo);
 
-	const auto library = game::Library::Create(arena);
+	game::Library library{};
+
+	library.monsters = jv::CreateArray<game::MonsterCard>(arena, 30);
+
+	// temp.
+	for (auto& monster : library.monsters)
+	{
+		monster.tier = 1 + rand() % 7;
+		monster.unique = false;
+	}
+
+	// temp.
+	for (int i = 0; i < game::NEW_GAME_MONSTER_SELECTION_COUNT; ++i)
+	{
+		library.monsters[i].tier = 1;
+	}
+
+	library.artifacts = jv::CreateArray<game::ArtifactCard>(arena, 30);
+	for (auto& artifact : library.artifacts)
+	{
+		artifact.tier = 1 + rand() % 7;
+		artifact.unique = false;
+	}
+
+	// temp.
+	for (int i = 0; i < game::NEW_GAME_ARTIFACT_SELECTION_COUNT; ++i)
+	{
+		library.artifacts[i].tier = 1;
+	}
+
+	library.quests = jv::CreateArray<game::QuestCard>(arena, 30);
+	for (auto& quest : library.quests)
+	{
+		quest.tier = rand() % 8;
+	}
+
+	// temp.
+	for (int i = 0; i < game::NEW_RUN_QUEST_SELECTION_COUNT; ++i)
+	{
+		library.quests[i].tier = 1;
+	}
 
 	// Select dungeon tier.
 	uint32_t tier = 0;
@@ -216,6 +257,36 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 		std::cout << "quest " << questIds[questChoice] << " selected." << std::endl;
 
 		tempArena.DestroyScope(tempScope);
+	}
+
+	game::GameState gameState{};
+	gameState.playerState = playerState;
+	gameState.library = &library;
+
+	// Call start of game effects.
+	for (unsigned& monsterId : monsterIds)
+	{
+		const auto& monster = library.monsters[monsterId];
+		if (monster.onGameStart)
+			monster.onGameStart(&gameState, false);
+	}
+
+	for (unsigned& artifactId : artifactIds)
+	{
+		const auto& artifacts = library.artifacts[artifactId];
+		if (artifacts.onGameStart)
+			artifacts.onGameStart(&gameState, false);
+	}
+
+	const auto& quest = library.quests[questChoice];
+	if (quest.onGameStart)
+		quest.onGameStart(&gameState, false);
+
+	for (uint32_t i = 0; i < playerState->partySize; ++i)
+	{
+		const auto& monster = library.monsters[playerState->partyIds[i]];
+		if (monster.onGameStart)
+			monster.onGameStart(&gameState, true);
 	}
 
 	bool quit = false;

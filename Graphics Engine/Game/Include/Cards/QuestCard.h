@@ -2,7 +2,7 @@
 
 namespace game
 {
-	struct QuestCard final
+	struct QuestCard final : Card
 	{
 		uint32_t tier;
 	};
