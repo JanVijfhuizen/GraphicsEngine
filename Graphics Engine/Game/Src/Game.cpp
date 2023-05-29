@@ -75,6 +75,7 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 	// temp.
 	for (auto& monster : library.monsters)
 	{
+		monster = {};
 		monster.tier = 1 + rand() % 7;
 		monster.unique = false;
 	}
@@ -88,6 +89,7 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 	library.artifacts = jv::CreateArray<game::ArtifactCard>(arena, 30);
 	for (auto& artifact : library.artifacts)
 	{
+		artifact = {};
 		artifact.tier = 1 + rand() % 7;
 		artifact.unique = false;
 	}
@@ -101,7 +103,10 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 	library.quests = jv::CreateArray<game::QuestCard>(arena, 30);
 	for (auto& quest : library.quests)
 	{
+		quest = {};
 		quest.tier = rand() % 8;
+		quest.minRoomCount = 2;
+		quest.roomCountDice = {};
 	}
 
 	// temp.
@@ -246,10 +251,10 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 		}
 	}
 
-	uint32_t questChoice = 0;
+	uint32_t questId;
 	{
 		const auto tempScope = tempArena.CreateScope();
-
+		uint32_t questChoice = 0;
 		// Set up monster deck.
 		auto questIds = jv::CreateVector<uint32_t>(arena, library.monsters.length);
 		for (uint32_t i = 0; i < library.quests.length; ++i)
@@ -284,11 +289,12 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 			std::cout << "Invalid quest selected." << std::endl;
 		}
 
-		std::cout << "quest " << questIds[questChoice] << " selected." << std::endl;
+		questId = questIds[questChoice];
+		std::cout << "quest " << questId << " selected." << std::endl;
 
 		tempArena.DestroyScope(tempScope);
 	}
-	const auto& quest = library.quests[questChoice];
+	const auto& quest = library.quests[questId];
 
 	library.rooms = jv::CreateArray<game::RoomCard>(arena, 30);
 
@@ -300,7 +306,8 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 
 	// Decide on the amount of rooms.
 	const uint32_t roomCount = quest.minRoomCount + RollDice(&quest.roomCountDice, 1);
-	const auto roomIds = jv::CreateArray<uint32_t>(arena, library.rooms.length);
+	auto roomIds = jv::CreateVector<uint32_t>(arena, library.rooms.length);
+	roomIds.count = roomIds.length;
 	for (uint32_t i = 0; i < roomIds.length; ++i)
 		roomIds[i] = i;
 	Shuffle(roomIds.ptr, roomIds.length);
@@ -337,6 +344,37 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 	bool quit = false;
 	while(!quit)
 	{
+		uint32_t roomsRemaining = roomCount;
+		while(roomsRemaining-- > 0)
+		{
+			uint32_t roomChoice;
+			uint32_t roomId;
+			while (true)
+			{
+				std::cout << "Choose one of these rooms to enter:" << std::endl;
+
+				for (uint32_t i = 0; i < game::ROOM_SELECTION_COUNT; ++i)
+					std::cout << i << ": " << roomIds[i] << std::endl;
+
+				std::cin >> roomChoice;
+				if (roomChoice <= game::ROOM_SELECTION_COUNT)
+					break;
+
+				std::cout << "Invalid room selected." << std::endl;
+			}
+
+			roomId = roomIds[roomChoice];
+			std::cout << "room " << roomId << " selected." << std::endl;
+			roomIds.RemoveAt(roomChoice);
+			std::cout << "Entering room " << roomId << "." << std::endl;
+			Shuffle(roomIds.ptr, roomIds.count);
+
+			//
+
+			std::cout << "Cleared room " << roomId << "." << std::endl;
+		}
+
+		std::cout << "Cleared quest " << questId << "." << std::endl;
 		frameArena.Clear();
 		quit = true;
 	}
