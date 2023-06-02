@@ -11,8 +11,8 @@ namespace game
 	struct BoardState final
 	{
 		MonsterState monsterStates[MAX_PARTY_SIZE + MAX_TIER];
-		uint32_t monsterIntentions[MAX_TIER];
-		uint32_t monsterIds[MAX_TIER];
-		uint32_t monsterCount;
+		uint32_t enemyMonsterIntentions[MAX_TIER];
+		uint32_t enemyMonsterIds[MAX_TIER];
+		uint32_t enemyMonsterCount;
 	};
 }

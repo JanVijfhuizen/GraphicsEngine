@@ -50,9 +50,6 @@
     <ClInclude Include="Include\pch_game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Cards\Card.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Include\Dice.h">
       <Filter>Header Files</Filter>
     </ClInclude>

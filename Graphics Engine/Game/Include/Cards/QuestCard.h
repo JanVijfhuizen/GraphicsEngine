@@ -3,10 +3,11 @@
 
 namespace game
 {
-	struct QuestCard final : Card
+	struct QuestCard final
 	{
 		uint32_t tier;
 		Dice roomCountDice;
 		uint32_t minRoomCount;
+		uint32_t bossId;
 	};
 }

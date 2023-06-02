@@ -79,13 +79,14 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 		monster = {};
 		monster.tier = 1 + rand() % 7;
 		monster.unique = false;
+		monster.count = 1;
+		monster.attack = 1;
+		monster.health = 1;
 	}
 
 	// temp.
 	for (int i = 0; i < game::NEW_GAME_MONSTER_SELECTION_COUNT; ++i)
-	{
 		library.monsters[i].tier = 1;
-	}
 
 	library.artifacts = jv::CreateArray<game::ArtifactCard>(arena, 30);
 	for (auto& artifact : library.artifacts)
@@ -108,6 +109,7 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 		quest.tier = rand() % 8;
 		quest.minRoomCount = 2;
 		quest.roomCountDice = {};
+		quest.roomCountDice.dType = game::Dice::Type::d4;
 	}
 
 	// temp.
@@ -129,6 +131,17 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 	std::cout << "tier " << tier << " selected." << std::endl;
 
 	// Set up monster deck.
+	uint32_t monsterMaxDeckSize = 0;
+	for (uint32_t i = 0; i < library.monsters.length; ++i)
+	{
+		const auto& monster = library.monsters[i];
+		if (monster.tier > tier)
+			continue;
+		if (monster.unique)
+			continue;
+		monsterMaxDeckSize += monster.count;
+	}
+
 	auto monsterIds = jv::CreateVector<uint32_t>(arena, library.monsters.length);
 	for (uint32_t i = 0; i < library.monsters.length; ++i)
 	{
@@ -272,16 +285,13 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 
 		const auto questSelectionCount = jv::Min<uint32_t>(game::NEW_RUN_QUEST_SELECTION_COUNT, questIds.count);
 		assert(questSelectionCount > 0);
-
-		for (uint32_t i = 0; i < questSelectionCount; ++i)
-			std::cout << "Quest " << questIds[i] << std::endl;
 		
 		while (true)
 		{
 			std::cout << "Choose one of these quests to pursue:" << std::endl;
 
 			for (uint32_t i = 0; i < questSelectionCount; ++i)
-				std::cout << i << ": " << questIds[i] << std::endl;
+				std::cout << i << "Quest: " << questIds[i] << std::endl;
 
 			std::cin >> questChoice;
 			if (questChoice <= questSelectionCount)
@@ -317,34 +327,12 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 	gameState.playerState = playerState;
 	gameState.library = &library;
 
-	// Call start of game effects.
-	for (unsigned& monsterId : monsterIds)
-	{
-		const auto& monster = library.monsters[monsterId];
-		if (monster.onGameStart)
-			monster.onGameStart(&gameState, false);
-	}
-
-	for (unsigned& artifactId : artifactIds)
-	{
-		const auto& artifacts = library.artifacts[artifactId];
-		if (artifacts.onGameStart)
-			artifacts.onGameStart(&gameState, false);
-	}
-
-	if (quest.onGameStart)
-		quest.onGameStart(&gameState, false);
-
-	for (uint32_t i = 0; i < playerState->partySize; ++i)
-	{
-		const auto& monster = library.monsters[playerState->partyIds[i]];
-		if (monster.onGameStart)
-			monster.onGameStart(&gameState, true);
-	}
-
 	bool quit = false;
 	while(!quit)
 	{
+		game::BoardState boardState{};
+		bool isPartyWiped = false;
+
 		uint32_t roomsRemaining = roomCount;
 		while(roomsRemaining-- > 0)
 		{
@@ -371,26 +359,151 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 			Shuffle(roomIds.ptr, roomIds.count);
 
 			uint32_t roomRating = 0;
-			game::BoardState boardState{};
-
+			boardState.enemyMonsterCount = 0;
 			Shuffle(monsterIds.ptr, monsterIds.count);
-			while(roomRating < tier)
+
+			// If it's the final room, fight the boss.
+			if(roomsRemaining == 0)
 			{
-				uint32_t monsterId = monsterIds.Pop();
-				const auto& monster = library.monsters[monsterId];
-				roomRating += monster.tier;
-				boardState.monsterIds[boardState.monsterCount++] = monsterId;
-				std::cout << "Monster " << monsterId << " encountered!" << std::endl;
+				boardState.enemyMonsterCount = 1;
+				boardState.enemyMonsterIds[0] = quest.bossId;
+			}
+			else
+				while (roomRating < tier)
+				{
+					uint32_t monsterId = monsterIds.Pop();
+					const auto& monster = library.monsters[monsterId];
+					roomRating += monster.tier;
+					boardState.enemyMonsterIds[boardState.enemyMonsterCount++] = monsterId;
+					std::cout << "Monster " << monsterId << " encountered!" << std::endl;
+				}
+			// Reset monster states.
+			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+				boardState.monsterStates[game::MAX_PARTY_SIZE + i] = {};
+
+			const uint32_t startingEnemyMonsterCount = boardState.enemyMonsterCount;
+
+			game::Dice d4;
+			d4.dType = game::Dice::Type::d4;
+
+			// Start taking turns.
+			while(boardState.enemyMonsterCount > 0)
+			{
+				bool livingPartyMembers[game::MAX_PARTY_SIZE]{};
+				
+				isPartyWiped = true;
+				for (uint32_t i = 0; i < playerState->partySize; ++i)
+				{
+					const auto& monster = library.monsters[playerState->partyIds[i]];
+					livingPartyMembers[i] = monster.health > boardState.monsterStates[i].damageTaken;
+					isPartyWiped = !isPartyWiped ? false : !livingPartyMembers[i];
+				}
+
+				if(isPartyWiped)
+				{
+					std::cout << "Your party has been wiped!" << std::endl;
+					break;
+				}
+
+				// Roll intention.
+				for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+				{
+					uint32_t intention;
+					do
+						intention = RollDice(&d4, 1) - 1;
+					while (!livingPartyMembers[intention]);
+
+					boardState.enemyMonsterIntentions[i] = intention;
+					std::cout << "Monster " << i << " intention rolled: " << intention << std::endl;
+				}
+
+				// Player turn.
+				for (uint32_t i = 0; i < playerState->partySize; ++i)
+				{
+					const auto& playerMonster = library.monsters[playerState->partyIds[i]];
+					if (!livingPartyMembers[i])
+						continue;
+
+					uint32_t intentionChoice;
+					while (true)
+					{
+						std::cout << "Choose whom to attack: 0-" << boardState.enemyMonsterCount - 1 << std::endl;
+						
+						std::cin >> intentionChoice;
+						if (intentionChoice < boardState.enemyMonsterCount)
+							break;
+
+						std::cout << "Invalid target selected." << std::endl;
+					}
+
+					const uint32_t monsterId = boardState.enemyMonsterIds[intentionChoice];
+					const auto& monster = library.monsters[monsterId];
+
+					std::cout << "Attacked monster at slot " << intentionChoice << "for " << playerMonster.attack << " damage." << std::endl;
+
+					auto& damageTaken = boardState.monsterStates[game::MAX_PARTY_SIZE + intentionChoice].damageTaken;
+					damageTaken += playerMonster.attack;
+
+					{
+						uint32_t intention;
+						do
+							intention = RollDice(&d4, 1) - 1;
+						while (!livingPartyMembers[intention]);
+
+						boardState.enemyMonsterIntentions[intentionChoice] = intention;
+						std::cout << "Monster " << intentionChoice << " intention rolled: " << intention << std::endl;
+					}
+
+					if(monster.health <= damageTaken)
+					{
+						std::cout << "Monster at slot " << intentionChoice << " died!" << std::endl;
+
+						// Remove monster from the board.
+						for (uint32_t j = intentionChoice; j < boardState.enemyMonsterCount; ++j)
+						{
+							boardState.monsterStates[game::MAX_PARTY_SIZE + j] = boardState.monsterStates[game::MAX_PARTY_SIZE + j + 1];
+							boardState.enemyMonsterIds[j] = boardState.enemyMonsterIds[j + 1];
+						}
+
+						boardState.enemyMonsterCount--;
+					}
+				}
+
+				// Monster turn.
+				for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+				{
+					const uint32_t monsterId = boardState.enemyMonsterIds[i];
+					const auto& monster = library.monsters[monsterId];
+
+					const uint32_t intention = boardState.enemyMonsterIntentions[i];
+					const uint32_t playerMonsterId = playerState->partyIds[intention];
+
+					std::cout << "Monster attacks at slot " << intention << "for " << monster.attack << " damage." << std::endl;
+
+					auto& damageTaken = boardState.monsterStates[intention].damageTaken;
+					damageTaken += monster.attack;
+
+					const auto& playerMonster = library.monsters[playerMonsterId];
+					if(damageTaken > playerMonster.health)
+						std::cout << "Player monster defeated at slot " << intention << "." << std::endl;
+				}
 			}
 
-			std::cout << "Cleared room " << roomId << "." << std::endl;
-
 			// Add the monsters back into the deck.
-			for (uint32_t i = 0; i < boardState.monsterCount; ++i)
-				monsterIds.Add() = boardState.monsterIds[i];
+			for (uint32_t i = 0; i < startingEnemyMonsterCount; ++i)
+				monsterIds.Add() = boardState.enemyMonsterIds[i];
+
+			if(isPartyWiped)
+				break;
+
+			std::cout << "Cleared room " << roomId << "." << std::endl;
 		}
 
-		std::cout << "Cleared quest " << questId << "." << std::endl;
+		if(!isPartyWiped)
+			std::cout << "Cleared quest " << questId << "." << std::endl;
+		else
+			std::cout << "Failed quest " << questId << "." << std::endl;
+
 		frameArena.Clear();
 		quit = true;
 	}
@@ -404,5 +517,9 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 int main()
 {
 	game::PlayerState state{};
-	return ExecuteGameLoop(&state);
+
+	int ret = 0;
+	while(!ret)
+		ret = ExecuteGameLoop(&state);
+	return 0;
 }
