@@ -7,6 +7,7 @@
 #include "Utils/Shuffle.h"
 #include "Library.h"
 #include "Cards/RoomCard.h"
+#include "States/BoardState.h"
 #include "States/GameState.h"
 
 void* Alloc(const uint32_t size)
@@ -369,9 +370,24 @@ int ExecuteGameLoop(game::PlayerState* playerState)
 			std::cout << "Entering room " << roomId << "." << std::endl;
 			Shuffle(roomIds.ptr, roomIds.count);
 
-			//
+			uint32_t roomRating = 0;
+			game::BoardState boardState{};
+
+			Shuffle(monsterIds.ptr, monsterIds.count);
+			while(roomRating < tier)
+			{
+				uint32_t monsterId = monsterIds.Pop();
+				const auto& monster = library.monsters[monsterId];
+				roomRating += monster.tier;
+				boardState.monsterIds[boardState.monsterCount++] = monsterId;
+				std::cout << "Monster " << monsterId << " encountered!" << std::endl;
+			}
 
 			std::cout << "Cleared room " << roomId << "." << std::endl;
+
+			// Add the monsters back into the deck.
+			for (uint32_t i = 0; i < boardState.monsterCount; ++i)
+				monsterIds.Add() = boardState.monsterIds[i];
 		}
 
 		std::cout << "Cleared quest " << questId << "." << std::endl;

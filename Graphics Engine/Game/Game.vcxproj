@@ -156,6 +156,7 @@
     <ClInclude Include="Include\Library.h" />
     <ClInclude Include="Include\Macros.h" />
     <ClInclude Include="Include\pch_game.h" />
+    <ClInclude Include="Include\States\BoardState.h" />
     <ClInclude Include="Include\States\GameState.h" />
     <ClInclude Include="Include\States\PlayerState.h" />
     <ClInclude Include="Include\Utils\Shuffle.h" />
