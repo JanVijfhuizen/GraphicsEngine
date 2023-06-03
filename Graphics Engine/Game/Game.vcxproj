@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Engine\Engine.cpp" />
     <ClCompile Include="Src\Game.cpp" />
     <ClCompile Include="Src\pch_game.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -152,6 +153,8 @@
     <ClInclude Include="Include\Cards\QuestCard.h" />
     <ClInclude Include="Include\Cards\RoomCard.h" />
     <ClInclude Include="Include\Dice.h" />
+    <ClInclude Include="Include\Engine\Engine.h" />
+    <ClInclude Include="Include\GameTest.h" />
     <ClInclude Include="Include\Library.h" />
     <ClInclude Include="Include\Macros.h" />
     <ClInclude Include="Include\pch_game.h" />
