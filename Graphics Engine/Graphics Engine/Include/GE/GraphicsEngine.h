@@ -48,6 +48,10 @@ namespace jv::ge
 		const char* name = "Graphics Engine";
 		glm::ivec2 resolution{ 800, 600 };
 		bool fullscreen = false;
+
+		void (*onKeyCallback)(size_t key, size_t action) = nullptr;
+		void (*onMouseCallback)(size_t key, size_t action) = nullptr;
+		void (*onScrollCallback)(glm::vec<2, double> offset) = nullptr;
 	};
 
 	struct ImageCreateInfo final
@@ -223,6 +227,7 @@ namespace jv::ge
 	};
 
 	void Initialize(const CreateInfo& info);
+	[[nodiscard]] glm::vec2 GetMousePosition();
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] Resource CreateScene();
 	void ClearScene(Resource scene);

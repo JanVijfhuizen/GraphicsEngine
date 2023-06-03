@@ -127,6 +127,10 @@ namespace jv::ge
 		Arena frameArena;
 		void* frameArenaMem;
 
+		void (*onKeyCallback)(size_t key, size_t action);
+		void (*onMouseCallback)(size_t key, size_t action);
+		void (*onScrollCallback)(glm::vec<2, double> offset);
+
 		vk::GLFWApp glfwApp;
 		vk::App app;
 		vk::SwapChain swapChain;
@@ -143,6 +147,24 @@ namespace jv::ge
 		LinkedList<DrawInfo> draws{};
 		bool waitedForImage = false;
 	} ge{};
+
+	void GLFWKeyCallback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods)
+	{
+		if (ge.onKeyCallback)
+			ge.onKeyCallback(key, action);
+	}
+
+	void GLFWMouseKeyCallback(GLFWwindow* window, const int button, const int action, const int mods)
+	{
+		if (ge.onMouseCallback)
+			ge.onMouseCallback(button, action);
+	}
+
+	void GLFWScrollCallback(GLFWwindow* window, const double xOffset, const double yOffset)
+	{
+		if (ge.onScrollCallback)
+			ge.onScrollCallback({ xOffset, yOffset });
+	}
 
 	void* Alloc(const uint32_t size)
 	{
@@ -202,7 +224,16 @@ namespace jv::ge
 		arenaInfo.memory = ge.frameArenaMem;
 		ge.frameArena = Arena::Create(arenaInfo);
 
+		ge.onKeyCallback = info.onKeyCallback;
+		ge.onMouseCallback = info.onMouseCallback;
+		ge.onScrollCallback = info.onScrollCallback;
+
 		ge.glfwApp = vk::GLFWApp::Create(info.name, info.resolution, info.fullscreen);
+
+		glfwSetKeyCallback(ge.glfwApp.window, GLFWKeyCallback);
+		glfwSetMouseButtonCallback(ge.glfwApp.window, GLFWMouseKeyCallback);
+		glfwSetScrollCallback(ge.glfwApp.window, GLFWScrollCallback);
+		glfwSetInputMode(ge.glfwApp.window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
 		Array<const char*> extensions{};
 		extensions.ptr = vk::GLFWApp::GetRequiredExtensions(extensions.length);
@@ -217,6 +248,13 @@ namespace jv::ge
 		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, info.resolution);
 
 		ge.scope = ge.arena.CreateScope();
+	}
+
+	glm::vec2 GetMousePosition()
+	{
+		double x, y;
+		glfwGetCursorPos(ge.glfwApp.window, &x, &y);
+		return {x, y};
 	}
 
 	void Resize(const glm::ivec2 resolution, const bool fullScreen)
