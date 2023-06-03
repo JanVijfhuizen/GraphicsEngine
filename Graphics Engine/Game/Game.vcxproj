@@ -162,6 +162,7 @@
     <ClInclude Include="Include\States\GameState.h" />
     <ClInclude Include="Include\States\PlayerState.h" />
     <ClInclude Include="Include\Utils\Shuffle.h" />
+    <ClInclude Include="Include\Engine\TaskSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

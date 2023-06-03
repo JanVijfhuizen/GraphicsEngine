@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "TaskSystem.h"
 
 namespace game
 {
@@ -17,10 +18,21 @@ namespace game
 		jv::Arena arena;
 		jv::Arena tempArena;
 		jv::Arena frameArena;
+		jv::LinkedList<ITaskSystem*> taskSystems{};
 
+		template <typename T>
+		[[nodiscard]] TaskSystem<T>& AddTaskSystem();
 		[[nodiscard]] bool Update();
 
 		[[nodiscard]] static Engine Create(const EngineCreateInfo& info);
 		static void Destroy(const Engine& engine);
 	};
+
+	template <typename T>
+	TaskSystem<T>& Engine::AddTaskSystem()
+	{
+		auto& sys = arena.New<TaskSystem<T>>();
+		Add(arena, taskSystems) = sys;
+		return sys;
+	}
 }

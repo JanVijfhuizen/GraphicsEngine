@@ -17,13 +17,18 @@ namespace game
 
 	bool Engine::Update()
 	{
-		// Clear frame arena.
-		frameArena.Clear();
-
 		// Update renderer.
 		jv::ge::RenderFrameInfo renderFrameInfo{};
 		if (!RenderFrame(renderFrameInfo))
 			return false;
+
+		// Clear tasks.
+		for (const auto& taskSystem : taskSystems)
+			if(taskSystem->autoClear)
+				taskSystem->ClearTasks();
+
+		// Clear frame arena.
+		frameArena.Clear();
 		return true;
 	}
 
