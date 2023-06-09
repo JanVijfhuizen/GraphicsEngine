@@ -6,7 +6,6 @@ namespace game
 {
 	struct TaskSystemCreateInfo final
 	{
-		uint32_t taskCapacity = 64;
 		uint32_t taskChunkSize = 32;
 	};
 
@@ -48,6 +47,8 @@ namespace game
 
 		if (fit)
 			return;
+		if (chunkSize == 0)
+			return;
 
 		auto& vector = Add(frameArena, additionalTasks) = jv::CreateVector<T>(frameArena, chunkSize);
 		vector.Add() = task;
@@ -58,14 +59,14 @@ namespace game
 	{
 		jv::LinkedList<jv::Vector<T>> taskBatches{};
 		tasks.next = additionalTasks.values;
-		taskBatches.values = tasks;
+		taskBatches.values = &tasks;
 		return taskBatches;
 	}
 
 	template <typename T>
 	void TaskSystem<T>::ClearTasks()
 	{
-		tasks.Clear();
+		tasks.value.Clear();
 		additionalTasks = {};
 	}
 
@@ -74,7 +75,7 @@ namespace game
 	{
 		TaskSystem<T> taskSystem{};
 		taskSystem.chunkSize = info.taskChunkSize;
-		taskSystem.tasks.value = jv::CreateVector<T>(arena, info.taskCapacity);
+		taskSystem.tasks.value = jv::CreateVector<T>(arena, info.taskChunkSize);
 		return taskSystem;
 	}
 

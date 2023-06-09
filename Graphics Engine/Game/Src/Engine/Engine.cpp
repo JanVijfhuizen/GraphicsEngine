@@ -15,12 +15,20 @@ namespace game
 		return free(ptr);
 	}
 
+	void* ITaskInterpreter::GetTaskSystemPtr() const
+	{
+		return _taskSystem;
+	}
+
 	bool Engine::Update()
 	{
 		// Update renderer.
 		jv::ge::RenderFrameInfo renderFrameInfo{};
 		if (!RenderFrame(renderFrameInfo))
 			return false;
+
+		for (const auto& interpreter : taskInterpreters)
+			interpreter->Update();
 
 		// Clear tasks.
 		for (const auto& taskSystem : taskSystems)
