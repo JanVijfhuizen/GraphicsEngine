@@ -250,6 +250,11 @@ namespace jv::ge
 		ge.scope = ge.arena.CreateScope();
 	}
 
+	glm::ivec2 GetResolution()
+	{
+		return ge.swapChain.GetResolution();
+	}
+
 	glm::vec2 GetMousePosition()
 	{
 		double x, y;

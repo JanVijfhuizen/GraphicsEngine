@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Src\Engine\BasicRenderSystem.cpp" />
+    <ClCompile Include="Src\Engine\BasicRenderInterpreter.cpp" />
     <ClCompile Include="Src\Engine\Engine.cpp" />
     <ClCompile Include="Src\Game.cpp" />
     <ClCompile Include="Src\pch_game.cpp">
@@ -152,7 +152,7 @@
     <ClInclude Include="Include\Cards\ArtifactCard.h" />
     <ClInclude Include="Include\Cards\MonsterCard.h" />
     <ClInclude Include="Include\Cards\QuestCard.h" />
-    <ClInclude Include="Include\Engine\BasicRenderSystem.h" />
+    <ClInclude Include="Include\Engine\BasicRenderInterpreter.h" />
     <ClInclude Include="Include\Cards\RoomCard.h" />
     <ClInclude Include="Include\Dice.h" />
     <ClInclude Include="Include\Engine\Engine.h" />

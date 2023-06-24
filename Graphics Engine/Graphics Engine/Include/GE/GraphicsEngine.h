@@ -227,6 +227,7 @@ namespace jv::ge
 	};
 
 	void Initialize(const CreateInfo& info);
+	[[nodiscard]] glm::ivec2 GetResolution();
 	[[nodiscard]] glm::vec2 GetMousePosition();
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] Resource CreateScene();

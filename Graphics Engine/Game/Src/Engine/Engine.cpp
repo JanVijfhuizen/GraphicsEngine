@@ -15,6 +15,12 @@ namespace game
 		return free(ptr);
 	}
 
+	EngineMemory::EngineMemory(jv::Arena& arena, jv::Arena& tempArena, jv::Arena& frameArena) :
+		arena(arena), tempArena(tempArena), frameArena(frameArena)
+	{
+
+	}
+
 	void* ITaskInterpreter::GetTaskSystemPtr() const
 	{
 		return _taskSystem;
@@ -27,16 +33,18 @@ namespace game
 		if (!RenderFrame(renderFrameInfo))
 			return false;
 
-		for (const auto& interpreter : taskInterpreters)
-			interpreter->Update();
+		const auto memory = GetMemory();
+		
+		for (const auto& interpreter : _taskInterpreters)
+			interpreter->Update(memory);
 
 		// Clear tasks.
-		for (const auto& taskSystem : taskSystems)
+		for (const auto& taskSystem : _taskSystems)
 			if(taskSystem->autoClear)
 				taskSystem->ClearTasks();
 
 		// Clear frame arena.
-		frameArena.Clear();
+		_frameArena.Clear();
 		return true;
 	}
 
@@ -47,32 +55,37 @@ namespace game
 		Initialize(createInfo);
 
 		Engine engine{};
-		engine.arenaMem = malloc(info.arenaSize);
-		engine.tempArenaMem = malloc(info.frameArenaSize);
-		engine.frameArenaMem = malloc(info.tempArenaSize);
+		engine._arenaMem = malloc(info.arenaSize);
+		engine._tempArenaMem = malloc(info.frameArenaSize);
+		engine._frameArenaMem = malloc(info.tempArenaSize);
 
 		jv::ArenaCreateInfo arenaCreateInfo{};
 		arenaCreateInfo.alloc = Alloc;
 		arenaCreateInfo.free = Free;
 		arenaCreateInfo.memorySize = info.arenaSize;
-		arenaCreateInfo.memory = engine.arenaMem;
-		engine.arena = jv::Arena::Create(arenaCreateInfo);
+		arenaCreateInfo.memory = engine._arenaMem;
+		engine._arena = jv::Arena::Create(arenaCreateInfo);
 		arenaCreateInfo.memorySize = info.tempArenaSize;
-		arenaCreateInfo.memory = engine.tempArenaMem;
-		engine.tempArena = jv::Arena::Create(arenaCreateInfo);
+		arenaCreateInfo.memory = engine._tempArenaMem;
+		engine._tempArena = jv::Arena::Create(arenaCreateInfo);
 		arenaCreateInfo.memorySize = info.frameArenaSize;
-		arenaCreateInfo.memory = engine.frameArenaMem;
-		engine.frameArena = jv::Arena::Create(arenaCreateInfo);
+		arenaCreateInfo.memory = engine._frameArenaMem;
+		engine._frameArena = jv::Arena::Create(arenaCreateInfo);
 		return engine;
 	}
 
 	void Engine::Destroy(const Engine& engine)
 	{
-		jv::Arena::Destroy(engine.frameArena);
-		jv::Arena::Destroy(engine.tempArena);
-		jv::Arena::Destroy(engine.arena);
+		jv::Arena::Destroy(engine._frameArena);
+		jv::Arena::Destroy(engine._tempArena);
+		jv::Arena::Destroy(engine._arena);
 
 		// Shut down renderer.
 		jv::ge::Shutdown();
+	}
+
+	EngineMemory Engine::GetMemory()
+	{
+		return {_arena, _tempArena, _frameArena };
 	}
 }

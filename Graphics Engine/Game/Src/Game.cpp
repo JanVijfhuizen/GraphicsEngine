@@ -1,33 +1,26 @@
 #include "pch_game.h"
+
+#include "Engine/BasicRenderInterpreter.h"
 #include "Engine/Engine.h"
 #include "Tasks/RenderTask.h"
-
-class TestInterpreter : public game::TaskInterpreter<game::RenderTask>
-{
-	void OnStart(uint32_t chunkCapacity) override;
-	void OnUpdate(const jv::LinkedList<jv::Vector<game::RenderTask>>& tasks) override;
-	void OnExit() override;
-};
-
-void TestInterpreter::OnStart(uint32_t chunkCapacity)
-{
-}
-
-void TestInterpreter::OnUpdate(const jv::LinkedList<jv::Vector<game::RenderTask>>& tasks)
-{
-}
-
-void TestInterpreter::OnExit()
-{
-}
 
 int main()
 {
 	game::EngineCreateInfo engineCreateInfo{};
 	auto engine = game::Engine::Create(engineCreateInfo);
 
+	const auto scene = jv::ge::CreateScene();
+
 	auto& renderTasks = engine.AddTaskSystem<game::RenderTask>();
-	auto& testInterpreter = engine.AddTaskInterpreter<game::RenderTask, TestInterpreter>(renderTasks);
+
+	game::BasicRenderInterpreterCreateInfo basicRenderInterpreterCreateInfo{};
+	basicRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
+	basicRenderInterpreterCreateInfo.frameCount = jv::ge::GetFrameCount();
+	basicRenderInterpreterCreateInfo.scene = scene;
+	basicRenderInterpreterCreateInfo.capacity = 64;
+
+	auto& testInterpreter = engine.AddTaskInterpreter<game::RenderTask,
+		game::BasicRenderInterpreter>(renderTasks, basicRenderInterpreterCreateInfo);
 
 	while(true)
 	{

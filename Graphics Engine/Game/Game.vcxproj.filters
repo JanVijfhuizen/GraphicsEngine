@@ -24,7 +24,7 @@
     <ClCompile Include="Src\Engine\Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Engine\BasicRenderSystem.cpp">
+    <ClCompile Include="Src\Engine\BasicRenderInterpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,7 +77,7 @@
     <ClInclude Include="Include\Tasks\RenderTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\BasicRenderSystem.h">
+    <ClInclude Include="Include\Engine\BasicRenderInterpreter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

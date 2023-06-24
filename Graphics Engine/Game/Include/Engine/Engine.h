@@ -3,6 +3,18 @@
 
 namespace game
 {
+	struct EngineMemory final
+	{
+		friend class Engine;
+
+		jv::Arena& arena;
+		jv::Arena& tempArena;
+		jv::Arena& frameArena;
+
+	private:
+		EngineMemory(jv::Arena& arena, jv::Arena& tempArena, jv::Arena& frameArena);
+	};
+
 	struct EngineCreateInfo final
 	{
 		uint32_t arenaSize = 4096;
@@ -12,86 +24,87 @@ namespace game
 
 	class ITaskInterpreter
 	{
-		friend struct Engine;
+		friend class Engine;
 
 	protected:
-		void* GetTaskSystemPtr() const;
+		[[nodiscard]] void* GetTaskSystemPtr() const;
 
 	private:
 		void* _taskSystem;
-		virtual void Start(uint32_t chunkCapacity) = 0;
-		virtual void Update() = 0;
-		virtual void Exit() = 0;
+		
+		virtual void Update(const EngineMemory& memory) = 0;
+		virtual void Exit(const EngineMemory& memory) = 0;
 	};
 
-	template <typename T>
+	template <typename Task, typename CreateInfo>
 	class TaskInterpreter : public ITaskInterpreter
 	{
+		friend class Engine;
+
 	protected:
-		virtual void OnStart(uint32_t chunkCapacity) = 0;
-		virtual void OnUpdate(const jv::LinkedList<jv::Vector<T>>& tasks) = 0;
-		virtual void OnExit() = 0;
+		virtual void OnStart(const CreateInfo& createInfo, const EngineMemory& memory) = 0;
+		virtual void OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<Task>>& tasks) = 0;
+		virtual void OnExit(const EngineMemory& memory) = 0;
 	private:
-		void Start(uint32_t chunkCapacity) override;
-		void Update() override;
-		void Exit() override;
+		void Update(const EngineMemory& memory) override;
+		void Exit(const EngineMemory& memory) override;
 	};
 
-	struct Engine final
+	class Engine final
 	{
-		void* arenaMem;
-		void* tempArenaMem;
-		void* frameArenaMem;
-		jv::Arena arena;
-		jv::Arena tempArena;
-		jv::Arena frameArena;
-		jv::LinkedList<ITaskSystem*> taskSystems{};
-		jv::LinkedList<ITaskInterpreter*> taskInterpreters{};
-
+	public:
 		template <typename T>
 		[[nodiscard]] TaskSystem<T>& AddTaskSystem();
-		template <typename Task, typename Interpreter>
-		[[nodiscard]] Interpreter& AddTaskInterpreter(TaskSystem<Task>& taskSystem);
+		template <typename Task, typename Interpreter, typename CreateInfo>
+		[[nodiscard]] Interpreter& AddTaskInterpreter(TaskSystem<Task>& taskSystem, const CreateInfo& createInfo);
 		[[nodiscard]] bool Update();
 
 		[[nodiscard]] static Engine Create(const EngineCreateInfo& info);
 		static void Destroy(const Engine& engine);
+		[[nodiscard]] EngineMemory GetMemory();
+
+	private:
+		void* _arenaMem;
+		void* _tempArenaMem;
+		void* _frameArenaMem;
+		jv::Arena _arena;
+		jv::Arena _tempArena;
+		jv::Arena _frameArena;
+		jv::LinkedList<ITaskSystem*> _taskSystems{};
+		jv::LinkedList<ITaskInterpreter*> _taskInterpreters{};
 	};
+
+	template <typename Task, typename CreateInfo>
+	void TaskInterpreter<Task, CreateInfo>::Update(const EngineMemory& memory)
+	{
+		auto taskSystem = static_cast<TaskSystem<Task>*>(GetTaskSystemPtr());
+		auto batches = taskSystem->GetTaskBatches();
+		OnUpdate(memory, batches);
+	}
+
+	template <typename Task, typename CreateInfo>
+	void TaskInterpreter<Task, CreateInfo>::Exit(const EngineMemory& memory)
+	{
+		OnExit(memory);
+	}
 
 	template <typename T>
 	TaskSystem<T>& Engine::AddTaskSystem()
 	{
-		auto sys = arena.New<TaskSystem<T>>();
-		Add(arena, taskSystems) = sys;
+		auto sys = _arena.New<TaskSystem<T>>();
+		Add(_arena, _taskSystems) = sys;
 		return *sys;
 	}
 
-	template <typename T>
-	void TaskInterpreter<T>::Start(const uint32_t chunkCapacity)
+	template <typename Task, typename Interpreter, typename CreateInfo>
+	Interpreter& Engine::AddTaskInterpreter(TaskSystem<Task>& taskSystem, const CreateInfo& createInfo)
 	{
-		OnStart(chunkCapacity);
-	}
+		auto taskInterpreter = _arena.New<Interpreter>();
+		Add(_arena, _taskInterpreters) = taskInterpreter;
 
-	template <typename T>
-	void TaskInterpreter<T>::Update()
-	{
-		auto taskSystem = static_cast<TaskSystem<T>*>(GetTaskSystemPtr());
-		auto batches = taskSystem->GetTaskBatches();
-		OnUpdate(batches);
-	}
-
-	template <typename T>
-	void TaskInterpreter<T>::Exit()
-	{
-		OnExit();
-	}
-
-	template <typename Task, typename Interpreter>
-	Interpreter& Engine::AddTaskInterpreter(TaskSystem<Task>& taskSystem)
-	{
-		auto taskInterpreter = arena.New<Interpreter>();
-		Add(arena, taskInterpreters) = taskInterpreter;
-		taskInterpreter->_taskSystem = &taskSystem;
+		TaskInterpreter<Task, CreateInfo>* ptr = taskInterpreter;
+		ptr->_taskSystem = &taskSystem;
+		ptr->OnStart(createInfo, GetMemory());
 		return *taskInterpreter;
 	}
 }
