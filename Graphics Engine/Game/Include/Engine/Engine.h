@@ -54,7 +54,7 @@ namespace game
 	{
 	public:
 		template <typename T>
-		[[nodiscard]] TaskSystem<T>& AddTaskSystem();
+		[[nodiscard]] TaskSystem<T>& AddTaskSystem(const TaskSystemCreateInfo& info);
 		template <typename Task, typename Interpreter, typename CreateInfo>
 		[[nodiscard]] Interpreter& AddTaskInterpreter(TaskSystem<Task>& taskSystem, const CreateInfo& createInfo);
 		[[nodiscard]] bool Update();
@@ -89,9 +89,10 @@ namespace game
 	}
 
 	template <typename T>
-	TaskSystem<T>& Engine::AddTaskSystem()
+	TaskSystem<T>& Engine::AddTaskSystem(const TaskSystemCreateInfo& info)
 	{
 		auto sys = _arena.New<TaskSystem<T>>();
+		*sys = TaskSystem<T>::Create(_frameArena, _arena, info);
 		Add(_arena, _taskSystems) = sys;
 		return *sys;
 	}

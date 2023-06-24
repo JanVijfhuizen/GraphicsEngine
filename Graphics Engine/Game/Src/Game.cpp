@@ -1,7 +1,4 @@
 #include "pch_game.h"
-
-#include <stb_image.h>
-
 #include "Engine/InstancedRenderInterpreter.h"
 #include "Engine/Engine.h"
 #include "Tasks/InstancedRenderTask.h"
@@ -13,14 +10,16 @@ int main()
 
 	const auto scene = jv::ge::CreateScene();
 
-	auto& renderTasks = engine.AddTaskSystem<game::InstancedRenderTask>();
+	game::TaskSystemCreateInfo taskSystemCreateInfo{};
+	taskSystemCreateInfo.chunkSize = 32;
+	auto& renderTasks = engine.AddTaskSystem<game::InstancedRenderTask>(taskSystemCreateInfo);
 
 	game::InstancedRenderInterpreterCreateInfo createInfo{};
 	createInfo.resolution = jv::ge::GetResolution();
 
 	game::InstancedRenderInterpreterEnableInfo enableInfo{};
 	enableInfo.scene = scene;
-	enableInfo.capacity = 64;
+	enableInfo.capacity = 32;
 
 	auto& renderInterpreter = engine.AddTaskInterpreter<game::InstancedRenderTask,
 		game::InstancedRenderInterpreter>(renderTasks, createInfo);
@@ -28,6 +27,9 @@ int main()
 
 	while(true)
 	{
+		game::InstancedRenderTask renderTask{};
+		renderTasks.Push(renderTask);
+
 		const bool result = engine.Update();
 		if (!result)
 			break;
