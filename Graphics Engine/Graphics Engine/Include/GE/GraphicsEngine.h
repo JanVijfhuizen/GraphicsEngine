@@ -216,6 +216,9 @@ namespace jv::ge
 		Resource mesh;
 		Resource pipeline;
 		uint32_t instanceCount = 1;
+		void* pushConstant;
+		ShaderStage pushConstantStage;
+		uint32_t pushConstantSize = 0;
 	};
 
 	struct RenderFrameInfo final

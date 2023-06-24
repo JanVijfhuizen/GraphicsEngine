@@ -1,8 +1,10 @@
 #include "pch_game.h"
 
-#include "Engine/BasicRenderInterpreter.h"
+#include <stb_image.h>
+
+#include "Engine/InstancedRenderInterpreter.h"
 #include "Engine/Engine.h"
-#include "Tasks/RenderTask.h"
+#include "Tasks/InstancedRenderTask.h"
 
 int main()
 {
@@ -11,16 +13,18 @@ int main()
 
 	const auto scene = jv::ge::CreateScene();
 
-	auto& renderTasks = engine.AddTaskSystem<game::RenderTask>();
+	auto& renderTasks = engine.AddTaskSystem<game::InstancedRenderTask>();
 
-	game::BasicRenderInterpreterCreateInfo basicRenderInterpreterCreateInfo{};
-	basicRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
-	basicRenderInterpreterCreateInfo.frameCount = jv::ge::GetFrameCount();
-	basicRenderInterpreterCreateInfo.scene = scene;
-	basicRenderInterpreterCreateInfo.capacity = 64;
+	game::InstancedRenderInterpreterCreateInfo createInfo{};
+	createInfo.resolution = jv::ge::GetResolution();
 
-	auto& testInterpreter = engine.AddTaskInterpreter<game::RenderTask,
-		game::BasicRenderInterpreter>(renderTasks, basicRenderInterpreterCreateInfo);
+	game::InstancedRenderInterpreterEnableInfo enableInfo{};
+	enableInfo.scene = scene;
+	enableInfo.capacity = 64;
+
+	auto& renderInterpreter = engine.AddTaskInterpreter<game::InstancedRenderTask,
+		game::InstancedRenderInterpreter>(renderTasks, createInfo);
+	renderInterpreter.Enable(enableInfo);
 
 	while(true)
 	{

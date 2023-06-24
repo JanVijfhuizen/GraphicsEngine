@@ -24,7 +24,7 @@
     <ClCompile Include="Src\Engine\Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Engine\BasicRenderInterpreter.cpp">
+    <ClCompile Include="Src\Engine\InstancedRenderInterpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,10 +74,10 @@
     <ClInclude Include="Include\Engine\TaskSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Tasks\RenderTask.h">
+    <ClInclude Include="Include\Tasks\InstancedRenderTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\BasicRenderInterpreter.h">
+    <ClInclude Include="Include\Engine\InstancedRenderInterpreter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

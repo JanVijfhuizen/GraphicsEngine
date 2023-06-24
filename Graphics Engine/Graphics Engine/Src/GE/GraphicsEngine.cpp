@@ -996,6 +996,25 @@ namespace jv::ge
 
 		const auto descriptorSets = reinterpret_cast<const VkDescriptorSet*>(info.descriptorSets);
 
+		// Push constant.
+		if(info.pushConstantSize > 0)
+		{
+			VkShaderStageFlagBits stageFlags{};
+			switch (info.pushConstantStage)
+			{
+			case ShaderStage::vertex:
+				stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStage::fragment:
+				stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			default:
+				std::cerr << "Shader stage not supported." << std::endl;
+			}
+
+			vkCmdPushConstants(cmd, pipeline->pipeline.layout, stageFlags, 0, info.pushConstantSize, info.pushConstant);
+		}
+
 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,
 			0, info.descriptorSetCount, descriptorSets, 0, nullptr);
 		mesh->mesh.Draw(ge.tempArena, cmd, info.instanceCount);
