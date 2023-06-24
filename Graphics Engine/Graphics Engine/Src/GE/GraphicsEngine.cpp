@@ -480,6 +480,8 @@ namespace jv::ge
 		constexpr VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 		vkBuffer.memoryHandle = scene->freeArena.Alloc(scene->arena, ge.app, memRequirements, memoryPropertyFlags, 1, vkBuffer.memory);
 
+		vkBindBufferMemory(ge.app.device, vkBuffer.buffer, vkBuffer.memory.memory, vkBuffer.memory.offset);
+
 		buffer.buffer = vkBuffer;
 		buffer.info = info;
 		return &buffer;

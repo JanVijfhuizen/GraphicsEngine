@@ -4,11 +4,6 @@
 
 namespace game
 {
-	struct TaskSystemCreateInfo final
-	{
-		uint32_t chunkSize = 32;
-	};
-
 	class ITaskSystem
 	{
 	public:
@@ -22,24 +17,35 @@ namespace game
 		friend class Engine;
 
 	public:
+		void Allocate(jv::Arena& arena, uint32_t chunkSize);
+
 		void Push(const T& task);
 		[[nodiscard]] jv::LinkedList<jv::Vector<T>> GetTaskBatches();
 		void ClearTasks() override;
 
 	private:
-		uint32_t _chunkSize;
+		uint32_t _chunkSize = 0;
 		jv::Arena* _frameArena;
 
 		jv::LinkedListNode<jv::Vector<T>> _tasks{};
 		jv::LinkedList<jv::Vector<T>> _additionalTasks{};
 
-		[[nodiscard]] static TaskSystem Create(jv::Arena& frameArena, jv::Arena& arena, const TaskSystemCreateInfo& info);
+		[[nodiscard]] static TaskSystem Create(jv::Arena& frameArena);
 		static void Destroy(jv::Arena& arena, const TaskSystem& taskSystem);
 	};
 
 	template <typename T>
+	void TaskSystem<T>::Allocate(jv::Arena& arena, const uint32_t chunkSize)
+	{
+		_chunkSize = chunkSize;
+		_tasks.value = jv::CreateVector<T>(arena, chunkSize);
+		_additionalTasks = {};
+	}
+
+	template <typename T>
 	void TaskSystem<T>::Push(const T& task)
 	{
+		assert(_chunkSize > 0);
 		const auto batches = GetTaskBatches();
 
 		bool fit = false;
@@ -78,12 +84,10 @@ namespace game
 	}
 
 	template <typename T>
-	TaskSystem<T> TaskSystem<T>::Create(jv::Arena& frameArena, jv::Arena& arena, const TaskSystemCreateInfo& info)
+	TaskSystem<T> TaskSystem<T>::Create(jv::Arena& frameArena)
 	{
 		TaskSystem<T> taskSystem{};
-		taskSystem._chunkSize = info.chunkSize;
 		taskSystem._frameArena = &frameArena;
-		taskSystem._tasks.value = jv::CreateVector<T>(arena, info.chunkSize);
 		return taskSystem;
 	}
 

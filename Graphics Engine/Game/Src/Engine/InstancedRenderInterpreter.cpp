@@ -13,6 +13,7 @@ namespace game
 		jv::ge::BufferCreateInfo bufferCreateInfo{};
 		bufferCreateInfo.size = info.capacity * jv::ge::GetFrameCount() * static_cast<uint32_t>(sizeof(InstancedRenderTask));
 		bufferCreateInfo.scene = info.scene;
+		bufferCreateInfo.type = jv::ge::BufferCreateInfo::Type::storage;
 		_buffer = AddBuffer(bufferCreateInfo);
 
 		int texWidth, texHeight, texChannels2;
@@ -45,11 +46,29 @@ namespace game
 		samplerCreateInfo.scene = info.scene;
 		_sampler = AddSampler(samplerCreateInfo);
 
+		const uint32_t frameCount = jv::ge::GetFrameCount();
+
 		jv::ge::DescriptorPoolCreateInfo poolCreateInfo{};
 		poolCreateInfo.layout = _layout;
-		poolCreateInfo.capacity = jv::ge::GetFrameCount();
+		poolCreateInfo.capacity = frameCount;
 		poolCreateInfo.scene = info.scene;
 		_pool = AddDescriptorPool(poolCreateInfo);
+
+		for (uint32_t i = 0; i < frameCount; ++i)
+		{
+			jv::ge::WriteInfo::Binding writeBindingInfo{};
+			writeBindingInfo.type = jv::ge::BindingType::storageBuffer;
+			writeBindingInfo.buffer.buffer = _buffer;
+			writeBindingInfo.buffer.offset = sizeof(InstancedRenderTask) * info.capacity * i;
+			writeBindingInfo.buffer.range = sizeof(InstancedRenderTask) * info.capacity;
+			writeBindingInfo.index = 1;
+
+			jv::ge::WriteInfo writeInfo{};
+			writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, i);
+			writeInfo.bindings = &writeBindingInfo;
+			writeInfo.bindingCount = 1;
+			Write(writeInfo);
+		}
 	}
 
 	void InstancedRenderInterpreter::Disable()
@@ -107,6 +126,8 @@ namespace game
 		const auto& renderedTasks = tasks[0];
 		if (renderedTasks.count == 0)
 			return;
+
+		const uint32_t frameIndex = jv::ge::GetFrameIndex();
 		
 		jv::ge::WriteInfo::Binding writeBindingInfo{};
 		writeBindingInfo.type = jv::ge::BindingType::sampler;
@@ -114,7 +135,7 @@ namespace game
 		writeBindingInfo.image.sampler = _sampler;
 
 		jv::ge::WriteInfo writeInfo{};
-		writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, jv::ge::GetFrameIndex());
+		writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, frameIndex);
 		writeInfo.bindings = &writeBindingInfo;
 		writeInfo.bindingCount = 1;
 		Write(writeInfo);
@@ -122,7 +143,7 @@ namespace game
 		jv::ge::DrawInfo drawInfo{};
 		drawInfo.pipeline = _pipeline;
 		drawInfo.mesh = mesh ? mesh : _fallbackMesh;
-		drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(_pool, jv::ge::GetFrameIndex());
+		drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(_pool, frameIndex);
 		drawInfo.descriptorSetCount = 1;
 		drawInfo.instanceCount = renderedTasks.count;
 		drawInfo.pushConstant = &pushConstant;

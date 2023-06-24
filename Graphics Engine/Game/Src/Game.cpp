@@ -9,10 +9,10 @@ int main()
 	auto engine = game::Engine::Create(engineCreateInfo);
 
 	const auto scene = jv::ge::CreateScene();
+	auto subArena = engine.CreateSubArena(1024);
 
-	game::TaskSystemCreateInfo taskSystemCreateInfo{};
-	taskSystemCreateInfo.chunkSize = 32;
-	auto& renderTasks = engine.AddTaskSystem<game::InstancedRenderTask>(taskSystemCreateInfo);
+	auto& renderTasks = engine.AddTaskSystem<game::InstancedRenderTask>();
+	renderTasks.Allocate(subArena, 32);
 
 	game::InstancedRenderInterpreterCreateInfo createInfo{};
 	createInfo.resolution = jv::ge::GetResolution();

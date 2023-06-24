@@ -54,7 +54,7 @@ namespace game
 	{
 	public:
 		template <typename T>
-		[[nodiscard]] TaskSystem<T>& AddTaskSystem(const TaskSystemCreateInfo& info);
+		[[nodiscard]] TaskSystem<T>& AddTaskSystem();
 		template <typename Task, typename Interpreter, typename CreateInfo>
 		[[nodiscard]] Interpreter& AddTaskInterpreter(TaskSystem<Task>& taskSystem, const CreateInfo& createInfo);
 		[[nodiscard]] bool Update();
@@ -62,6 +62,7 @@ namespace game
 		[[nodiscard]] static Engine Create(const EngineCreateInfo& info);
 		static void Destroy(const Engine& engine);
 		[[nodiscard]] EngineMemory GetMemory();
+		[[nodiscard]] jv::Arena CreateSubArena(uint32_t size);
 
 	private:
 		void* _arenaMem;
@@ -89,10 +90,10 @@ namespace game
 	}
 
 	template <typename T>
-	TaskSystem<T>& Engine::AddTaskSystem(const TaskSystemCreateInfo& info)
+	TaskSystem<T>& Engine::AddTaskSystem()
 	{
 		auto sys = _arena.New<TaskSystem<T>>();
-		*sys = TaskSystem<T>::Create(_frameArena, _arena, info);
+		*sys = TaskSystem<T>::Create(_frameArena);
 		Add(_arena, _taskSystems) = sys;
 		return *sys;
 	}

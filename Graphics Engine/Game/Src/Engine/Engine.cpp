@@ -88,4 +88,14 @@ namespace game
 	{
 		return {_arena, _tempArena, _frameArena };
 	}
+
+	jv::Arena Engine::CreateSubArena(const uint32_t size)
+	{
+		jv::ArenaCreateInfo info{};
+		info.memorySize = size;
+		info.memory = _arena.Alloc(size);
+		info.alloc = Alloc;
+		info.free = Free;
+		return jv::Arena::Create(info);
+	}
 }
