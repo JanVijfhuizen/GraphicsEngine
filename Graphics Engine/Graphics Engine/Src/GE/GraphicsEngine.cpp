@@ -127,6 +127,10 @@ namespace jv::ge
 		Arena frameArena;
 		void* frameArenaMem;
 
+		void (*onKeyCallback)(size_t key, size_t action);
+		void (*onMouseCallback)(size_t key, size_t action);
+		void (*onScrollCallback)(glm::vec<2, double> offset);
+
 		vk::GLFWApp glfwApp;
 		vk::App app;
 		vk::SwapChain swapChain;
@@ -143,6 +147,24 @@ namespace jv::ge
 		LinkedList<DrawInfo> draws{};
 		bool waitedForImage = false;
 	} ge{};
+
+	void GLFWKeyCallback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods)
+	{
+		if (ge.onKeyCallback)
+			ge.onKeyCallback(key, action);
+	}
+
+	void GLFWMouseKeyCallback(GLFWwindow* window, const int button, const int action, const int mods)
+	{
+		if (ge.onMouseCallback)
+			ge.onMouseCallback(button, action);
+	}
+
+	void GLFWScrollCallback(GLFWwindow* window, const double xOffset, const double yOffset)
+	{
+		if (ge.onScrollCallback)
+			ge.onScrollCallback({ xOffset, yOffset });
+	}
 
 	void* Alloc(const uint32_t size)
 	{
@@ -202,7 +224,16 @@ namespace jv::ge
 		arenaInfo.memory = ge.frameArenaMem;
 		ge.frameArena = Arena::Create(arenaInfo);
 
+		ge.onKeyCallback = info.onKeyCallback;
+		ge.onMouseCallback = info.onMouseCallback;
+		ge.onScrollCallback = info.onScrollCallback;
+
 		ge.glfwApp = vk::GLFWApp::Create(info.name, info.resolution, info.fullscreen);
+
+		glfwSetKeyCallback(ge.glfwApp.window, GLFWKeyCallback);
+		glfwSetMouseButtonCallback(ge.glfwApp.window, GLFWMouseKeyCallback);
+		glfwSetScrollCallback(ge.glfwApp.window, GLFWScrollCallback);
+		glfwSetInputMode(ge.glfwApp.window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
 		Array<const char*> extensions{};
 		extensions.ptr = vk::GLFWApp::GetRequiredExtensions(extensions.length);
@@ -217,6 +248,18 @@ namespace jv::ge
 		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, info.resolution);
 
 		ge.scope = ge.arena.CreateScope();
+	}
+
+	glm::ivec2 GetResolution()
+	{
+		return ge.swapChain.GetResolution();
+	}
+
+	glm::vec2 GetMousePosition()
+	{
+		double x, y;
+		glfwGetCursorPos(ge.glfwApp.window, &x, &y);
+		return {x, y};
 	}
 
 	void Resize(const glm::ivec2 resolution, const bool fullScreen)
@@ -436,6 +479,8 @@ namespace jv::ge
 
 		constexpr VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 		vkBuffer.memoryHandle = scene->freeArena.Alloc(scene->arena, ge.app, memRequirements, memoryPropertyFlags, 1, vkBuffer.memory);
+
+		vkBindBufferMemory(ge.app.device, vkBuffer.buffer, vkBuffer.memory.memory, vkBuffer.memory.offset);
 
 		buffer.buffer = vkBuffer;
 		buffer.info = info;
@@ -953,21 +998,33 @@ namespace jv::ge
 
 		const auto descriptorSets = reinterpret_cast<const VkDescriptorSet*>(info.descriptorSets);
 
+		// Push constant.
+		if(info.pushConstantSize > 0)
+			vkCmdPushConstants(cmd, pipeline->pipeline.layout, VK_SHADER_STAGE_VERTEX_BIT, 
+				0, info.pushConstantSize, info.pushConstant);
+
 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,
-			0, info.descriptorSetCount, descriptorSets, 0, nullptr);
+		                        0, info.descriptorSetCount, descriptorSets, 0, nullptr);
 		mesh->mesh.Draw(ge.tempArena, cmd, info.instanceCount);
 	}
 
-	bool RenderFrame(RenderFrameInfo& info)
+	bool WaitForImage()
+	{
+		assert(!ge.waitedForImage);
+		if (!ge.glfwApp.BeginFrame())
+			return false;
+		ge.swapChain.WaitForImage(ge.app);
+		ge.waitedForImage = true;
+		return true;
+	}
+
+	bool RenderFrame(const RenderFrameInfo& info)
 	{
 		assert(ge.initialized);
 
-		if(!ge.waitedForImage)
-		{
-			if (!ge.glfwApp.BeginFrame())
+		if (!ge.waitedForImage)
+			if (!WaitForImage())
 				return false;
-			ge.swapChain.WaitForImage(ge.app);
-		}
 
 		const auto draws = ToArray(ge.frameArena, ge.draws, false);
 

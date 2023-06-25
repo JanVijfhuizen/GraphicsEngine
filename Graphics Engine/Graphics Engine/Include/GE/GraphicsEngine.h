@@ -48,6 +48,10 @@ namespace jv::ge
 		const char* name = "Graphics Engine";
 		glm::ivec2 resolution{ 800, 600 };
 		bool fullscreen = false;
+
+		void (*onKeyCallback)(size_t key, size_t action) = nullptr;
+		void (*onMouseCallback)(size_t key, size_t action) = nullptr;
+		void (*onScrollCallback)(glm::vec<2, double> offset) = nullptr;
 	};
 
 	struct ImageCreateInfo final
@@ -212,6 +216,8 @@ namespace jv::ge
 		Resource mesh;
 		Resource pipeline;
 		uint32_t instanceCount = 1;
+		void* pushConstant;
+		uint32_t pushConstantSize = 0;
 	};
 
 	struct RenderFrameInfo final
@@ -223,6 +229,8 @@ namespace jv::ge
 	};
 
 	void Initialize(const CreateInfo& info);
+	[[nodiscard]] glm::ivec2 GetResolution();
+	[[nodiscard]] glm::vec2 GetMousePosition();
 	void Resize(glm::ivec2 resolution, bool fullScreen);
 	[[nodiscard]] Resource CreateScene();
 	void ClearScene(Resource scene);
@@ -242,7 +250,8 @@ namespace jv::ge
 	[[nodiscard]] Resource CreateSemaphore();
 	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);
 	void Draw(const DrawInfo& info);
-	[[nodiscard]] bool RenderFrame(RenderFrameInfo& info);
+	[[nodiscard]] bool WaitForImage();
+	[[nodiscard]] bool RenderFrame(const RenderFrameInfo& info);
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();
 	void DeviceWaitIdle();

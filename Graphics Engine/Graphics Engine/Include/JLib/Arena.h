@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <cstdint>
 
 namespace jv
 {
@@ -61,6 +62,8 @@ namespace jv
 	{
 		void* ptr = Alloc(sizeof(T) * count);
 		T* ptrType = static_cast<T*>(ptr);
+		for (uint32_t i = 0; i < count; ++i)
+			new(&ptrType[i]) T();
 		return ptrType;
 	}
 }

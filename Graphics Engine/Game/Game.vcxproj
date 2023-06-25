@@ -106,6 +106,8 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Ext/vulkan-1.2.189.0/Include;$(ProjectDir)/Include;$(SolutionDir)Ext;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)Graphics Engine/Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch_game.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,18 +126,49 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Ext/vulkan-1.2.189.0/Include;$(ProjectDir)/Include;$(SolutionDir)Ext;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\include;$(SolutionDir)Graphics Engine/Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch_game.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Ext/vulkan-1.2.189.0\Lib;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Graphics Engine.lib;glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\Release;$(SolutionDir)Ext/vulkan-1.2.189.0\Lib;$(SolutionDir)Ext/glfw-3.3.4\glfw-3.3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Src\Interpreters\TextInterpreter.cpp" />
+    <ClCompile Include="Src\Interpreters\InstancedRenderInterpreter.cpp" />
+    <ClCompile Include="Src\Engine\Engine.cpp" />
+    <ClCompile Include="Src\Game.cpp" />
+    <ClCompile Include="Src\pch_game.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch_game.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\Cards\ArtifactCard.h" />
+    <ClInclude Include="Include\Cards\MonsterCard.h" />
+    <ClInclude Include="Include\Cards\QuestCard.h" />
+    <ClInclude Include="Include\Interpreters\InstancedRenderInterpreter.h" />
+    <ClInclude Include="Include\Cards\RoomCard.h" />
+    <ClInclude Include="Include\Dice.h" />
+    <ClInclude Include="Include\Engine\Engine.h" />
+    <ClInclude Include="Include\GameTest.h" />
+    <ClInclude Include="Include\Interpreters\TextInterpreter.h" />
+    <ClInclude Include="Include\Library.h" />
+    <ClInclude Include="Include\Macros.h" />
+    <ClInclude Include="Include\pch_game.h" />
+    <ClInclude Include="Include\States\BoardState.h" />
+    <ClInclude Include="Include\States\GameState.h" />
+    <ClInclude Include="Include\States\PlayerState.h" />
+    <ClInclude Include="Include\Tasks\InstancedRenderTask.h" />
+    <ClInclude Include="Include\Tasks\TextTask.h" />
+    <ClInclude Include="Include\Utils\Shuffle.h" />
+    <ClInclude Include="Include\Engine\TaskSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
