@@ -61,6 +61,8 @@ int main()
 	textureLibrary.atlas = AddImage(imageCreateInfo);
 	jv::ge::FillImage(textureLibrary.atlas, pixels);
 
+	stbi_image_free(pixels);
+
 	textureLibrary.subTextures = jv::ge::LoadAtlasMetaData(subArena, textureLibrary.atlasMetaDataPath);
 
 	auto& renderTasks = engine.AddTaskSystem<game::InstancedRenderTask>();

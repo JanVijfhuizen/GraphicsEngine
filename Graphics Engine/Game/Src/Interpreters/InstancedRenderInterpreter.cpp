@@ -26,6 +26,8 @@ namespace game
 		_fallbackImage = AddImage(imageCreateInfo);
 		jv::ge::FillImage(_fallbackImage, pixels);
 
+		stbi_image_free(pixels);
+
 		jv::ge::Vertex3D vertices[4]
 		{
 			{glm::vec3{ -1, -1, 0 }, glm::vec3{0, 0, 1}, glm::vec2{0, 0}},

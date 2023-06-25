@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Engine\TexturePool.cpp" />
     <ClCompile Include="Src\Interpreters\TextInterpreter.cpp" />
     <ClCompile Include="Src\Interpreters\InstancedRenderInterpreter.cpp" />
     <ClCompile Include="Src\Engine\Engine.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Include\Engine\Engine.h" />
     <ClInclude Include="Include\GameTest.h" />
     <ClInclude Include="Include\Interpreters\TextInterpreter.h" />
+    <ClInclude Include="Include\Engine\TexturePool.h" />
     <ClInclude Include="Include\Library.h" />
     <ClInclude Include="Include\Macros.h" />
     <ClInclude Include="Include\pch_game.h" />
