@@ -33,6 +33,9 @@
     <ClCompile Include="Src\Engine\TexturePool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Interpreters\DynamicRenderInterpreter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Shuffle.h">
@@ -80,7 +83,7 @@
     <ClInclude Include="Include\Engine\TaskSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Tasks\InstancedRenderTask.h">
+    <ClInclude Include="Include\Tasks\RenderTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Interpreters\InstancedRenderInterpreter.h">
@@ -93,6 +96,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\TexturePool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Interpreters\DynamicRenderInterpreter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,6 +6,7 @@
 #include "Engine/Engine.h"
 #include "Interpreters/TextInterpreter.h"
 #include "GE/AtlasGenerator.h"
+#include "Interpreters/DynamicRenderInterpreter.h"
 
 struct TextureLibrary final
 {
@@ -65,8 +66,11 @@ int main()
 
 	textureLibrary.subTextures = jv::ge::LoadAtlasMetaData(subArena, textureLibrary.atlasMetaDataPath);
 
-	auto& renderTasks = engine.AddTaskSystem<game::InstancedRenderTask>();
+	auto& renderTasks = engine.AddTaskSystem<game::RenderTask>();
 	renderTasks.Allocate(subArena, 32);
+
+	auto& dynamicRenderTasks = engine.AddTaskSystem<game::DynamicRenderTask>();
+	dynamicRenderTasks.Allocate(subArena, 32);
 
 	auto& textTasks = engine.AddTaskSystem<game::TextTask>();
 	textTasks.Allocate(subArena, 16);
@@ -78,10 +82,23 @@ int main()
 	enableInfo.scene = scene;
 	enableInfo.capacity = 32;
 
-	auto& renderInterpreter = engine.AddTaskInterpreter<game::InstancedRenderTask, game::InstancedRenderInterpreter>(
+	auto& renderInterpreter = engine.AddTaskInterpreter<game::RenderTask, game::InstancedRenderInterpreter>(
 		renderTasks, createInfo);
 	renderInterpreter.Enable(enableInfo);
 	renderInterpreter.image = textureLibrary.atlas;
+
+	game::DynamicRenderInterpreterCreateInfo dynamicCreateInfo{};
+	dynamicCreateInfo.resolution = jv::ge::GetResolution();
+	dynamicCreateInfo.frameArena = &engine.GetMemory().frameArena;
+
+	game::DynamicRenderInterpreterEnableInfo dynamicEnableInfo{};
+	dynamicEnableInfo.arena = &subArena;
+	dynamicEnableInfo.scene = scene;
+	dynamicEnableInfo.capacity = 32;
+
+	auto& dynamicRenderInterpreter = engine.AddTaskInterpreter<game::DynamicRenderTask, game::DynamicRenderInterpreter>(
+		dynamicRenderTasks, dynamicCreateInfo);
+	dynamicRenderInterpreter.Enable(dynamicEnableInfo);
 
 	game::TextInterpreterCreateInfo textInterpreterCreateInfo{};
 	textInterpreterCreateInfo.instancedRenderTasks = &renderTasks;
@@ -101,7 +118,7 @@ int main()
 
 		for (uint32_t i = 0; i < 5; ++i)
 		{
-			game::InstancedRenderTask renderTask{};
+			game::RenderTask renderTask{};
 			renderTask.position.x = sin(f + dist * i) * .25f;
 			renderTask.position.y = cos(f + dist * i) * .25f;
 			renderTask.position *= 1.f + (5.f - static_cast<float>(i)) * .2f;
@@ -120,6 +137,11 @@ int main()
 		renderInterpreter.camera.position.x = abs(sin(f / 3)) * .2f;
 		renderInterpreter.camera.zoom = -.4f + abs(cos(f / 2)) * .2f;
 		renderInterpreter.camera.rotation = sin(f / 4) * .2f;
+
+		game::DynamicRenderTask dynRenderTask{};
+		dynRenderTask.renderTask.scale *= .2f;
+		dynRenderTask.renderTask.color.y *= .5f + sin(f) * .5f;
+		dynamicRenderTasks.Push(dynRenderTask);
 
 		const bool result = engine.Update();
 		if (!result)

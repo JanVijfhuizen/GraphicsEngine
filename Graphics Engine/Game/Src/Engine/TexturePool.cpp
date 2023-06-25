@@ -73,9 +73,23 @@ namespace game
 		return _idCount++;
 	}
 
-	void TexturePool::Update()
+	void TexturePool::Update() const
 	{
+		const uint32_t frameCount = jv::ge::GetFrameCount();
 
+		for (uint32_t i = 0; i < _idCount; ++i)
+		{
+			auto& id = _ids[i];
+			if (!id.resource)
+				continue;
+
+			++id.inactiveCount;
+			if(id.inactiveCount > frameCount)
+			{
+				id.resource->active = false;
+				id.resource = nullptr;
+			}
+		}
 	}
 
 	TexturePool TexturePool::Create(jv::Arena& arena, const uint32_t poolChunkSize, const uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo)

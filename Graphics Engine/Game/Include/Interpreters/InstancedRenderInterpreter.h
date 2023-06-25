@@ -2,7 +2,7 @@
 #include "Engine/Engine.h"
 #include "Engine/TaskSystem.h"
 #include "GE/GraphicsEngine.h"
-#include "Tasks/InstancedRenderTask.h"
+#include "Tasks/RenderTask.h"
 
 namespace game
 {
@@ -21,7 +21,7 @@ namespace game
 		uint32_t capacity;
 	};
 
-	class InstancedRenderInterpreter final : public TaskInterpreter<InstancedRenderTask, InstancedRenderInterpreterCreateInfo>
+	class InstancedRenderInterpreter final : public TaskInterpreter<RenderTask, InstancedRenderInterpreterCreateInfo>
 	{
 	public:
 		struct Camera
@@ -35,16 +35,14 @@ namespace game
 		jv::ge::Resource mesh = nullptr;
 		
 		void Enable(const InstancedRenderInterpreterEnableInfo& info);
-		void Disable();
 
 	private:
 		struct PushConstant final
 		{
 			Camera camera{};
 			glm::vec2 resolution;
-		} pushConstant{};
-
-		bool _enabled = false;
+		} _pushConstant{};
+		
 		InstancedRenderInterpreterCreateInfo _createInfo;
 		uint32_t _capacity;
 
@@ -60,7 +58,7 @@ namespace game
 		jv::ge::Resource _pool;
 
 		void OnStart(const InstancedRenderInterpreterCreateInfo& createInfo, const EngineMemory& memory) override;
-		void OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<InstancedRenderTask>>& tasks) override;
+		void OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<RenderTask>>& tasks) override;
 		void OnExit(const EngineMemory& memory) override;
 	};
 }
