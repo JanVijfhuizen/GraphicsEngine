@@ -1,5 +1,5 @@
 ﻿#include "pch_game.h"
-#include "Engine/InstancedRenderInterpreter.h"
+#include "Interpreters/InstancedRenderInterpreter.h"
 #include <stb_image.h>
 #include "JLib/FileLoader.h"
 
@@ -9,6 +9,7 @@ namespace game
 	{
 		assert(!_enabled);
 		_enabled = true;
+		_capacity = info.capacity;
 
 		jv::ge::BufferCreateInfo bufferCreateInfo{};
 		bufferCreateInfo.size = info.capacity * jv::ge::GetFrameCount() * static_cast<uint32_t>(sizeof(InstancedRenderTask));
@@ -25,12 +26,12 @@ namespace game
 		_fallbackImage = AddImage(imageCreateInfo);
 		jv::ge::FillImage(_fallbackImage, pixels);
 
-		jv::ge::Vertex2D vertices[4]
+		jv::ge::Vertex3D vertices[4]
 		{
-			{glm::vec2{ -1, -1 }, glm::vec2{0, 0}},
-			{glm::vec2{ -1, 1 },glm::vec2{0, 1}},
-			{glm::vec2{ 1, 1 }, glm::vec2{1, 1}},
-			{glm::vec2{ 1, -1 }, glm::vec2{1, 0}}
+			{glm::vec3{ -1, -1, 0 }, glm::vec3{0, 0, 1}, glm::vec2{0, 0}},
+			{glm::vec3{ -1, 1, 0 },glm::vec3{0, 0, 1}, glm::vec2{0, 1}},
+			{glm::vec3{ 1, 1, 0 }, glm::vec3{0, 0, 1}, glm::vec2{1, 1}},
+			{glm::vec3{ 1, -1, 0 }, glm::vec3{0, 0, 1}, glm::vec2{1, 0}}
 		};
 		uint16_t indices[6]{ 0, 1, 2, 0, 2, 3 };
 
@@ -39,6 +40,7 @@ namespace game
 		meshCreateInfo.indicesLength = 6;
 		meshCreateInfo.vertices = vertices;
 		meshCreateInfo.indices = indices;
+		meshCreateInfo.vertexType = jv::ge::VertexType::v3D;
 		meshCreateInfo.scene = info.scene;
 		_fallbackMesh = AddMesh(meshCreateInfo);
 
@@ -61,7 +63,7 @@ namespace game
 			writeBindingInfo.buffer.buffer = _buffer;
 			writeBindingInfo.buffer.offset = sizeof(InstancedRenderTask) * info.capacity * i;
 			writeBindingInfo.buffer.range = sizeof(InstancedRenderTask) * info.capacity;
-			writeBindingInfo.index = 1;
+			writeBindingInfo.index = 0;
 
 			jv::ge::WriteInfo writeInfo{};
 			writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, i);
@@ -93,10 +95,10 @@ namespace game
 		_shader = CreateShader(shaderCreateInfo);
 
 		jv::ge::LayoutCreateInfo::Binding bindingCreateInfos[2]{};
-		bindingCreateInfos[0].stage = jv::ge::ShaderStage::fragment;
-		bindingCreateInfos[0].type = jv::ge::BindingType::sampler;
-		bindingCreateInfos[1].stage = jv::ge::ShaderStage::vertex;
-		bindingCreateInfos[1].type = jv::ge::BindingType::storageBuffer;
+		bindingCreateInfos[0].stage = jv::ge::ShaderStage::vertex;
+		bindingCreateInfos[0].type = jv::ge::BindingType::storageBuffer;
+		bindingCreateInfos[1].stage = jv::ge::ShaderStage::fragment;
+		bindingCreateInfos[1].type = jv::ge::BindingType::sampler;
 
 		jv::ge::LayoutCreateInfo layoutCreateInfo{};
 		layoutCreateInfo.bindings = bindingCreateInfos;
@@ -116,6 +118,7 @@ namespace game
 		pipelineCreateInfo.layouts = &_layout;
 		pipelineCreateInfo.renderPass = _renderPass;
 		pipelineCreateInfo.pushConstantSize = sizeof(PushConstant);
+		pipelineCreateInfo.vertexType = jv::ge::VertexType::v3D;
 		_pipeline = CreatePipeline(pipelineCreateInfo);
 
 		memory.tempArena.DestroyScope(tempScope);
@@ -128,17 +131,28 @@ namespace game
 			return;
 
 		const uint32_t frameIndex = jv::ge::GetFrameIndex();
+
+		jv::ge::BufferUpdateInfo bufferUpdateInfo{};
+		bufferUpdateInfo.buffer = _buffer;
+		bufferUpdateInfo.size = sizeof(InstancedRenderTask) * _capacity;
+		bufferUpdateInfo.offset = sizeof(InstancedRenderTask) * _capacity * frameIndex;
+		bufferUpdateInfo.data = renderedTasks.ptr;
+		UpdateBuffer(bufferUpdateInfo);
 		
 		jv::ge::WriteInfo::Binding writeBindingInfo{};
 		writeBindingInfo.type = jv::ge::BindingType::sampler;
 		writeBindingInfo.image.image = image ? image : _fallbackImage;
 		writeBindingInfo.image.sampler = _sampler;
+		writeBindingInfo.index = 1;
 
 		jv::ge::WriteInfo writeInfo{};
 		writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, frameIndex);
 		writeInfo.bindings = &writeBindingInfo;
 		writeInfo.bindingCount = 1;
 		Write(writeInfo);
+
+		pushConstant.camera = camera;
+		pushConstant.resolution = _createInfo.resolution;
 
 		jv::ge::DrawInfo drawInfo{};
 		drawInfo.pipeline = _pipeline;
@@ -148,7 +162,6 @@ namespace game
 		drawInfo.instanceCount = renderedTasks.count;
 		drawInfo.pushConstant = &pushConstant;
 		drawInfo.pushConstantSize = sizeof(PushConstant);
-		drawInfo.pushConstantStage = jv::ge::ShaderStage::vertex;
 		Draw(drawInfo);
 	}
 

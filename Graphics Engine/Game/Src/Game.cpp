@@ -1,7 +1,7 @@
 #include "pch_game.h"
-#include "Engine/InstancedRenderInterpreter.h"
+#include "Interpreters/InstancedRenderInterpreter.h"
 #include "Engine/Engine.h"
-#include "Tasks/InstancedRenderTask.h"
+#include "Interpreters/TextInterpreter.h"
 
 int main()
 {
@@ -14,6 +14,9 @@ int main()
 	auto& renderTasks = engine.AddTaskSystem<game::InstancedRenderTask>();
 	renderTasks.Allocate(subArena, 32);
 
+	auto& textTasks = engine.AddTaskSystem<game::TextTask>();
+	textTasks.Allocate(subArena, 16);
+
 	game::InstancedRenderInterpreterCreateInfo createInfo{};
 	createInfo.resolution = jv::ge::GetResolution();
 
@@ -21,14 +24,32 @@ int main()
 	enableInfo.scene = scene;
 	enableInfo.capacity = 32;
 
-	auto& renderInterpreter = engine.AddTaskInterpreter<game::InstancedRenderTask,
-		game::InstancedRenderInterpreter>(renderTasks, createInfo);
+	game::TextInterpreterCreateInfo textInterpreterCreateInfo{};
+	textInterpreterCreateInfo.instancedRenderTasks = &renderTasks;
+	auto& textInterpreter = engine.AddTaskInterpreter<game::TextTask, game::TextInterpreter>(
+		textTasks, textInterpreterCreateInfo);
+
+	auto& renderInterpreter = engine.AddTaskInterpreter<game::InstancedRenderTask, game::InstancedRenderInterpreter>(
+		renderTasks, createInfo);
 	renderInterpreter.Enable(enableInfo);
 
 	while(true)
 	{
-		game::InstancedRenderTask renderTask{};
-		renderTasks.Push(renderTask);
+		static float f = 0;
+		f += 0.01f;
+		
+		constexpr float dist = .2f;
+
+		for (uint32_t i = 0; i < 5; ++i)
+		{
+			game::InstancedRenderTask renderTask{};
+			renderTask.position.x = sin(f + dist * i) * .25f;
+			renderTask.position.y = cos(f + dist * i) * .25f;
+			renderTask.position *= 1.f + (5.f - static_cast<float>(i)) * .2f;
+			renderTask.color.r *= static_cast<float>(i) / 5;
+			renderTask.scale *= .2f;
+			renderTasks.Push(renderTask);
+		}
 
 		const bool result = engine.Update();
 		if (!result)

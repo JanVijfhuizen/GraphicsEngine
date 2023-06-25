@@ -1,5 +1,5 @@
 #pragma once
-#include "VkHL/VkSubTexture.h"
+#include "GE/SubTexture.h"
 
 namespace game
 {
@@ -7,7 +7,7 @@ namespace game
 	{
 		glm::vec2 position{};
 		glm::vec2 scale{ 1 };
-		jv::vk::SubTexture subTexture{};
+		jv::ge::SubTexture subTexture{};
 		glm::vec4 color{ 1 };
 	};
 }

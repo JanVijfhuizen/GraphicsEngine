@@ -217,7 +217,6 @@ namespace jv::ge
 		Resource pipeline;
 		uint32_t instanceCount = 1;
 		void* pushConstant;
-		ShaderStage pushConstantStage;
 		uint32_t pushConstantSize = 0;
 	};
 
@@ -251,7 +250,8 @@ namespace jv::ge
 	[[nodiscard]] Resource CreateSemaphore();
 	[[nodiscard]] Resource CreatePipeline(const PipelineCreateInfo& info);
 	void Draw(const DrawInfo& info);
-	[[nodiscard]] bool RenderFrame(RenderFrameInfo& info);
+	[[nodiscard]] bool WaitForImage();
+	[[nodiscard]] bool RenderFrame(const RenderFrameInfo& info);
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();
 	void DeviceWaitIdle();

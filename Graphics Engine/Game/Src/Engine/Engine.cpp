@@ -28,15 +28,19 @@ namespace game
 
 	bool Engine::Update()
 	{
-		// Update renderer.
-		jv::ge::RenderFrameInfo renderFrameInfo{};
-		if (!RenderFrame(renderFrameInfo))
+		const bool waitForImage = jv::ge::WaitForImage();
+		if (!waitForImage)
 			return false;
 
 		const auto memory = GetMemory();
 		
 		for (const auto& interpreter : _taskInterpreters)
 			interpreter->Update(memory);
+
+		// Update renderer.
+		jv::ge::RenderFrameInfo renderFrameInfo{};
+		if (!RenderFrame(renderFrameInfo))
+			return false;
 
 		// Clear tasks.
 		for (const auto& taskSystem : _taskSystems)

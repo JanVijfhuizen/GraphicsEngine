@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Engine.h"
+#include "Engine/Engine.h"
 #include "Engine/TaskSystem.h"
 #include "GE/GraphicsEngine.h"
 #include "Tasks/InstancedRenderTask.h"
@@ -24,16 +24,12 @@ namespace game
 	class InstancedRenderInterpreter final : public TaskInterpreter<InstancedRenderTask, InstancedRenderInterpreterCreateInfo>
 	{
 	public:
-		struct PushConstant final
+		struct Camera
 		{
-			struct Camera
-			{
-				glm::vec2 position{};
-				float zoom = 0;
-				float rotation = 0;
-			} camera{};
+			glm::vec2 position{};
+			float zoom = 0;
 			float rotation = 0;
-		} pushConstant{};
+		} camera{};
 
 		jv::ge::Resource image = nullptr;
 		jv::ge::Resource mesh = nullptr;
@@ -42,8 +38,15 @@ namespace game
 		void Disable();
 
 	private:
+		struct PushConstant final
+		{
+			Camera camera{};
+			glm::vec2 resolution;
+		} pushConstant{};
+
 		bool _enabled = false;
 		InstancedRenderInterpreterCreateInfo _createInfo;
+		uint32_t _capacity;
 
 		jv::ge::Resource _shader;
 		jv::ge::Resource _layout;

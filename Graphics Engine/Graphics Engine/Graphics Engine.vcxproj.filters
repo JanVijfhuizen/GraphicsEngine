@@ -191,5 +191,8 @@
     <ClInclude Include="Include\GE\GETest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\GE\SubTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

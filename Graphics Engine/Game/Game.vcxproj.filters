@@ -24,7 +24,10 @@
     <ClCompile Include="Src\Engine\Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Engine\InstancedRenderInterpreter.cpp">
+    <ClCompile Include="Src\Interpreters\InstancedRenderInterpreter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Interpreters\TextInterpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,7 +80,13 @@
     <ClInclude Include="Include\Tasks\InstancedRenderTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\InstancedRenderInterpreter.h">
+    <ClInclude Include="Include\Interpreters\InstancedRenderInterpreter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Tasks\TextTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Interpreters\TextInterpreter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
