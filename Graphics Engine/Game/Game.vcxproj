@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Utils\BoxCollision.cpp" />
     <ClCompile Include="Src\Utils\SubTextureUtils.cpp" />
     <ClCompile Include="Src\Interpreters\MouseInterpreter.cpp" />
     <ClCompile Include="Src\CardGame.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="Include\Tasks\MouseTask.h" />
     <ClInclude Include="Include\Tasks\RenderTask.h" />
     <ClInclude Include="Include\Tasks\TextTask.h" />
+    <ClInclude Include="Include\Utils\BoxCollision.h" />
     <ClInclude Include="Include\Utils\Shuffle.h" />
     <ClInclude Include="Include\Engine\TaskSystem.h" />
     <ClInclude Include="Include\Utils\SubTextureUtils.h" />

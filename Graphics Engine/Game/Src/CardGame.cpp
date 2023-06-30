@@ -14,6 +14,7 @@
 #include "JLib/ArrayUtils.h"
 #include "States/MainMenuState.h"
 #include "Tasks/MouseTask.h"
+#include "Utils/BoxCollision.h"
 
 namespace game 
 {
@@ -225,41 +226,6 @@ namespace game
 	{
 		const auto ptr = static_cast<MainMenuState*>(_levelStatePtr);
 
-		TextTask titleTextTask{};
-		titleTextTask.lineLength = 12;
-		titleTextTask.center = true;
-		titleTextTask.position.y = -0.75f;
-		titleTextTask.text = "untitled card game";
-		titleTextTask.scale = .12f;
-		_textTasks->Push(titleTextTask);
-
-		const float buttonYOffset = ptr->saveDataValid ? -.18 : 0;
-
-		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = buttonYOffset;
-		buttonRenderTask.scale.y *= .12f;
-		buttonRenderTask.scale.x = .4f;
-		buttonRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		_renderTasks->Push(buttonRenderTask);
-
-		TextTask buttonTextTask{};
-		buttonTextTask.lineLength = 6;
-		buttonTextTask.center = true;
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "new game";
-		buttonTextTask.scale = .06f;
-		_textTasks->Push(buttonTextTask);
-
-		if(ptr->saveDataValid)
-		{
-			buttonRenderTask.position.y *= -1;
-			_renderTasks->Push(buttonRenderTask);
-
-			buttonTextTask.position = buttonRenderTask.position;
-			buttonTextTask.text = "continue";
-			_textTasks->Push(buttonTextTask);
-		}
-
 		MouseTask mouseTask{};
 		mouseTask.position = GetConvertedMousePosition();
 		mouseTask.position *= 2;
@@ -278,6 +244,57 @@ namespace game
 				mouseTask.rButton = MouseTask::released;
 		}
 		_mouseTasks->Push(mouseTask);
+
+		TextTask titleTextTask{};
+		titleTextTask.lineLength = 12;
+		titleTextTask.center = true;
+		titleTextTask.position.y = -0.75f;
+		titleTextTask.text = "untitled card game";
+		titleTextTask.scale = .12f;
+		_textTasks->Push(titleTextTask);
+
+		const float buttonYOffset = ptr->saveDataValid ? -.18 : 0;
+
+		RenderTask buttonRenderTask{};
+		buttonRenderTask.position.y = buttonYOffset;
+		buttonRenderTask.scale.y *= .12f;
+		buttonRenderTask.scale.x = .4f;
+		buttonRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		_renderTasks->Push(buttonRenderTask);
+
+		std::cout << mouseTask.position.x << " " << mouseTask.position.y << std::endl;
+
+		if (mouseTask.lButton == MouseTask::pressed)
+			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, mouseTask.position))
+			{
+				_levelState = LevelState::newGame;
+				_levelLoading = true;
+			}
+
+		TextTask buttonTextTask{};
+		buttonTextTask.lineLength = 6;
+		buttonTextTask.center = true;
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.text = "new game";
+		buttonTextTask.scale = .06f;
+		_textTasks->Push(buttonTextTask);
+
+		if(ptr->saveDataValid)
+		{
+			buttonRenderTask.position.y *= -1;
+			_renderTasks->Push(buttonRenderTask);
+
+			buttonTextTask.position = buttonRenderTask.position;
+			buttonTextTask.text = "continue";
+			_textTasks->Push(buttonTextTask);
+
+			if (mouseTask.lButton == MouseTask::pressed)
+				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, mouseTask.position))
+				{
+					_levelState = LevelState::inGame;
+					_levelLoading = true;
+				}
+		}
 
 		// Reset callbacks.
 		_keyCallbacks = {};
