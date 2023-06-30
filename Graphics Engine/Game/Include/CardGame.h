@@ -3,6 +3,9 @@
 #include "Engine/Engine.h"
 #include "GE/SubTexture.h"
 #include "JLib/Array.h"
+#include "States/BoardState.h"
+#include "States/GameState.h"
+#include "States/PlayerState.h"
 #include "Tasks/DynamicRenderTask.h"
 #include "Tasks/RenderTask.h"
 #include "Tasks/TextTask.h"
@@ -40,5 +43,9 @@ namespace game
 		InstancedRenderInterpreter* _renderInterpreter;
 		DynamicRenderInterpreter* _dynamicRenderInterpreter;
 		TextInterpreter* _textInterpreter;
+
+		GameState _gameState{};
+		PlayerState _playerState{};
+		BoardState _boardState{};
 	};
 }
