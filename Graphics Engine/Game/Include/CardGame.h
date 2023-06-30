@@ -1,9 +1,11 @@
 ﻿#pragma once
 #include "CardGame.h"
 #include "CardGame.h"
+#include "Cards/MonsterCard.h"
 #include "Engine/Engine.h"
 #include "GE/SubTexture.h"
 #include "Interpreters/MouseInterpreter.h"
+#include "JLib/Array.h"
 #include "JLib/Array.h"
 #include "States/BoardState.h"
 #include "States/GameState.h"
@@ -55,6 +57,7 @@ namespace game
 		jv::Arena _arena;
 		jv::Arena _levelArena;
 		jv::ge::Resource _scene;
+		jv::ge::Resource _levelScene;
 		jv::ge::Resource _atlas;
 		jv::Array<jv::ge::SubTexture> _subTextures;
 		TaskSystem<RenderTask>* _renderTasks;
@@ -72,16 +75,22 @@ namespace game
 
 		LevelState _levelState = LevelState::mainMenu;
 		bool _levelLoading = true;
+		uint32_t _levelLoadingFrame = 0;
 		void* _levelStatePtr;
 
 		jv::LinkedList<KeyCallback> _keyCallbacks{};
 		jv::LinkedList<KeyCallback> _mouseCallbacks{};
 		float _scrollCallback = 0;
 
+		jv::Array<MonsterCard> _monsterCards;
+		jv::Vector<uint32_t> _monsterCardsDeck;
+
 		void LoadMainMenu();
 		void UpdateMainMenu();
 		void LoadNewGame();
 		void UpdateNewGame();
+
+		void DrawMonsterCard(uint32_t id, glm::vec2 position) const;
 
 		static void OnKeyCallback(size_t key, size_t action);
 		static void OnMouseCallback(size_t key, size_t action);

@@ -5,6 +5,7 @@
 #include <stb_image.h>
 #include <Engine/Engine.h>
 
+#include "Cards/MonsterCard.h"
 #include "GE/AtlasGenerator.h"
 #include "GE/GraphicsEngine.h"
 #include "Interpreters/DynamicRenderInterpreter.h"
@@ -33,6 +34,41 @@ namespace game
 		arr[3] = "Art/mouse.png";
 		arr[4] = "Art/fallback.png";
 		return arr;
+	}
+
+	jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<MonsterCard>(arena, 10);
+		// Starting pet.
+		arr[0].unique = true;
+		arr[0].name = "daisy, loyal protector";
+		arr[0].ruleText = "follows you around.";
+		return arr;
+	}
+
+	void GetMonsterCardDeck(jv::Vector<uint32_t> monsterCardsDeck, const jv::Array<MonsterCard>& monsterCards, const PlayerState& playerState)
+	{
+		monsterCardsDeck.Clear();
+		for (uint32_t i = 0; i < monsterCardsDeck.length; ++i)
+		{
+			if (monsterCards[i].unique)
+				continue;
+			monsterCardsDeck.Add() = i;
+		}
+
+		for (auto i = static_cast<int32_t>(monsterCardsDeck.count) - 1; i >= 0; --i)
+		{
+			const uint32_t id = monsterCardsDeck[i];
+			auto& monsterCard = monsterCards[id];
+			for (uint32_t j = 0; j < playerState.partySize; ++j)
+			{
+				if(playerState.monsterIds[j] == id)
+				{
+					monsterCardsDeck.RemoveAt(i);
+					break;
+				}
+			}
+		}
 	}
 
 	bool TryLoadSaveData(PlayerState& playerState)
@@ -75,6 +111,13 @@ namespace game
 	{
 		if(_levelLoading)
 		{
+			if (++_levelLoadingFrame < jv::ge::GetFrameCount())
+				return true;
+			_levelLoadingFrame = 0;
+
+			jv::ge::ClearScene(_levelScene);
+			_levelArena.Clear();
+
 			switch (_levelState)
 			{
 				case LevelState::mainMenu:
@@ -125,7 +168,9 @@ namespace game
 		}
 
 		outCardGame->_arena = outCardGame->_engine.CreateSubArena(1024);
+		outCardGame->_levelArena = outCardGame->_engine.CreateSubArena(1024);
 		outCardGame->_scene = jv::ge::CreateScene();
+		outCardGame->_levelScene = jv::ge::CreateScene();
 
 		const auto mem = outCardGame->_engine.GetMemory();
 
@@ -156,7 +201,7 @@ namespace game
 
 		{
 			outCardGame->_renderTasks = &outCardGame->_engine.AddTaskSystem<RenderTask>();
-			outCardGame->_renderTasks->Allocate(outCardGame->_arena, 512);
+			outCardGame->_renderTasks->Allocate(outCardGame->_arena, 1024);
 			outCardGame->_dynamicRenderTasks = &outCardGame->_engine.AddTaskSystem<DynamicRenderTask>();
 			outCardGame->_dynamicRenderTasks->Allocate(outCardGame->_arena, 32);
 			outCardGame->_mouseTasks = &outCardGame->_engine.AddTaskSystem<MouseTask>();
@@ -171,7 +216,7 @@ namespace game
 
 			InstancedRenderInterpreterEnableInfo enableInfo{};
 			enableInfo.scene = outCardGame->_scene;
-			enableInfo.capacity = 512;
+			enableInfo.capacity = 1024;
 
 			outCardGame->_renderInterpreter = &outCardGame->_engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter>(
 				*outCardGame->_renderTasks, createInfo);
@@ -205,6 +250,11 @@ namespace game
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
 			outCardGame->_textInterpreter = &outCardGame->_engine.AddTaskInterpreter<TextTask, TextInterpreter>(
 				*outCardGame->_textTasks, textInterpreterCreateInfo);
+		}
+
+		{
+			outCardGame->_monsterCards = GetMonsterCards(outCardGame->_arena);
+			outCardGame->_monsterCardsDeck = jv::CreateVector<uint32_t>(outCardGame->_arena, outCardGame->_monsterCards.length);
 		}
 	}
 
@@ -305,10 +355,48 @@ namespace game
 	void CardGame::LoadNewGame()
 	{
 		remove(SAVE_DATA_PATH);
+		GetMonsterCardDeck(_monsterCardsDeck, _monsterCards, _playerState);
 	}
 
 	void CardGame::UpdateNewGame()
 	{
+		DrawMonsterCard(0, glm::vec2(0));
+	}
+
+	void CardGame::DrawMonsterCard(const uint32_t id, const glm::vec2 position) const
+	{
+		const auto& card = _monsterCards[id];
+		constexpr float width = .3f;
+		constexpr float height = .4f;
+		constexpr float picFillPct = .6f;
+
+		RenderTask bgRenderTask{};
+		bgRenderTask.scale.y = height * (1.f - picFillPct);
+		bgRenderTask.scale.x = width;
+		bgRenderTask.position = position + glm::vec2(0, height * (1.f - picFillPct));
+		bgRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		_renderTasks->Push(bgRenderTask);
+
+		RenderTask picRenderTask{};
+		picRenderTask.scale.y = height * picFillPct;
+		picRenderTask.scale.x = width;
+		picRenderTask.position = position - glm::vec2(0, height * picFillPct);
+		picRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		picRenderTask.color = glm::vec4(1, 0, 0, 1);
+		_renderTasks->Push(picRenderTask);
+
+		TextTask titleTextTask{};
+		titleTextTask.lineLength = 12;
+		titleTextTask.center = true;
+		titleTextTask.position = position - glm::vec2(0, height);
+		titleTextTask.text = card.name;
+		titleTextTask.scale = .04f;
+		_textTasks->Push(titleTextTask);
+
+		TextTask ruleTextTask = titleTextTask;
+		ruleTextTask.position = position + glm::vec2(0, bgRenderTask.scale.y);
+		ruleTextTask.text = card.ruleText;
+		_textTasks->Push(ruleTextTask);
 	}
 
 	void CardGame::OnKeyCallback(const size_t key, const size_t action)
