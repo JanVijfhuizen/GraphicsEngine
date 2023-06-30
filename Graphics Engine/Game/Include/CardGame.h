@@ -26,7 +26,7 @@ namespace game
 		};
 		
 		[[nodiscard]] bool Update();
-		[[nodiscard]] static CardGame Create();
+		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
 	private:
 		Engine _engine;

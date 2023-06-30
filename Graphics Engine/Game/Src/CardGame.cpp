@@ -64,26 +64,25 @@ namespace game
 		return result;
 	}
 
-	CardGame CardGame::Create()
+	void CardGame::Create(CardGame* outCardGame)
 	{
-		CardGame cardGame{};
-
+		*outCardGame = {};
 		{
 			EngineCreateInfo engineCreateInfo{};
-			cardGame._engine = Engine::Create(engineCreateInfo);
+			outCardGame->_engine = Engine::Create(engineCreateInfo);
 		}
 
-		cardGame._arena = cardGame._engine.CreateSubArena(1024);
-		cardGame._scene = jv::ge::CreateScene();
+		outCardGame->_arena = outCardGame->_engine.CreateSubArena(1024);
+		outCardGame->_scene = jv::ge::CreateScene();
 
-		const auto mem = cardGame._engine.GetMemory();
+		const auto mem = outCardGame->_engine.GetMemory();
 
 #ifdef _DEBUG
 		{
 			const auto tempScope = mem.tempArena.CreateScope();
 
 			const auto paths = GetTexturePaths(mem.tempArena);
-			jv::ge::GenerateAtlas(cardGame._arena, mem.tempArena, paths,
+			jv::ge::GenerateAtlas(outCardGame->_arena, mem.tempArena, paths,
 				ATLAS_PATH, ATLAS_META_DATA_PATH);
 
 			mem.tempArena.DestroyScope(tempScope);
@@ -96,20 +95,20 @@ namespace game
 
 			jv::ge::ImageCreateInfo imageCreateInfo{};
 			imageCreateInfo.resolution = { texWidth, texHeight };
-			imageCreateInfo.scene = cardGame._scene;
-			cardGame._atlas = AddImage(imageCreateInfo);
-			jv::ge::FillImage(cardGame._atlas, pixels);
+			imageCreateInfo.scene = outCardGame->_scene;
+			outCardGame->_atlas = AddImage(imageCreateInfo);
+			jv::ge::FillImage(outCardGame->_atlas, pixels);
 			stbi_image_free(pixels);
-			cardGame._subTextures = jv::ge::LoadAtlasMetaData(cardGame._arena, ATLAS_META_DATA_PATH);
+			outCardGame->_subTextures = jv::ge::LoadAtlasMetaData(outCardGame->_arena, ATLAS_META_DATA_PATH);
 		}
 
 		{
-			cardGame._renderTasks = &cardGame._engine.AddTaskSystem<RenderTask>();
-			cardGame._renderTasks->Allocate(cardGame._arena, 32);
-			cardGame._dynamicRenderTasks = &cardGame._engine.AddTaskSystem<DynamicRenderTask>();
-			cardGame._dynamicRenderTasks->Allocate(cardGame._arena, 32);
-			cardGame._textTasks = &cardGame._engine.AddTaskSystem<TextTask>();
-			cardGame._textTasks->Allocate(cardGame._arena, 16);
+			outCardGame->_renderTasks = &outCardGame->_engine.AddTaskSystem<RenderTask>();
+			outCardGame->_renderTasks->Allocate(outCardGame->_arena, 32);
+			outCardGame->_dynamicRenderTasks = &outCardGame->_engine.AddTaskSystem<DynamicRenderTask>();
+			outCardGame->_dynamicRenderTasks->Allocate(outCardGame->_arena, 32);
+			outCardGame->_textTasks = &outCardGame->_engine.AddTaskSystem<TextTask>();
+			outCardGame->_textTasks->Allocate(outCardGame->_arena, 16);
 		}
 
 		{
@@ -117,42 +116,36 @@ namespace game
 			createInfo.resolution = jv::ge::GetResolution();
 
 			InstancedRenderInterpreterEnableInfo enableInfo{};
-			enableInfo.scene = cardGame._scene;
+			enableInfo.scene = outCardGame->_scene;
 			enableInfo.capacity = 32;
 
-			cardGame._renderInterpreter = &cardGame._engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter>(
-				*cardGame._renderTasks, createInfo);
-			cardGame._renderInterpreter->Enable(enableInfo);
-			cardGame._renderInterpreter->image = cardGame._atlas;
+			outCardGame->_renderInterpreter = &outCardGame->_engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter>(
+				*outCardGame->_renderTasks, createInfo);
+			outCardGame->_renderInterpreter->Enable(enableInfo);
+			outCardGame->_renderInterpreter->image = outCardGame->_atlas;
 
 			DynamicRenderInterpreterCreateInfo dynamicCreateInfo{};
 			dynamicCreateInfo.resolution = jv::ge::GetResolution();
 			dynamicCreateInfo.frameArena = &mem.frameArena;
 
 			DynamicRenderInterpreterEnableInfo dynamicEnableInfo{};
-			dynamicEnableInfo.arena = &cardGame._arena;
-			dynamicEnableInfo.scene = cardGame._scene;
+			dynamicEnableInfo.arena = &outCardGame->_arena;
+			dynamicEnableInfo.scene = outCardGame->_scene;
 			dynamicEnableInfo.capacity = 32;
 
-			cardGame._dynamicRenderInterpreter = &cardGame._engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
-				*cardGame._dynamicRenderTasks, dynamicCreateInfo);
-			cardGame._dynamicRenderInterpreter->Enable(dynamicEnableInfo);
+			outCardGame->_dynamicRenderInterpreter = &outCardGame->_engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
+				*outCardGame->_dynamicRenderTasks, dynamicCreateInfo);
+			outCardGame->_dynamicRenderInterpreter->Enable(dynamicEnableInfo);
 
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
-			textInterpreterCreateInfo.instancedRenderTasks = cardGame._renderTasks;
-			textInterpreterCreateInfo.alphabetSubTexture = cardGame._subTextures[static_cast<uint32_t>(TextureId::alphabet)];
-			textInterpreterCreateInfo.symbolSubTexture = cardGame._subTextures[static_cast<uint32_t>(TextureId::symbols)];
-			textInterpreterCreateInfo.numberSubTexture = cardGame._subTextures[static_cast<uint32_t>(TextureId::numbers)];
+			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->_renderTasks;
+			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::alphabet)];
+			textInterpreterCreateInfo.symbolSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::symbols)];
+			textInterpreterCreateInfo.numberSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::numbers)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
-			cardGame._textInterpreter = &cardGame._engine.AddTaskInterpreter<TextTask, TextInterpreter>(
-				*cardGame._textTasks, textInterpreterCreateInfo);
+			outCardGame->_textInterpreter = &outCardGame->_engine.AddTaskInterpreter<TextTask, TextInterpreter>(
+				*outCardGame->_textTasks, textInterpreterCreateInfo);
 		}
-
-		// Temp until stupid bug is fixed.
-		while (true)
-			cardGame.Update();
-
-		return cardGame;
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)
