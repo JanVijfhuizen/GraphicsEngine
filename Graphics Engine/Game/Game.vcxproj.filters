@@ -42,6 +42,9 @@
     <ClCompile Include="Src\Interpreters\MouseInterpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Utils\SubTextureUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Shuffle.h">
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Interpreters\MouseInterpreter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Utils\SubTextureUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

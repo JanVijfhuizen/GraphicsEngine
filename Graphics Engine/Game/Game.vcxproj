@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Utils\SubTextureUtils.cpp" />
     <ClCompile Include="Src\Interpreters\MouseInterpreter.cpp" />
     <ClCompile Include="Src\CardGame.cpp" />
     <ClCompile Include="Src\Interpreters\DynamicRenderInterpreter.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="Include\Tasks\TextTask.h" />
     <ClInclude Include="Include\Utils\Shuffle.h" />
     <ClInclude Include="Include\Engine\TaskSystem.h" />
+    <ClInclude Include="Include\Utils\SubTextureUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

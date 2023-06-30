@@ -29,14 +29,15 @@ namespace game
 		arr[0] = "Art/alphabet.png";
 		arr[1] = "Art/numbers.png";
 		arr[2] = "Art/symbols.png";
-		arr[3] = "Art/fallback.png";
+		arr[3] = "Art/mouse.png";
+		arr[4] = "Art/fallback.png";
 		return arr;
 	}
 
 	bool TryLoadSaveData(PlayerState& playerState)
 	{
 		std::ifstream inFile;
-		if (!inFile.good())
+		if (!inFile.is_open())
 			return false;
 		inFile.open(SAVE_DATA_PATH);
 		
@@ -191,8 +192,7 @@ namespace game
 			mouseInterpreterCreateInfo.renderTasks = outCardGame->_renderTasks;
 			outCardGame->mouseInterpreter = &outCardGame->_engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
 				*outCardGame->_mouseTasks, mouseInterpreterCreateInfo);
-			outCardGame->mouseInterpreter->mouseIdleSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::fallback)];
-			//outCardGame->mouseInterpreter->mouseIdleSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::fallback)];
+			outCardGame->mouseInterpreter->subTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::mouse)];
 
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
 			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->_renderTasks;
@@ -224,9 +224,21 @@ namespace game
 	void CardGame::UpdateMainMenu()
 	{
 		const auto ptr = static_cast<MainMenuState*>(_levelStatePtr);
+
+		TextTask titleTextTask{};
+		titleTextTask.lineLength = 12;
+		titleTextTask.center = true;
+		titleTextTask.position.y = -0.75f;
+		titleTextTask.text = "untitled card game";
+		titleTextTask.scale = .12f;
+		_textTasks->Push(titleTextTask);
+
+		const float buttonYOffset = ptr->saveDataValid ? -.18 : 0;
+
 		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = -.25f;
-		buttonRenderTask.scale.y *= .2f;
+		buttonRenderTask.position.y = buttonYOffset;
+		buttonRenderTask.scale.y *= .12f;
+		buttonRenderTask.scale.x = .4f;
 		buttonRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
 		_renderTasks->Push(buttonRenderTask);
 
@@ -235,14 +247,18 @@ namespace game
 		buttonTextTask.center = true;
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "new game";
+		buttonTextTask.scale = .06f;
 		_textTasks->Push(buttonTextTask);
 
-		buttonRenderTask.position.y *= -1;
-		_renderTasks->Push(buttonRenderTask);
-		
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "continue";
-		_textTasks->Push(buttonTextTask);
+		if(ptr->saveDataValid)
+		{
+			buttonRenderTask.position.y *= -1;
+			_renderTasks->Push(buttonRenderTask);
+
+			buttonTextTask.position = buttonRenderTask.position;
+			buttonTextTask.text = "continue";
+			_textTasks->Push(buttonTextTask);
+		}
 
 		MouseTask mouseTask{};
 		mouseTask.position = GetConvertedMousePosition();

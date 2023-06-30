@@ -13,8 +13,7 @@ namespace game
 	class MouseInterpreter final : public TaskInterpreter<MouseTask, MouseInterpreterCreateInfo>
 	{
 	public:
-		jv::ge::SubTexture mouseIdleSubTexture;
-		jv::ge::SubTexture mouseLClickSubTexture;
+		jv::ge::SubTexture subTexture;
 
 	private:
 		TaskSystem<RenderTask>* _renderTasks;

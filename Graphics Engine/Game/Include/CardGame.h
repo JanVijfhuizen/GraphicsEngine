@@ -27,6 +27,7 @@ namespace game
 			alphabet,
 			numbers,
 			symbols,
+			mouse,
 			fallback,
 			length
 		};

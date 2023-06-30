@@ -1,6 +1,8 @@
 ﻿#include "pch_game.h"
 #include "Interpreters/MouseInterpreter.h"
 
+#include "Utils/SubTextureUtils.h"
+
 namespace game
 {
 	void MouseInterpreter::OnStart(const MouseInterpreterCreateInfo& createInfo, const EngineMemory& memory)
@@ -11,6 +13,9 @@ namespace game
 	void MouseInterpreter::OnUpdate(const EngineMemory& memory,
 		const jv::LinkedList<jv::Vector<MouseTask>>& tasks)
 	{
+		jv::ge::SubTexture subTextures[2];
+		Divide(subTexture, subTextures, (sizeof subTextures) / sizeof(jv::ge::SubTexture));
+
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)
 			{
@@ -32,8 +37,8 @@ namespace game
 				mouseRenderTask.position = job.position;
 				mouseRenderTask.position *= 2;
 				mouseRenderTask.position -= glm::vec2(1);
-				mouseRenderTask.scale *= .2f;
-				mouseRenderTask.subTexture = _lPressed ? mouseLClickSubTexture : mouseIdleSubTexture;
+				mouseRenderTask.scale *= .08f;
+				mouseRenderTask.subTexture = _lPressed ? subTextures[1] : subTextures[0];
 				_renderTasks->Push(mouseRenderTask);
 			}
 	}

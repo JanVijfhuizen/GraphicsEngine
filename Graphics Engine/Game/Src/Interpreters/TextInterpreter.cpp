@@ -33,8 +33,11 @@ namespace game
 				uint32_t nextLineStart = 0;
 
 				float xOffset = 0;
-				if (job.center && len > job.lineLength)
-					xOffset = spacing * static_cast<float>(jv::Min<uint32_t>(len, job.lineLength)) * -.5f;
+				if (job.center)
+				{
+					const auto l = jv::Min<uint32_t>(len, job.lineLength);
+					xOffset = spacing * static_cast<float>(l) * -.5f;
+				}
 
 				for (uint32_t i = 0; i < len; ++i)
 				{
@@ -55,7 +58,10 @@ namespace game
 						lineLength = 0;
 						task.position.x = job.position.x + xOffset;
 						if(i != 0)
+						{
 							task.position.y += lineSpacing;
+							task.position.x -= spacing;
+						}
 					}
 
 					const auto& c = job.text[i];
