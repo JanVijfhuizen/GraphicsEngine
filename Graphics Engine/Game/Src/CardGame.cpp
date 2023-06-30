@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "CardGame.h"
 
+#include <fstream>
 #include <stb_image.h>
 #include <Engine/Engine.h>
 
@@ -10,11 +11,13 @@
 #include "Interpreters/InstancedRenderInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
+#include "States/MainMenuState.h"
 
 namespace game 
 {
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
+	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
 
 	jv::Array<const char*> GetTexturePaths(jv::Arena& arena)
 	{
@@ -26,8 +29,76 @@ namespace game
 		return arr;
 	}
 
+	bool TryLoadSaveData(PlayerState& playerState)
+	{
+		std::ifstream inFile;
+		if (!inFile.good())
+			return false;
+		inFile.open(SAVE_DATA_PATH);
+		
+		for (auto& monsterId : playerState.monsterIds)
+			inFile >> monsterId;
+		for (auto& health : playerState.healths)
+			inFile >> health;
+		for (auto& artifact : playerState.artifacts)
+			inFile >> artifact;
+		for (auto& artifactCount : playerState.artifactsCounts)
+			inFile >> artifactCount;
+		inFile >> playerState.partySize;
+
+		return true;
+	}
+
+	void SaveData(PlayerState& playerState)
+	{
+		std::ofstream outFile;
+		outFile.open(SAVE_DATA_PATH);
+
+		for (const auto& monsterId : playerState.monsterIds)
+			outFile << monsterId;
+		for (const auto& health : playerState.healths)
+			outFile << health;
+		for (const auto& artifact : playerState.artifacts)
+			outFile << artifact;
+		for (const auto& artifactCount : playerState.artifactsCounts)
+			outFile << artifactCount;
+		outFile << playerState.partySize;
+	}
+
 	bool CardGame::Update()
 	{
+		if(_levelLoading)
+		{
+			switch (_sceneState)
+			{
+				case LevelState::mainMenu:
+					LoadMainMenu();
+					break;
+				case LevelState::newGame: 
+					break;
+				case LevelState::inGame:
+					break;
+				default:
+					throw std::exception("Scene state not supported!");
+			}
+
+			_levelLoading = false;
+		}
+
+		switch (_sceneState)
+		{
+		case LevelState::mainMenu:
+			UpdateMainMenu();
+			break;
+		case LevelState::newGame:
+			break;
+		case LevelState::inGame:
+			break;
+		default:
+			throw std::exception("Scene state not supported!");
+		}
+
+		/*
 		static float f = 0;
 		f += 0.01f;
 
@@ -59,6 +130,7 @@ namespace game
 		dynRenderTask.renderTask.scale *= .2f;
 		dynRenderTask.renderTask.color.y *= .5f + sin(f) * .5f;
 		_dynamicRenderTasks->Push(dynRenderTask);
+		*/
 
 		const bool result = _engine.Update();
 		return result;
@@ -152,5 +224,34 @@ namespace game
 	{
 		jv::Arena::Destroy(cardGame._arena);
 		Engine::Destroy(cardGame._engine);
+	}
+
+	void CardGame::LoadMainMenu()
+	{
+		const auto ptr = _arena.New<MainMenuState>();
+		_levelState = ptr;
+		ptr->saveDataValid = TryLoadSaveData(_playerState);
+	}
+
+	void CardGame::UpdateMainMenu()
+	{
+		const auto ptr = static_cast<MainMenuState*>(_levelState);
+		RenderTask buttonRenderTask{};
+		buttonRenderTask.position.y = -.25f;
+		buttonRenderTask.scale.y *= .2f;
+		buttonRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		_renderTasks->Push(buttonRenderTask);
+
+		TextTask buttonTextTask{};
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.text = "new game";
+		_textTasks->Push(buttonTextTask);
+
+		buttonRenderTask.position.y *= -1;
+		_renderTasks->Push(buttonRenderTask);
+		
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.text = "continue";
+		_textTasks->Push(buttonTextTask);
 	}
 }

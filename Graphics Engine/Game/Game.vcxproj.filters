@@ -113,5 +113,8 @@
     <ClInclude Include="Include\Cards\CriticalFailCard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\States\MainMenuState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

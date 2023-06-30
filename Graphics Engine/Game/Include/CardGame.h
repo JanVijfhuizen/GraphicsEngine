@@ -32,8 +32,17 @@ namespace game
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
 	private:
+		enum class LevelState
+		{
+			mainMenu,
+			newGame,
+			inGame
+		} _sceneState = LevelState::mainMenu;
+		bool _levelLoading = true;
+
 		Engine _engine;
 		jv::Arena _arena;
+		jv::Arena _levelArena;
 		jv::ge::Resource _scene;
 		jv::ge::Resource _atlas;
 		jv::Array<jv::ge::SubTexture> _subTextures;
@@ -47,5 +56,9 @@ namespace game
 		GameState _gameState{};
 		PlayerState _playerState{};
 		BoardState _boardState{};
+		void* _levelState;
+
+		void LoadMainMenu();
+		void UpdateMainMenu();
 	};
 }
