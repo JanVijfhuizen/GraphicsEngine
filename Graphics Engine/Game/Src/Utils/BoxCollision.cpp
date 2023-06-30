@@ -5,7 +5,7 @@ namespace game
 {
 	bool CollidesShape(const glm::vec2 center, const glm::vec2 shape, const glm::vec2 pos)
 	{
-		return Collides(center + shape * glm::vec2(-.5f, .5f), center + shape * glm::vec2(.5f, -.5f), pos);
+		return Collides(center + shape * glm::vec2(-1, 1), center + shape * glm::vec2(1, -1), pos);
 	}
 
 	bool Collides(const glm::vec2 lTop, const glm::vec2 rBot, const glm::vec2 pos)

@@ -36,6 +36,7 @@ namespace game
 				RenderTask mouseRenderTask{};
 				mouseRenderTask.position = job.position;
 				mouseRenderTask.scale *= .08f;
+				mouseRenderTask.position += mouseRenderTask.scale * glm::vec2(.5f, .5f);
 				mouseRenderTask.subTexture = _lPressed ? subTextures[1] : subTextures[0];
 				_renderTasks->Push(mouseRenderTask);
 			}

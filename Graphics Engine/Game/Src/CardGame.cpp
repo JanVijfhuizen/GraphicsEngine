@@ -80,7 +80,8 @@ namespace game
 				case LevelState::mainMenu:
 					LoadMainMenu();
 					break;
-				case LevelState::newGame: 
+				case LevelState::newGame:
+					LoadNewGame();
 					break;
 				case LevelState::inGame:
 					break;
@@ -97,6 +98,7 @@ namespace game
 			UpdateMainMenu();
 			break;
 		case LevelState::newGame:
+			UpdateNewGame();
 			break;
 		case LevelState::inGame:
 			break;
@@ -261,9 +263,7 @@ namespace game
 		buttonRenderTask.scale.x = .4f;
 		buttonRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
 		_renderTasks->Push(buttonRenderTask);
-
-		std::cout << mouseTask.position.x << " " << mouseTask.position.y << std::endl;
-
+		
 		if (mouseTask.lButton == MouseTask::pressed)
 			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, mouseTask.position))
 			{
@@ -300,6 +300,15 @@ namespace game
 		_keyCallbacks = {};
 		_mouseCallbacks = {};
 		_scrollCallback = 0;
+	}
+
+	void CardGame::LoadNewGame()
+	{
+		remove(SAVE_DATA_PATH);
+	}
+
+	void CardGame::UpdateNewGame()
+	{
 	}
 
 	void CardGame::OnKeyCallback(const size_t key, const size_t action)

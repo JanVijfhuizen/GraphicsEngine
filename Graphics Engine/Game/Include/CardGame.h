@@ -80,6 +80,8 @@ namespace game
 
 		void LoadMainMenu();
 		void UpdateMainMenu();
+		void LoadNewGame();
+		void UpdateNewGame();
 
 		static void OnKeyCallback(size_t key, size_t action);
 		static void OnMouseCallback(size_t key, size_t action);
