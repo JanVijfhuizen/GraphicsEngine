@@ -298,7 +298,7 @@ namespace game
 		_mouseTasks->Push(mouseTask);
 
 		TextTask titleTextTask{};
-		titleTextTask.lineLength = 12;
+		titleTextTask.lineLength = 10;
 		titleTextTask.center = true;
 		titleTextTask.position.y = -0.75f;
 		titleTextTask.text = "untitled card game";
@@ -322,7 +322,6 @@ namespace game
 			}
 
 		TextTask buttonTextTask{};
-		buttonTextTask.lineLength = 6;
 		buttonTextTask.center = true;
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "new game";

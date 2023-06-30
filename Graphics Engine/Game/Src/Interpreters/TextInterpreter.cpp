@@ -36,27 +36,31 @@ namespace game
 				if (job.center)
 				{
 					const auto l = jv::Min<uint32_t>(len, job.lineLength);
-					xOffset = spacing * static_cast<float>(l) * -.5f;
+					xOffset = spacing * static_cast<float>(l - 1) * -.5f;
 				}
 
 				for (uint32_t i = 0; i < len; ++i)
 				{
 					if (nextLineStart == i)
 					{
+						uint32_t previousBreak = i;
+
 						// Define line length.
-						for (uint32_t j = i; j < len; ++j)
+						for (uint32_t j = i + 1; j < len; ++j)
 						{
 							const auto& c = job.text[j];
 							if (c == ' ')
-								if (j - i >= job.lineLength)
-								{
-									nextLineStart = j;
-									break;
-								}
+								previousBreak = j;
+							if (j - i >= job.lineLength && previousBreak != i)
+							{
+								nextLineStart = previousBreak;
+								break;
+							}
 						}
 						
 						lineLength = 0;
 						task.position.x = job.position.x + xOffset;
+
 						if(i != 0)
 						{
 							task.position.y += lineSpacing;
