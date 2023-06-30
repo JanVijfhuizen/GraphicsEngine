@@ -20,6 +20,10 @@ namespace game
 		uint32_t arenaSize = 4096;
 		uint32_t tempArenaSize = 4096;
 		uint32_t frameArenaSize = 4096;
+
+		void (*onKeyCallback)(size_t key, size_t action) = nullptr;
+		void (*onMouseCallback)(size_t key, size_t action) = nullptr;
+		void (*onScrollCallback)(glm::vec<2, double> offset) = nullptr;
 	};
 
 	class ITaskInterpreter

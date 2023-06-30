@@ -9,15 +9,34 @@
 #include "GE/GraphicsEngine.h"
 #include "Interpreters/DynamicRenderInterpreter.h"
 #include "Interpreters/InstancedRenderInterpreter.h"
+#include "Interpreters/MouseInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "States/MainMenuState.h"
+#include "Tasks/MouseTask.h"
 
 namespace game 
 {
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
+
+	CardGame* userPtr = nullptr;
+
+	void OnKeyCallback(const size_t key, const size_t action)
+	{
+		
+	}
+
+	void OnMouseCallback(const size_t key, const size_t action)
+	{
+		
+	}
+
+	void OnScrollCallback(const glm::vec<2, double> offset)
+	{
+		
+	}
 
 	jv::Array<const char*> GetTexturePaths(jv::Arena& arena)
 	{
@@ -138,6 +157,9 @@ namespace game
 
 	void CardGame::Create(CardGame* outCardGame)
 	{
+		assert(!userPtr);
+		userPtr = outCardGame;
+
 		*outCardGame = {};
 		{
 			EngineCreateInfo engineCreateInfo{};
@@ -179,6 +201,8 @@ namespace game
 			outCardGame->_renderTasks->Allocate(outCardGame->_arena, 512);
 			outCardGame->_dynamicRenderTasks = &outCardGame->_engine.AddTaskSystem<DynamicRenderTask>();
 			outCardGame->_dynamicRenderTasks->Allocate(outCardGame->_arena, 32);
+			outCardGame->_mouseTasks = &outCardGame->_engine.AddTaskSystem<MouseTask>();
+			outCardGame->_mouseTasks->Allocate(outCardGame->_arena, 1);
 			outCardGame->_textTasks = &outCardGame->_engine.AddTaskSystem<TextTask>();
 			outCardGame->_textTasks->Allocate(outCardGame->_arena, 16);
 		}
@@ -209,6 +233,13 @@ namespace game
 				*outCardGame->_dynamicRenderTasks, dynamicCreateInfo);
 			outCardGame->_dynamicRenderInterpreter->Enable(dynamicEnableInfo);
 
+			MouseInterpreterCreateInfo mouseInterpreterCreateInfo{};
+			mouseInterpreterCreateInfo.renderTasks = outCardGame->_renderTasks;
+			outCardGame->mouseInterpreter = &outCardGame->_engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
+				*outCardGame->_mouseTasks, mouseInterpreterCreateInfo);
+			outCardGame->mouseInterpreter->mouseIdleSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::fallback)];
+			outCardGame->mouseInterpreter->mouseIdleSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::fallback)];
+
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
 			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->_renderTasks;
 			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::alphabet)];
@@ -222,6 +253,9 @@ namespace game
 
 	void CardGame::Destroy(const CardGame& cardGame)
 	{
+		assert(userPtr);
+		userPtr = nullptr;
+
 		jv::Arena::Destroy(cardGame._arena);
 		Engine::Destroy(cardGame._engine);
 	}
@@ -255,5 +289,18 @@ namespace game
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "continue";
 		_textTasks->Push(buttonTextTask);
+
+		MouseTask mouseTask{};
+		mouseTask.position = GetConvertedMousePosition();
+		mouseTask.position *= 2;
+		mouseTask.position -= glm::vec2(1);
+		_mouseTasks->Push(mouseTask);
+	}
+
+	glm::vec2 CardGame::GetConvertedMousePosition()
+	{
+		const auto mousePos = jv::ge::GetMousePosition();
+		const auto resolution = jv::ge::GetResolution();
+		return glm::vec2(mousePos.x, mousePos.y) / glm::vec2(resolution.x, resolution.y);
 	}
 }

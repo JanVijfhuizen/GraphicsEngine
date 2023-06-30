@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Interpreters\MouseInterpreter.cpp" />
     <ClCompile Include="Src\CardGame.cpp" />
     <ClCompile Include="Src\Interpreters\DynamicRenderInterpreter.cpp" />
     <ClCompile Include="Src\Engine\TexturePool.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="Include\Cards\MagicCard.h" />
     <ClInclude Include="Include\Cards\MonsterCard.h" />
     <ClInclude Include="Include\Cards\RoomCard.h" />
+    <ClInclude Include="Include\Interpreters\MouseInterpreter.h" />
     <ClInclude Include="Include\Macros.h" />
     <ClInclude Include="Include\States\BoardState.h" />
     <ClInclude Include="Include\States\GameState.h" />
@@ -174,6 +176,7 @@
     <ClInclude Include="Include\States\MainMenuState.h" />
     <ClInclude Include="Include\States\PlayerState.h" />
     <ClInclude Include="Include\Tasks\DynamicRenderTask.h" />
+    <ClInclude Include="Include\Tasks\MouseTask.h" />
     <ClInclude Include="Include\Tasks\RenderTask.h" />
     <ClInclude Include="Include\Tasks\TextTask.h" />
     <ClInclude Include="Include\Utils\Shuffle.h" />

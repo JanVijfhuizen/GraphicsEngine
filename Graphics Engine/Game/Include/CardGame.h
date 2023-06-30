@@ -1,12 +1,15 @@
 ﻿#pragma once
 #include "CardGame.h"
+#include "CardGame.h"
 #include "Engine/Engine.h"
 #include "GE/SubTexture.h"
+#include "Interpreters/MouseInterpreter.h"
 #include "JLib/Array.h"
 #include "States/BoardState.h"
 #include "States/GameState.h"
 #include "States/PlayerState.h"
 #include "Tasks/DynamicRenderTask.h"
+#include "Tasks/MouseTask.h"
 #include "Tasks/RenderTask.h"
 #include "Tasks/TextTask.h"
 
@@ -31,6 +34,8 @@ namespace game
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
+
+		[[nodiscard]] static glm::vec2 GetConvertedMousePosition();
 	private:
 		enum class LevelState
 		{
@@ -48,9 +53,11 @@ namespace game
 		jv::Array<jv::ge::SubTexture> _subTextures;
 		TaskSystem<RenderTask>* _renderTasks;
 		TaskSystem<DynamicRenderTask>* _dynamicRenderTasks;
+		TaskSystem<MouseTask>* _mouseTasks;
 		TaskSystem<TextTask>* _textTasks;
 		InstancedRenderInterpreter* _renderInterpreter;
 		DynamicRenderInterpreter* _dynamicRenderInterpreter;
+		MouseInterpreter* mouseInterpreter;
 		TextInterpreter* _textInterpreter;
 
 		GameState _gameState{};
