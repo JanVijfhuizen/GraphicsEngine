@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Engine/Engine.h"
 #include "GE/SubTexture.h"
-#include "Tasks/InstancedRenderTask.h"
+#include "Tasks/RenderTask.h"
 #include "Tasks/TextTask.h"
 
 namespace game
@@ -10,7 +10,7 @@ namespace game
 
 	struct TextInterpreterCreateInfo final
 	{
-		TaskSystem<InstancedRenderTask>* instancedRenderTasks;
+		TaskSystem<RenderTask>* instancedRenderTasks;
 		glm::ivec2 atlasResolution;
 		jv::ge::SubTexture alphabetSubTexture;
 		jv::ge::SubTexture numberSubTexture;

@@ -1,7 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Interpreters/TextInterpreter.h"
 
-#include "Tasks/InstancedRenderTask.h"
+#include "Tasks/RenderTask.h"
 
 namespace game
 {
@@ -14,7 +14,7 @@ namespace game
 	{
 		const float symbolPctSize = static_cast<float>(_createInfo.symbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
 		
-		InstancedRenderTask task{};
+		RenderTask task{};
 
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)

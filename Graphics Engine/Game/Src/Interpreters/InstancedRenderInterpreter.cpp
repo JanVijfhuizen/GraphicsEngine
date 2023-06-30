@@ -7,12 +7,10 @@ namespace game
 {
 	void InstancedRenderInterpreter::Enable(const InstancedRenderInterpreterEnableInfo& info)
 	{
-		assert(!_enabled);
-		_enabled = true;
 		_capacity = info.capacity;
 
 		jv::ge::BufferCreateInfo bufferCreateInfo{};
-		bufferCreateInfo.size = info.capacity * jv::ge::GetFrameCount() * static_cast<uint32_t>(sizeof(InstancedRenderTask));
+		bufferCreateInfo.size = info.capacity * jv::ge::GetFrameCount() * static_cast<uint32_t>(sizeof(RenderTask));
 		bufferCreateInfo.scene = info.scene;
 		bufferCreateInfo.type = jv::ge::BufferCreateInfo::Type::storage;
 		_buffer = AddBuffer(bufferCreateInfo);
@@ -25,6 +23,7 @@ namespace game
 		imageCreateInfo.scene = info.scene;
 		_fallbackImage = AddImage(imageCreateInfo);
 		jv::ge::FillImage(_fallbackImage, pixels);
+		stbi_image_free(pixels);
 
 		jv::ge::Vertex3D vertices[4]
 		{
@@ -61,8 +60,8 @@ namespace game
 			jv::ge::WriteInfo::Binding writeBindingInfo{};
 			writeBindingInfo.type = jv::ge::BindingType::storageBuffer;
 			writeBindingInfo.buffer.buffer = _buffer;
-			writeBindingInfo.buffer.offset = sizeof(InstancedRenderTask) * info.capacity * i;
-			writeBindingInfo.buffer.range = sizeof(InstancedRenderTask) * info.capacity;
+			writeBindingInfo.buffer.offset = sizeof(RenderTask) * info.capacity * i;
+			writeBindingInfo.buffer.range = sizeof(RenderTask) * info.capacity;
 			writeBindingInfo.index = 0;
 
 			jv::ge::WriteInfo writeInfo{};
@@ -71,12 +70,6 @@ namespace game
 			writeInfo.bindingCount = 1;
 			Write(writeInfo);
 		}
-	}
-
-	void InstancedRenderInterpreter::Disable()
-	{
-		assert(_enabled);
-		_enabled = false;
 	}
 
 	void InstancedRenderInterpreter::OnStart(const InstancedRenderInterpreterCreateInfo& createInfo, const EngineMemory& memory)
@@ -124,7 +117,7 @@ namespace game
 		memory.tempArena.DestroyScope(tempScope);
 	}
 
-	void InstancedRenderInterpreter::OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<InstancedRenderTask>>& tasks)
+	void InstancedRenderInterpreter::OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<RenderTask>>& tasks)
 	{
 		const auto& renderedTasks = tasks[0];
 		if (renderedTasks.count == 0)
@@ -134,8 +127,8 @@ namespace game
 
 		jv::ge::BufferUpdateInfo bufferUpdateInfo{};
 		bufferUpdateInfo.buffer = _buffer;
-		bufferUpdateInfo.size = sizeof(InstancedRenderTask) * _capacity;
-		bufferUpdateInfo.offset = sizeof(InstancedRenderTask) * _capacity * frameIndex;
+		bufferUpdateInfo.size = sizeof(RenderTask) * _capacity;
+		bufferUpdateInfo.offset = sizeof(RenderTask) * _capacity * frameIndex;
 		bufferUpdateInfo.data = renderedTasks.ptr;
 		UpdateBuffer(bufferUpdateInfo);
 		
@@ -151,8 +144,8 @@ namespace game
 		writeInfo.bindingCount = 1;
 		Write(writeInfo);
 
-		pushConstant.camera = camera;
-		pushConstant.resolution = _createInfo.resolution;
+		_pushConstant.camera = camera;
+		_pushConstant.resolution = _createInfo.resolution;
 
 		jv::ge::DrawInfo drawInfo{};
 		drawInfo.pipeline = _pipeline;
@@ -160,7 +153,7 @@ namespace game
 		drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(_pool, frameIndex);
 		drawInfo.descriptorSetCount = 1;
 		drawInfo.instanceCount = renderedTasks.count;
-		drawInfo.pushConstant = &pushConstant;
+		drawInfo.pushConstant = &_pushConstant;
 		drawInfo.pushConstantSize = sizeof(PushConstant);
 		Draw(drawInfo);
 	}

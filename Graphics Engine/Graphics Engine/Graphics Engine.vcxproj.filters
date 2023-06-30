@@ -69,9 +69,6 @@
     <ClCompile Include="Src\RenderGraph\RenderGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\GE\GETest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Src\GE\AtlasGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -189,9 +186,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\RenderGraph\RenderGraph.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\GE\GETest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\GE\SubTexture.h">

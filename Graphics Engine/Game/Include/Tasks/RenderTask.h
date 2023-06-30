@@ -3,7 +3,7 @@
 
 namespace game
 {
-	struct InstancedRenderTask final
+	struct RenderTask final
 	{
 		glm::vec2 position{};
 		glm::vec2 scale{ 1 };
