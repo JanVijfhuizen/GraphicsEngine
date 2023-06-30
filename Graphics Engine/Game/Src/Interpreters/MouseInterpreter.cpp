@@ -14,12 +14,26 @@ namespace game
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)
 			{
+				switch (job.lButton)
+				{
+					case MouseTask::idle:
+						break;
+					case MouseTask::pressed:
+						_lPressed = true;
+						break;
+					case MouseTask::released:
+						_lPressed = false;
+						break;
+					default: 
+						throw std::exception("Mouse button state not supported!");
+				}
+
 				RenderTask mouseRenderTask{};
 				mouseRenderTask.position = job.position;
 				mouseRenderTask.position *= 2;
 				mouseRenderTask.position -= glm::vec2(1);
 				mouseRenderTask.scale *= .2f;
-				mouseRenderTask.subTexture = mouseIdleSubTexture;
+				mouseRenderTask.subTexture = _lPressed ? mouseLClickSubTexture : mouseIdleSubTexture;
 				_renderTasks->Push(mouseRenderTask);
 			}
 	}

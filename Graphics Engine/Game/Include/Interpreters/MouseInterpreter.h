@@ -18,6 +18,7 @@ namespace game
 
 	private:
 		TaskSystem<RenderTask>* _renderTasks;
+		bool _lPressed = false;
 
 		void OnStart(const MouseInterpreterCreateInfo& createInfo, const EngineMemory& memory) override;
 		void OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<MouseTask>>& tasks) override;

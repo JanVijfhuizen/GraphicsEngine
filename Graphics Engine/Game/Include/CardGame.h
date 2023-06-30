@@ -42,8 +42,13 @@ namespace game
 			mainMenu,
 			newGame,
 			inGame
-		} _sceneState = LevelState::mainMenu;
-		bool _levelLoading = true;
+		};
+
+		struct KeyCallback final
+		{
+			uint32_t key;
+			uint32_t action;
+		};
 
 		Engine _engine;
 		jv::Arena _arena;
@@ -63,9 +68,20 @@ namespace game
 		GameState _gameState{};
 		PlayerState _playerState{};
 		BoardState _boardState{};
-		void* _levelState;
+
+		LevelState _levelState = LevelState::mainMenu;
+		bool _levelLoading = true;
+		void* _levelStatePtr;
+
+		jv::LinkedList<KeyCallback> _keyCallbacks{};
+		jv::LinkedList<KeyCallback> _mouseCallbacks{};
+		float _scrollCallback = 0;
 
 		void LoadMainMenu();
 		void UpdateMainMenu();
+
+		static void OnKeyCallback(size_t key, size_t action);
+		static void OnMouseCallback(size_t key, size_t action);
+		static void OnScrollCallback(glm::vec<2, double> offset);
 	};
 }

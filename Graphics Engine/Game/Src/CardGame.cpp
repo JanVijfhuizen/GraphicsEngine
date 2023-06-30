@@ -23,21 +23,6 @@ namespace game
 
 	CardGame* userPtr = nullptr;
 
-	void OnKeyCallback(const size_t key, const size_t action)
-	{
-		
-	}
-
-	void OnMouseCallback(const size_t key, const size_t action)
-	{
-		
-	}
-
-	void OnScrollCallback(const glm::vec<2, double> offset)
-	{
-		
-	}
-
 	jv::Array<const char*> GetTexturePaths(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<const char*>(arena, static_cast<uint32_t>(CardGame::TextureId::length));
@@ -88,7 +73,7 @@ namespace game
 	{
 		if(_levelLoading)
 		{
-			switch (_sceneState)
+			switch (_levelState)
 			{
 				case LevelState::mainMenu:
 					LoadMainMenu();
@@ -104,7 +89,7 @@ namespace game
 			_levelLoading = false;
 		}
 
-		switch (_sceneState)
+		switch (_levelState)
 		{
 		case LevelState::mainMenu:
 			UpdateMainMenu();
@@ -116,40 +101,6 @@ namespace game
 		default:
 			throw std::exception("Scene state not supported!");
 		}
-
-		/*
-		static float f = 0;
-		f += 0.01f;
-
-		for (uint32_t i = 0; i < 5; ++i)
-		{
-			constexpr float dist = .2f;
-			RenderTask renderTask{};
-			renderTask.position.x = sin(f + dist * i) * .25f;
-			renderTask.position.y = cos(f + dist * i) * .25f;
-			renderTask.position *= 1.f + (5.f - static_cast<float>(i)) * .2f;
-			renderTask.color.r *= static_cast<float>(i) / 5;
-			renderTask.scale *= .2f;
-			renderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
-			_renderTasks->Push(renderTask);
-		}
-
-		TextTask textTask{};
-		textTask.text = "just a test.";
-		textTask.position.x = -1;
-		textTask.position.y = -.75f;
-		_textTasks->Push(textTask);
-
-		auto& camera = _renderInterpreter->camera;
-		camera.position.x = abs(sin(f / 3)) * .2f;
-		camera.zoom = -.4f + abs(cos(f / 2)) * .2f;
-		camera.rotation = sin(f / 4) * .2f;
-
-		DynamicRenderTask dynRenderTask{};
-		dynRenderTask.renderTask.scale *= .2f;
-		dynRenderTask.renderTask.color.y *= .5f + sin(f) * .5f;
-		_dynamicRenderTasks->Push(dynRenderTask);
-		*/
 
 		const bool result = _engine.Update();
 		return result;
@@ -163,6 +114,9 @@ namespace game
 		*outCardGame = {};
 		{
 			EngineCreateInfo engineCreateInfo{};
+			engineCreateInfo.onKeyCallback = OnKeyCallback;
+			engineCreateInfo.onMouseCallback = OnMouseCallback;
+			engineCreateInfo.onScrollCallback = OnScrollCallback;
 			outCardGame->_engine = Engine::Create(engineCreateInfo);
 		}
 
@@ -238,7 +192,7 @@ namespace game
 			outCardGame->mouseInterpreter = &outCardGame->_engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
 				*outCardGame->_mouseTasks, mouseInterpreterCreateInfo);
 			outCardGame->mouseInterpreter->mouseIdleSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::fallback)];
-			outCardGame->mouseInterpreter->mouseIdleSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::fallback)];
+			//outCardGame->mouseInterpreter->mouseIdleSubTexture = outCardGame->_subTextures[static_cast<uint32_t>(TextureId::fallback)];
 
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
 			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->_renderTasks;
@@ -263,13 +217,13 @@ namespace game
 	void CardGame::LoadMainMenu()
 	{
 		const auto ptr = _arena.New<MainMenuState>();
-		_levelState = ptr;
+		_levelStatePtr = ptr;
 		ptr->saveDataValid = TryLoadSaveData(_playerState);
 	}
 
 	void CardGame::UpdateMainMenu()
 	{
-		const auto ptr = static_cast<MainMenuState*>(_levelState);
+		const auto ptr = static_cast<MainMenuState*>(_levelStatePtr);
 		RenderTask buttonRenderTask{};
 		buttonRenderTask.position.y = -.25f;
 		buttonRenderTask.scale.y *= .2f;
@@ -294,7 +248,48 @@ namespace game
 		mouseTask.position = GetConvertedMousePosition();
 		mouseTask.position *= 2;
 		mouseTask.position -= glm::vec2(1);
+		mouseTask.scroll = _scrollCallback;
+
+		for (const auto& callback : _mouseCallbacks)
+		{
+			if (callback.key == GLFW_MOUSE_BUTTON_LEFT && callback.action == GLFW_PRESS)
+				mouseTask.lButton = MouseTask::pressed;
+			if (callback.key == GLFW_MOUSE_BUTTON_RIGHT && callback.action == GLFW_PRESS)
+				mouseTask.rButton = MouseTask::pressed;
+			if (callback.key == GLFW_MOUSE_BUTTON_LEFT && callback.action == GLFW_RELEASE)
+				mouseTask.lButton = MouseTask::released;
+			if (callback.key == GLFW_MOUSE_BUTTON_RIGHT && callback.action == GLFW_RELEASE)
+				mouseTask.rButton = MouseTask::released;
+		}
 		_mouseTasks->Push(mouseTask);
+
+		// Reset callbacks.
+		_keyCallbacks = {};
+		_mouseCallbacks = {};
+		_scrollCallback = 0;
+	}
+
+	void CardGame::OnKeyCallback(const size_t key, const size_t action)
+	{
+		KeyCallback callback{};
+		callback.key = key;
+		callback.action = action;
+		const auto mem = userPtr->_engine.GetMemory();
+		Add(mem.frameArena, userPtr->_keyCallbacks) = callback;
+	}
+
+	void CardGame::OnMouseCallback(const size_t key, const size_t action)
+	{
+		KeyCallback callback{};
+		callback.key = key;
+		callback.action = action;
+		const auto mem = userPtr->_engine.GetMemory();
+		Add(mem.frameArena, userPtr->_mouseCallbacks) = callback;
+	}
+
+	void CardGame::OnScrollCallback(const glm::vec<2, double> offset)
+	{
+		userPtr->_scrollCallback += static_cast<float>(offset.y);
 	}
 
 	glm::vec2 CardGame::GetConvertedMousePosition()
