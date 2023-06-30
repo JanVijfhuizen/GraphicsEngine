@@ -176,7 +176,7 @@ namespace game
 
 		{
 			outCardGame->_renderTasks = &outCardGame->_engine.AddTaskSystem<RenderTask>();
-			outCardGame->_renderTasks->Allocate(outCardGame->_arena, 32);
+			outCardGame->_renderTasks->Allocate(outCardGame->_arena, 512);
 			outCardGame->_dynamicRenderTasks = &outCardGame->_engine.AddTaskSystem<DynamicRenderTask>();
 			outCardGame->_dynamicRenderTasks->Allocate(outCardGame->_arena, 32);
 			outCardGame->_textTasks = &outCardGame->_engine.AddTaskSystem<TextTask>();
@@ -189,7 +189,7 @@ namespace game
 
 			InstancedRenderInterpreterEnableInfo enableInfo{};
 			enableInfo.scene = outCardGame->_scene;
-			enableInfo.capacity = 32;
+			enableInfo.capacity = 512;
 
 			outCardGame->_renderInterpreter = &outCardGame->_engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter>(
 				*outCardGame->_renderTasks, createInfo);
@@ -243,6 +243,8 @@ namespace game
 		_renderTasks->Push(buttonRenderTask);
 
 		TextTask buttonTextTask{};
+		buttonTextTask.lineLength = 6;
+		buttonTextTask.center = true;
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "new game";
 		_textTasks->Push(buttonTextTask);
