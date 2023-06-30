@@ -1,17 +1,10 @@
 ﻿#pragma once
 #include "Engine/Engine.h"
-#include "GE/GraphicsEngine.h"
+#include "Tasks/DynamicRenderTask.h"
 #include "Tasks/RenderTask.h"
 
 namespace game
 {
-	struct DynamicRenderTask final
-	{
-		jv::ge::Resource image = nullptr;
-		jv::ge::Resource mesh = nullptr;
-		RenderTask renderTask{};
-	};
-
 	struct DynamicRenderInterpreterCreateInfo final
 	{
 		glm::ivec2 resolution;

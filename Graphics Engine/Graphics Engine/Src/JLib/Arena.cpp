@@ -26,19 +26,29 @@ namespace jv
 
 	void* Arena::Alloc(uint32_t size)
 	{
-		if (next && next->front > 0)
+		bool goNext = false;
+		auto n = next;
+		while(n)
+		{
+			goNext = goNext ? true : n->front > 0;
+			n = n->next;
+		}
+		if (goNext)
 			return next->Alloc(size);
 
 		size += (4 - size) % 4;
 
 		if (front + size + sizeof(ArenaAllocMetaData) > info.memorySize - sizeof(Arena))
 		{
-			const auto nextPtr = &static_cast<char*>(memory)[info.memorySize - sizeof(Arena)];
-			next = reinterpret_cast<Arena*>(nextPtr);
-			ArenaCreateInfo createInfo = info;
-			createInfo.memory = nullptr;
-			createInfo.memorySize = Max<uint32_t>(createInfo.memorySize, size + sizeof(ArenaAllocMetaData) + sizeof(Arena));
-			*next = Create(createInfo);
+			if (!next)
+			{
+				const auto nextPtr = &static_cast<char*>(memory)[info.memorySize - sizeof(Arena)];
+				next = reinterpret_cast<Arena*>(nextPtr);
+				ArenaCreateInfo createInfo = info;
+				createInfo.memory = nullptr;
+				createInfo.memorySize = Max<uint32_t>(createInfo.memorySize, size + sizeof(ArenaAllocMetaData) + sizeof(Arena));
+				*next = Create(createInfo);
+			}
 
 			return next->Alloc(size);
 		}

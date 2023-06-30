@@ -1,6 +1,8 @@
 ﻿#include "pch_game.h"
 #include "Interpreters/DynamicRenderInterpreter.h"
 #include <stb_image.h>
+
+#include "GE/GraphicsEngine.h"
 #include "JLib/FileLoader.h"
 
 namespace game
