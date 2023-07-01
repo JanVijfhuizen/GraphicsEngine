@@ -56,6 +56,9 @@ namespace game
 	{
 		// Set up renderer.
 		jv::ge::CreateInfo createInfo{};
+		createInfo.onKeyCallback = info.onKeyCallback;
+		createInfo.onMouseCallback = info.onMouseCallback;
+		createInfo.onScrollCallback = info.onScrollCallback;
 		Initialize(createInfo);
 
 		Engine engine{};

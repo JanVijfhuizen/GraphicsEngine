@@ -3,10 +3,11 @@
 
 int main()
 {
-	auto game = game::CardGame::Create();
+	game::CardGame cardGame;
+	game::CardGame::Create(&cardGame);
 
 	bool valid = true;
 	while (valid)
-		valid = game.Update();
+		valid = cardGame.Update();
 	return 0;
 }

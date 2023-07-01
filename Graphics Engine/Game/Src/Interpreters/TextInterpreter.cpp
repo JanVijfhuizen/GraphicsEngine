@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Interpreters/TextInterpreter.h"
 
+#include "JLib/Math.h"
 #include "Tasks/RenderTask.h"
 
 namespace game
@@ -27,22 +28,49 @@ namespace game
 
 				uint32_t lineLength = 0;
 
-				const size_t len = strlen(job.text);
-				for (size_t i = 0; i < len; ++i)
-				{
-					const auto& c = job.text[i];
+				const auto len = static_cast<uint32_t>(strlen(job.text));
 
-					if (c == ' ')
+				uint32_t nextLineStart = 0;
+
+				float xOffset = 0;
+				if (job.center)
+				{
+					const auto l = jv::Min<uint32_t>(len, job.lineLength);
+					xOffset = spacing * static_cast<float>(l - 1) * -.5f;
+				}
+
+				for (uint32_t i = 0; i < len; ++i)
+				{
+					if (nextLineStart == i)
 					{
-						if (lineLength >= job.lineLength)
+						uint32_t previousBreak = i;
+
+						// Define line length.
+						for (uint32_t j = i + 1; j < len; ++j)
 						{
-							lineLength = 0;
-							task.position.x = job.position.x;
+							const auto& c = job.text[j];
+							if (c == ' ')
+								previousBreak = j;
+							if (j - i >= job.lineLength && previousBreak != i)
+							{
+								nextLineStart = previousBreak;
+								break;
+							}
+						}
+						
+						lineLength = 0;
+						task.position.x = job.position.x + xOffset;
+
+						if(i != 0)
+						{
 							task.position.y += lineSpacing;
-							continue;
+							task.position.x -= spacing;
 						}
 					}
-					else
+
+					const auto& c = job.text[i];
+
+					if (c != ' ')
 					{
 						const bool isSymbol = c < '0';
 						const bool isInteger = !isSymbol && c < 'a';
