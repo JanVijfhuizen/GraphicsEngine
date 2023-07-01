@@ -435,7 +435,6 @@ namespace game
 		cPos *= 2;
 		cPos -= glm::vec2(1, 1);
 		cPos.x *= static_cast<float>(resolution.x) / static_cast<float>(resolution.y);
-		std::cout << cPos.x << " " << cPos.y << std::endl;
 		return cPos;
 	}
 }
