@@ -90,6 +90,7 @@ namespace game
 		void LoadNewGame();
 		void UpdateNewGame();
 
+		void UpdateInput(MouseTask& outMouseTask);
 		void DrawMonsterCard(uint32_t id, glm::vec2 position) const;
 
 		static void OnKeyCallback(size_t key, size_t action);

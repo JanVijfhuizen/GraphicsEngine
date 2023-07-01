@@ -278,24 +278,8 @@ namespace game
 	{
 		const auto ptr = static_cast<MainMenuState*>(_levelStatePtr);
 
-		MouseTask mouseTask{};
-		mouseTask.position = GetConvertedMousePosition();
-		mouseTask.position *= 2;
-		mouseTask.position -= glm::vec2(1);
-		mouseTask.scroll = _scrollCallback;
-
-		for (const auto& callback : _mouseCallbacks)
-		{
-			if (callback.key == GLFW_MOUSE_BUTTON_LEFT && callback.action == GLFW_PRESS)
-				mouseTask.lButton = MouseTask::pressed;
-			if (callback.key == GLFW_MOUSE_BUTTON_RIGHT && callback.action == GLFW_PRESS)
-				mouseTask.rButton = MouseTask::pressed;
-			if (callback.key == GLFW_MOUSE_BUTTON_LEFT && callback.action == GLFW_RELEASE)
-				mouseTask.lButton = MouseTask::released;
-			if (callback.key == GLFW_MOUSE_BUTTON_RIGHT && callback.action == GLFW_RELEASE)
-				mouseTask.rButton = MouseTask::released;
-		}
-		_mouseTasks->Push(mouseTask);
+		MouseTask mouseTask;
+		UpdateInput(mouseTask);
 
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 10;
@@ -344,11 +328,6 @@ namespace game
 					_levelLoading = true;
 				}
 		}
-
-		// Reset callbacks.
-		_keyCallbacks = {};
-		_mouseCallbacks = {};
-		_scrollCallback = 0;
 	}
 
 	void CardGame::LoadNewGame()
@@ -360,6 +339,33 @@ namespace game
 	void CardGame::UpdateNewGame()
 	{
 		DrawMonsterCard(0, glm::vec2(0));
+		MouseTask mouseTask;
+		UpdateInput(mouseTask);
+	}
+
+	void CardGame::UpdateInput(MouseTask& outMouseTask)
+	{
+		outMouseTask = {};
+		outMouseTask.position = GetConvertedMousePosition();
+		outMouseTask.scroll = _scrollCallback;
+
+		for (const auto& callback : _mouseCallbacks)
+		{
+			if (callback.key == GLFW_MOUSE_BUTTON_LEFT && callback.action == GLFW_PRESS)
+				outMouseTask.lButton = MouseTask::pressed;
+			if (callback.key == GLFW_MOUSE_BUTTON_RIGHT && callback.action == GLFW_PRESS)
+				outMouseTask.rButton = MouseTask::pressed;
+			if (callback.key == GLFW_MOUSE_BUTTON_LEFT && callback.action == GLFW_RELEASE)
+				outMouseTask.lButton = MouseTask::released;
+			if (callback.key == GLFW_MOUSE_BUTTON_RIGHT && callback.action == GLFW_RELEASE)
+				outMouseTask.rButton = MouseTask::released;
+		}
+		_mouseTasks->Push(outMouseTask);
+
+		// Reset callbacks.
+		_keyCallbacks = {};
+		_mouseCallbacks = {};
+		_scrollCallback = 0;
 	}
 
 	void CardGame::DrawMonsterCard(const uint32_t id, const glm::vec2 position) const
@@ -425,6 +431,11 @@ namespace game
 	{
 		const auto mousePos = jv::ge::GetMousePosition();
 		const auto resolution = jv::ge::GetResolution();
-		return glm::vec2(mousePos.x, mousePos.y) / glm::vec2(resolution.x, resolution.y);
+		auto cPos = glm::vec2(mousePos.x, mousePos.y) / glm::vec2(resolution.x, resolution.y);
+		cPos *= 2;
+		cPos -= glm::vec2(1, 1);
+		cPos.x *= static_cast<float>(resolution.x) / static_cast<float>(resolution.y);
+		std::cout << cPos.x << " " << cPos.y << std::endl;
+		return cPos;
 	}
 }
