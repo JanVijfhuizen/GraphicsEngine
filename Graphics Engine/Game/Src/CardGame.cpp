@@ -123,9 +123,12 @@ namespace game
 	bool TryLoadSaveData(PlayerState& playerState)
 	{
 		std::ifstream inFile;
-		if (!inFile.is_open())
-			return false;
 		inFile.open(SAVE_DATA_PATH);
+		if (!inFile.is_open())
+		{
+			inFile.close();
+			return false;
+		}
 		
 		for (auto& monsterId : playerState.monsterIds)
 			inFile >> monsterId;
@@ -136,7 +139,7 @@ namespace game
 		for (auto& artifactCount : playerState.artifactsCounts)
 			inFile >> artifactCount;
 		inFile >> playerState.partySize;
-
+		inFile.close();
 		return true;
 	}
 
@@ -146,14 +149,15 @@ namespace game
 		outFile.open(SAVE_DATA_PATH);
 
 		for (const auto& monsterId : playerState.monsterIds)
-			outFile << monsterId;
+			outFile << monsterId << std::endl;
 		for (const auto& health : playerState.healths)
-			outFile << health;
+			outFile << health << std::endl;
 		for (const auto& artifact : playerState.artifacts)
-			outFile << artifact;
+			outFile << artifact << std::endl;
 		for (const auto& artifactCount : playerState.artifactsCounts)
-			outFile << artifactCount;
-		outFile << playerState.partySize;
+			outFile << artifactCount << std::endl;
+		outFile << playerState.partySize << std::endl;
+		outFile.close();
 	}
 
 	bool CardGame::Update()
@@ -454,6 +458,12 @@ namespace game
 
 		if (_pressedEnter)
 		{
+			_playerState.monsterIds[0] = ptr->monsterDiscoverOptions[ptr->monsterChoice];
+			_playerState.artifactsCounts[0] = 1;
+			_playerState.artifacts[0] = ptr->artifactDiscoverOptions[ptr->artifactChoice];
+			_playerState.monsterIds[1] = 0;
+			_playerState.partySize = 2;
+			SaveData(_playerState);
 			_levelState = LevelState::inGame;
 			_levelLoading = true;
 		}
