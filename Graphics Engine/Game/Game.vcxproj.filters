@@ -140,5 +140,8 @@
     <ClInclude Include="Include\States\NewGameState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\States\InputState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

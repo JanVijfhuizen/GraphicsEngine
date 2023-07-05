@@ -21,12 +21,12 @@ namespace game
 			{
 				switch (job.lButton)
 				{
-					case MouseTask::idle:
+					case InputState::idle:
 						break;
-					case MouseTask::pressed:
+					case InputState::pressed:
 						_lPressed = true;
 						break;
-					case MouseTask::released:
+					case InputState::released:
 						_lPressed = false;
 						break;
 					default: 
