@@ -93,8 +93,10 @@ namespace game
 		void UpdateNewGame(const MouseTask& mouseTask);
 
 		void UpdateInput(MouseTask& outMouseTask);
-		void DrawMonsterCard(uint32_t id, glm::vec2 position) const;
-		[[nodiscard]] uint32_t DrawMonsterChoice(const uint32_t* ids, glm::vec2 center, uint32_t count) const;
+		void DrawMonsterCard(uint32_t id, glm::vec2 position, glm::vec4 color = glm::vec4(1)) const;
+		[[nodiscard]] uint32_t DrawMonsterChoice(const uint32_t* ids, glm::vec2 center, uint32_t count, uint32_t highlight = -1) const;
+		void DrawArtifactCard(uint32_t id, glm::vec2 position, glm::vec4 color = glm::vec4(1)) const;
+		[[nodiscard]] uint32_t DrawArtifactChoice(const uint32_t* ids, glm::vec2 center, uint32_t count, uint32_t highlight = -1) const;
 
 		static void OnKeyCallback(size_t key, size_t action);
 		static void OnMouseCallback(size_t key, size_t action);
