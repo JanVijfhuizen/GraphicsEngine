@@ -9,5 +9,6 @@ namespace game
 
 		uint32_t monsterChoice = -1;
 		uint32_t artifactChoice = -1;
+		bool confirmedChoices = false;
 	};
 }

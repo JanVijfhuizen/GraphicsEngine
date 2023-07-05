@@ -87,6 +87,8 @@ namespace game
 		jv::Array<ArtifactCard> _artifactCards;
 		jv::Vector<uint32_t> _artifactCardsDeck;
 
+		bool _pressedEnter = false;
+
 		void LoadMainMenu();
 		void UpdateMainMenu(const MouseTask& mouseTask);
 		void LoadNewGame();

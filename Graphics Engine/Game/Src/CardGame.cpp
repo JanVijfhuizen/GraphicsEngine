@@ -26,11 +26,12 @@ namespace game
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
 
 	constexpr float CARD_SPACING = .1f;
-	constexpr float CARD_WIDTH = .3f;
-	constexpr float CARD_HEIGHT = .4f;
+	constexpr float CARD_WIDTH = .15f;
+	constexpr float CARD_HEIGHT = .2f;
 	constexpr float CARD_PIC_FILL_HEIGHT = .6f;
 	constexpr float CARD_WIDTH_OFFSET = CARD_WIDTH * 2 + CARD_SPACING;
 	constexpr float CARD_HEIGHT_OFFSET = CARD_HEIGHT + CARD_SPACING;
+	constexpr float CARD_TEXT_SIZE = CARD_WIDTH * .1f;
 	constexpr float DISCOVER_LENGTH = 3;
 
 	constexpr float CARD_DARKENED_COLOR_MUL = .2f;
@@ -405,12 +406,57 @@ namespace game
 	{
 		const auto ptr = static_cast<NewGameState*>(_levelStatePtr);
 
-		auto choice = DrawMonsterChoice(ptr->monsterDiscoverOptions.ptr, glm::vec2(0, -CARD_HEIGHT_OFFSET), DISCOVER_LENGTH, ptr->monsterChoice);
-		if (mouseTask.lButton == MouseTask::pressed && choice != -1)
-			ptr->monsterChoice = choice;
-		choice = DrawArtifactChoice(ptr->artifactDiscoverOptions.ptr, glm::vec2(0, CARD_HEIGHT_OFFSET), DISCOVER_LENGTH, ptr->artifactChoice);
-		if (mouseTask.lButton == MouseTask::pressed && choice != -1)
-			ptr->artifactChoice = choice;
+		if(!ptr->confirmedChoices)
+		{
+			auto choice = DrawMonsterChoice(ptr->monsterDiscoverOptions.ptr, glm::vec2(0, -CARD_HEIGHT_OFFSET), DISCOVER_LENGTH, ptr->monsterChoice);
+			if (mouseTask.lButton == MouseTask::pressed && choice != -1)
+				ptr->monsterChoice = choice == ptr->monsterChoice ? -1 : choice;
+			choice = DrawArtifactChoice(ptr->artifactDiscoverOptions.ptr, glm::vec2(0, CARD_HEIGHT_OFFSET), DISCOVER_LENGTH, ptr->artifactChoice);
+			if (mouseTask.lButton == MouseTask::pressed && choice != -1)
+				ptr->artifactChoice = choice == ptr->artifactChoice ? -1 : choice;
+
+			TextTask buttonTextTask{};
+			buttonTextTask.center = true;
+			buttonTextTask.text = "choose your starting cards.";
+			buttonTextTask.position = glm::vec2(0, -.8f);
+			buttonTextTask.scale = .06f;
+			_textTasks->Push(buttonTextTask);
+
+			if (ptr->monsterChoice != -1 && ptr->artifactChoice != -1)
+			{
+				TextTask textTask{};
+				textTask.center = true;
+				textTask.text = "press enter to confirm your choice.";
+				textTask.position = glm::vec2(0, .8f);
+				textTask.scale = .06f;
+				_textTasks->Push(textTask);
+
+				if (_pressedEnter)
+					ptr->confirmedChoices = true;
+			}
+			return;
+		}
+
+		TextTask joinTextTask{};
+		joinTextTask.center = true;
+		joinTextTask.text = "daisy joins you on your adventure.";
+		joinTextTask.position = glm::vec2(0, -.8f);
+		joinTextTask.scale = .06f;
+		_textTasks->Push(joinTextTask);
+		DrawMonsterCard(0, glm::vec2(0));
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.text = "press enter to continue.";
+		textTask.scale = .06f;
+		textTask.position = glm::vec2(0, .8f);
+		_textTasks->Push(textTask);
+
+		if (_pressedEnter)
+		{
+			_levelState = LevelState::inGame;
+			_levelLoading = true;
+		}
 	}
 
 	void CardGame::UpdateInput(MouseTask& outMouseTask)
@@ -418,6 +464,8 @@ namespace game
 		outMouseTask = {};
 		outMouseTask.position = GetConvertedMousePosition();
 		outMouseTask.scroll = _scrollCallback;
+
+		_pressedEnter = false;
 
 		for (const auto& callback : _mouseCallbacks)
 		{
@@ -430,6 +478,12 @@ namespace game
 			if (callback.key == GLFW_MOUSE_BUTTON_RIGHT && callback.action == GLFW_RELEASE)
 				outMouseTask.rButton = MouseTask::released;
 		}
+		for (const auto& callback : _keyCallbacks)
+		{
+			if (callback.key == GLFW_KEY_ENTER)
+				_pressedEnter = callback.action == GLFW_PRESS;
+		}
+
 		_mouseTasks->Push(outMouseTask);
 
 		// Reset callbacks.
@@ -463,7 +517,7 @@ namespace game
 		titleTextTask.center = true;
 		titleTextTask.position = position - glm::vec2(0, CARD_HEIGHT);
 		titleTextTask.text = card.name;
-		titleTextTask.scale = .04f;
+		titleTextTask.scale = CARD_TEXT_SIZE;
 		_textTasks->Push(titleTextTask);
 
 		TextTask ruleTextTask = titleTextTask;
@@ -516,7 +570,7 @@ namespace game
 		titleTextTask.center = true;
 		titleTextTask.position = position - glm::vec2(0, CARD_HEIGHT);
 		titleTextTask.text = card.name;
-		titleTextTask.scale = .04f;
+		titleTextTask.scale = CARD_TEXT_SIZE;
 		_textTasks->Push(titleTextTask);
 
 		TextTask ruleTextTask = titleTextTask;
