@@ -37,7 +37,7 @@ namespace game
 	constexpr float CARD_WIDTH_OFFSET = CARD_WIDTH * 2 + CARD_SPACING;
 	constexpr float CARD_HEIGHT_OFFSET = CARD_HEIGHT + CARD_SPACING;
 	constexpr float CARD_TEXT_SIZE = CARD_WIDTH * .1f;
-	constexpr float DISCOVER_LENGTH = 3;
+	constexpr uint32_t DISCOVER_LENGTH = 3;
 
 	constexpr float CARD_DARKENED_COLOR_MUL = .2f;
 
@@ -91,14 +91,11 @@ namespace game
 		
 		void UpdateInput();
 		static void SetInputState(InputState::State& state, uint32_t target, KeyCallback callback);
-		void DrawMonsterCard(uint32_t id, glm::vec2 position, glm::vec4 color = glm::vec4(1)) const;
-		[[nodiscard]] uint32_t DrawMonsterChoice(const uint32_t* ids, glm::vec2 center, uint32_t count, uint32_t highlight = -1) const;
-		void DrawArtifactCard(uint32_t id, glm::vec2 position, glm::vec4 color = glm::vec4(1)) const;
-		[[nodiscard]] uint32_t DrawArtifactChoice(const uint32_t* ids, glm::vec2 center, uint32_t count, uint32_t highlight = -1) const;
-
 		static void OnKeyCallback(size_t key, size_t action);
 		static void OnMouseCallback(size_t key, size_t action);
 		static void OnScrollCallback(glm::vec<2, double> offset);
+
+		uint32_t RenderCards(Card** cards, uint32_t length, glm::vec2 position, uint32_t highlight = -1) const;
 
 		Engine engine;
 		jv::Arena arena;
@@ -488,10 +485,17 @@ namespace game
 
 		if(!ptr->confirmedChoices)
 		{
-			auto choice = DrawMonsterChoice(ptr->monsterDiscoverOptions.ptr, glm::vec2(0, -CARD_HEIGHT_OFFSET), DISCOVER_LENGTH, ptr->monsterChoice);
+			Card* cards[DISCOVER_LENGTH]{};
+
+			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+				cards[i] = &monsters[ptr->monsterDiscoverOptions[i]];
+			auto choice = RenderCards(cards, DISCOVER_LENGTH, glm::vec2(0, -CARD_HEIGHT_OFFSET), ptr->monsterChoice);
 			if (inputState.lMouse == InputState::pressed && choice != -1)
 				ptr->monsterChoice = choice == ptr->monsterChoice ? -1 : choice;
-			choice = DrawArtifactChoice(ptr->artifactDiscoverOptions.ptr, glm::vec2(0, CARD_HEIGHT_OFFSET), DISCOVER_LENGTH, ptr->artifactChoice);
+
+			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+				cards[i] = &artifacts[ptr->artifactDiscoverOptions[i]];
+			choice = RenderCards(cards, DISCOVER_LENGTH, glm::vec2(0, CARD_HEIGHT_OFFSET), ptr->artifactChoice);
 			if (inputState.lMouse == InputState::pressed && choice != -1)
 				ptr->artifactChoice = choice == ptr->artifactChoice ? -1 : choice;
 
@@ -523,7 +527,9 @@ namespace game
 		joinTextTask.position = glm::vec2(0, -.8f);
 		joinTextTask.scale = .06f;
 		textTasks->Push(joinTextTask);
-		DrawMonsterCard(0, glm::vec2(0));
+
+		Card* cards = &monsters[0];
+		RenderCards(&cards, 1, glm::vec2(0));
 
 		TextTask textTask{};
 		textTask.center = true;
@@ -590,110 +596,6 @@ namespace game
 		}
 	}
 
-	void CardGame::DrawMonsterCard(const uint32_t id, const glm::vec2 position, const glm::vec4 color) const
-	{
-		const auto& card = monsters[id];
-
-		RenderTask bgRenderTask{};
-		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
-		bgRenderTask.scale.x = CARD_WIDTH;
-		bgRenderTask.position = position + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
-		bgRenderTask.subTexture = subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		bgRenderTask.color = color;
-		renderTasks->Push(bgRenderTask);
-
-		RenderTask picRenderTask{};
-		picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
-		picRenderTask.scale.x = CARD_WIDTH;
-		picRenderTask.position = position - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
-		picRenderTask.subTexture = subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		picRenderTask.color = color;
-		renderTasks->Push(picRenderTask);
-
-		TextTask titleTextTask{};
-		titleTextTask.lineLength = 12;
-		titleTextTask.center = true;
-		titleTextTask.position = position - glm::vec2(0, CARD_HEIGHT);
-		titleTextTask.text = card.name;
-		titleTextTask.scale = CARD_TEXT_SIZE;
-		textTasks->Push(titleTextTask);
-
-		TextTask ruleTextTask = titleTextTask;
-		ruleTextTask.position = position + glm::vec2(0, bgRenderTask.scale.y);
-		ruleTextTask.text = card.ruleText;
-		textTasks->Push(ruleTextTask);
-	}
-
-	uint32_t CardGame::DrawMonsterChoice(const uint32_t* ids, const glm::vec2 center, const uint32_t count, const uint32_t highlight) const
-	{
-		const float offset = -CARD_WIDTH_OFFSET * (count - 1) / 2;
-		uint32_t selected = -1;
-		const auto defaultColor = glm::vec4(1) * (highlight < count ? CARD_DARKENED_COLOR_MUL : 1);
-
-		for (uint32_t i = 0; i < count; ++i)
-		{
-			const auto pos = center + glm::vec2(offset + CARD_WIDTH_OFFSET * static_cast<float>(i), 0);
-			DrawMonsterCard(ids[i], pos, highlight == i ? glm::vec4(1) : defaultColor);
-
-			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), inputState.mousePos))
-				selected = i;
-		}
-
-		return selected;
-	}
-
-	void CardGame::DrawArtifactCard(const uint32_t id, const glm::vec2 position, const glm::vec4 color) const
-	{
-		const auto& card = artifacts[id];
-
-		RenderTask bgRenderTask{};
-		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
-		bgRenderTask.scale.x = CARD_WIDTH;
-		bgRenderTask.position = position + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
-		bgRenderTask.subTexture = subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		bgRenderTask.color = color;
-		renderTasks->Push(bgRenderTask);
-
-		RenderTask picRenderTask{};
-		picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
-		picRenderTask.scale.x = CARD_WIDTH;
-		picRenderTask.position = position - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
-		picRenderTask.subTexture = subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		picRenderTask.color = color;
-		renderTasks->Push(picRenderTask);
-
-		TextTask titleTextTask{};
-		titleTextTask.lineLength = 12;
-		titleTextTask.center = true;
-		titleTextTask.position = position - glm::vec2(0, CARD_HEIGHT);
-		titleTextTask.text = card.name;
-		titleTextTask.scale = CARD_TEXT_SIZE;
-		textTasks->Push(titleTextTask);
-
-		TextTask ruleTextTask = titleTextTask;
-		ruleTextTask.position = position + glm::vec2(0, bgRenderTask.scale.y);
-		ruleTextTask.text = card.ruleText;
-		textTasks->Push(ruleTextTask);
-	}
-
-	uint32_t CardGame::DrawArtifactChoice(const uint32_t* ids, const glm::vec2 center, const uint32_t count, const uint32_t highlight) const
-	{
-		const float offset = -CARD_WIDTH_OFFSET * (count - 1) / 2;
-		uint32_t selected = -1;
-		const auto defaultColor = glm::vec4(1) * (highlight < count ? CARD_DARKENED_COLOR_MUL : 1);
-
-		for (uint32_t i = 0; i < count; ++i)
-		{
-			const auto pos = center + glm::vec2(offset + CARD_WIDTH_OFFSET * static_cast<float>(i), 0);
-			DrawArtifactCard(ids[i], pos, highlight == i ? glm::vec4(1) : defaultColor);
-
-			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), inputState.mousePos))
-				selected = i;
-		}
-
-		return selected;
-	}
-
 	void CardGame::OnKeyCallback(const size_t key, const size_t action)
 	{
 		KeyCallback callback{};
@@ -715,6 +617,54 @@ namespace game
 	void CardGame::OnScrollCallback(const glm::vec<2, double> offset)
 	{
 		cardGame.scrollCallback += static_cast<float>(offset.y);
+	}
+
+	uint32_t CardGame::RenderCards(Card** cards, const uint32_t length, const glm::vec2 position, uint32_t highlight) const
+	{
+		const float offset = -CARD_WIDTH_OFFSET * (length - 1) / 2;
+		uint32_t selected = -1;
+		const auto color = glm::vec4(1) * (highlight < length ? CARD_DARKENED_COLOR_MUL : 1);
+
+		for (uint32_t i = 0; i < length; ++i)
+		{
+			const auto card = cards[i];
+			const auto pos = position + glm::vec2(offset + CARD_WIDTH_OFFSET * static_cast<float>(i), 0);
+			const auto finalColor = highlight == i ? glm::vec4(1) : color;
+
+			RenderTask bgRenderTask{};
+			bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
+			bgRenderTask.scale.x = CARD_WIDTH;
+			bgRenderTask.position = pos + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
+			bgRenderTask.subTexture = subTextures[static_cast<uint32_t>(TextureId::fallback)];
+			bgRenderTask.color = finalColor;
+			renderTasks->Push(bgRenderTask);
+
+			RenderTask picRenderTask{};
+			picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
+			picRenderTask.scale.x = CARD_WIDTH;
+			picRenderTask.position = pos - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
+			picRenderTask.subTexture = subTextures[static_cast<uint32_t>(TextureId::fallback)];
+			picRenderTask.color = finalColor;
+			renderTasks->Push(picRenderTask);
+
+			TextTask titleTextTask{};
+			titleTextTask.lineLength = 12;
+			titleTextTask.center = true;
+			titleTextTask.position = pos - glm::vec2(0, CARD_HEIGHT);
+			titleTextTask.text = card->name;
+			titleTextTask.scale = CARD_TEXT_SIZE;
+			textTasks->Push(titleTextTask);
+
+			TextTask ruleTextTask = titleTextTask;
+			ruleTextTask.position = pos + glm::vec2(0, bgRenderTask.scale.y);
+			ruleTextTask.text = card->ruleText;
+			textTasks->Push(ruleTextTask);
+
+			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), inputState.mousePos))
+				selected = i;
+		}
+
+		return selected;
 	}
 
 	void Start()

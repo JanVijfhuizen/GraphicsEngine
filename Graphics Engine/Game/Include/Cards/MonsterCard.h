@@ -1,12 +1,10 @@
 #pragma once
+#include "Card.h"
 
 namespace game
 {
-	struct MonsterCard final
+	struct MonsterCard final : Card
 	{
-		bool unique = false;
-		const char* name = "unnamed";
-		const char* ruleText = "";
-		const char* flavorText = "this one does not have flavor";
+		
 	};
 }
