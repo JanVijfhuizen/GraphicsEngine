@@ -62,27 +62,31 @@ namespace game
 		uint32_t key;
 		uint32_t action;
 	};
-
+	
 	struct CardGame final
 	{
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
 
-		jv::Array<const char*> GetTexturePaths(jv::Arena& arena) const;
-		jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena) const;
-		jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena) const;
-		static void GetMonsterCardDeck(jv::Vector<uint32_t>& monsterCardsDeck, const jv::Array<MonsterCard>& monsterCards, const PlayerState& playerState);
-		static void GetArtifactCardDeck(jv::Vector<uint32_t>& artifactCardsDeck, const jv::Array<ArtifactCard>& artifactCards, const PlayerState& playerState);
+		static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
+		static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
+		static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
+
+		template <typename T>
+		static void GetDeck(jv::Vector<uint32_t>& outDeck, const jv::Array<T>& cards, const PlayerState& playerState, bool(*func)(uint32_t, const PlayerState&));
+		[[nodiscard]] static bool ValidateMonsterInclusion(uint32_t id, const PlayerState& playerState);
+		[[nodiscard]] static bool ValidateArtifactInclusion(uint32_t id, const PlayerState& playerState);
+
 		static bool TryLoadSaveData(PlayerState& playerState);
 		static void SaveData(PlayerState& playerState);
-		[[nodiscard]] static glm::vec2 GetConvertedMousePosition();
 
 		void LoadMainMenu();
 		void UpdateMainMenu(const MouseTask& mouseTask);
 		void LoadNewGame();
 		void UpdateNewGame(const MouseTask& mouseTask);
 
+		[[nodiscard]] static glm::vec2 GetConvertedMousePosition();
 		void UpdateInput(MouseTask& outMouseTask);
 		void DrawMonsterCard(uint32_t id, glm::vec2 position, glm::vec4 color = glm::vec4(1)) const;
 		[[nodiscard]] uint32_t DrawMonsterChoice(const uint32_t* ids, glm::vec2 center, uint32_t count, uint32_t highlight = -1) const;
@@ -122,13 +126,30 @@ namespace game
 		jv::LinkedList<KeyCallback> mouseCallbacks{};
 		float scrollCallback = 0;
 
-		jv::Array<MonsterCard> monsterCards;
-		jv::Vector<uint32_t> monsterCardsDeck;
-		jv::Array<ArtifactCard> artifactCards;
-		jv::Vector<uint32_t> artifactCardsDeck;
+		jv::Array<MonsterCard> monsters;
+		jv::Array<ArtifactCard> artifacts;
+
+		jv::Vector<uint32_t> monsterDeck;
+		jv::Vector<uint32_t> artifactDeck;
 
 		bool pressedEnter = false;
 	} cardGame{};
+
+	template <typename T>
+	void CardGame::GetDeck(jv::Vector<uint32_t>& outDeck, const jv::Array<T>& cards, const PlayerState& playerState,
+		bool(* func)(uint32_t, const PlayerState&))
+	{
+		outDeck.Clear();
+		for (uint32_t i = 0; i < outDeck.length; ++i)
+		{
+			if (cards[i].unique)
+				continue;
+			if (!func(i, playerState))
+				continue;
+			outDeck.Add() = i;
+		}
+	}
+
 	bool cardGameRunning = false;
 
 	bool CardGame::Update()
@@ -277,10 +298,10 @@ namespace game
 		}
 
 		{
-			outCardGame->monsterCards = cardGame.GetMonsterCards(outCardGame->arena);
-			outCardGame->monsterCardsDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->monsterCards.length);
-			outCardGame->artifactCards = cardGame.GetArtifactCards(outCardGame->arena);
-			outCardGame->artifactCardsDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->artifactCards.length);
+			outCardGame->monsters = cardGame.GetMonsterCards(outCardGame->arena);
+			outCardGame->monsterDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->monsters.length);
+			outCardGame->artifacts = cardGame.GetArtifactCards(outCardGame->arena);
+			outCardGame->artifactDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->artifacts.length);
 		}
 	}
 
@@ -290,7 +311,7 @@ namespace game
 		Engine::Destroy(cardGame.engine);
 	}
 
-	jv::Array<const char*> CardGame::GetTexturePaths(jv::Arena& arena) const
+	jv::Array<const char*> CardGame::GetTexturePaths(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<const char*>(arena, static_cast<uint32_t>(TextureId::length));
 		arr[0] = "Art/alphabet.png";
@@ -301,7 +322,7 @@ namespace game
 		return arr;
 	}
 
-	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena) const
+	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MonsterCard>(arena, 10);
 		// Starting pet.
@@ -311,7 +332,7 @@ namespace game
 		return arr;
 	}
 
-	jv::Array<ArtifactCard> CardGame::GetArtifactCards(jv::Arena& arena) const
+	jv::Array<ArtifactCard> CardGame::GetArtifactCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<ArtifactCard>(arena, 10);
 		arr[0].unique = true;
@@ -320,58 +341,24 @@ namespace game
 		return arr;
 	}
 
-	void CardGame::GetMonsterCardDeck(jv::Vector<uint32_t>& monsterCardsDeck,
-		const jv::Array<MonsterCard>& monsterCards, const PlayerState& playerState)
+	bool CardGame::ValidateMonsterInclusion(const uint32_t id, const PlayerState& playerState)
 	{
-		monsterCardsDeck.Clear();
-		for (uint32_t i = 0; i < monsterCardsDeck.length; ++i)
-		{
-			if (monsterCards[i].unique)
-				continue;
-			monsterCardsDeck.Add() = i;
-		}
-
-		for (auto i = static_cast<int32_t>(monsterCardsDeck.count) - 1; i >= 0; --i)
-		{
-			const uint32_t id = monsterCardsDeck[i];
-			for (uint32_t j = 0; j < playerState.partySize; ++j)
-			{
-				if (playerState.monsterIds[j] == id)
-				{
-					monsterCardsDeck.RemoveAt(i);
-					break;
-				}
-			}
-		}
+		for (uint32_t j = 0; j < playerState.partySize; ++j)
+			if (playerState.monsterIds[j] == id)
+				return false;
+		return true;
 	}
 
-	void CardGame::GetArtifactCardDeck(jv::Vector<uint32_t>& artifactCardsDeck,
-		const jv::Array<ArtifactCard>& artifactCards, const PlayerState& playerState)
+	bool CardGame::ValidateArtifactInclusion(const uint32_t id, const PlayerState& playerState)
 	{
-		artifactCardsDeck.Clear();
-		for (uint32_t i = 0; i < artifactCardsDeck.length; ++i)
+		for (uint32_t j = 0; j < playerState.partySize; ++j)
 		{
-			if (artifactCards[i].unique)
-				continue;
-			artifactCardsDeck.Add() = i;
+			const uint32_t artifactCount = playerState.artifactsCounts[j];
+			for (uint32_t k = 0; k < artifactCount; ++k)
+				if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
+					return false;
 		}
-
-		for (auto i = static_cast<int32_t>(artifactCardsDeck.count) - 1; i >= 0; --i)
-		{
-			const uint32_t id = artifactCardsDeck[i];
-			for (uint32_t j = 0; j < playerState.partySize; ++j)
-			{
-				const uint32_t artifactCount = playerState.artifactsCounts[j];
-				for (uint32_t k = 0; k < artifactCount; ++k)
-				{
-					if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
-					{
-						artifactCardsDeck.RemoveAt(i);
-						break;
-					}
-				}
-			}
-		}
+		return true;
 	}
 
 	bool CardGame::TryLoadSaveData(PlayerState& playerState)
@@ -480,19 +467,19 @@ namespace game
 		levelStatePtr = ptr;
 
 		remove(SAVE_DATA_PATH);
-		GetMonsterCardDeck(monsterCardsDeck, monsterCards, playerState);
-		GetArtifactCardDeck(artifactCardsDeck, artifactCards, playerState);
+		GetDeck(monsterDeck, monsters, playerState, ValidateMonsterInclusion);
+		GetDeck(artifactDeck, artifacts, playerState, ValidateArtifactInclusion);
 
 		// Create a discover option for your initial monster.
 		ptr->monsterDiscoverOptions = jv::CreateArray<uint32_t>(arena, DISCOVER_LENGTH);
-		Shuffle(monsterCardsDeck.ptr, monsterCardsDeck.length);
+		Shuffle(monsterDeck.ptr, monsterDeck.length);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			ptr->monsterDiscoverOptions[i] = monsterCardsDeck.Pop();
+			ptr->monsterDiscoverOptions[i] = monsterDeck.Pop();
 		// Create a discover option for your initial artifact.
 		ptr->artifactDiscoverOptions = jv::CreateArray<uint32_t>(arena, DISCOVER_LENGTH);
-		Shuffle(artifactCardsDeck.ptr, artifactCardsDeck.length);
+		Shuffle(artifactDeck.ptr, artifactDeck.length);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			ptr->artifactDiscoverOptions[i] = artifactCardsDeck.Pop();
+			ptr->artifactDiscoverOptions[i] = artifactDeck.Pop();
 	}
 
 	void CardGame::UpdateNewGame(const MouseTask& mouseTask)
@@ -593,7 +580,7 @@ namespace game
 
 	void CardGame::DrawMonsterCard(const uint32_t id, const glm::vec2 position, const glm::vec4 color) const
 	{
-		const auto& card = monsterCards[id];
+		const auto& card = monsters[id];
 
 		RenderTask bgRenderTask{};
 		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
@@ -646,7 +633,7 @@ namespace game
 
 	void CardGame::DrawArtifactCard(const uint32_t id, const glm::vec2 position, const glm::vec4 color) const
 	{
-		const auto& card = artifactCards[id];
+		const auto& card = artifacts[id];
 
 		RenderTask bgRenderTask{};
 		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
