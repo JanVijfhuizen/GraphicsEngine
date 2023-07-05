@@ -3,11 +3,11 @@
 
 int main()
 {
-	game::CardGame cardGame;
-	game::CardGame::Create(&cardGame);
+	game::Start();
 
 	bool valid = true;
 	while (valid)
-		valid = cardGame.Update();
+		valid = game::Update();
+	game::Stop();
 	return 0;
 }
