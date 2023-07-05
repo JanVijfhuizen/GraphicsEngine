@@ -14,14 +14,27 @@
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "States/MainMenuState.h"
+#include "States/NewGameState.h"
 #include "Tasks/MouseTask.h"
 #include "Utils/BoxCollision.h"
+#include "Utils/Shuffle.h"
 
 namespace game 
 {
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
+
+	constexpr float CARD_SPACING = .1f;
+	constexpr float CARD_WIDTH = .15f;
+	constexpr float CARD_HEIGHT = .2f;
+	constexpr float CARD_PIC_FILL_HEIGHT = .6f;
+	constexpr float CARD_WIDTH_OFFSET = CARD_WIDTH * 2 + CARD_SPACING;
+	constexpr float CARD_HEIGHT_OFFSET = CARD_HEIGHT + CARD_SPACING;
+	constexpr float CARD_TEXT_SIZE = CARD_WIDTH * .1f;
+	constexpr float DISCOVER_LENGTH = 3;
+
+	constexpr float CARD_DARKENED_COLOR_MUL = .2f;
 
 	CardGame* userPtr = nullptr;
 
@@ -46,7 +59,16 @@ namespace game
 		return arr;
 	}
 
-	void GetMonsterCardDeck(jv::Vector<uint32_t> monsterCardsDeck, const jv::Array<MonsterCard>& monsterCards, const PlayerState& playerState)
+	jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<ArtifactCard>(arena, 10);
+		arr[0].unique = true;
+		arr[0].name = "sword of a thousand truths";
+		arr[0].ruleText = "whenever you attack, win the game.";
+		return arr;
+	}
+
+	void GetMonsterCardDeck(jv::Vector<uint32_t>& monsterCardsDeck, const jv::Array<MonsterCard>& monsterCards, const PlayerState& playerState)
 	{
 		monsterCardsDeck.Clear();
 		for (uint32_t i = 0; i < monsterCardsDeck.length; ++i)
@@ -59,13 +81,40 @@ namespace game
 		for (auto i = static_cast<int32_t>(monsterCardsDeck.count) - 1; i >= 0; --i)
 		{
 			const uint32_t id = monsterCardsDeck[i];
-			auto& monsterCard = monsterCards[id];
 			for (uint32_t j = 0; j < playerState.partySize; ++j)
 			{
 				if(playerState.monsterIds[j] == id)
 				{
 					monsterCardsDeck.RemoveAt(i);
 					break;
+				}
+			}
+		}
+	}
+
+	void GetArtifactCardDeck(jv::Vector<uint32_t>& artifactCardsDeck, const jv::Array<ArtifactCard>& artifactCards, const PlayerState& playerState)
+	{
+		artifactCardsDeck.Clear();
+		for (uint32_t i = 0; i < artifactCardsDeck.length; ++i)
+		{
+			if (artifactCards[i].unique)
+				continue;
+			artifactCardsDeck.Add() = i;
+		}
+
+		for (auto i = static_cast<int32_t>(artifactCardsDeck.count) - 1; i >= 0; --i)
+		{
+			const uint32_t id = artifactCardsDeck[i];
+			for (uint32_t j = 0; j < playerState.partySize; ++j)
+			{
+				const uint32_t artifactCount = playerState.artifactsCounts[j];
+				for (uint32_t k = 0; k < artifactCount; ++k)
+				{
+					if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
+					{
+						artifactCardsDeck.RemoveAt(i);
+						break;
+					}
 				}
 			}
 		}
@@ -135,13 +184,16 @@ namespace game
 			_levelLoading = false;
 		}
 
+		MouseTask mouseTask;
+		UpdateInput(mouseTask);
+
 		switch (_levelState)
 		{
 		case LevelState::mainMenu:
-			UpdateMainMenu();
+			UpdateMainMenu(mouseTask);
 			break;
 		case LevelState::newGame:
-			UpdateNewGame();
+			UpdateNewGame(mouseTask);
 			break;
 		case LevelState::inGame:
 			break;
@@ -255,6 +307,8 @@ namespace game
 		{
 			outCardGame->_monsterCards = GetMonsterCards(outCardGame->_arena);
 			outCardGame->_monsterCardsDeck = jv::CreateVector<uint32_t>(outCardGame->_arena, outCardGame->_monsterCards.length);
+			outCardGame->_artifactCards = GetArtifactCards(outCardGame->_arena);
+			outCardGame->_artifactCardsDeck = jv::CreateVector<uint32_t>(outCardGame->_arena, outCardGame->_artifactCards.length);
 		}
 	}
 
@@ -274,13 +328,10 @@ namespace game
 		ptr->saveDataValid = TryLoadSaveData(_playerState);
 	}
 
-	void CardGame::UpdateMainMenu()
+	void CardGame::UpdateMainMenu(const MouseTask& mouseTask)
 	{
 		const auto ptr = static_cast<MainMenuState*>(_levelStatePtr);
-
-		MouseTask mouseTask;
-		UpdateInput(mouseTask);
-
+		
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 10;
 		titleTextTask.center = true;
@@ -332,15 +383,80 @@ namespace game
 
 	void CardGame::LoadNewGame()
 	{
+		const auto ptr = _arena.New<NewGameState>();
+		_levelStatePtr = ptr;
+
 		remove(SAVE_DATA_PATH);
 		GetMonsterCardDeck(_monsterCardsDeck, _monsterCards, _playerState);
+		GetArtifactCardDeck(_artifactCardsDeck, _artifactCards, _playerState);
+
+		// Create a discover option for your initial monster.
+		ptr->monsterDiscoverOptions = jv::CreateArray<uint32_t>(_arena, DISCOVER_LENGTH);
+		Shuffle(_monsterCardsDeck.ptr, _monsterCardsDeck.length);
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			ptr->monsterDiscoverOptions[i] = _monsterCardsDeck.Pop();
+		// Create a discover option for your initial artifact.
+		ptr->artifactDiscoverOptions = jv::CreateArray<uint32_t>(_arena, DISCOVER_LENGTH);
+		Shuffle(_artifactCardsDeck.ptr, _artifactCardsDeck.length);
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			ptr->artifactDiscoverOptions[i] = _artifactCardsDeck.Pop();
 	}
 
-	void CardGame::UpdateNewGame()
+	void CardGame::UpdateNewGame(const MouseTask& mouseTask)
 	{
+		const auto ptr = static_cast<NewGameState*>(_levelStatePtr);
+
+		if(!ptr->confirmedChoices)
+		{
+			auto choice = DrawMonsterChoice(ptr->monsterDiscoverOptions.ptr, glm::vec2(0, -CARD_HEIGHT_OFFSET), DISCOVER_LENGTH, ptr->monsterChoice);
+			if (mouseTask.lButton == MouseTask::pressed && choice != -1)
+				ptr->monsterChoice = choice == ptr->monsterChoice ? -1 : choice;
+			choice = DrawArtifactChoice(ptr->artifactDiscoverOptions.ptr, glm::vec2(0, CARD_HEIGHT_OFFSET), DISCOVER_LENGTH, ptr->artifactChoice);
+			if (mouseTask.lButton == MouseTask::pressed && choice != -1)
+				ptr->artifactChoice = choice == ptr->artifactChoice ? -1 : choice;
+
+			TextTask buttonTextTask{};
+			buttonTextTask.center = true;
+			buttonTextTask.text = "choose your starting cards.";
+			buttonTextTask.position = glm::vec2(0, -.8f);
+			buttonTextTask.scale = .06f;
+			_textTasks->Push(buttonTextTask);
+
+			if (ptr->monsterChoice != -1 && ptr->artifactChoice != -1)
+			{
+				TextTask textTask{};
+				textTask.center = true;
+				textTask.text = "press enter to confirm your choice.";
+				textTask.position = glm::vec2(0, .8f);
+				textTask.scale = .06f;
+				_textTasks->Push(textTask);
+
+				if (_pressedEnter)
+					ptr->confirmedChoices = true;
+			}
+			return;
+		}
+
+		TextTask joinTextTask{};
+		joinTextTask.center = true;
+		joinTextTask.text = "daisy joins you on your adventure.";
+		joinTextTask.position = glm::vec2(0, -.8f);
+		joinTextTask.scale = .06f;
+		_textTasks->Push(joinTextTask);
 		DrawMonsterCard(0, glm::vec2(0));
-		MouseTask mouseTask;
-		UpdateInput(mouseTask);
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.text = "press enter to continue.";
+		textTask.scale = .06f;
+		textTask.position = glm::vec2(0, .8f);
+		_textTasks->Push(textTask);
+
+		if (_pressedEnter)
+		{
+			_levelState = LevelState::inGame;
+			_levelLoading = true;
+		}
 	}
 
 	void CardGame::UpdateInput(MouseTask& outMouseTask)
@@ -348,6 +464,8 @@ namespace game
 		outMouseTask = {};
 		outMouseTask.position = GetConvertedMousePosition();
 		outMouseTask.scroll = _scrollCallback;
+
+		_pressedEnter = false;
 
 		for (const auto& callback : _mouseCallbacks)
 		{
@@ -360,6 +478,12 @@ namespace game
 			if (callback.key == GLFW_MOUSE_BUTTON_RIGHT && callback.action == GLFW_RELEASE)
 				outMouseTask.rButton = MouseTask::released;
 		}
+		for (const auto& callback : _keyCallbacks)
+		{
+			if (callback.key == GLFW_KEY_ENTER)
+				_pressedEnter = callback.action == GLFW_PRESS;
+		}
+
 		_mouseTasks->Push(outMouseTask);
 
 		// Reset callbacks.
@@ -368,40 +492,110 @@ namespace game
 		_scrollCallback = 0;
 	}
 
-	void CardGame::DrawMonsterCard(const uint32_t id, const glm::vec2 position) const
+	void CardGame::DrawMonsterCard(const uint32_t id, const glm::vec2 position, const glm::vec4 color) const
 	{
 		const auto& card = _monsterCards[id];
-		constexpr float width = .3f;
-		constexpr float height = .4f;
-		constexpr float picFillPct = .6f;
 
 		RenderTask bgRenderTask{};
-		bgRenderTask.scale.y = height * (1.f - picFillPct);
-		bgRenderTask.scale.x = width;
-		bgRenderTask.position = position + glm::vec2(0, height * (1.f - picFillPct));
+		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
+		bgRenderTask.scale.x = CARD_WIDTH;
+		bgRenderTask.position = position + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
 		bgRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		bgRenderTask.color = color;
 		_renderTasks->Push(bgRenderTask);
 
 		RenderTask picRenderTask{};
-		picRenderTask.scale.y = height * picFillPct;
-		picRenderTask.scale.x = width;
-		picRenderTask.position = position - glm::vec2(0, height * picFillPct);
+		picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
+		picRenderTask.scale.x = CARD_WIDTH;
+		picRenderTask.position = position - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
 		picRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		picRenderTask.color = glm::vec4(1, 0, 0, 1);
+		picRenderTask.color = color;
 		_renderTasks->Push(picRenderTask);
 
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 12;
 		titleTextTask.center = true;
-		titleTextTask.position = position - glm::vec2(0, height);
+		titleTextTask.position = position - glm::vec2(0, CARD_HEIGHT);
 		titleTextTask.text = card.name;
-		titleTextTask.scale = .04f;
+		titleTextTask.scale = CARD_TEXT_SIZE;
 		_textTasks->Push(titleTextTask);
 
 		TextTask ruleTextTask = titleTextTask;
 		ruleTextTask.position = position + glm::vec2(0, bgRenderTask.scale.y);
 		ruleTextTask.text = card.ruleText;
 		_textTasks->Push(ruleTextTask);
+	}
+
+	uint32_t CardGame::DrawMonsterChoice(const uint32_t* ids, const glm::vec2 center, const uint32_t count, const uint32_t highlight) const
+	{
+		const float offset = -CARD_WIDTH_OFFSET * (count - 1) / 2;
+		const auto mousePos = GetConvertedMousePosition();
+		uint32_t selected = -1;
+		const auto defaultColor = glm::vec4(1) * (highlight < count ? CARD_DARKENED_COLOR_MUL : 1);
+
+		for (uint32_t i = 0; i < count; ++i)
+		{
+			const auto pos = center + glm::vec2(offset + CARD_WIDTH_OFFSET * static_cast<float>(i), 0);
+			DrawMonsterCard(ids[i], pos, highlight == i ? glm::vec4(1) : defaultColor);
+
+			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
+				selected = i;
+		}
+
+		return selected;
+	}
+
+	void CardGame::DrawArtifactCard(const uint32_t id, const glm::vec2 position, const glm::vec4 color) const
+	{
+		const auto& card = _artifactCards[id];
+
+		RenderTask bgRenderTask{};
+		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
+		bgRenderTask.scale.x = CARD_WIDTH;
+		bgRenderTask.position = position + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
+		bgRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		bgRenderTask.color = color;
+		_renderTasks->Push(bgRenderTask);
+
+		RenderTask picRenderTask{};
+		picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
+		picRenderTask.scale.x = CARD_WIDTH;
+		picRenderTask.position = position - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
+		picRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		picRenderTask.color = color;
+		_renderTasks->Push(picRenderTask);
+
+		TextTask titleTextTask{};
+		titleTextTask.lineLength = 12;
+		titleTextTask.center = true;
+		titleTextTask.position = position - glm::vec2(0, CARD_HEIGHT);
+		titleTextTask.text = card.name;
+		titleTextTask.scale = CARD_TEXT_SIZE;
+		_textTasks->Push(titleTextTask);
+
+		TextTask ruleTextTask = titleTextTask;
+		ruleTextTask.position = position + glm::vec2(0, bgRenderTask.scale.y);
+		ruleTextTask.text = card.ruleText;
+		_textTasks->Push(ruleTextTask);
+	}
+
+	uint32_t CardGame::DrawArtifactChoice(const uint32_t* ids, const glm::vec2 center, const uint32_t count, const uint32_t highlight) const
+	{
+		const float offset = -CARD_WIDTH_OFFSET * (count - 1) / 2;
+		const auto mousePos = GetConvertedMousePosition();
+		uint32_t selected = -1;
+		const auto defaultColor = glm::vec4(1) * (highlight < count ? CARD_DARKENED_COLOR_MUL : 1);
+
+		for (uint32_t i = 0; i < count; ++i)
+		{
+			const auto pos = center + glm::vec2(offset + CARD_WIDTH_OFFSET * static_cast<float>(i), 0);
+			DrawArtifactCard(ids[i], pos, highlight == i ? glm::vec4(1) : defaultColor);
+
+			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
+				selected = i;
+		}
+
+		return selected;
 	}
 
 	void CardGame::OnKeyCallback(const size_t key, const size_t action)
