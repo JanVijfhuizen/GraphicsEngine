@@ -1,11 +1,11 @@
 ﻿#pragma once
 #include "CardGame.h"
 #include "CardGame.h"
+#include "Cards/ArtifactCard.h"
 #include "Cards/MonsterCard.h"
 #include "Engine/Engine.h"
 #include "GE/SubTexture.h"
 #include "Interpreters/MouseInterpreter.h"
-#include "JLib/Array.h"
 #include "JLib/Array.h"
 #include "States/BoardState.h"
 #include "States/GameState.h"
@@ -84,14 +84,17 @@ namespace game
 
 		jv::Array<MonsterCard> _monsterCards;
 		jv::Vector<uint32_t> _monsterCardsDeck;
+		jv::Array<ArtifactCard> _artifactCards;
+		jv::Vector<uint32_t> _artifactCardsDeck;
 
 		void LoadMainMenu();
-		void UpdateMainMenu();
+		void UpdateMainMenu(const MouseTask& mouseTask);
 		void LoadNewGame();
-		void UpdateNewGame();
+		void UpdateNewGame(const MouseTask& mouseTask);
 
 		void UpdateInput(MouseTask& outMouseTask);
 		void DrawMonsterCard(uint32_t id, glm::vec2 position) const;
+		[[nodiscard]] uint32_t DrawMonsterChoice(const uint32_t* ids, glm::vec2 center, uint32_t count) const;
 
 		static void OnKeyCallback(size_t key, size_t action);
 		static void OnMouseCallback(size_t key, size_t action);

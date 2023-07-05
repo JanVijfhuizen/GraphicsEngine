@@ -14,14 +14,23 @@
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "States/MainMenuState.h"
+#include "States/NewGameState.h"
 #include "Tasks/MouseTask.h"
 #include "Utils/BoxCollision.h"
+#include "Utils/Shuffle.h"
 
 namespace game 
 {
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
+
+	constexpr float CARD_SPACING = .1f;
+	constexpr float CARD_WIDTH = .3f;
+	constexpr float CARD_HEIGHT = .4f;
+	constexpr float CARD_PIC_FILL_HEIGHT = .6f;
+	constexpr float CARD_WIDTH_OFFSET = CARD_WIDTH * 2 + CARD_SPACING;
+	constexpr float DISCOVER_LENGTH = 3;
 
 	CardGame* userPtr = nullptr;
 
@@ -46,7 +55,16 @@ namespace game
 		return arr;
 	}
 
-	void GetMonsterCardDeck(jv::Vector<uint32_t> monsterCardsDeck, const jv::Array<MonsterCard>& monsterCards, const PlayerState& playerState)
+	jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<ArtifactCard>(arena, 10);
+		arr[0].unique = true;
+		arr[0].name = "sword of a thousand truths";
+		arr[0].ruleText = "whenever you attack, win the game.";
+		return arr;
+	}
+
+	void GetMonsterCardDeck(jv::Vector<uint32_t>& monsterCardsDeck, const jv::Array<MonsterCard>& monsterCards, const PlayerState& playerState)
 	{
 		monsterCardsDeck.Clear();
 		for (uint32_t i = 0; i < monsterCardsDeck.length; ++i)
@@ -59,13 +77,40 @@ namespace game
 		for (auto i = static_cast<int32_t>(monsterCardsDeck.count) - 1; i >= 0; --i)
 		{
 			const uint32_t id = monsterCardsDeck[i];
-			auto& monsterCard = monsterCards[id];
 			for (uint32_t j = 0; j < playerState.partySize; ++j)
 			{
 				if(playerState.monsterIds[j] == id)
 				{
 					monsterCardsDeck.RemoveAt(i);
 					break;
+				}
+			}
+		}
+	}
+
+	void GetArtifactCardDeck(jv::Vector<uint32_t>& artifactCardsDeck, const jv::Array<ArtifactCard>& artifactCards, const PlayerState& playerState)
+	{
+		artifactCardsDeck.Clear();
+		for (uint32_t i = 0; i < artifactCardsDeck.length; ++i)
+		{
+			if (artifactCards[i].unique)
+				continue;
+			artifactCardsDeck.Add() = i;
+		}
+
+		for (auto i = static_cast<int32_t>(artifactCardsDeck.count) - 1; i >= 0; --i)
+		{
+			const uint32_t id = artifactCardsDeck[i];
+			for (uint32_t j = 0; j < playerState.partySize; ++j)
+			{
+				const uint32_t artifactCount = playerState.artifactsCounts[j];
+				for (uint32_t k = 0; k < artifactCount; ++k)
+				{
+					if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
+					{
+						artifactCardsDeck.RemoveAt(i);
+						break;
+					}
 				}
 			}
 		}
@@ -135,13 +180,16 @@ namespace game
 			_levelLoading = false;
 		}
 
+		MouseTask mouseTask;
+		UpdateInput(mouseTask);
+
 		switch (_levelState)
 		{
 		case LevelState::mainMenu:
-			UpdateMainMenu();
+			UpdateMainMenu(mouseTask);
 			break;
 		case LevelState::newGame:
-			UpdateNewGame();
+			UpdateNewGame(mouseTask);
 			break;
 		case LevelState::inGame:
 			break;
@@ -255,6 +303,8 @@ namespace game
 		{
 			outCardGame->_monsterCards = GetMonsterCards(outCardGame->_arena);
 			outCardGame->_monsterCardsDeck = jv::CreateVector<uint32_t>(outCardGame->_arena, outCardGame->_monsterCards.length);
+			outCardGame->_artifactCards = GetArtifactCards(outCardGame->_arena);
+			outCardGame->_artifactCardsDeck = jv::CreateVector<uint32_t>(outCardGame->_arena, outCardGame->_artifactCards.length);
 		}
 	}
 
@@ -274,13 +324,10 @@ namespace game
 		ptr->saveDataValid = TryLoadSaveData(_playerState);
 	}
 
-	void CardGame::UpdateMainMenu()
+	void CardGame::UpdateMainMenu(const MouseTask& mouseTask)
 	{
 		const auto ptr = static_cast<MainMenuState*>(_levelStatePtr);
-
-		MouseTask mouseTask;
-		UpdateInput(mouseTask);
-
+		
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 10;
 		titleTextTask.center = true;
@@ -332,15 +379,28 @@ namespace game
 
 	void CardGame::LoadNewGame()
 	{
+		const auto ptr = _arena.New<NewGameState>();
+		_levelStatePtr = ptr;
+
 		remove(SAVE_DATA_PATH);
 		GetMonsterCardDeck(_monsterCardsDeck, _monsterCards, _playerState);
+		GetArtifactCardDeck(_artifactCardsDeck, _artifactCards, _playerState);
+
+		// Create a discover option for your initial monster.
+		ptr->monsterDiscoverOptions = jv::CreateArray<uint32_t>(_arena, DISCOVER_LENGTH);
+		Shuffle(_monsterCardsDeck.ptr, _monsterCardsDeck.length);
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			ptr->monsterDiscoverOptions[i] = _monsterCardsDeck.Pop();
 	}
 
-	void CardGame::UpdateNewGame()
+	void CardGame::UpdateNewGame(const MouseTask& mouseTask)
 	{
-		DrawMonsterCard(0, glm::vec2(0));
-		MouseTask mouseTask;
-		UpdateInput(mouseTask);
+		const auto ptr = static_cast<NewGameState*>(_levelStatePtr);
+
+		const uint32_t monsterChoice = DrawMonsterChoice(ptr->monsterDiscoverOptions.ptr, glm::vec2(0), DISCOVER_LENGTH);
+
+		if (mouseTask.lButton != MouseTask::pressed)
+			return;
 	}
 
 	void CardGame::UpdateInput(MouseTask& outMouseTask)
@@ -371,21 +431,18 @@ namespace game
 	void CardGame::DrawMonsterCard(const uint32_t id, const glm::vec2 position) const
 	{
 		const auto& card = _monsterCards[id];
-		constexpr float width = .3f;
-		constexpr float height = .4f;
-		constexpr float picFillPct = .6f;
 
 		RenderTask bgRenderTask{};
-		bgRenderTask.scale.y = height * (1.f - picFillPct);
-		bgRenderTask.scale.x = width;
-		bgRenderTask.position = position + glm::vec2(0, height * (1.f - picFillPct));
+		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
+		bgRenderTask.scale.x = CARD_WIDTH;
+		bgRenderTask.position = position + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
 		bgRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
 		_renderTasks->Push(bgRenderTask);
 
 		RenderTask picRenderTask{};
-		picRenderTask.scale.y = height * picFillPct;
-		picRenderTask.scale.x = width;
-		picRenderTask.position = position - glm::vec2(0, height * picFillPct);
+		picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
+		picRenderTask.scale.x = CARD_WIDTH;
+		picRenderTask.position = position - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
 		picRenderTask.subTexture = _subTextures[static_cast<uint32_t>(TextureId::fallback)];
 		picRenderTask.color = glm::vec4(1, 0, 0, 1);
 		_renderTasks->Push(picRenderTask);
@@ -393,7 +450,7 @@ namespace game
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 12;
 		titleTextTask.center = true;
-		titleTextTask.position = position - glm::vec2(0, height);
+		titleTextTask.position = position - glm::vec2(0, CARD_HEIGHT);
 		titleTextTask.text = card.name;
 		titleTextTask.scale = .04f;
 		_textTasks->Push(titleTextTask);
@@ -402,6 +459,23 @@ namespace game
 		ruleTextTask.position = position + glm::vec2(0, bgRenderTask.scale.y);
 		ruleTextTask.text = card.ruleText;
 		_textTasks->Push(ruleTextTask);
+	}
+
+	uint32_t CardGame::DrawMonsterChoice(const uint32_t* ids, const glm::vec2 center, const uint32_t count) const
+	{
+		const float offset = -CARD_WIDTH_OFFSET * (count - 1) / 2;
+		const auto mousePos = GetConvertedMousePosition();
+		uint32_t selected = -1;
+		for (uint32_t i = 0; i < count; ++i)
+		{
+			const auto pos = center + glm::vec2(offset + CARD_WIDTH_OFFSET * i, 0);
+			DrawMonsterCard(ids[i], pos);
+
+			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
+				selected = i;
+		}
+
+		return selected;
 	}
 
 	void CardGame::OnKeyCallback(const size_t key, const size_t action)
