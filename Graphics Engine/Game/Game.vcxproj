@@ -177,8 +177,6 @@
     <ClInclude Include="Include\Engine\TexturePool.h" />
     <ClInclude Include="Include\pch_game.h" />
     <ClInclude Include="Include\States\InputState.h" />
-    <ClInclude Include="Include\States\MainMenuState.h" />
-    <ClInclude Include="Include\States\NewGameState.h" />
     <ClInclude Include="Include\States\PlayerState.h" />
     <ClInclude Include="Include\Tasks\DynamicRenderTask.h" />
     <ClInclude Include="Include\Tasks\MouseTask.h" />

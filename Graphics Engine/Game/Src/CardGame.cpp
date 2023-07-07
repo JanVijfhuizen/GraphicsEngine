@@ -1,10 +1,8 @@
 ﻿#include "pch_game.h"
 #include "CardGame.h"
-
 #include <fstream>
 #include <stb_image.h>
 #include <Engine/Engine.h>
-
 #include "Cards/ArtifactCard.h"
 #include "Cards/MonsterCard.h"
 #include "GE/AtlasGenerator.h"
@@ -17,8 +15,6 @@
 #include "States/BoardState.h"
 #include "States/GameState.h"
 #include "States/InputState.h"
-#include "States/MainMenuState.h"
-#include "States/NewGameState.h"
 #include "States/PlayerState.h"
 #include "Tasks/MouseTask.h"
 #include "Utils/BoxCollision.h"
@@ -51,11 +47,11 @@ namespace game
 		length
 	};
 
-	enum class LevelState
+	enum class LevelIndex
 	{
 		mainMenu,
 		newGame,
-		inGame
+		main
 	};
 
 	struct KeyCallback final
@@ -64,20 +60,10 @@ namespace game
 		uint32_t action;
 	};
 
-	struct LevelCreateInfo final
+	struct LevelInfo
 	{
 		jv::Arena& arena;
 		jv::ge::Resource scene;
-	};
-
-	struct LevelUpdateInfo final
-	{
-		jv::Arena& arena;
-		jv::ge::Resource levelScene;
-		InputState inputState{};
-		TaskSystem<RenderTask>& renderTasks;
-		TaskSystem<DynamicRenderTask>& dynamicRenderTasks;
-		TaskSystem<TextTask>& textTasks;
 
 		GameState& gameState;
 		PlayerState& playerState;
@@ -85,58 +71,30 @@ namespace game
 
 		const jv::Array<MonsterCard>& monsters;
 		const jv::Array<ArtifactCard>& artifacts;
+
+		jv::Vector<uint32_t>& monsterDeck;
+		jv::Vector<uint32_t>& artifactDeck;
+	};
+
+	struct LevelCreateInfo final : LevelInfo
+	{
+		
+	};
+
+	struct LevelUpdateInfo final : LevelInfo
+	{
+		InputState inputState{};
+		TaskSystem<RenderTask>& renderTasks;
+		TaskSystem<DynamicRenderTask>& dynamicRenderTasks;
+		TaskSystem<TextTask>& textTasks;
+		const jv::Array<jv::ge::SubTexture>& subTextures;
 	};
 
 	struct Level
 	{
 		virtual void Create(const LevelCreateInfo& info) = 0;
-		virtual bool Update(const LevelUpdateInfo& info) = 0;
+		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) = 0;
 	};
-
-	struct MainMenuLevel final : Level
-	{
-		void Create(const LevelCreateInfo& info) override;
-		bool Update(const LevelUpdateInfo& info) override;
-	};
-
-	void MainMenuLevel::Create(const LevelCreateInfo& info)
-	{
-	}
-
-	bool MainMenuLevel::Update(const LevelUpdateInfo& info)
-	{
-		return true;
-	}
-
-	struct NewGameLevel final : Level
-	{
-		void Create(const LevelCreateInfo& info) override;
-		bool Update(const LevelUpdateInfo& info) override;
-	};
-
-	void NewGameLevel::Create(const LevelCreateInfo& info)
-	{
-	}
-
-	bool NewGameLevel::Update(const LevelUpdateInfo& info)
-	{
-		return true;
-	}
-
-	struct MainLevel final : Level
-	{
-		void Create(const LevelCreateInfo& info) override;
-		bool Update(const LevelUpdateInfo& info) override;
-	};
-
-	void MainLevel::Create(const LevelCreateInfo& info)
-	{
-	}
-
-	bool MainLevel::Update(const LevelUpdateInfo& info)
-	{
-		return true;
-	}
 
 	struct CardGame final
 	{
@@ -161,10 +119,11 @@ namespace game
 		PlayerState playerState{};
 		BoardState boardState{};
 
-		LevelState levelState = LevelState::mainMenu;
+		LevelIndex levelIndex = LevelIndex::mainMenu;
 		bool levelLoading = true;
 		uint32_t levelLoadingFrame = 0;
-		void* levelStatePtr;
+
+		jv::Array<Level*> levels{};
 
 		jv::LinkedList<KeyCallback> keyCallbacks{};
 		jv::LinkedList<KeyCallback> mouseCallbacks{};
@@ -191,11 +150,6 @@ namespace game
 
 		static bool TryLoadSaveData(PlayerState& playerState);
 		static void SaveData(PlayerState& playerState);
-
-		void LoadMainMenu();
-		void UpdateMainMenu();
-		void LoadNewGame();
-		void UpdateNewGame();
 		
 		void UpdateInput();
 		static void SetInputState(InputState::State& state, uint32_t target, KeyCallback callback);
@@ -205,6 +159,188 @@ namespace game
 
 		uint32_t RenderCards(Card** cards, uint32_t length, glm::vec2 position, uint32_t highlight = -1) const;
 	} cardGame{};
+
+	struct MainMenuLevel final : Level
+	{
+		bool saveDataValid;
+
+		void Create(const LevelCreateInfo& info) override;
+		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
+	};
+
+	struct NewGameLevel final : Level
+	{
+		jv::Array<uint32_t> monsterDiscoverOptions;
+		jv::Array<uint32_t> artifactDiscoverOptions;
+
+		uint32_t monsterChoice = -1;
+		uint32_t artifactChoice = -1;
+		bool confirmedChoices = false;
+
+		void Create(const LevelCreateInfo& info) override;
+		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
+	};
+
+	struct MainLevel final : Level
+	{
+		void Create(const LevelCreateInfo& info) override;
+		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
+	};
+
+	void MainMenuLevel::Create(const LevelCreateInfo& info)
+	{
+		saveDataValid = CardGame::TryLoadSaveData(info.playerState);
+	}
+
+	bool MainMenuLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		TextTask titleTextTask{};
+		titleTextTask.lineLength = 10;
+		titleTextTask.center = true;
+		titleTextTask.position.y = -0.75f;
+		titleTextTask.text = "untitled card game";
+		titleTextTask.scale = .12f;
+		info.textTasks.Push(titleTextTask);
+
+		const float buttonYOffset = saveDataValid ? -.18 : 0;
+
+		RenderTask buttonRenderTask{};
+		buttonRenderTask.position.y = buttonYOffset;
+		buttonRenderTask.scale.y *= .12f;
+		buttonRenderTask.scale.x = .4f;
+		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		info.renderTasks.Push(buttonRenderTask);
+
+		if (info.inputState.lMouse == InputState::pressed)
+			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+			{
+				loadLevelIndex = LevelIndex::newGame;
+			}
+
+		TextTask buttonTextTask{};
+		buttonTextTask.center = true;
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.text = "new game";
+		buttonTextTask.scale = .06f;
+		info.textTasks.Push(buttonTextTask);
+
+		if (saveDataValid)
+		{
+			buttonRenderTask.position.y *= -1;
+			info.renderTasks.Push(buttonRenderTask);
+
+			buttonTextTask.position = buttonRenderTask.position;
+			buttonTextTask.text = "continue";
+			info.textTasks.Push(buttonTextTask);
+
+			if (info.inputState.lMouse == InputState::pressed)
+				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+				{
+					loadLevelIndex = LevelIndex::main;
+				}
+		}
+
+		return true;
+	}
+
+	void NewGameLevel::Create(const LevelCreateInfo& info)
+	{
+		remove(SAVE_DATA_PATH);
+		CardGame::GetDeck(info.monsterDeck, info.monsters, info.playerState, CardGame::ValidateMonsterInclusion);
+		CardGame::GetDeck(info.artifactDeck, info.artifacts, info.playerState, CardGame::ValidateArtifactInclusion);
+
+		// Create a discover option for your initial monster.
+		monsterDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
+		Shuffle(info.monsterDeck.ptr, info.monsterDeck.length);
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			monsterDiscoverOptions[i] = info.monsterDeck.Pop();
+		// Create a discover option for your initial artifact.
+		artifactDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
+		Shuffle(info.artifactDeck.ptr, info.artifactDeck.length);
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			artifactDiscoverOptions[i] = info.artifactDeck.Pop();
+	}
+
+	bool NewGameLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		if (!confirmedChoices)
+		{
+			Card* cards[DISCOVER_LENGTH]{};
+
+			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+				cards[i] = &info.monsters[monsterDiscoverOptions[i]];
+			auto choice = cardGame.RenderCards(cards, DISCOVER_LENGTH, glm::vec2(0, -CARD_HEIGHT_OFFSET), monsterChoice);
+			if (info.inputState.lMouse == InputState::pressed && choice != -1)
+				monsterChoice = choice == monsterChoice ? -1 : choice;
+
+			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+				cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
+			choice = cardGame.RenderCards(cards, DISCOVER_LENGTH, glm::vec2(0, CARD_HEIGHT_OFFSET), artifactChoice);
+			if (info.inputState.lMouse == InputState::pressed && choice != -1)
+				artifactChoice = choice == artifactChoice ? -1 : choice;
+
+			TextTask buttonTextTask{};
+			buttonTextTask.center = true;
+			buttonTextTask.text = "choose your starting cards.";
+			buttonTextTask.position = glm::vec2(0, -.8f);
+			buttonTextTask.scale = .06f;
+			info.textTasks.Push(buttonTextTask);
+
+			if (monsterChoice != -1 && artifactChoice != -1)
+			{
+				TextTask textTask{};
+				textTask.center = true;
+				textTask.text = "press enter to confirm your choice.";
+				textTask.position = glm::vec2(0, .8f);
+				textTask.scale = .06f;
+				info.textTasks.Push(textTask);
+
+				if (info.inputState.enter == InputState::pressed)
+					confirmedChoices = true;
+			}
+			return true;
+		}
+
+		TextTask joinTextTask{};
+		joinTextTask.center = true;
+		joinTextTask.text = "daisy joins you on your adventure.";
+		joinTextTask.position = glm::vec2(0, -.8f);
+		joinTextTask.scale = .06f;
+		info.textTasks.Push(joinTextTask);
+
+		Card* cards = &info.monsters[0];
+		cardGame.RenderCards(&cards, 1, glm::vec2(0));
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.text = "press enter to continue.";
+		textTask.scale = .06f;
+		textTask.position = glm::vec2(0, .8f);
+		info.textTasks.Push(textTask);
+
+		if (info.inputState.enter == InputState::pressed)
+		{
+			auto& playerState = info.playerState;
+			playerState.monsterIds[0] = monsterDiscoverOptions[monsterChoice];
+			playerState.artifactsCounts[0] = 1;
+			playerState.artifacts[0] = artifactDiscoverOptions[artifactChoice];
+			playerState.monsterIds[1] = 0;
+			playerState.partySize = 2;
+			CardGame::SaveData(playerState);
+			loadLevelIndex = LevelIndex::main;
+		}
+
+		return true;
+	}
+
+	void MainLevel::Create(const LevelCreateInfo& info)
+	{
+	}
+
+	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		return true;
+	}
 
 	template <typename T>
 	void CardGame::GetDeck(jv::Vector<uint32_t>& outDeck, const jv::Array<T>& cards, const PlayerState& playerState,
@@ -235,39 +371,53 @@ namespace game
 
 			jv::ge::ClearScene(levelScene);
 			levelArena.Clear();
-
-			switch (levelState)
+			const LevelCreateInfo info
 			{
-				case LevelState::mainMenu:
-					LoadMainMenu();
-					break;
-				case LevelState::newGame:
-					LoadNewGame();
-					break;
-				case LevelState::inGame:
-					break;
-				default:
-					throw std::exception("Scene state not supported!");
-			}
+				levelArena,
+				levelScene,
+				gameState,
+				playerState,
+				boardState,
+				monsters,
+				artifacts,
+				monsterDeck,
+				artifactDeck
+			};
 
+			levels[static_cast<uint32_t>(levelIndex)]->Create(info);
 			levelLoading = false;
 		}
 
-		switch (levelState)
+		const LevelUpdateInfo info
 		{
-		case LevelState::mainMenu:
-			UpdateMainMenu();
-			break;
-		case LevelState::newGame:
-			UpdateNewGame();
-			break;
-		case LevelState::inGame:
-			break;
-		default:
-			throw std::exception("Scene state not supported!");
+			levelArena,
+			levelScene,
+			gameState,
+			playerState,
+			boardState,
+			monsters,
+			artifacts,
+			monsterDeck,
+			artifactDeck,
+			inputState,
+			*renderTasks,
+			*dynamicRenderTasks,
+			*textTasks,
+			subTextures
+		};
+
+		auto loadLevelIndex = levelIndex;
+		auto result = levels[static_cast<uint32_t>(levelIndex)]->Update(info, loadLevelIndex);
+		if (!result)
+			return result;
+
+		if(loadLevelIndex != levelIndex)
+		{
+			levelIndex = loadLevelIndex;
+			levelLoading = true;
 		}
 
-		const bool result = engine.Update();
+		result = engine.Update();
 		return result;
 	}
 
@@ -373,6 +523,13 @@ namespace game
 			outCardGame->artifacts = cardGame.GetArtifactCards(outCardGame->arena);
 			outCardGame->artifactDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->artifacts.length);
 		}
+
+		{
+			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 3);
+			outCardGame->levels[0] = outCardGame->arena.New<MainMenuLevel>();
+			outCardGame->levels[1] = outCardGame->arena.New<NewGameLevel>();
+			outCardGame->levels[2] = outCardGame->arena.New<MainLevel>();
+		}
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)
@@ -469,159 +626,6 @@ namespace game
 			outFile << artifactCount << std::endl;
 		outFile << playerState.partySize << std::endl;
 		outFile.close();
-	}
-
-	void CardGame::LoadMainMenu()
-	{
-		const auto ptr = arena.New<MainMenuState>();
-		levelStatePtr = ptr;
-		ptr->saveDataValid = TryLoadSaveData(playerState);
-	}
-
-	void CardGame::UpdateMainMenu()
-	{
-		const auto ptr = static_cast<MainMenuState*>(levelStatePtr);
-		
-		TextTask titleTextTask{};
-		titleTextTask.lineLength = 10;
-		titleTextTask.center = true;
-		titleTextTask.position.y = -0.75f;
-		titleTextTask.text = "untitled card game";
-		titleTextTask.scale = .12f;
-		textTasks->Push(titleTextTask);
-
-		const float buttonYOffset = ptr->saveDataValid ? -.18 : 0;
-
-		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = buttonYOffset;
-		buttonRenderTask.scale.y *= .12f;
-		buttonRenderTask.scale.x = .4f;
-		buttonRenderTask.subTexture = subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		renderTasks->Push(buttonRenderTask);
-		
-		if (inputState.lMouse == InputState::pressed)
-			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, inputState.mousePos))
-			{
-				levelState = LevelState::newGame;
-				levelLoading = true;
-			}
-
-		TextTask buttonTextTask{};
-		buttonTextTask.center = true;
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "new game";
-		buttonTextTask.scale = .06f;
-		textTasks->Push(buttonTextTask);
-
-		if(ptr->saveDataValid)
-		{
-			buttonRenderTask.position.y *= -1;
-			renderTasks->Push(buttonRenderTask);
-
-			buttonTextTask.position = buttonRenderTask.position;
-			buttonTextTask.text = "continue";
-			textTasks->Push(buttonTextTask);
-
-			if (inputState.lMouse == InputState::pressed)
-				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, inputState.mousePos))
-				{
-					levelState = LevelState::inGame;
-					levelLoading = true;
-				}
-		}
-	}
-
-	void CardGame::LoadNewGame()
-	{
-		const auto ptr = arena.New<NewGameState>();
-		levelStatePtr = ptr;
-
-		remove(SAVE_DATA_PATH);
-		GetDeck(monsterDeck, monsters, playerState, ValidateMonsterInclusion);
-		GetDeck(artifactDeck, artifacts, playerState, ValidateArtifactInclusion);
-
-		// Create a discover option for your initial monster.
-		ptr->monsterDiscoverOptions = jv::CreateArray<uint32_t>(arena, DISCOVER_LENGTH);
-		Shuffle(monsterDeck.ptr, monsterDeck.length);
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			ptr->monsterDiscoverOptions[i] = monsterDeck.Pop();
-		// Create a discover option for your initial artifact.
-		ptr->artifactDiscoverOptions = jv::CreateArray<uint32_t>(arena, DISCOVER_LENGTH);
-		Shuffle(artifactDeck.ptr, artifactDeck.length);
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			ptr->artifactDiscoverOptions[i] = artifactDeck.Pop();
-	}
-
-	void CardGame::UpdateNewGame()
-	{
-		const auto ptr = static_cast<NewGameState*>(levelStatePtr);
-
-		if(!ptr->confirmedChoices)
-		{
-			Card* cards[DISCOVER_LENGTH]{};
-
-			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-				cards[i] = &monsters[ptr->monsterDiscoverOptions[i]];
-			auto choice = RenderCards(cards, DISCOVER_LENGTH, glm::vec2(0, -CARD_HEIGHT_OFFSET), ptr->monsterChoice);
-			if (inputState.lMouse == InputState::pressed && choice != -1)
-				ptr->monsterChoice = choice == ptr->monsterChoice ? -1 : choice;
-
-			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-				cards[i] = &artifacts[ptr->artifactDiscoverOptions[i]];
-			choice = RenderCards(cards, DISCOVER_LENGTH, glm::vec2(0, CARD_HEIGHT_OFFSET), ptr->artifactChoice);
-			if (inputState.lMouse == InputState::pressed && choice != -1)
-				ptr->artifactChoice = choice == ptr->artifactChoice ? -1 : choice;
-
-			TextTask buttonTextTask{};
-			buttonTextTask.center = true;
-			buttonTextTask.text = "choose your starting cards.";
-			buttonTextTask.position = glm::vec2(0, -.8f);
-			buttonTextTask.scale = .06f;
-			textTasks->Push(buttonTextTask);
-
-			if (ptr->monsterChoice != -1 && ptr->artifactChoice != -1)
-			{
-				TextTask textTask{};
-				textTask.center = true;
-				textTask.text = "press enter to confirm your choice.";
-				textTask.position = glm::vec2(0, .8f);
-				textTask.scale = .06f;
-				textTasks->Push(textTask);
-
-				if (inputState.enter == InputState::pressed)
-					ptr->confirmedChoices = true;
-			}
-			return;
-		}
-
-		TextTask joinTextTask{};
-		joinTextTask.center = true;
-		joinTextTask.text = "daisy joins you on your adventure.";
-		joinTextTask.position = glm::vec2(0, -.8f);
-		joinTextTask.scale = .06f;
-		textTasks->Push(joinTextTask);
-
-		Card* cards = &monsters[0];
-		RenderCards(&cards, 1, glm::vec2(0));
-
-		TextTask textTask{};
-		textTask.center = true;
-		textTask.text = "press enter to continue.";
-		textTask.scale = .06f;
-		textTask.position = glm::vec2(0, .8f);
-		textTasks->Push(textTask);
-
-		if (inputState.enter == InputState::pressed)
-		{
-			playerState.monsterIds[0] = ptr->monsterDiscoverOptions[ptr->monsterChoice];
-			playerState.artifactsCounts[0] = 1;
-			playerState.artifacts[0] = ptr->artifactDiscoverOptions[ptr->artifactChoice];
-			playerState.monsterIds[1] = 0;
-			playerState.partySize = 2;
-			SaveData(playerState);
-			levelState = LevelState::inGame;
-			levelLoading = true;
-		}
 	}
 
 	void CardGame::UpdateInput()
