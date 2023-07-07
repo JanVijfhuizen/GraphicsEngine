@@ -11,3 +11,21 @@ constexpr uint32_t ROOM_COUNT_BEFORE_BOSS = 10;
 constexpr uint32_t ROOM_COUNT_BEFORE_FLAW = 5;
 constexpr uint32_t DISCOVER_COUNT = 3;
 constexpr uint32_t MAGIC_DECK_SIZE = 24;
+constexpr uint32_t DISCOVER_LENGTH = 3;
+
+enum class LevelIndex
+{
+	mainMenu,
+	newGame,
+	main
+};
+
+enum class TextureId
+{
+	alphabet,
+	numbers,
+	symbols,
+	mouse,
+	fallback,
+	length
+};
