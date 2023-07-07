@@ -63,10 +63,118 @@ namespace game
 		uint32_t key;
 		uint32_t action;
 	};
-	
+
+	struct LevelCreateInfo final
+	{
+		jv::Arena& arena;
+		jv::ge::Resource scene;
+	};
+
+	struct LevelUpdateInfo final
+	{
+		jv::Arena& arena;
+		jv::ge::Resource levelScene;
+		InputState inputState{};
+		TaskSystem<RenderTask>& renderTasks;
+		TaskSystem<DynamicRenderTask>& dynamicRenderTasks;
+		TaskSystem<TextTask>& textTasks;
+
+		GameState& gameState;
+		PlayerState& playerState;
+		BoardState& boardState;
+
+		const jv::Array<MonsterCard>& monsters;
+		const jv::Array<ArtifactCard>& artifacts;
+	};
+
+	struct Level
+	{
+		virtual void Create(const LevelCreateInfo& info) = 0;
+		virtual bool Update(const LevelUpdateInfo& info) = 0;
+	};
+
+	struct MainMenuLevel final : Level
+	{
+		void Create(const LevelCreateInfo& info) override;
+		bool Update(const LevelUpdateInfo& info) override;
+	};
+
+	void MainMenuLevel::Create(const LevelCreateInfo& info)
+	{
+	}
+
+	bool MainMenuLevel::Update(const LevelUpdateInfo& info)
+	{
+		return true;
+	}
+
+	struct NewGameLevel final : Level
+	{
+		void Create(const LevelCreateInfo& info) override;
+		bool Update(const LevelUpdateInfo& info) override;
+	};
+
+	void NewGameLevel::Create(const LevelCreateInfo& info)
+	{
+	}
+
+	bool NewGameLevel::Update(const LevelUpdateInfo& info)
+	{
+		return true;
+	}
+
+	struct MainLevel final : Level
+	{
+		void Create(const LevelCreateInfo& info) override;
+		bool Update(const LevelUpdateInfo& info) override;
+	};
+
+	void MainLevel::Create(const LevelCreateInfo& info)
+	{
+	}
+
+	bool MainLevel::Update(const LevelUpdateInfo& info)
+	{
+		return true;
+	}
+
 	struct CardGame final
 	{
+		Engine engine;
+		jv::Arena arena;
+		jv::Arena levelArena;
+		jv::ge::Resource scene;
+		jv::ge::Resource levelScene;
+		jv::ge::Resource atlas;
 		InputState inputState{};
+		jv::Array<jv::ge::SubTexture> subTextures;
+		TaskSystem<RenderTask>* renderTasks;
+		TaskSystem<DynamicRenderTask>* dynamicRenderTasks;
+		TaskSystem<MouseTask>* mouseTasks;
+		TaskSystem<TextTask>* textTasks;
+		InstancedRenderInterpreter* renderInterpreter;
+		DynamicRenderInterpreter* dynamicRenderInterpreter;
+		MouseInterpreter* mouseInterpreter;
+		TextInterpreter* textInterpreter;
+
+		GameState gameState{};
+		PlayerState playerState{};
+		BoardState boardState{};
+
+		LevelState levelState = LevelState::mainMenu;
+		bool levelLoading = true;
+		uint32_t levelLoadingFrame = 0;
+		void* levelStatePtr;
+
+		jv::LinkedList<KeyCallback> keyCallbacks{};
+		jv::LinkedList<KeyCallback> mouseCallbacks{};
+		float scrollCallback = 0;
+
+		jv::Array<MonsterCard> monsters;
+		jv::Array<ArtifactCard> artifacts;
+
+		jv::Vector<uint32_t> monsterDeck;
+		jv::Vector<uint32_t> artifactDeck;
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -96,41 +204,6 @@ namespace game
 		static void OnScrollCallback(glm::vec<2, double> offset);
 
 		uint32_t RenderCards(Card** cards, uint32_t length, glm::vec2 position, uint32_t highlight = -1) const;
-
-		Engine engine;
-		jv::Arena arena;
-		jv::Arena levelArena;
-		jv::ge::Resource scene;
-		jv::ge::Resource levelScene;
-		jv::ge::Resource atlas;
-		jv::Array<jv::ge::SubTexture> subTextures;
-		TaskSystem<RenderTask>* renderTasks;
-		TaskSystem<DynamicRenderTask>* dynamicRenderTasks;
-		TaskSystem<MouseTask>* mouseTasks;
-		TaskSystem<TextTask>* textTasks;
-		InstancedRenderInterpreter* renderInterpreter;
-		DynamicRenderInterpreter* dynamicRenderInterpreter;
-		MouseInterpreter* mouseInterpreter;
-		TextInterpreter* textInterpreter;
-
-		GameState gameState{};
-		PlayerState playerState{};
-		BoardState boardState{};
-
-		LevelState levelState = LevelState::mainMenu;
-		bool levelLoading = true;
-		uint32_t levelLoadingFrame = 0;
-		void* levelStatePtr;
-
-		jv::LinkedList<KeyCallback> keyCallbacks{};
-		jv::LinkedList<KeyCallback> mouseCallbacks{};
-		float scrollCallback = 0;
-
-		jv::Array<MonsterCard> monsters;
-		jv::Array<ArtifactCard> artifacts;
-
-		jv::Vector<uint32_t> monsterDeck;
-		jv::Vector<uint32_t> artifactDeck;
 	} cardGame{};
 
 	template <typename T>
