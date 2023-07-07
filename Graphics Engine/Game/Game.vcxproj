@@ -159,6 +159,7 @@
     <ClInclude Include="Include\CardGame.h" />
     <ClInclude Include="Include\Cards\ArtifactCard.h" />
     <ClInclude Include="Include\Cards\BossCard.h" />
+    <ClInclude Include="Include\Cards\Card.h" />
     <ClInclude Include="Include\Cards\CriticalCard.h" />
     <ClInclude Include="Include\Cards\CriticalFailCard.h" />
     <ClInclude Include="Include\Cards\FlawCard.h" />
@@ -175,8 +176,7 @@
     <ClInclude Include="Include\Interpreters\TextInterpreter.h" />
     <ClInclude Include="Include\Engine\TexturePool.h" />
     <ClInclude Include="Include\pch_game.h" />
-    <ClInclude Include="Include\States\MainMenuState.h" />
-    <ClInclude Include="Include\States\NewGameState.h" />
+    <ClInclude Include="Include\States\InputState.h" />
     <ClInclude Include="Include\States\PlayerState.h" />
     <ClInclude Include="Include\Tasks\DynamicRenderTask.h" />
     <ClInclude Include="Include\Tasks\MouseTask.h" />

@@ -1,8 +1,9 @@
 #pragma once
+#include "Card.h"
 
 namespace game
 {
-	struct BossCard final
+	struct BossCard final : Card
 	{
 
 	};
