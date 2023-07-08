@@ -65,4 +65,24 @@ namespace game
 
 		return selected;
 	}
+
+	bool ValidateMonsterInclusion(const uint32_t id, const PlayerState& playerState)
+	{
+		for (uint32_t j = 0; j < playerState.partySize; ++j)
+			if (playerState.monsterIds[j] == id)
+				return false;
+		return true;
+	}
+
+	bool ValidateArtifactInclusion(const uint32_t id, const PlayerState& playerState)
+	{
+		for (uint32_t j = 0; j < playerState.partySize; ++j)
+		{
+			const uint32_t artifactCount = playerState.artifactsCounts[j];
+			for (uint32_t k = 0; k < artifactCount; ++k)
+				if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
+					return false;
+		}
+		return true;
+	}
 }

@@ -8,55 +8,24 @@
 
 namespace game
 {
-	template <typename T>
-	void GetDeck(jv::Vector<uint32_t>& outDeck, const jv::Array<T>& cards, const PlayerState& playerState,
-		bool(*func)(uint32_t, const PlayerState&))
-	{
-		outDeck.Clear();
-		for (uint32_t i = 0; i < outDeck.length; ++i)
-		{
-			if (cards[i].unique)
-				continue;
-			if (!func(i, playerState))
-				continue;
-			outDeck.Add() = i;
-		}
-	}
-
-	bool ValidateMonsterInclusion(const uint32_t id, const PlayerState& playerState)
-	{
-		for (uint32_t j = 0; j < playerState.partySize; ++j)
-			if (playerState.monsterIds[j] == id)
-				return false;
-		return true;
-	}
-
-	bool ValidateArtifactInclusion(const uint32_t id, const PlayerState& playerState)
-	{
-		for (uint32_t j = 0; j < playerState.partySize; ++j)
-		{
-			const uint32_t artifactCount = playerState.artifactsCounts[j];
-			for (uint32_t k = 0; k < artifactCount; ++k)
-				if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
-					return false;
-		}
-		return true;
-	}
-
 	void NewGameLevel::Create(const LevelCreateInfo& info)
 	{
+		monsterChoice = -1;
+		artifactChoice = -1;
+		confirmedChoices = false;
+
 		ClearSaveData();
 		GetDeck(info.monsterDeck, info.monsters, info.playerState, ValidateMonsterInclusion);
 		GetDeck(info.artifactDeck, info.artifacts, info.playerState, ValidateArtifactInclusion);
 
 		// Create a discover option for your initial monster.
 		monsterDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
-		Shuffle(info.monsterDeck.ptr, info.monsterDeck.length);
+		Shuffle(info.monsterDeck.ptr, info.monsterDeck.count);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			monsterDiscoverOptions[i] = info.monsterDeck.Pop();
 		// Create a discover option for your initial artifact.
 		artifactDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
-		Shuffle(info.artifactDeck.ptr, info.artifactDeck.length);
+		Shuffle(info.artifactDeck.ptr, info.artifactDeck.count);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			artifactDiscoverOptions[i] = info.artifactDeck.Pop();
 	}

@@ -4,6 +4,7 @@
 #include <stb_image.h>
 #include <Engine/Engine.h>
 #include "Cards/ArtifactCard.h"
+#include "Cards/BossCard.h"
 #include "Cards/MonsterCard.h"
 #include "GE/AtlasGenerator.h"
 #include "GE/GraphicsEngine.h"
@@ -69,6 +70,7 @@ namespace game
 
 		jv::Array<MonsterCard> monsters;
 		jv::Array<ArtifactCard> artifacts;
+		jv::Array<BossCard> bosses;
 
 		jv::Vector<uint32_t> monsterDeck;
 		jv::Vector<uint32_t> artifactDeck;
@@ -77,9 +79,10 @@ namespace game
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
 
-		static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
-		static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
-		static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<BossCard> GetBossCards(jv::Arena& arena);
 		
 		void UpdateInput();
 		static void SetInputState(InputState::State& state, uint32_t target, KeyCallback callback);
@@ -110,10 +113,11 @@ namespace game
 				boardState,
 				monsters,
 				artifacts,
+				bosses,
 				monsterDeck,
 				artifactDeck
 			};
-
+			
 			levels[static_cast<uint32_t>(levelIndex)]->Create(info);
 			levelLoading = false;
 		}
@@ -127,6 +131,7 @@ namespace game
 			boardState,
 			monsters,
 			artifacts,
+			bosses,
 			monsterDeck,
 			artifactDeck,
 			inputState,
@@ -252,6 +257,7 @@ namespace game
 			outCardGame->monsterDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->monsters.length);
 			outCardGame->artifacts = cardGame.GetArtifactCards(outCardGame->arena);
 			outCardGame->artifactDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->artifacts.length);
+			outCardGame->bosses = cardGame.GetBossCards(outCardGame->arena);
 		}
 
 		{
@@ -295,6 +301,14 @@ namespace game
 		arr[0].unique = true;
 		arr[0].name = "sword of a thousand truths";
 		arr[0].ruleText = "whenever you attack, win the game.";
+		return arr;
+	}
+
+	jv::Array<BossCard> CardGame::GetBossCards(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<BossCard>(arena, 10);
+		arr[0].name = "ivern the cruel";
+		arr[0].ruleText = "summon ivern and daisy.";
 		return arr;
 	}
 
