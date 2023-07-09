@@ -9,33 +9,33 @@
 
 namespace game
 {
-	uint32_t RenderCards(const LevelUpdateInfo& info, Card** cards, uint32_t length, glm::vec2 position, uint32_t highlight)
+	uint32_t RenderCards(const RenderCardInfo& info)
 	{
-		const float offset = -CARD_WIDTH_OFFSET * (length - 1) / 2;
+		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (info.length - 1) / 2;
 		uint32_t selected = -1;
-		const auto color = glm::vec4(1) * (highlight < length ? CARD_DARKENED_COLOR_MUL : 1);
+		const auto color = glm::vec4(1) * (info.highlight < info.length ? CARD_DARKENED_COLOR_MUL : 1);
 
-		for (uint32_t i = 0; i < length; ++i)
+		for (uint32_t i = 0; i < info.length; ++i)
 		{
-			const auto card = cards[i];
-			const auto pos = position + glm::vec2(offset + CARD_WIDTH_OFFSET * static_cast<float>(i), 0);
-			const auto finalColor = highlight == i ? glm::vec4(1) : color;
+			const auto card = info.cards[i];
+			const auto pos = info.center + glm::vec2(offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(i), 0);
+			const auto finalColor = info.highlight == i ? glm::vec4(1) : color;
 
 			RenderTask bgRenderTask{};
 			bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
 			bgRenderTask.scale.x = CARD_WIDTH;
 			bgRenderTask.position = pos + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
-			bgRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+			bgRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
 			bgRenderTask.color = finalColor;
-			info.renderTasks.Push(bgRenderTask);
+			info.levelUpdateInfo->renderTasks.Push(bgRenderTask);
 
 			RenderTask picRenderTask{};
 			picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
 			picRenderTask.scale.x = CARD_WIDTH;
 			picRenderTask.position = pos - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
-			picRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+			picRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
 			picRenderTask.color = finalColor;
-			info.renderTasks.Push(picRenderTask);
+			info.levelUpdateInfo->renderTasks.Push(picRenderTask);
 
 			TextTask titleTextTask{};
 			titleTextTask.lineLength = 12;
@@ -43,14 +43,14 @@ namespace game
 			titleTextTask.position = pos - glm::vec2(0, CARD_HEIGHT);
 			titleTextTask.text = card->name;
 			titleTextTask.scale = CARD_TEXT_SIZE;
-			info.textTasks.Push(titleTextTask);
+			info.levelUpdateInfo->textTasks.Push(titleTextTask);
 
 			TextTask ruleTextTask = titleTextTask;
 			ruleTextTask.position = pos + glm::vec2(0, bgRenderTask.scale.y);
 			ruleTextTask.text = card->ruleText;
-			info.textTasks.Push(ruleTextTask);
+			info.levelUpdateInfo->textTasks.Push(ruleTextTask);
 
-			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), info.inputState.mousePos))
+			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), info.levelUpdateInfo->inputState.mousePos))
 				selected = i;
 		}
 

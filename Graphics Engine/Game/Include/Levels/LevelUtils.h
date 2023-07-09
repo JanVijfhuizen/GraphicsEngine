@@ -8,7 +8,17 @@ namespace game
 	struct Card;
 	struct LevelUpdateInfo;
 
-	uint32_t RenderCards(const LevelUpdateInfo& info, Card** cards, uint32_t length, glm::vec2 position, uint32_t highlight = -1);
+	struct RenderCardInfo final
+	{
+		LevelUpdateInfo const* levelUpdateInfo;
+		Card** cards;
+		uint32_t length;
+		glm::vec2 center{};
+		uint32_t highlight = -1;
+		float additionalSpacing = 0;
+	};
+
+	uint32_t RenderCards(const RenderCardInfo& info);
 
 	bool ValidateMonsterInclusion(uint32_t id, const PlayerState& playerState);
 	bool ValidateArtifactInclusion(uint32_t id, const PlayerState& playerState);

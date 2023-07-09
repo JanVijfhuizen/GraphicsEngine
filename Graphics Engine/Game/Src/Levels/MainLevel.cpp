@@ -26,6 +26,7 @@ namespace game
 		switchingStage = true;
 		depth = 0;
 		chosenDiscoverOption = -1;
+
 		currentBosses = jv::CreateArray<Boss>(info.arena, DISCOVER_LENGTH);
 		currentRooms = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
 		currentMagics = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
@@ -89,8 +90,13 @@ namespace game
 		Card* cards[DISCOVER_LENGTH]{};
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.bosses[currentBosses[i].id];
-		
-		RenderCards(info, cards, DISCOVER_LENGTH, glm::vec2(0));
+
+		RenderCardInfo renderInfo{};
+		renderInfo.levelUpdateInfo = &info;
+		renderInfo.cards = cards;
+		renderInfo.length = DISCOVER_LENGTH;
+		renderInfo.highlight = chosenDiscoverOption;
+		RenderCards(renderInfo);
 
 		TextTask textTask{};
 		textTask.center = true;
@@ -147,10 +153,19 @@ namespace game
 	void MainLevel::UpdateRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
 		// Render bosses.
-		Card* cards[DISCOVER_LENGTH * 2]{};
+		Card* cards[DISCOVER_LENGTH]{};
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.bosses[currentBosses[i].id];
-		const uint32_t selected = RenderCards(info, cards, DISCOVER_LENGTH, glm::vec2(0, -CARD_HEIGHT), chosenDiscoverOption);
+
+		RenderCardInfo renderInfo{};
+		renderInfo.levelUpdateInfo = &info;
+		renderInfo.cards = cards;
+		renderInfo.length = DISCOVER_LENGTH;
+		renderInfo.center = glm::vec2(0, -CARD_HEIGHT);
+		renderInfo.highlight = chosenDiscoverOption;
+		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
+
+		const uint32_t selected = RenderCards(renderInfo);
 
 		if (info.inputState.lMouse == InputState::pressed)
 			chosenDiscoverOption = selected == chosenDiscoverOption ? -1 : selected;
@@ -163,17 +178,24 @@ namespace game
 			TextTask textTask{};
 			textTask.center = true;
 			textTask.text = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
-			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * DISCOVER_LENGTH / 2 + CARD_WIDTH_OFFSET * i, -CARD_HEIGHT);
+			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * DISCOVER_LENGTH / 2 + CARD_WIDTH_OFFSET * 2 * i, -CARD_HEIGHT);
 			textTask.scale = .06f;
 			info.textTasks.Push(textTask);
 		}
 
 		// Render rooms and magics.
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i * 2] = &info.rooms[currentRooms[i]];
+			cards[i] = &info.rooms[currentRooms[i]];
+		
+		renderInfo.center = glm::vec2(0, CARD_HEIGHT);
+		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
+		RenderCards(renderInfo);
+
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i * 2 + 1] = &info.magics[currentMagics[i]];
-		RenderCards(info, cards, DISCOVER_LENGTH * 2, glm::vec2(0, CARD_HEIGHT), chosenDiscoverOption);
+			cards[i] = &info.magics[currentMagics[i]];
+		
+		renderInfo.center.x += CARD_WIDTH * 2;
+		RenderCards(renderInfo);
 
 		TextTask textTask{};
 		textTask.center = true;
