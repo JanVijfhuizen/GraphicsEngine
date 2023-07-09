@@ -337,7 +337,7 @@ namespace game
 
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<MagicCard>(arena, 10);
+		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
 		return arr;
 	}
 

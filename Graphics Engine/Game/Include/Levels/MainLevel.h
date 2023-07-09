@@ -23,7 +23,9 @@ namespace game
 		jv::Array<Boss> currentBosses;
 		jv::Vector<uint32_t> bossDeck;
 		jv::Array<uint32_t> currentRooms;
+		jv::Array<uint32_t> currentMagics;
 		jv::Vector<uint32_t> roomDeck;
+		jv::Vector<uint32_t> magicDeck;
 
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;

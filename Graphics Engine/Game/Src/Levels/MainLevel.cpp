@@ -5,32 +5,38 @@
 
 #include "Interpreters/TextInterpreter.h"
 #include "States/InputState.h"
+#include "States/GameState.h"
+#include "States/BoardState.h"
 
 namespace game
 {
-	bool ValidateBossInclusion(const uint32_t id, const PlayerState& playerState)
-	{
-		return true;
-	}
-
-	bool ValidateRoomInclusion(const uint32_t id, const PlayerState& playerState)
+	bool EmptyValidation(const uint32_t id, const PlayerState& playerState)
 	{
 		return true;
 	}
 
 	void MainLevel::Create(const LevelCreateInfo& info)
 	{
+		info.gameState = {};
+		info.boardState = {};
+		for (auto& card : info.gameState.magics)
+			card = -1;
+
 		stage = Stage::bossReveal;
 		switchingStage = true;
 		depth = 0;
 		chosenDiscoverOption = -1;
 		currentBosses = jv::CreateArray<Boss>(info.arena, DISCOVER_LENGTH);
 		currentRooms = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
+		currentMagics = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
 
 		bossDeck = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
-		GetDeck(bossDeck, info.bosses, info.playerState, ValidateBossInclusion);
+		GetDeck(bossDeck, info.bosses, info.playerState, EmptyValidation);
 		Shuffle(bossDeck.ptr, bossDeck.count);
 		roomDeck = jv::CreateVector<uint32_t>(info.arena, info.rooms.length);
+		magicDeck = jv::CreateVector<uint32_t>(info.arena, info.magics.length);
+		GetDeck(magicDeck, info.magics, info.playerState, EmptyValidation);
+		Shuffle(magicDeck.ptr, magicDeck.count);
 		
 		GetDeck(info.monsterDeck, info.monsters, info.playerState, ValidateMonsterInclusion);
 		GetDeck(info.artifactDeck, info.artifacts, info.playerState, ValidateArtifactInclusion);
@@ -111,7 +117,7 @@ namespace game
 		{
 			if (roomDeck.count == 0)
 			{
-				GetDeck(roomDeck, info.rooms, info.playerState, ValidateRoomInclusion);
+				GetDeck(roomDeck, info.rooms, info.playerState, EmptyValidation);
 				Shuffle(roomDeck.ptr, roomDeck.count);
 
 				// If the room is already in play, remove it from the shuffled deck.
@@ -134,16 +140,20 @@ namespace game
 			}
 
 			currentRooms[i] = roomDeck.Pop();
+			currentMagics[i] = magicDeck.Pop();
 		}
 	}
 
 	void MainLevel::UpdateRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
 		// Render bosses.
-		Card* cards[DISCOVER_LENGTH]{};
+		Card* cards[DISCOVER_LENGTH * 2]{};
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.bosses[currentBosses[i].id];
-		RenderCards(info, cards, DISCOVER_LENGTH, glm::vec2(0, -CARD_HEIGHT), chosenDiscoverOption);
+		const uint32_t selected = RenderCards(info, cards, DISCOVER_LENGTH, glm::vec2(0, -CARD_HEIGHT), chosenDiscoverOption);
+
+		if (info.inputState.lMouse == InputState::pressed)
+			chosenDiscoverOption = selected == chosenDiscoverOption ? -1 : selected;
 
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
@@ -158,13 +168,12 @@ namespace game
 			info.textTasks.Push(textTask);
 		}
 
-		// Render rooms.
+		// Render rooms and magics.
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.rooms[currentRooms[i]];
-		const uint32_t selected = RenderCards(info, cards, DISCOVER_LENGTH, glm::vec2(0, CARD_HEIGHT), chosenDiscoverOption);
-
-		if (info.inputState.lMouse == InputState::pressed)
-			chosenDiscoverOption = selected == chosenDiscoverOption ? -1 : selected;
+			cards[i * 2] = &info.rooms[currentRooms[i]];
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			cards[i * 2 + 1] = &info.magics[currentMagics[i]];
+		RenderCards(info, cards, DISCOVER_LENGTH * 2, glm::vec2(0, CARD_HEIGHT), chosenDiscoverOption);
 
 		TextTask textTask{};
 		textTask.center = true;
@@ -179,14 +188,24 @@ namespace game
 			textTask.position.y *= -1;
 			textTask.text = "press enter to continue.";
 			info.textTasks.Push(textTask);
-		}
 
-		if (info.inputState.enter == InputState::pressed)
-		{
-			++currentBosses[selected].counters;
+			if (info.inputState.enter == InputState::pressed)
+			{
+				auto& counters = currentBosses[chosenDiscoverOption].counters;
+				++counters;
+				++depth;
 
-			stage = Stage::roomSelection;
-			switchingStage = true;
+				if (depth == 10 || counters > BOSS_COUNTER_COUNT_BEFORE_BOSS)
+				{
+					depth = 0;
+					stage = Stage::bossReveal;
+					switchingStage = true;
+					return;
+				}
+
+				stage = Stage::roomSelection;
+				switchingStage = true;
+			}
 		}
 	}
 }
