@@ -1,7 +1,9 @@
 #pragma once
 #include "Cards/ArtifactCard.h"
 #include "Cards/BossCard.h"
+#include "Cards/MagicCard.h"
 #include "Cards/MonsterCard.h"
+#include "Cards/RoomCard.h"
 #include "Engine/TaskSystem.h"
 #include "JLib/Array.h"
 #include "JLib/Vector.h"
@@ -18,6 +20,8 @@ namespace game
 	struct LevelInfo
 	{
 		jv::Arena& arena;
+		jv::Arena& tempArena;
+		jv::Arena& frameArena;
 		const jv::ge::Resource scene;
 
 		GameState& gameState;
@@ -27,6 +31,8 @@ namespace game
 		const jv::Array<MonsterCard>& monsters;
 		const jv::Array<ArtifactCard>& artifacts;
 		const jv::Array<BossCard>& bosses;
+		const jv::Array<RoomCard>& rooms;
+		const jv::Array<MagicCard>& magics;
 
 		jv::Vector<uint32_t>& monsterDeck;
 		jv::Vector<uint32_t>& artifactDeck;

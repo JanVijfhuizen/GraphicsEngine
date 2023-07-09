@@ -9,15 +9,6 @@
 
 namespace game
 {
-	constexpr float CARD_SPACING = .1f;
-	constexpr float CARD_WIDTH = .15f;
-	constexpr float CARD_HEIGHT = .2f;
-	constexpr float CARD_PIC_FILL_HEIGHT = .6f;
-	constexpr float CARD_WIDTH_OFFSET = CARD_WIDTH * 2 + CARD_SPACING;
-	constexpr float CARD_HEIGHT_OFFSET = CARD_HEIGHT + CARD_SPACING;
-	constexpr float CARD_TEXT_SIZE = CARD_WIDTH * .1f;
-	constexpr float CARD_DARKENED_COLOR_MUL = .2f;
-
 	uint32_t RenderCards(const LevelUpdateInfo& info, Card** cards, uint32_t length, glm::vec2 position, uint32_t highlight)
 	{
 		const float offset = -CARD_WIDTH_OFFSET * (length - 1) / 2;

@@ -19,8 +19,11 @@ namespace game
 		};
 
 		uint32_t depth;
+		uint32_t chosenDiscoverOption;
 		jv::Array<Boss> currentBosses;
 		jv::Vector<uint32_t> bossDeck;
+		jv::Array<uint32_t> currentRooms;
+		jv::Vector<uint32_t> roomDeck;
 
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
