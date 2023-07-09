@@ -6,6 +6,16 @@
 
 namespace game
 {
+	const char* TextInterpreter::IntToConstCharPtr(const uint32_t i, jv::Arena& arena)
+	{
+		constexpr uint32_t size = (sizeof i * CHAR_BIT + 2) / 3 + 2;
+		const auto ptr = static_cast<char*>(arena.Alloc(size));
+		char s[size];
+		sprintf_s(s, "%d", i);
+		memcpy(ptr, s, size);
+		return ptr;
+	}
+
 	void TextInterpreter::OnStart(const TextInterpreterCreateInfo& createInfo, const EngineMemory& memory)
 	{
 		_createInfo = createInfo;

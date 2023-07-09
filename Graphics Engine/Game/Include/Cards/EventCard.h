@@ -3,7 +3,7 @@
 
 namespace game
 {
-	struct BossCard final : Card
+	struct EventCard final : Card
 	{
 		
 	};

@@ -166,6 +166,7 @@
     <ClInclude Include="Include\Cards\Card.h" />
     <ClInclude Include="Include\Cards\CriticalCard.h" />
     <ClInclude Include="Include\Cards\CriticalFailCard.h" />
+    <ClInclude Include="Include\Cards\EventCard.h" />
     <ClInclude Include="Include\Cards\FlawCard.h" />
     <ClInclude Include="Include\Cards\MagicCard.h" />
     <ClInclude Include="Include\Cards\MonsterCard.h" />

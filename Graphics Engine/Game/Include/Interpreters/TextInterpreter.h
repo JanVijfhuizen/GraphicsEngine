@@ -20,6 +20,10 @@ namespace game
 
 	class TextInterpreter final : public TaskInterpreter<TextTask, TextInterpreterCreateInfo>
 	{
+	public:
+		static const char* IntToConstCharPtr(uint32_t i, jv::Arena& arena);
+
+	private:
 		TextInterpreterCreateInfo _createInfo;
 		
 		void OnStart(const TextInterpreterCreateInfo& createInfo, const EngineMemory& memory) override;
