@@ -15,8 +15,9 @@ namespace game
 		confirmedChoices = false;
 
 		ClearSaveData();
-		GetDeck(info.monsterDeck, info.monsters, info.playerState, ValidateMonsterInclusion);
-		GetDeck(info.artifactDeck, info.artifacts, info.playerState, ValidateArtifactInclusion);
+
+		GetDeck(&info.monsterDeck, nullptr, info.monsters, info.playerState, ValidateMonsterInclusion);
+		GetDeck(&info.artifactDeck, nullptr, info.artifacts, info.playerState, ValidateArtifactInclusion);
 
 		// Create a discover option for your initial monster.
 		monsterDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);

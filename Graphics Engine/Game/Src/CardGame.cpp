@@ -16,6 +16,7 @@
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "Levels/Level.h"
+#include "Levels/LevelUtils.h"
 #include "Levels/MainLevel.h"
 #include "Levels/MainMenuLevel.h"
 #include "Levels/NewGameLevel.h"
@@ -269,12 +270,16 @@ namespace game
 
 		{
 			outCardGame->monsters = cardGame.GetMonsterCards(outCardGame->arena);
-			outCardGame->monsterDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->monsters.length);
 			outCardGame->artifacts = cardGame.GetArtifactCards(outCardGame->arena);
-			outCardGame->artifactDeck = jv::CreateVector<uint32_t>(outCardGame->arena, outCardGame->artifacts.length);
 			outCardGame->bosses = cardGame.GetBossCards(outCardGame->arena);
 			outCardGame->rooms = cardGame.GetRoomCards(outCardGame->arena);
 			outCardGame->magic = cardGame.GetMagicCards(outCardGame->arena);
+
+			uint32_t count;
+			GetDeck(nullptr, &count, outCardGame->monsters, outCardGame->playerState, ValidateMonsterInclusion);
+			outCardGame->monsterDeck = jv::CreateVector<uint32_t>(outCardGame->arena, count);
+			GetDeck(nullptr, &count, outCardGame->artifacts, outCardGame->playerState, ValidateArtifactInclusion);
+			outCardGame->artifactDeck = jv::CreateVector<uint32_t>(outCardGame->arena, count);
 		}
 
 		{

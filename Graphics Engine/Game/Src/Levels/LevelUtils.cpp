@@ -76,4 +76,9 @@ namespace game
 		}
 		return true;
 	}
+
+	bool EmptyValidation(const uint32_t id, const PlayerState& playerState)
+	{
+		return true;
+	}
 }

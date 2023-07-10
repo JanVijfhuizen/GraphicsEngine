@@ -22,19 +22,28 @@ namespace game
 
 	bool ValidateMonsterInclusion(uint32_t id, const PlayerState& playerState);
 	bool ValidateArtifactInclusion(uint32_t id, const PlayerState& playerState);
+	bool EmptyValidation(const uint32_t id, const PlayerState& playerState);
 
 	template <typename T>
-	void GetDeck(jv::Vector<uint32_t>& outDeck, const jv::Array<T>& cards, const PlayerState& playerState,
-		bool(*func)(uint32_t, const PlayerState&))
+	void GetDeck(jv::Vector<uint32_t>* outDeck, uint32_t* outCount, const jv::Array<T>& cards, const PlayerState& playerState,
+	    bool(*func)(uint32_t, const PlayerState&))
 	{
-		outDeck.Clear();
-		for (uint32_t i = 0; i < outDeck.length; ++i)
+		if (outCount)
+			*outCount = 0;
+
+		for (uint32_t i = 0; i < cards.length; ++i)
 		{
-			if (cards[i].unique)
+			const auto& card = cards[i];
+			if (card.unique)
 				continue;
 			if (!func(i, playerState))
 				continue;
-			outDeck.Add() = i;
+
+			if(outCount)
+				*outCount += card.count;
+			if(outDeck)
+				for (uint32_t j = 0; j < card.count; ++j)
+					outDeck->Add() = i;
 		}
 	}
 }

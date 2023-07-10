@@ -10,11 +10,6 @@
 
 namespace game
 {
-	bool EmptyValidation(const uint32_t id, const PlayerState& playerState)
-	{
-		return true;
-	}
-
 	void MainLevel::Create(const LevelCreateInfo& info)
 	{
 		info.gameState = {};
@@ -29,16 +24,25 @@ namespace game
 		currentRooms = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
 		currentMagics = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
 
+		uint32_t count;
+
+		GetDeck(nullptr, &count, info.bosses, info.playerState, EmptyValidation);
 		bossDeck = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
-		GetDeck(bossDeck, info.bosses, info.playerState, EmptyValidation);
+		GetDeck(&bossDeck, nullptr, info.bosses, info.playerState, EmptyValidation);
 		Shuffle(bossDeck.ptr, bossDeck.count);
-		roomDeck = jv::CreateVector<uint32_t>(info.arena, info.rooms.length);
-		magicDeck = jv::CreateVector<uint32_t>(info.arena, info.magics.length);
-		GetDeck(magicDeck, info.magics, info.playerState, EmptyValidation);
+
+		GetDeck(nullptr, &count, info.rooms, info.playerState, EmptyValidation);
+		roomDeck = jv::CreateVector<uint32_t>(info.arena, count);
+
+		GetDeck(nullptr, &count, info.magics, info.playerState, EmptyValidation);
+		magicDeck = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(&magicDeck, nullptr, info.magics, info.playerState, EmptyValidation);
 		Shuffle(magicDeck.ptr, magicDeck.count);
-		
-		GetDeck(info.monsterDeck, info.monsters, info.playerState, ValidateMonsterInclusion);
-		GetDeck(info.artifactDeck, info.artifacts, info.playerState, ValidateArtifactInclusion);
+
+		info.monsterDeck.Clear();
+		info.artifactDeck.Clear();
+		GetDeck(&info.monsterDeck, nullptr, info.monsters, info.playerState, ValidateMonsterInclusion);
+		GetDeck(&info.artifactDeck, nullptr, info.artifacts, info.playerState, ValidateArtifactInclusion);
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -127,7 +131,7 @@ namespace game
 		{
 			if (roomDeck.count == 0)
 			{
-				GetDeck(roomDeck, info.rooms, info.playerState, EmptyValidation);
+				GetDeck(&roomDeck, nullptr, info.rooms, info.playerState, EmptyValidation);
 				Shuffle(roomDeck.ptr, roomDeck.count);
 
 				// If the room is already in play, remove it from the shuffled deck.
@@ -245,7 +249,7 @@ namespace game
 		for (uint32_t i = 0; i < MAGIC_CAPACITY; ++i)
 			cards[i] = &info.magics[info.gameState.magics[i]];
 
-		scroll += info.inputState.scroll;
+		scroll += info.inputState.scroll * .1f;
 
 		RenderCardInfo renderInfo{};
 		renderInfo.levelUpdateInfo = &info;
