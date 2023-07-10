@@ -57,11 +57,39 @@ namespace game
 		return selected;
 	}
 
+	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
+	{
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+			for (int32_t j = static_cast<int32_t>(deck.count) - 1; j >= 0; --j)
+				if (playerState.monsterIds[i] == deck[j])
+				{
+					deck.RemoveAt(j);
+					break;
+				}
+	}
+
+	bool RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
+	{
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		{
+			const uint32_t artifactCount = playerState.artifactsCounts[i];
+			for (uint32_t j = 0; j < artifactCount; ++j)
+				for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
+					if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * i + j] == deck[k])
+					{
+						deck.RemoveAt(k);
+						break;
+					}
+		}
+		return true;
+	}
+
 	bool ValidateMonsterInclusion(const uint32_t id, const PlayerState& playerState)
 	{
 		for (uint32_t j = 0; j < playerState.partySize; ++j)
 			if (playerState.monsterIds[j] == id)
 				return false;
+
 		return true;
 	}
 
@@ -74,11 +102,6 @@ namespace game
 				if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
 					return false;
 		}
-		return true;
-	}
-
-	bool EmptyValidation(const uint32_t id, const PlayerState& playerState)
-	{
 		return true;
 	}
 }

@@ -28,23 +28,25 @@ namespace game
 
 		uint32_t count;
 
-		GetDeck(nullptr, &count, info.bosses, info.playerState, EmptyValidation);
+		GetDeck(nullptr, &count, info.bosses, info.playerState);
 		bossDeck = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
-		GetDeck(&bossDeck, nullptr, info.bosses, info.playerState, EmptyValidation);
+		GetDeck(&bossDeck, nullptr, info.bosses, info.playerState);
 		Shuffle(bossDeck.ptr, bossDeck.count);
 
-		GetDeck(nullptr, &count, info.rooms, info.playerState, EmptyValidation);
+		GetDeck(nullptr, &count, info.rooms, info.playerState);
 		roomDeck = jv::CreateVector<uint32_t>(info.arena, count);
 
-		GetDeck(nullptr, &count, info.magics, info.playerState, EmptyValidation);
+		GetDeck(nullptr, &count, info.magics, info.playerState);
 		magicDeck = jv::CreateVector<uint32_t>(info.arena, count);
-		GetDeck(&magicDeck, nullptr, info.magics, info.playerState, EmptyValidation);
+		GetDeck(&magicDeck, nullptr, info.magics, info.playerState);
 		Shuffle(magicDeck.ptr, magicDeck.count);
 
 		info.monsterDeck.Clear();
 		info.artifactDeck.Clear();
-		GetDeck(&info.monsterDeck, nullptr, info.monsters, info.playerState, ValidateMonsterInclusion);
-		GetDeck(&info.artifactDeck, nullptr, info.artifacts, info.playerState, ValidateArtifactInclusion);
+		GetDeck(&info.monsterDeck, nullptr, info.monsters, info.playerState);
+		GetDeck(&info.artifactDeck, nullptr, info.artifacts, info.playerState);
+		RemoveMonstersInParty(info.monsterDeck, info.playerState);
+		RemoveArtifactsInParty(info.artifactDeck, info.playerState);
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -139,7 +141,7 @@ namespace game
 		{
 			if (roomDeck.count == 0)
 			{
-				GetDeck(&roomDeck, nullptr, info.rooms, info.playerState, EmptyValidation);
+				GetDeck(&roomDeck, nullptr, info.rooms, info.playerState);
 				Shuffle(roomDeck.ptr, roomDeck.count);
 
 				// If the room is already in play, remove it from the shuffled deck.

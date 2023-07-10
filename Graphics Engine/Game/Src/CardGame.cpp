@@ -276,9 +276,9 @@ namespace game
 			outCardGame->magic = cardGame.GetMagicCards(outCardGame->arena);
 
 			uint32_t count;
-			GetDeck(nullptr, &count, outCardGame->monsters, outCardGame->playerState, ValidateMonsterInclusion);
+			GetDeck(nullptr, &count, outCardGame->monsters, outCardGame->playerState);
 			outCardGame->monsterDeck = jv::CreateVector<uint32_t>(outCardGame->arena, count);
-			GetDeck(nullptr, &count, outCardGame->artifacts, outCardGame->playerState, ValidateArtifactInclusion);
+			GetDeck(nullptr, &count, outCardGame->artifacts, outCardGame->playerState);
 			outCardGame->artifactDeck = jv::CreateVector<uint32_t>(outCardGame->arena, count);
 		}
 

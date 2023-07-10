@@ -19,14 +19,11 @@ namespace game
 	};
 
 	uint32_t RenderCards(const RenderCardInfo& info);
-
-	bool ValidateMonsterInclusion(uint32_t id, const PlayerState& playerState);
-	bool ValidateArtifactInclusion(uint32_t id, const PlayerState& playerState);
-	bool EmptyValidation(const uint32_t id, const PlayerState& playerState);
+	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
+	bool RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
 
 	template <typename T>
-	void GetDeck(jv::Vector<uint32_t>* outDeck, uint32_t* outCount, const jv::Array<T>& cards, const PlayerState& playerState,
-	    bool(*func)(uint32_t, const PlayerState&))
+	void GetDeck(jv::Vector<uint32_t>* outDeck, uint32_t* outCount, const jv::Array<T>& cards, const PlayerState& playerState)
 	{
 		if (outCount)
 			*outCount = 0;
@@ -35,8 +32,6 @@ namespace game
 		{
 			const auto& card = cards[i];
 			if (card.unique)
-				continue;
-			if (!func(i, playerState))
 				continue;
 
 			if(outCount)
