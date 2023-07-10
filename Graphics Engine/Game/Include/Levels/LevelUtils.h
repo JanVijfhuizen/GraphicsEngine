@@ -8,23 +8,42 @@ namespace game
 	struct Card;
 	struct LevelUpdateInfo;
 
-	uint32_t RenderCards(const LevelUpdateInfo& info, Card** cards, uint32_t length, glm::vec2 position, uint32_t highlight = -1);
+	struct RenderCardInfo final
+	{
+		LevelUpdateInfo const* levelUpdateInfo;
+		Card** cards;
+		uint32_t length;
+		glm::vec2 center{};
+		uint32_t highlight = -1;
+		float additionalSpacing = 0;
+	};
+
+	uint32_t RenderCards(const RenderCardInfo& info);
 
 	bool ValidateMonsterInclusion(uint32_t id, const PlayerState& playerState);
 	bool ValidateArtifactInclusion(uint32_t id, const PlayerState& playerState);
+	bool EmptyValidation(const uint32_t id, const PlayerState& playerState);
 
 	template <typename T>
-	void GetDeck(jv::Vector<uint32_t>& outDeck, const jv::Array<T>& cards, const PlayerState& playerState,
-		bool(*func)(uint32_t, const PlayerState&))
+	void GetDeck(jv::Vector<uint32_t>* outDeck, uint32_t* outCount, const jv::Array<T>& cards, const PlayerState& playerState,
+	    bool(*func)(uint32_t, const PlayerState&))
 	{
-		outDeck.Clear();
-		for (uint32_t i = 0; i < outDeck.length; ++i)
+		if (outCount)
+			*outCount = 0;
+
+		for (uint32_t i = 0; i < cards.length; ++i)
 		{
-			if (cards[i].unique)
+			const auto& card = cards[i];
+			if (card.unique)
 				continue;
 			if (!func(i, playerState))
 				continue;
-			outDeck.Add() = i;
+
+			if(outCount)
+				*outCount += card.count;
+			if(outDeck)
+				for (uint32_t j = 0; j < card.count; ++j)
+					outDeck->Add() = i;
 		}
 	}
 }

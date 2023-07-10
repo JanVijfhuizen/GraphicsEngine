@@ -15,8 +15,9 @@ namespace game
 		confirmedChoices = false;
 
 		ClearSaveData();
-		GetDeck(info.monsterDeck, info.monsters, info.playerState, ValidateMonsterInclusion);
-		GetDeck(info.artifactDeck, info.artifacts, info.playerState, ValidateArtifactInclusion);
+
+		GetDeck(&info.monsterDeck, nullptr, info.monsters, info.playerState, ValidateMonsterInclusion);
+		GetDeck(&info.artifactDeck, nullptr, info.artifacts, info.playerState, ValidateArtifactInclusion);
 
 		// Create a discover option for your initial monster.
 		monsterDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
@@ -36,15 +37,24 @@ namespace game
 		{
 			Card* cards[DISCOVER_LENGTH]{};
 
+			RenderCardInfo renderInfo{};
+			renderInfo.levelUpdateInfo = &info;
+			renderInfo.cards = cards;
+			renderInfo.length = DISCOVER_LENGTH;
+			renderInfo.center = glm::vec2(0, -.3);
+			renderInfo.highlight = monsterChoice;
+
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.monsters[monsterDiscoverOptions[i]];
-			auto choice = RenderCards(info, cards, DISCOVER_LENGTH, glm::vec2(0, -.3), monsterChoice);
+			auto choice = RenderCards(renderInfo);
 			if (info.inputState.lMouse == InputState::pressed && choice != -1)
 				monsterChoice = choice == monsterChoice ? -1 : choice;
 
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
-			choice = RenderCards(info, cards, DISCOVER_LENGTH, glm::vec2(0, .3), artifactChoice);
+			renderInfo.center.y *= -1;
+			renderInfo.highlight = artifactChoice;
+			choice = RenderCards(renderInfo);
 			if (info.inputState.lMouse == InputState::pressed && choice != -1)
 				artifactChoice = choice == artifactChoice ? -1 : choice;
 
@@ -78,7 +88,12 @@ namespace game
 		info.textTasks.Push(joinTextTask);
 
 		Card* cards = &info.monsters[0];
-		RenderCards(info, &cards, 1, glm::vec2(0));
+
+		RenderCardInfo renderInfo{};
+		renderInfo.levelUpdateInfo = &info;
+		renderInfo.cards = &cards;
+		renderInfo.length = 1;
+		RenderCards(renderInfo);
 
 		TextTask textTask{};
 		textTask.center = true;
