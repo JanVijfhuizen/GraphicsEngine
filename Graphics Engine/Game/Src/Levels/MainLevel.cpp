@@ -19,8 +19,6 @@ namespace game
 	{
 		info.gameState = {};
 		info.boardState = {};
-		for (auto& card : info.gameState.magics)
-			card = -1;
 
 		stage = Stage::bossReveal;
 		switchingStage = true;
@@ -55,6 +53,9 @@ namespace game
 			case Stage::roomSelection:
 				SwitchToRoomSelectionStage(info, loadLevelIndex);
 				break;
+			case Stage::receiveRewards:
+				SwitchToRewardStage(info, loadLevelIndex);
+				break;
 			default:
 				throw std::exception("Stage not supported!");
 			}
@@ -67,6 +68,9 @@ namespace game
 			break;
 		case Stage::roomSelection:
 			UpdateRoomSelectionStage(info, loadLevelIndex);
+			break;
+		case Stage::receiveRewards:
+			UpdateRewardStage(info, loadLevelIndex);
 			break;
 		default:
 			throw std::exception("Stage not supported!");
@@ -213,21 +217,85 @@ namespace game
 
 			if (info.inputState.enter == InputState::pressed)
 			{
+				chosenRoom = chosenDiscoverOption;
 				auto& counters = currentBosses[chosenDiscoverOption].counters;
 				++counters;
 				++depth;
 
-				if (depth == 10 || counters > BOSS_COUNTER_COUNT_BEFORE_BOSS)
-				{
-					depth = 0;
-					stage = Stage::bossReveal;
-					switchingStage = true;
-					return;
-				}
-
-				stage = Stage::roomSelection;
+				for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+					if(chosenDiscoverOption != i)
+						magicDeck.Add() = currentMagics[i];
+				
+				stage = Stage::receiveRewards;
 				switchingStage = true;
+				chosenDiscoverOption = -1;
 			}
+		}
+	}
+
+	void MainLevel::SwitchToRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		chosenDiscoverOption = -1;
+		scroll = 0;
+	}
+
+	void MainLevel::UpdateRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		Card* cards[MAGIC_CAPACITY]{};
+		for (uint32_t i = 0; i < MAGIC_CAPACITY; ++i)
+			cards[i] = &info.magics[info.gameState.magics[i]];
+
+		scroll += info.inputState.scroll;
+
+		RenderCardInfo renderInfo{};
+		renderInfo.levelUpdateInfo = &info;
+		renderInfo.length = MAGIC_CAPACITY;
+		renderInfo.highlight = chosenDiscoverOption;
+		renderInfo.cards = cards;
+		renderInfo.center.x = scroll;
+		renderInfo.center.y = CARD_HEIGHT;
+		renderInfo.additionalSpacing = -CARD_SPACING;
+		const uint32_t choice = RenderCards(renderInfo);
+
+		cards[0] = &info.magics[currentMagics[chosenRoom]];
+		renderInfo.length = 1;
+		renderInfo.highlight = -1;
+		renderInfo.center.y *= -1;
+		renderInfo.center.x = 0;
+		RenderCards(renderInfo);
+
+		if (info.inputState.lMouse == InputState::pressed)
+			chosenDiscoverOption = choice == chosenDiscoverOption ? -1 : choice;
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.lineLength = 20;
+		textTask.scale = .06f;
+		textTask.position = glm::vec2(0, .8f);
+		textTask.text = "press enter to continue.";
+		info.textTasks.Push(textTask);
+
+		textTask.text = "select card to replace, if any.";
+		textTask.position.y *= -1;
+		info.textTasks.Push(textTask);
+
+		if (info.inputState.enter == InputState::pressed)
+		{
+			if(chosenDiscoverOption != -1)
+			{
+				magicDeck.Add() = info.gameState.magics[chosenDiscoverOption];
+				info.gameState.magics[chosenDiscoverOption] = currentMagics[chosenRoom];
+			}
+
+			if (depth == 10)
+			{
+				depth = 0;
+				stage = Stage::bossReveal;
+			}
+			else
+				stage = Stage::roomSelection;
+
+			switchingStage = true;
 		}
 	}
 }
