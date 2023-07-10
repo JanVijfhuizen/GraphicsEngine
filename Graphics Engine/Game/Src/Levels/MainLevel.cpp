@@ -3,10 +3,12 @@
 #include "Utils/Shuffle.h"
 #include <Levels/LevelUtils.h>
 
+#include "CardGame.h"
 #include "Interpreters/TextInterpreter.h"
 #include "States/InputState.h"
 #include "States/GameState.h"
 #include "States/BoardState.h"
+#include "Utils/BoxCollision.h"
 
 namespace game
 {
@@ -60,6 +62,9 @@ namespace game
 			case Stage::receiveRewards:
 				SwitchToRewardStage(info, loadLevelIndex);
 				break;
+			case Stage::exitFound:
+				SwitchToExitFoundStage(info, loadLevelIndex);
+				break;
 			default:
 				throw std::exception("Stage not supported!");
 			}
@@ -75,6 +80,9 @@ namespace game
 			break;
 		case Stage::receiveRewards:
 			UpdateRewardStage(info, loadLevelIndex);
+			break;
+		case Stage::exitFound:
+			UpdateExitFoundStage(info, loadLevelIndex);
 			break;
 		default:
 			throw std::exception("Stage not supported!");
@@ -291,15 +299,65 @@ namespace game
 				info.gameState.magics[chosenDiscoverOption] = currentMagics[chosenRoom];
 			}
 
-			if (depth == 10)
-			{
-				depth = 0;
-				stage = Stage::bossReveal;
-			}
+			if (depth % 5 == 0)
+				stage = Stage::exitFound;
 			else
 				stage = Stage::roomSelection;
-
+			
 			switchingStage = true;
 		}
+	}
+
+	void MainLevel::SwitchToExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.lineLength = 20;
+		textTask.scale = .06f;
+		textTask.position = glm::vec2(0, -.8f);
+		textTask.text = "an exit leading outside has been found.";
+		info.textTasks.Push(textTask);
+	}
+
+	void MainLevel::UpdateExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		RenderTask buttonRenderTask{};
+		buttonRenderTask.position.y = -.18;
+		buttonRenderTask.scale.y *= .12f;
+		buttonRenderTask.scale.x = 1;
+		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		info.renderTasks.Push(buttonRenderTask);
+
+		if (info.inputState.lMouse == InputState::pressed)
+			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+			{
+				if (depth % 10 == 0)
+					stage = Stage::bossReveal;
+				else
+					stage = Stage::roomSelection;
+				switchingStage = true;
+				return;
+			}
+
+		TextTask buttonTextTask{};
+		buttonTextTask.center = true;
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.text = "continue forward";
+		buttonTextTask.scale = .06f;
+		info.textTasks.Push(buttonTextTask);
+
+		buttonRenderTask.position.y *= -1;
+		info.renderTasks.Push(buttonRenderTask);
+
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.text = "save and escape dungeon";
+		info.textTasks.Push(buttonTextTask);
+
+		if (info.inputState.lMouse == InputState::pressed)
+			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+			{
+				SaveData(info.playerState);
+				loadLevelIndex = LevelIndex::mainMenu;
+			}
 	}
 }

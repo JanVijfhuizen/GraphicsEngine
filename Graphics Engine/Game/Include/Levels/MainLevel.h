@@ -9,7 +9,8 @@ namespace game
 		{
 			bossReveal,
 			roomSelection,
-			receiveRewards
+			receiveRewards,
+			exitFound
 		} stage;
 		bool switchingStage;
 
@@ -39,5 +40,7 @@ namespace game
 		void UpdateRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		void SwitchToRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		void UpdateRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
+		void SwitchToExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
+		void UpdateExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 	};
 }
