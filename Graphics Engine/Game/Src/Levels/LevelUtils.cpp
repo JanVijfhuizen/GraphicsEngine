@@ -64,16 +64,10 @@ namespace game
 
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
 	{
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			for (int32_t j = static_cast<int32_t>(deck.count) - 1; j >= 0; --j)
-				if (playerState.monsterIds[i] == deck[j])
-				{
-					deck.RemoveAt(j);
-					break;
-				}
+		RemoveDuplicates(deck, playerState.monsterIds, playerState.partySize);
 	}
 
-	bool RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
+	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
 	{
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 		{
@@ -86,7 +80,17 @@ namespace game
 						break;
 					}
 		}
-		return true;
+	}
+
+	void RemoveDuplicates(jv::Vector<uint32_t>& deck, const uint32_t* duplicates, const uint32_t duplicateCount)
+	{
+		for (uint32_t i = 0; i < duplicateCount; ++i)
+			for (uint32_t j = 0; j < deck.count; ++j)
+				if(deck[j] == duplicates[i])
+				{
+					deck.RemoveAt(j);
+					break;
+				}
 	}
 
 	bool ValidateMonsterInclusion(const uint32_t id, const PlayerState& playerState)

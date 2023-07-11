@@ -25,6 +25,7 @@ namespace game
 		currentBosses = jv::CreateArray<Boss>(info.arena, DISCOVER_LENGTH);
 		currentRooms = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
 		currentMagics = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
+		currentFlaws = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
 
 		uint32_t count;
 
@@ -40,6 +41,11 @@ namespace game
 		magicDeck = jv::CreateVector<uint32_t>(info.arena, count);
 		GetDeck(&magicDeck, nullptr, info.magics);
 		Shuffle(magicDeck.ptr, magicDeck.count);
+
+		GetDeck(nullptr, &count, info.flaws);
+		flawDeck = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(&flawDeck, nullptr, info.flaws);
+		Shuffle(flawDeck.ptr, flawDeck.count);
 
 		info.monsterDeck.Clear();
 		info.artifactDeck.Clear();
@@ -139,32 +145,25 @@ namespace game
 	{
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
-			if (roomDeck.count == 0)
+			jv::Vector<uint32_t>* decks[]
 			{
-				GetDeck(&roomDeck, nullptr, info.rooms);
-				Shuffle(roomDeck.ptr, roomDeck.count);
+				&roomDeck,
+				&magicDeck,
+				&flawDeck
+			};
 
-				// If the room is already in play, remove it from the shuffled deck.
-				for (uint32_t j = 0; j < i; ++j)
-				{
-					bool removed = false;
-
-					for (int32_t k = static_cast<int32_t>(roomDeck.count) - 1; k >= 0; --k)
-					{
-						if (currentRooms[j] == roomDeck[k])
-						{
-							roomDeck.RemoveAt(k);
-							removed = true;
-							break;
-						}
-					}
-					if (removed)
-						break;
-				}
+			for (auto& deck : decks)
+			{
+				if (deck->count > 0)
+					continue;
+				GetDeck(deck, nullptr, info.rooms);
+				Shuffle(deck->ptr, deck->count);
+				RemoveDuplicates(*deck, currentRooms.ptr, DISCOVER_LENGTH);
 			}
 
 			currentRooms[i] = roomDeck.Pop();
 			currentMagics[i] = magicDeck.Pop();
+			currentFlaws[i] = flawDeck.Pop();
 		}
 
 		chosenDiscoverOption = -1;

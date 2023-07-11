@@ -24,12 +24,14 @@ namespace game
 		uint32_t chosenDiscoverOption;
 		uint32_t chosenRoom;
 		float scroll;
-		jv::Array<Boss> currentBosses;
 		jv::Vector<uint32_t> bossDeck;
+		jv::Array<Boss> currentBosses;
 		jv::Array<uint32_t> currentRooms;
 		jv::Array<uint32_t> currentMagics;
+		jv::Array<uint32_t> currentFlaws;
 		jv::Vector<uint32_t> roomDeck;
 		jv::Vector<uint32_t> magicDeck;
+		jv::Vector<uint32_t> flawDeck;
 
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;

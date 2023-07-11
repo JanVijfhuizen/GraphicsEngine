@@ -77,6 +77,7 @@ namespace game
 		jv::Array<BossCard> bosses;
 		jv::Array<RoomCard> rooms;
 		jv::Array<MagicCard> magic;
+		jv::Array<FlawCard> flaws;
 
 		jv::Vector<uint32_t> monsterDeck;
 		jv::Vector<uint32_t> artifactDeck;
@@ -91,6 +92,7 @@ namespace game
 		[[nodiscard]] static jv::Array<BossCard> GetBossCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<RoomCard> GetRoomCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<MagicCard> GetMagicCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<FlawCard> GetFlawCards(jv::Arena& arena);
 		
 		void UpdateInput();
 		static void SetInputState(InputState::State& state, uint32_t target, KeyCallback callback);
@@ -127,6 +129,7 @@ namespace game
 				bosses,
 				rooms,
 				magic,
+				flaws,
 				monsterDeck,
 				artifactDeck
 			};
@@ -149,6 +152,7 @@ namespace game
 			bosses,
 			rooms,
 			magic,
+			flaws,
 			monsterDeck,
 			artifactDeck,
 			inputState,
@@ -275,6 +279,7 @@ namespace game
 			outCardGame->bosses = cardGame.GetBossCards(outCardGame->arena);
 			outCardGame->rooms = cardGame.GetRoomCards(outCardGame->arena);
 			outCardGame->magic = cardGame.GetMagicCards(outCardGame->arena);
+			outCardGame->flaws = cardGame.GetFlawCards(outCardGame->arena);
 
 			uint32_t count;
 			GetDeck(nullptr, &count, outCardGame->monsters);
@@ -345,6 +350,12 @@ namespace game
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
+		return arr;
+	}
+
+	jv::Array<FlawCard> CardGame::GetFlawCards(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<FlawCard>(arena, 24);
 		return arr;
 	}
 
