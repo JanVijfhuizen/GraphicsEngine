@@ -56,7 +56,7 @@ namespace game
 			if (info.inputState.lMouse == InputState::pressed)
 				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
 				{
-					loadLevelIndex = LevelIndex::main;
+					loadLevelIndex = LevelIndex::partySelect;
 				}
 		}
 

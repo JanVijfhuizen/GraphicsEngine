@@ -10,6 +10,7 @@ namespace game
 
 		uint32_t monsterChoice;
 		uint32_t artifactChoice;
+		bool confirmedMode;
 		bool confirmedChoices;
 
 		void Create(const LevelCreateInfo& info) override;

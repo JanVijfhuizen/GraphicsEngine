@@ -20,6 +20,7 @@
 #include "Levels/MainLevel.h"
 #include "Levels/MainMenuLevel.h"
 #include "Levels/NewGameLevel.h"
+#include "Levels/PartySelectLevel.h"
 #include "States/BoardState.h"
 #include "States/GameState.h"
 #include "States/InputState.h"
@@ -76,6 +77,7 @@ namespace game
 		jv::Array<BossCard> bosses;
 		jv::Array<RoomCard> rooms;
 		jv::Array<MagicCard> magic;
+		jv::Array<FlawCard> flaws;
 
 		jv::Vector<uint32_t> monsterDeck;
 		jv::Vector<uint32_t> artifactDeck;
@@ -90,6 +92,7 @@ namespace game
 		[[nodiscard]] static jv::Array<BossCard> GetBossCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<RoomCard> GetRoomCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<MagicCard> GetMagicCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<FlawCard> GetFlawCards(jv::Arena& arena);
 		
 		void UpdateInput();
 		static void SetInputState(InputState::State& state, uint32_t target, KeyCallback callback);
@@ -126,6 +129,7 @@ namespace game
 				bosses,
 				rooms,
 				magic,
+				flaws,
 				monsterDeck,
 				artifactDeck
 			};
@@ -148,6 +152,7 @@ namespace game
 			bosses,
 			rooms,
 			magic,
+			flaws,
 			monsterDeck,
 			artifactDeck,
 			inputState,
@@ -274,19 +279,21 @@ namespace game
 			outCardGame->bosses = cardGame.GetBossCards(outCardGame->arena);
 			outCardGame->rooms = cardGame.GetRoomCards(outCardGame->arena);
 			outCardGame->magic = cardGame.GetMagicCards(outCardGame->arena);
+			outCardGame->flaws = cardGame.GetFlawCards(outCardGame->arena);
 
 			uint32_t count;
-			GetDeck(nullptr, &count, outCardGame->monsters, outCardGame->playerState, ValidateMonsterInclusion);
+			GetDeck(nullptr, &count, outCardGame->monsters);
 			outCardGame->monsterDeck = jv::CreateVector<uint32_t>(outCardGame->arena, count);
-			GetDeck(nullptr, &count, outCardGame->artifacts, outCardGame->playerState, ValidateArtifactInclusion);
+			GetDeck(nullptr, &count, outCardGame->artifacts);
 			outCardGame->artifactDeck = jv::CreateVector<uint32_t>(outCardGame->arena, count);
 		}
 
 		{
-			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 3);
+			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 4);
 			outCardGame->levels[0] = outCardGame->arena.New<MainMenuLevel>();
 			outCardGame->levels[1] = outCardGame->arena.New<NewGameLevel>();
-			outCardGame->levels[2] = outCardGame->arena.New<MainLevel>();
+			outCardGame->levels[2] = outCardGame->arena.New<PartySelectLevel>();
+			outCardGame->levels[3] = outCardGame->arena.New<MainLevel>();
 		}
 	}
 
@@ -343,6 +350,12 @@ namespace game
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
+		return arr;
+	}
+
+	jv::Array<FlawCard> CardGame::GetFlawCards(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<FlawCard>(arena, 24);
 		return arr;
 	}
 
@@ -447,13 +460,12 @@ namespace game
 
 		for (auto& monsterId : playerState.monsterIds)
 			inFile >> monsterId;
-		for (auto& health : playerState.healths)
-			inFile >> health;
 		for (auto& artifact : playerState.artifacts)
 			inFile >> artifact;
 		for (auto& artifactCount : playerState.artifactsCounts)
 			inFile >> artifactCount;
 		inFile >> playerState.partySize;
+		inFile >> playerState.ironManMode;
 		inFile.close();
 		return true;
 	}
@@ -466,13 +478,12 @@ namespace game
 
 		for (const auto& monsterId : playerState.monsterIds)
 			outFile << monsterId << std::endl;
-		for (const auto& health : playerState.healths)
-			outFile << health << std::endl;
 		for (const auto& artifact : playerState.artifacts)
 			outFile << artifact << std::endl;
 		for (const auto& artifactCount : playerState.artifactsCounts)
 			outFile << artifactCount << std::endl;
 		outFile << playerState.partySize << std::endl;
+		outFile << playerState.ironManMode << std::endl;
 		outFile.close();
 	}
 

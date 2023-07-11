@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/LevelUtils.h"
 
+#include "JLib/Math.h"
 #include "Levels/Level.h"
 #include "States/InputState.h"
 #include "Tasks/RenderTask.h"
@@ -11,15 +12,19 @@ namespace game
 {
 	uint32_t RenderCards(const RenderCardInfo& info)
 	{
-		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (info.length - 1) / 2;
+		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (jv::Min<uint32_t>(info.length, info.lineLength) - 1) / 2;
 		uint32_t selected = -1;
-		const auto color = glm::vec4(1) * (info.highlight < info.length ? CARD_DARKENED_COLOR_MUL : 1);
+		const auto color = glm::vec4(1) * (info.highlight < info.length || info.selectedArr ? CARD_DARKENED_COLOR_MUL : 1);
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
+			const uint32_t w = i % info.lineLength;
+			const uint32_t h = i / info.lineLength;
+
 			const auto card = info.cards[i];
-			const auto pos = info.center + glm::vec2(offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(i), 0);
-			const auto finalColor = info.highlight == i ? glm::vec4(1) : color;
+			const auto pos = info.center + glm::vec2(offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(w), h * CARD_HEIGHT * 2);
+			const bool highlight = info.highlight == i || (info.selectedArr ? info.selectedArr[i] : false);
+			const auto finalColor = highlight ? glm::vec4(1) : color;
 
 			RenderTask bgRenderTask{};
 			bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
@@ -57,11 +62,43 @@ namespace game
 		return selected;
 	}
 
+	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
+	{
+		RemoveDuplicates(deck, playerState.monsterIds, playerState.partySize);
+	}
+
+	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
+	{
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		{
+			const uint32_t artifactCount = playerState.artifactsCounts[i];
+			for (uint32_t j = 0; j < artifactCount; ++j)
+				for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
+					if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * i + j] == deck[k])
+					{
+						deck.RemoveAt(k);
+						break;
+					}
+		}
+	}
+
+	void RemoveDuplicates(jv::Vector<uint32_t>& deck, const uint32_t* duplicates, const uint32_t duplicateCount)
+	{
+		for (uint32_t i = 0; i < duplicateCount; ++i)
+			for (uint32_t j = 0; j < deck.count; ++j)
+				if(deck[j] == duplicates[i])
+				{
+					deck.RemoveAt(j);
+					break;
+				}
+	}
+
 	bool ValidateMonsterInclusion(const uint32_t id, const PlayerState& playerState)
 	{
 		for (uint32_t j = 0; j < playerState.partySize; ++j)
 			if (playerState.monsterIds[j] == id)
 				return false;
+
 		return true;
 	}
 
@@ -74,11 +111,6 @@ namespace game
 				if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
 					return false;
 		}
-		return true;
-	}
-
-	bool EmptyValidation(const uint32_t id, const PlayerState& playerState)
-	{
 		return true;
 	}
 }

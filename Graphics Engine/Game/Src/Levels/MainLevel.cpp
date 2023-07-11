@@ -14,8 +14,13 @@ namespace game
 {
 	void MainLevel::Create(const LevelCreateInfo& info)
 	{
-		info.gameState = {};
+		if (info.playerState.ironManMode)
+			ClearSaveData();
+
 		info.boardState = {};
+
+		for (auto& flaw : info.gameState.flaws)
+			flaw = -1;
 
 		stage = Stage::bossReveal;
 		switchingStage = true;
@@ -25,26 +30,34 @@ namespace game
 		currentBosses = jv::CreateArray<Boss>(info.arena, DISCOVER_LENGTH);
 		currentRooms = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
 		currentMagics = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
+		currentFlaws = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
 
 		uint32_t count;
 
-		GetDeck(nullptr, &count, info.bosses, info.playerState, EmptyValidation);
+		GetDeck(nullptr, &count, info.bosses);
 		bossDeck = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
-		GetDeck(&bossDeck, nullptr, info.bosses, info.playerState, EmptyValidation);
+		GetDeck(&bossDeck, nullptr, info.bosses);
 		Shuffle(bossDeck.ptr, bossDeck.count);
 
-		GetDeck(nullptr, &count, info.rooms, info.playerState, EmptyValidation);
+		GetDeck(nullptr, &count, info.rooms);
 		roomDeck = jv::CreateVector<uint32_t>(info.arena, count);
 
-		GetDeck(nullptr, &count, info.magics, info.playerState, EmptyValidation);
+		GetDeck(nullptr, &count, info.magics);
 		magicDeck = jv::CreateVector<uint32_t>(info.arena, count);
-		GetDeck(&magicDeck, nullptr, info.magics, info.playerState, EmptyValidation);
+		GetDeck(&magicDeck, nullptr, info.magics);
 		Shuffle(magicDeck.ptr, magicDeck.count);
+
+		GetDeck(nullptr, &count, info.flaws);
+		flawDeck = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(&flawDeck, nullptr, info.flaws);
+		Shuffle(flawDeck.ptr, flawDeck.count);
 
 		info.monsterDeck.Clear();
 		info.artifactDeck.Clear();
-		GetDeck(&info.monsterDeck, nullptr, info.monsters, info.playerState, ValidateMonsterInclusion);
-		GetDeck(&info.artifactDeck, nullptr, info.artifacts, info.playerState, ValidateArtifactInclusion);
+		GetDeck(&info.monsterDeck, nullptr, info.monsters);
+		GetDeck(&info.artifactDeck, nullptr, info.artifacts);
+		RemoveMonstersInParty(info.monsterDeck, info.playerState);
+		RemoveArtifactsInParty(info.artifactDeck, info.playerState);
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -135,35 +148,33 @@ namespace game
 
 	void MainLevel::SwitchToRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
+		const bool addFlaw = depth % 10 == 4;
+
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
-			if (roomDeck.count == 0)
+			jv::Vector<uint32_t>* decks[]
 			{
-				GetDeck(&roomDeck, nullptr, info.rooms, info.playerState, EmptyValidation);
-				Shuffle(roomDeck.ptr, roomDeck.count);
+				&roomDeck,
+				&magicDeck,
+				&flawDeck
+			};
 
-				// If the room is already in play, remove it from the shuffled deck.
-				for (uint32_t j = 0; j < i; ++j)
-				{
-					bool removed = false;
-
-					for (int32_t k = static_cast<int32_t>(roomDeck.count) - 1; k >= 0; --k)
-					{
-						if (currentRooms[j] == roomDeck[k])
-						{
-							roomDeck.RemoveAt(k);
-							removed = true;
-							break;
-						}
-					}
-					if (removed)
-						break;
-				}
+			for (auto& deck : decks)
+			{
+				if (deck->count > 0)
+					continue;
+				GetDeck(deck, nullptr, info.rooms);
+				Shuffle(deck->ptr, deck->count);
+				RemoveDuplicates(*deck, currentRooms.ptr, DISCOVER_LENGTH);
 			}
 
 			currentRooms[i] = roomDeck.Pop();
 			currentMagics[i] = magicDeck.Pop();
+			if(addFlaw)
+				currentFlaws[i] = flawDeck.Pop();
 		}
+
+		chosenDiscoverOption = -1;
 	}
 
 	void MainLevel::UpdateRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -194,12 +205,21 @@ namespace game
 			TextTask textTask{};
 			textTask.center = true;
 			textTask.text = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
-			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * DISCOVER_LENGTH / 2 + CARD_WIDTH_OFFSET * 2 * i, -CARD_HEIGHT);
+			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * DISCOVER_LENGTH / 2 + CARD_WIDTH_OFFSET * 2 * i - CARD_WIDTH_OFFSET, -CARD_HEIGHT);
 			textTask.scale = .06f;
 			info.textTasks.Push(textTask);
 		}
 
-		// Render rooms and magics.
+		// Render flaws.
+		if(depth % 10 == 4)
+		{
+			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+				cards[i] = &info.flaws[currentFlaws[i]];
+			renderInfo.center.x += CARD_WIDTH * 2;
+			RenderCards(renderInfo);
+		}
+
+		// Render rooms.
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.rooms[currentRooms[i]];
 		
@@ -207,6 +227,7 @@ namespace game
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 		RenderCards(renderInfo);
 
+		// Render magics.
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.magics[currentMagics[i]];
 		
@@ -233,10 +254,6 @@ namespace game
 				auto& counters = currentBosses[chosenDiscoverOption].counters;
 				++counters;
 				++depth;
-
-				for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-					if(chosenDiscoverOption != i)
-						magicDeck.Add() = currentMagics[i];
 				
 				stage = Stage::receiveRewards;
 				switchingStage = true;
@@ -249,63 +266,127 @@ namespace game
 	{
 		chosenDiscoverOption = -1;
 		scroll = 0;
+		rewardedMagicCard = false;
 	}
 
 	void MainLevel::UpdateRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
 		Card* cards[MAGIC_CAPACITY]{};
-		for (uint32_t i = 0; i < MAGIC_CAPACITY; ++i)
-			cards[i] = &info.magics[info.gameState.magics[i]];
 
-		scroll += info.inputState.scroll * .1f;
-
-		RenderCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.length = MAGIC_CAPACITY;
-		renderInfo.highlight = chosenDiscoverOption;
-		renderInfo.cards = cards;
-		renderInfo.center.x = scroll;
-		renderInfo.center.y = CARD_HEIGHT;
-		renderInfo.additionalSpacing = -CARD_SPACING;
-		const uint32_t choice = RenderCards(renderInfo);
-
-		cards[0] = &info.magics[currentMagics[chosenRoom]];
-		renderInfo.length = 1;
-		renderInfo.highlight = -1;
-		renderInfo.center.y *= -1;
-		renderInfo.center.x = 0;
-		RenderCards(renderInfo);
-
-		if (info.inputState.lMouse == InputState::pressed)
-			chosenDiscoverOption = choice == chosenDiscoverOption ? -1 : choice;
-
-		TextTask textTask{};
-		textTask.center = true;
-		textTask.lineLength = 20;
-		textTask.scale = .06f;
-		textTask.position = glm::vec2(0, .8f);
-		textTask.text = "press enter to continue.";
-		info.textTasks.Push(textTask);
-
-		textTask.text = "select card to replace, if any.";
-		textTask.position.y *= -1;
-		info.textTasks.Push(textTask);
-
-		if (info.inputState.enter == InputState::pressed)
+		if(!rewardedMagicCard)
 		{
-			if(chosenDiscoverOption != -1)
+			for (uint32_t i = 0; i < MAGIC_CAPACITY; ++i)
+				cards[i] = &info.magics[info.gameState.magics[i]];
+
+			scroll += info.inputState.scroll * .1f;
+
+			RenderCardInfo renderInfo{};
+			renderInfo.levelUpdateInfo = &info;
+			renderInfo.length = MAGIC_CAPACITY;
+			renderInfo.highlight = chosenDiscoverOption;
+			renderInfo.cards = cards;
+			renderInfo.center.x = scroll;
+			renderInfo.center.y = CARD_HEIGHT;
+			renderInfo.additionalSpacing = -CARD_SPACING;
+			renderInfo.lineLength = MAGIC_CAPACITY / 2;
+			const uint32_t choice = RenderCards(renderInfo);
+
+			cards[0] = &info.magics[currentMagics[chosenRoom]];
+			renderInfo.length = 1;
+			renderInfo.highlight = -1;
+			renderInfo.center.y *= -1;
+			renderInfo.center.x = 0;
+			RenderCards(renderInfo);
+
+			if (info.inputState.lMouse == InputState::pressed)
+				chosenDiscoverOption = choice == chosenDiscoverOption ? -1 : choice;
+
+			TextTask textTask{};
+			textTask.center = true;
+			textTask.lineLength = 20;
+			textTask.scale = .06f;
+			textTask.position = glm::vec2(0, .8f);
+			textTask.text = "press enter to continue.";
+			info.textTasks.Push(textTask);
+
+			textTask.text = "select card to replace, if any.";
+			textTask.position.y *= -1;
+			info.textTasks.Push(textTask);
+
+			if (info.inputState.enter == InputState::pressed)
 			{
-				magicDeck.Add() = info.gameState.magics[chosenDiscoverOption];
-				info.gameState.magics[chosenDiscoverOption] = currentMagics[chosenRoom];
+				if (chosenDiscoverOption != -1)
+				{
+					magicDeck.Add() = info.gameState.magics[chosenDiscoverOption];
+					info.gameState.magics[chosenDiscoverOption] = currentMagics[chosenRoom];
+				}
+
+				rewardedMagicCard = true;
+			}
+			return;
+		}
+
+		if(depth % 10 == 5)
+		{
+			auto& playerState = info.playerState;
+			auto& gameState = info.gameState;
+
+			bool selected[PARTY_ACTIVE_CAPACITY];
+			bool flawSlotAvailable = false;
+
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
+			{
+				auto& flaw = info.gameState.flaws[i];
+				selected[i] = flaw == -1;
+				flawSlotAvailable = flawSlotAvailable ? true : flaw == -1;
 			}
 
-			if (depth % 5 == 0)
-				stage = Stage::exitFound;
-			else
-				stage = Stage::roomSelection;
-			
-			switchingStage = true;
+			if(flawSlotAvailable)
+			{
+				TextTask textTask{};
+				textTask.center = true;
+				textTask.lineLength = 20;
+				textTask.scale = .06f;
+				textTask.position = glm::vec2(0, -.8f);
+				textTask.text = "select one ally to carry this flaw.";
+				info.textTasks.Push(textTask);
+
+				for (uint32_t i = 0; i < gameState.partySize; ++i)
+					cards[i] = &info.monsters[playerState.monsterIds[gameState.partyMembers[i]]];
+
+				RenderCardInfo renderInfo{};
+				renderInfo.levelUpdateInfo = &info;
+				renderInfo.length = gameState.partySize;
+				renderInfo.cards = cards;
+				renderInfo.selectedArr = selected;
+				renderInfo.center.y = CARD_HEIGHT;
+				renderInfo.additionalSpacing = -CARD_SPACING;
+				const uint32_t choice = RenderCards(renderInfo);
+
+				cards[0] = &info.flaws[currentFlaws[chosenRoom]];
+				renderInfo.center.y *= -1;
+				renderInfo.length = 1;
+				renderInfo.selectedArr = nullptr;
+				RenderCards(renderInfo);
+
+				bool validChoice = false;
+				if (info.inputState.lMouse == InputState::pressed)
+					if (choice != -1 && selected[choice])
+					{
+						info.gameState.flaws[choice] = currentFlaws[chosenRoom];
+						validChoice = true;
+					}
+
+				if (!validChoice)
+					return;
+			}
 		}
+
+		if (depth % 5 == 0)
+			stage = Stage::exitFound;
+		else
+			stage = Stage::roomSelection;
+		switchingStage = true;
 	}
 
 	void MainLevel::SwitchToExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
