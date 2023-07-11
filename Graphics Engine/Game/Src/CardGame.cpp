@@ -460,13 +460,12 @@ namespace game
 
 		for (auto& monsterId : playerState.monsterIds)
 			inFile >> monsterId;
-		for (auto& health : playerState.healths)
-			inFile >> health;
 		for (auto& artifact : playerState.artifacts)
 			inFile >> artifact;
 		for (auto& artifactCount : playerState.artifactsCounts)
 			inFile >> artifactCount;
 		inFile >> playerState.partySize;
+		inFile >> playerState.ironManMode;
 		inFile.close();
 		return true;
 	}
@@ -479,13 +478,12 @@ namespace game
 
 		for (const auto& monsterId : playerState.monsterIds)
 			outFile << monsterId << std::endl;
-		for (const auto& health : playerState.healths)
-			outFile << health << std::endl;
 		for (const auto& artifact : playerState.artifacts)
 			outFile << artifact << std::endl;
 		for (const auto& artifactCount : playerState.artifactsCounts)
 			outFile << artifactCount << std::endl;
 		outFile << playerState.partySize << std::endl;
+		outFile << playerState.ironManMode << std::endl;
 		outFile.close();
 	}
 

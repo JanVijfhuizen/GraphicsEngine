@@ -4,6 +4,7 @@
 #include "Levels/LevelUtils.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
+#include "Utils/BoxCollision.h"
 #include "Utils/Shuffle.h"
 
 namespace game
@@ -12,6 +13,7 @@ namespace game
 	{
 		monsterChoice = -1;
 		artifactChoice = -1;
+		confirmedMode = false;
 		confirmedChoices = false;
 
 		ClearSaveData();
@@ -33,6 +35,52 @@ namespace game
 
 	bool NewGameLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
+		if(!confirmedMode)
+		{
+			TextTask textTask{};
+			textTask.center = true;
+			textTask.text = "choose your mode.";
+			textTask.position = glm::vec2(0, -.8f);
+			textTask.scale = .06f;
+			info.textTasks.Push(textTask);
+
+			RenderTask buttonRenderTask{};
+			buttonRenderTask.position.y = -.18;
+			buttonRenderTask.scale.y *= .12f;
+			buttonRenderTask.scale.x = .4f;
+			buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+			info.renderTasks.Push(buttonRenderTask);
+
+			if (info.inputState.lMouse == InputState::pressed)
+				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+				{
+					info.playerState.ironManMode = false;
+					confirmedMode = true;
+				}
+
+			TextTask buttonTextTask{};
+			buttonTextTask.center = true;
+			buttonTextTask.position = buttonRenderTask.position;
+			buttonTextTask.text = "standard";
+			buttonTextTask.scale = .06f;
+			info.textTasks.Push(buttonTextTask);
+
+			buttonRenderTask.position.y *= -1;
+			info.renderTasks.Push(buttonRenderTask);
+			if (info.inputState.lMouse == InputState::pressed)
+				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+				{
+					info.playerState.ironManMode = true;
+					confirmedMode = true;
+				}
+
+			buttonTextTask.position = buttonRenderTask.position;
+			buttonTextTask.text = "iron man";
+			info.textTasks.Push(buttonTextTask);
+
+			return true;
+		}
+
 		if (!confirmedChoices)
 		{
 			Card* cards[DISCOVER_LENGTH]{};

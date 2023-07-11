@@ -14,6 +14,9 @@ namespace game
 {
 	void MainLevel::Create(const LevelCreateInfo& info)
 	{
+		if (info.playerState.ironManMode)
+			ClearSaveData();
+
 		info.gameState = {};
 		info.boardState = {};
 
