@@ -15,6 +15,7 @@ namespace game
 		uint32_t length;
 		glm::vec2 center{};
 		uint32_t highlight = -1;
+		bool* selectedArr = nullptr;
 		float additionalSpacing = 0;
 	};
 
@@ -25,6 +26,9 @@ namespace game
 	template <typename T>
 	void GetDeck(jv::Vector<uint32_t>* outDeck, uint32_t* outCount, const jv::Array<T>& cards, const PlayerState& playerState)
 	{
+		if(outDeck)
+			outDeck->Clear();
+
 		if (outCount)
 			*outCount = 0;
 

@@ -60,6 +60,9 @@
     <ClCompile Include="Src\Levels\LevelUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Levels\PartySelectLevel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Shuffle.h">
@@ -168,6 +171,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Cards\EventCard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Levels\PartySelectLevel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

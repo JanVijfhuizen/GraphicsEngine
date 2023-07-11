@@ -20,6 +20,7 @@
 #include "Levels/MainLevel.h"
 #include "Levels/MainMenuLevel.h"
 #include "Levels/NewGameLevel.h"
+#include "Levels/PartySelectLevel.h"
 #include "States/BoardState.h"
 #include "States/GameState.h"
 #include "States/InputState.h"
@@ -283,10 +284,11 @@ namespace game
 		}
 
 		{
-			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 3);
+			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 4);
 			outCardGame->levels[0] = outCardGame->arena.New<MainMenuLevel>();
 			outCardGame->levels[1] = outCardGame->arena.New<NewGameLevel>();
-			outCardGame->levels[2] = outCardGame->arena.New<MainLevel>();
+			outCardGame->levels[2] = outCardGame->arena.New<PartySelectLevel>();
+			outCardGame->levels[3] = outCardGame->arena.New<MainLevel>();
 		}
 	}
 

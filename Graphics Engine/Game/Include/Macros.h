@@ -25,6 +25,7 @@ enum class LevelIndex
 {
 	mainMenu,
 	newGame,
+	partySelect,
 	main
 };
 

@@ -166,6 +166,8 @@ namespace game
 			currentRooms[i] = roomDeck.Pop();
 			currentMagics[i] = magicDeck.Pop();
 		}
+
+		chosenDiscoverOption = -1;
 	}
 
 	void MainLevel::UpdateRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -238,7 +240,10 @@ namespace game
 
 				for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 					if(chosenDiscoverOption != i)
+					{
 						magicDeck.Add() = currentMagics[i];
+						roomDeck.Add() = currentRooms[i];
+					} 
 				
 				stage = Stage::receiveRewards;
 				switchingStage = true;

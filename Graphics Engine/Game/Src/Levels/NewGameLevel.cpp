@@ -111,7 +111,7 @@ namespace game
 			playerState.monsterIds[1] = 0;
 			playerState.partySize = 2;
 			SaveData(playerState);
-			loadLevelIndex = LevelIndex::main;
+			loadLevelIndex = LevelIndex::partySelect;
 		}
 
 		return true;

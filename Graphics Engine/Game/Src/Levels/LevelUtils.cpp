@@ -13,13 +13,14 @@ namespace game
 	{
 		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (info.length - 1) / 2;
 		uint32_t selected = -1;
-		const auto color = glm::vec4(1) * (info.highlight < info.length ? CARD_DARKENED_COLOR_MUL : 1);
+		const auto color = glm::vec4(1) * (info.highlight < info.length || info.selectedArr ? CARD_DARKENED_COLOR_MUL : 1);
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
 			const auto card = info.cards[i];
 			const auto pos = info.center + glm::vec2(offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(i), 0);
-			const auto finalColor = info.highlight == i ? glm::vec4(1) : color;
+			const bool highlight = info.highlight == i || (info.selectedArr ? info.selectedArr[i] : false);
+			const auto finalColor = highlight ? glm::vec4(1) : color;
 
 			RenderTask bgRenderTask{};
 			bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
