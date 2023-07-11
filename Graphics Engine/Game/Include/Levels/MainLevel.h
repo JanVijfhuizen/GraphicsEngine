@@ -24,6 +24,7 @@ namespace game
 		uint32_t chosenDiscoverOption;
 		uint32_t chosenRoom;
 		float scroll;
+		bool rewardedMagicCard;
 		jv::Vector<uint32_t> bossDeck;
 		jv::Array<Boss> currentBosses;
 		jv::Array<uint32_t> currentRooms;
