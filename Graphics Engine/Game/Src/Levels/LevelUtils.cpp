@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/LevelUtils.h"
 
+#include "JLib/Math.h"
 #include "Levels/Level.h"
 #include "States/InputState.h"
 #include "Tasks/RenderTask.h"
@@ -11,14 +12,17 @@ namespace game
 {
 	uint32_t RenderCards(const RenderCardInfo& info)
 	{
-		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (info.length - 1) / 2;
+		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (jv::Min<uint32_t>(info.length, info.lineLength) - 1) / 2;
 		uint32_t selected = -1;
 		const auto color = glm::vec4(1) * (info.highlight < info.length || info.selectedArr ? CARD_DARKENED_COLOR_MUL : 1);
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
+			const uint32_t w = i % info.lineLength;
+			const uint32_t h = i / info.lineLength;
+
 			const auto card = info.cards[i];
-			const auto pos = info.center + glm::vec2(offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(i), 0);
+			const auto pos = info.center + glm::vec2(offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(w), h * CARD_HEIGHT * 2);
 			const bool highlight = info.highlight == i || (info.selectedArr ? info.selectedArr[i] : false);
 			const auto finalColor = highlight ? glm::vec4(1) : color;
 

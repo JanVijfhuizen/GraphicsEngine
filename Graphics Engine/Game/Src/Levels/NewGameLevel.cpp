@@ -16,8 +16,8 @@ namespace game
 
 		ClearSaveData();
 
-		GetDeck(&info.monsterDeck, nullptr, info.monsters, info.playerState);
-		GetDeck(&info.artifactDeck, nullptr, info.artifacts, info.playerState);
+		GetDeck(&info.monsterDeck, nullptr, info.monsters);
+		GetDeck(&info.artifactDeck, nullptr, info.artifacts);
 
 		// Create a discover option for your initial monster.
 		monsterDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);

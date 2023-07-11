@@ -17,6 +17,7 @@ namespace game
 		uint32_t highlight = -1;
 		bool* selectedArr = nullptr;
 		float additionalSpacing = 0;
+		uint32_t lineLength = -1;
 	};
 
 	uint32_t RenderCards(const RenderCardInfo& info);
@@ -24,7 +25,7 @@ namespace game
 	bool RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
 
 	template <typename T>
-	void GetDeck(jv::Vector<uint32_t>* outDeck, uint32_t* outCount, const jv::Array<T>& cards, const PlayerState& playerState)
+	void GetDeck(jv::Vector<uint32_t>* outDeck, uint32_t* outCount, const jv::Array<T>& cards)
 	{
 		if(outDeck)
 			outDeck->Clear();

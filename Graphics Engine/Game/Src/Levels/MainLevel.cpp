@@ -28,23 +28,23 @@ namespace game
 
 		uint32_t count;
 
-		GetDeck(nullptr, &count, info.bosses, info.playerState);
+		GetDeck(nullptr, &count, info.bosses);
 		bossDeck = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
-		GetDeck(&bossDeck, nullptr, info.bosses, info.playerState);
+		GetDeck(&bossDeck, nullptr, info.bosses);
 		Shuffle(bossDeck.ptr, bossDeck.count);
 
-		GetDeck(nullptr, &count, info.rooms, info.playerState);
+		GetDeck(nullptr, &count, info.rooms);
 		roomDeck = jv::CreateVector<uint32_t>(info.arena, count);
 
-		GetDeck(nullptr, &count, info.magics, info.playerState);
+		GetDeck(nullptr, &count, info.magics);
 		magicDeck = jv::CreateVector<uint32_t>(info.arena, count);
-		GetDeck(&magicDeck, nullptr, info.magics, info.playerState);
+		GetDeck(&magicDeck, nullptr, info.magics);
 		Shuffle(magicDeck.ptr, magicDeck.count);
 
 		info.monsterDeck.Clear();
 		info.artifactDeck.Clear();
-		GetDeck(&info.monsterDeck, nullptr, info.monsters, info.playerState);
-		GetDeck(&info.artifactDeck, nullptr, info.artifacts, info.playerState);
+		GetDeck(&info.monsterDeck, nullptr, info.monsters);
+		GetDeck(&info.artifactDeck, nullptr, info.artifacts);
 		RemoveMonstersInParty(info.monsterDeck, info.playerState);
 		RemoveArtifactsInParty(info.artifactDeck, info.playerState);
 	}
@@ -141,7 +141,7 @@ namespace game
 		{
 			if (roomDeck.count == 0)
 			{
-				GetDeck(&roomDeck, nullptr, info.rooms, info.playerState);
+				GetDeck(&roomDeck, nullptr, info.rooms);
 				Shuffle(roomDeck.ptr, roomDeck.count);
 
 				// If the room is already in play, remove it from the shuffled deck.
@@ -274,6 +274,7 @@ namespace game
 		renderInfo.center.x = scroll;
 		renderInfo.center.y = CARD_HEIGHT;
 		renderInfo.additionalSpacing = -CARD_SPACING;
+		renderInfo.lineLength = MAGIC_CAPACITY / 2;
 		const uint32_t choice = RenderCards(renderInfo);
 
 		cards[0] = &info.magics[currentMagics[chosenRoom]];
