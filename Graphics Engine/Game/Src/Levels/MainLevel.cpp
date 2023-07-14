@@ -204,11 +204,8 @@ namespace game
 		renderInfo.highlight = chosenDiscoverOption;
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 
-		const uint32_t selected = RenderCards(renderInfo);
-
-		if (info.inputState.lMouse == InputState::pressed)
-			chosenDiscoverOption = selected == chosenDiscoverOption ? -1 : selected;
-
+		uint32_t selected = RenderCards(renderInfo);
+		
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
 			uint32_t counters = currentBosses[i].counters;
@@ -228,7 +225,8 @@ namespace game
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.flaws[currentFlaws[i]];
 			renderInfo.center.x += CARD_WIDTH * 2;
-			RenderCards(renderInfo);
+			const auto choice = RenderCards(renderInfo);
+			selected = choice != -1 ? choice : selected;
 		}
 		// Render artifacts.
 		else if (depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1)
@@ -236,7 +234,8 @@ namespace game
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.artifacts[currentArtifacts[i]];
 			renderInfo.center.x += CARD_WIDTH * 2;
-			RenderCards(renderInfo);
+			const auto choice = RenderCards(renderInfo);
+			selected = choice != -1 ? choice : selected;
 		}
 
 		// Render rooms.
@@ -245,14 +244,19 @@ namespace game
 		
 		renderInfo.center = glm::vec2(0, CARD_HEIGHT);
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
-		RenderCards(renderInfo);
+		auto choice = RenderCards(renderInfo);
+		selected = choice != -1 ? choice : selected;
 
 		// Render magics.
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.magics[currentMagics[i]];
 		
 		renderInfo.center.x += CARD_WIDTH * 2;
-		RenderCards(renderInfo);
+		choice = RenderCards(renderInfo);
+		selected = choice != -1 ? choice : selected;
+
+		if (info.inputState.lMouse == InputState::pressed)
+			chosenDiscoverOption = selected == chosenDiscoverOption ? -1 : selected;
 
 		TextTask textTask{};
 		textTask.center = true;
