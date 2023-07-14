@@ -94,7 +94,7 @@ namespace game
 
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.monsters[monsterDiscoverOptions[i]];
-			auto choice = RenderCards(renderInfo);
+			auto choice = RenderMonsterCards(info.frameArena, renderInfo);
 			if (info.inputState.lMouse == InputState::pressed && choice != -1)
 				monsterChoice = choice == monsterChoice ? -1 : choice;
 

@@ -27,7 +27,7 @@ namespace game
 		renderInfo.cards = cards;
 		renderInfo.length = playerState.partySize;
 		renderInfo.selectedArr = selected;
-		const uint32_t choice = RenderCards(renderInfo);
+		const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo);
 
 		if (info.inputState.lMouse == InputState::pressed && choice != -1)
 			selected[choice] = !selected[choice];

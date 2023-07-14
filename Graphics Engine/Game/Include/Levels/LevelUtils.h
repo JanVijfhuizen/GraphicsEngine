@@ -20,6 +20,8 @@ namespace game
 		uint32_t lineLength = -1;
 	};
 
+	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderCardInfo& info);
+	uint32_t RenderMagicCards(jv::Arena& frameArena, const RenderCardInfo& info);
 	uint32_t RenderCards(const RenderCardInfo& info);
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
 	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);

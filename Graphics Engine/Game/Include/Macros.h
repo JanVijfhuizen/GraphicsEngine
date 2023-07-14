@@ -23,6 +23,7 @@ constexpr float CARD_WIDTH_OFFSET = CARD_WIDTH * 2 + CARD_SPACING;
 constexpr float CARD_HEIGHT_OFFSET = CARD_HEIGHT + CARD_SPACING;
 constexpr float CARD_TEXT_SIZE = CARD_WIDTH * .1f;
 constexpr float CARD_DARKENED_COLOR_MUL = .2f;
+constexpr float CARD_BORDER_OFFSET = CARD_WIDTH / 8;
 
 enum class LevelIndex
 {

@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/LevelUtils.h"
 
+#include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
 #include "Levels/Level.h"
 #include "States/InputState.h"
@@ -10,18 +11,70 @@
 
 namespace game
 {
-	uint32_t RenderCards(const RenderCardInfo& info)
+	glm::vec2 GetCardPosition(const RenderCardInfo& info, const uint32_t i)
 	{
 		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (jv::Min<uint32_t>(info.length, info.lineLength) - 1) / 2;
+		const uint32_t w = i % info.lineLength;
+		const uint32_t h = i / info.lineLength;
+		const auto pos = info.center + glm::vec2(
+			offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(w),
+			h * CARD_HEIGHT * 2);
+		return pos;
+	}
+
+	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderCardInfo& info)
+	{
+		const auto result = RenderCards(info);
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.scale = CARD_TEXT_SIZE * 2;
+
+		constexpr float f = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
+
+		for (uint32_t i = 0; i < info.length; ++i)
+		{
+			const auto pos = GetCardPosition(info, i);
+			const auto monsterCard = static_cast<MonsterCard*>(info.cards[i]);
+			textTask.position = pos - glm::vec2(CARD_WIDTH - CARD_BORDER_OFFSET, -f);
+			textTask.text = TextInterpreter::IntToConstCharPtr(monsterCard->attack, frameArena);
+			info.levelUpdateInfo->textTasks.Push(textTask);
+			textTask.position = pos + glm::vec2(CARD_WIDTH - CARD_BORDER_OFFSET, f);
+			textTask.text = TextInterpreter::IntToConstCharPtr(monsterCard->health, frameArena);
+			info.levelUpdateInfo->textTasks.Push(textTask);
+		}
+
+		return result;
+	}
+
+	uint32_t RenderMagicCards(jv::Arena& frameArena, const RenderCardInfo& info)
+	{
+		const auto result = RenderCards(info);
+
+		TextTask costTextTask{};
+		costTextTask.center = true;
+		costTextTask.scale = CARD_TEXT_SIZE * 2;
+
+		for (uint32_t i = 0; i < info.length; ++i)
+		{
+			const auto pos = GetCardPosition(info, i);
+			const auto magicCard = static_cast<MagicCard*>(info.cards[i]);
+			costTextTask.position = pos - glm::vec2(CARD_WIDTH - CARD_BORDER_OFFSET, CARD_HEIGHT);
+			costTextTask.text = TextInterpreter::IntToConstCharPtr(magicCard->cost, frameArena);
+			info.levelUpdateInfo->textTasks.Push(costTextTask);
+		}
+
+		return result;
+	}
+
+	uint32_t RenderCards(const RenderCardInfo& info)
+	{
 		uint32_t selected = -1;
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
-			const uint32_t w = i % info.lineLength;
-			const uint32_t h = i / info.lineLength;
-
 			const auto card = info.cards[i];
-			const auto pos = info.center + glm::vec2(offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(w), h * CARD_HEIGHT * 2);
+			const auto pos = GetCardPosition(info, i);
 
 			auto finalColor = glm::vec4(1);
 			finalColor *= info.highlight != -1 ? info.highlight == i ? 1 : CARD_DARKENED_COLOR_MUL : 1;
