@@ -383,6 +383,7 @@ namespace game
 				renderInfo.length = gameState.partySize;
 				renderInfo.cards = cards;
 				renderInfo.selectedArr = selected;
+				renderInfo.highlight = chosenDiscoverOption;
 				renderInfo.center.y = CARD_HEIGHT;
 				renderInfo.additionalSpacing = -CARD_SPACING;
 				const uint32_t choice = RenderCards(renderInfo);
@@ -391,15 +392,26 @@ namespace game
 				renderInfo.center.y *= -1;
 				renderInfo.length = 1;
 				renderInfo.selectedArr = nullptr;
+				renderInfo.highlight = -1;
 				RenderCards(renderInfo);
 
-				bool validChoice = false;
 				if (info.inputState.lMouse == InputState::pressed)
-					if (choice != -1 && selected[choice])
+					if (choice == -1 || selected[choice])
+						chosenDiscoverOption = choice == chosenDiscoverOption ? -1 : choice;
+
+				bool validChoice = false;
+				if(chosenDiscoverOption != -1)
+				{
+					textTask.position.y *= -1;
+					textTask.text = "press enter to continue.";
+					info.textTasks.Push(textTask);
+
+					if (info.inputState.enter == InputState::pressed)
 					{
-						info.gameState.flaws[choice] = currentFlaws[chosenRoom];
+						info.gameState.flaws[chosenDiscoverOption] = currentFlaws[chosenRoom];
 						validChoice = true;
 					}
+				}
 
 				if (!validChoice)
 					return;
@@ -415,7 +427,7 @@ namespace game
 			textTask.lineLength = 20;
 			textTask.scale = .06f;
 			textTask.position = glm::vec2(0, -.8f);
-			textTask.text = "you can switch your artifacts around. press enter to continue";
+			textTask.text = "you can switch your artifacts around. press enter to continue.";
 			info.textTasks.Push(textTask);
 
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
@@ -429,7 +441,8 @@ namespace game
 			renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 			RenderCards(renderInfo);
 
-			cards[0] = &info.artifacts[currentArtifacts[chosenRoom]];
+			const uint32_t currentArtifactIndex = currentArtifacts[chosenRoom];
+			cards[0] = currentArtifactIndex == -1 ? nullptr : &info.artifacts[currentArtifactIndex];
 			renderInfo.center.y *= -1;
 			renderInfo.length = 1;
 			renderInfo.additionalSpacing = -CARD_SPACING;
@@ -445,11 +458,13 @@ namespace game
 			{
 				const uint32_t partyMember = gameState.partyMembers[i];
 				const uint32_t unlockedCount = playerState.artifactSlotCounts[partyMember];
-
 				const uint32_t artifactStartIndex = partyMember * MONSTER_ARTIFACT_CAPACITY;
 
 				for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
-					cards[j] = &info.artifacts[playerState.artifacts[j + artifactStartIndex]];
+				{
+					const uint32_t index = playerState.artifacts[j + artifactStartIndex];
+					cards[j] = index == -1 ? nullptr : &info.artifacts[index];
+				}
 
 				bool unlocked[MONSTER_ARTIFACT_CAPACITY];
 				for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
