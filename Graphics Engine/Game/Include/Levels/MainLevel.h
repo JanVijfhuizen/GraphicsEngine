@@ -25,11 +25,13 @@ namespace game
 		uint32_t chosenRoom;
 		float scroll;
 		bool rewardedMagicCard;
+		uint32_t selectedCardIndex;
 		jv::Vector<uint32_t> bossDeck;
 		jv::Array<Boss> currentBosses;
 		jv::Array<uint32_t> currentRooms;
 		jv::Array<uint32_t> currentMagics;
 		jv::Array<uint32_t> currentFlaws;
+		jv::Array<uint32_t> currentArtifacts;
 		jv::Vector<uint32_t> roomDeck;
 		jv::Vector<uint32_t> magicDeck;
 		jv::Vector<uint32_t> flawDeck;
