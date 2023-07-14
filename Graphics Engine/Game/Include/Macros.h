@@ -22,6 +22,8 @@ constexpr float CARD_PIC_FILL_HEIGHT = .6f;
 constexpr float CARD_WIDTH_OFFSET = CARD_WIDTH * 2 + CARD_SPACING;
 constexpr float CARD_HEIGHT_OFFSET = CARD_HEIGHT + CARD_SPACING;
 constexpr float CARD_TEXT_SIZE = CARD_WIDTH * .1f;
+constexpr float CARD_TITLE_SIZE = CARD_WIDTH * .12f;
+constexpr float CARD_STAT_SIZE = CARD_TEXT_SIZE * 2;
 constexpr float CARD_DARKENED_COLOR_MUL = .2f;
 constexpr float CARD_BORDER_OFFSET = CARD_WIDTH / 8;
 

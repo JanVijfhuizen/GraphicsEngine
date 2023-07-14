@@ -307,6 +307,7 @@ namespace game
 				cards[i] = &info.magics[info.gameState.magics[i]];
 
 			scroll += info.inputState.scroll * .1f;
+			scroll = jv::Clamp<float>(scroll, -1, 1);
 
 			RenderCardInfo renderInfo{};
 			renderInfo.levelUpdateInfo = &info;

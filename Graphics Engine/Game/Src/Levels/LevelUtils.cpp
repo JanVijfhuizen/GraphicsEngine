@@ -28,7 +28,7 @@ namespace game
 
 		TextTask textTask{};
 		textTask.center = true;
-		textTask.scale = CARD_TEXT_SIZE * 2;
+		textTask.scale = CARD_STAT_SIZE;
 
 		constexpr float f = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
 
@@ -53,7 +53,7 @@ namespace game
 
 		TextTask costTextTask{};
 		costTextTask.center = true;
-		costTextTask.scale = CARD_TEXT_SIZE * 2;
+		costTextTask.scale = CARD_STAT_SIZE;
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
@@ -103,12 +103,13 @@ namespace game
 				titleTextTask.center = true;
 				titleTextTask.position = pos - glm::vec2(0, CARD_HEIGHT);
 				titleTextTask.text = card->name;
-				titleTextTask.scale = CARD_TEXT_SIZE;
+				titleTextTask.scale = CARD_TITLE_SIZE;
 				info.levelUpdateInfo->textTasks.Push(titleTextTask);
 
 				TextTask ruleTextTask = titleTextTask;
-				ruleTextTask.position = pos + glm::vec2(0, bgRenderTask.scale.y);
+				ruleTextTask.position = pos + glm::vec2(0, bgRenderTask.scale.y / 2);
 				ruleTextTask.text = card->ruleText;
+				titleTextTask.scale = CARD_TEXT_SIZE;
 				info.levelUpdateInfo->textTasks.Push(ruleTextTask);
 			}
 
