@@ -287,10 +287,10 @@ namespace game
 		chosenDiscoverOption = -1;
 		scroll = 0;
 		rewardedMagicCard = false;
-		selectedCardIndex = -1;
 
-		for (auto& slotCount : info.playerState.artifactSlotCounts)
-			slotCount = jv::Max(slotCount, depth / ROOM_COUNT_BEFORE_BOSS);
+		if(depth % ROOM_COUNT_BEFORE_BOSS == 0)
+			for (auto& slotCount : info.playerState.artifactSlotCounts)
+				slotCount = jv::Max(slotCount, depth / ROOM_COUNT_BEFORE_BOSS);
 	}
 
 	void MainLevel::UpdateRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -415,7 +415,7 @@ namespace game
 			textTask.lineLength = 20;
 			textTask.scale = .06f;
 			textTask.position = glm::vec2(0, -.8f);
-			textTask.text = "select an ally to wield this artifact, if any.";
+			textTask.text = "you can switch your artifacts around. press enter to continue";
 			info.textTasks.Push(textTask);
 
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
@@ -426,37 +426,48 @@ namespace game
 			renderInfo.length = gameState.partySize;
 			renderInfo.cards = cards;
 			renderInfo.center.y = CARD_HEIGHT;
-			renderInfo.additionalSpacing = -CARD_SPACING;
-			renderInfo.highlight = selectedCardIndex;
-			const uint32_t choice = RenderCards(renderInfo);
-
-			cards[0] = &info.flaws[currentArtifacts[chosenRoom]];
-			renderInfo.center.y *= -1;
-			renderInfo.length = 1;
-			renderInfo.highlight = -1;
+			renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 			RenderCards(renderInfo);
 
-			if (info.inputState.lMouse == InputState::pressed)
-				selectedCardIndex = choice;
+			cards[0] = &info.artifacts[currentArtifacts[chosenRoom]];
+			renderInfo.center.y *= -1;
+			renderInfo.length = 1;
+			renderInfo.additionalSpacing = -CARD_SPACING;
+			RenderCards(renderInfo);
 
-			bool validChoice = false;
-			if(selectedCardIndex != -1)
+			renderInfo.center.x = -static_cast<float>(gameState.partySize - 1) * CARD_WIDTH_OFFSET;
+			renderInfo.center.y *= -1;
+			renderInfo.center.y += CARD_HEIGHT * 2;
+			renderInfo.length = MONSTER_ARTIFACT_CAPACITY;
+			renderInfo.lineLength = MONSTER_ARTIFACT_CAPACITY / 2;
+
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
-				const uint32_t artifactCount = playerState.artifactsCounts[selectedCardIndex];
-				for (uint32_t i = 0; i < artifactCount; ++i)
-					cards[i] = &info.artifacts[playerState.artifacts[i + selectedCardIndex * MONSTER_ARTIFACT_CAPACITY]];
-				renderInfo.length = artifactCount;
-				RenderCards(renderInfo);
+				const uint32_t partyMember = gameState.partyMembers[i];
+				const uint32_t unlockedCount = playerState.artifactSlotCounts[partyMember];
 
-				textTask.position.y *= -1;
-				textTask.text = "press enter to continue.";
-				info.textTasks.Push(textTask);
+				const uint32_t artifactStartIndex = partyMember * MONSTER_ARTIFACT_CAPACITY;
 
-				if (info.inputState.enter == InputState::pressed)
-					validChoice = true;
+				for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
+					cards[j] = &info.artifacts[playerState.artifacts[j + artifactStartIndex]];
+
+				bool unlocked[MONSTER_ARTIFACT_CAPACITY];
+				for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
+					unlocked[j] = unlockedCount > j;
+
+				renderInfo.selectedArr = unlocked;
+				const uint32_t choice = RenderCards(renderInfo);
+				if(info.inputState.lMouse == InputState::pressed && choice != -1 && choice < unlockedCount)
+				{
+					const uint32_t swappable = currentArtifacts[chosenRoom];
+					currentArtifacts[chosenRoom] = playerState.artifacts[artifactStartIndex + choice];
+					playerState.artifacts[artifactStartIndex + choice] = swappable;
+				}
+
+				renderInfo.center.x += CARD_WIDTH_OFFSET * 2;
 			}
 
-			if(!validChoice)
+			if (info.inputState.enter != InputState::pressed)
 				return;
 		}
 

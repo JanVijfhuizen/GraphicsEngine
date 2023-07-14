@@ -155,6 +155,7 @@ namespace game
 			auto& playerState = info.playerState;
 			playerState.monsterIds[0] = monsterDiscoverOptions[monsterChoice];
 			playerState.artifactsCounts[0] = 1;
+			playerState.artifactSlotCounts[0] = 1;
 			playerState.artifacts[0] = artifactDiscoverOptions[artifactChoice];
 			playerState.monsterIds[1] = 0;
 			playerState.partySize = 2;
