@@ -8,9 +8,12 @@ constexpr uint32_t BOARD_CAPACITY = BOARD_CAPACITY_PER_SIDE * 2;
 constexpr uint32_t MONSTER_ARTIFACT_CAPACITY = 4;
 constexpr uint32_t MONSTER_FLAW_CAPACITY = 4;
 constexpr uint32_t ROOM_COUNT_BEFORE_BOSS = 10;
-constexpr uint32_t ROOM_COUNT_BEFORE_FLAW = 5;
+constexpr uint32_t ROOM_COUNT_BEFORE_FLAW = ROOM_COUNT_BEFORE_BOSS / 2;
+constexpr uint32_t ROOM_COUNT_BEFORE_EXIT = ROOM_COUNT_BEFORE_FLAW;
 constexpr uint32_t MAGIC_CAPACITY = 24;
 constexpr uint32_t DISCOVER_LENGTH = 3;
+constexpr uint32_t SUB_BOSS_COUNT = 4;
+constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
 
 constexpr float CARD_SPACING = .1f;
 constexpr float CARD_WIDTH = .15f;

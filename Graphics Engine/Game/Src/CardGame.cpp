@@ -336,8 +336,6 @@ namespace game
 	jv::Array<BossCard> CardGame::GetBossCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<BossCard>(arena, 10);
-		arr[0].name = "ivern the cruel";
-		arr[0].ruleText = "summon ivern and daisy.";
 		return arr;
 	}
 
@@ -462,8 +460,8 @@ namespace game
 			inFile >> monsterId;
 		for (auto& artifact : playerState.artifacts)
 			inFile >> artifact;
-		for (auto& artifactCount : playerState.artifactsCounts)
-			inFile >> artifactCount;
+		for (auto &artifactSlotCount : playerState.artifactSlotCounts)
+			inFile >> artifactSlotCount;
 		inFile >> playerState.partySize;
 		inFile >> playerState.ironManMode;
 		inFile.close();
@@ -480,8 +478,8 @@ namespace game
 			outFile << monsterId << std::endl;
 		for (const auto& artifact : playerState.artifacts)
 			outFile << artifact << std::endl;
-		for (const auto& artifactCount : playerState.artifactsCounts)
-			outFile << artifactCount << std::endl;
+		for (const auto& artifactSlotCount : playerState.artifactSlotCounts)
+			outFile << artifactSlotCount << std::endl;
 		outFile << playerState.partySize << std::endl;
 		outFile << playerState.ironManMode << std::endl;
 		outFile.close();
