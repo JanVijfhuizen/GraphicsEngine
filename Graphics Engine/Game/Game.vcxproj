@@ -144,6 +144,7 @@
     <ClCompile Include="Src\Levels\MainLevel.cpp" />
     <ClCompile Include="Src\Levels\MainMenuLevel.cpp" />
     <ClCompile Include="Src\Levels\NewGameLevel.cpp" />
+    <ClCompile Include="Src\States\PlayerState.cpp" />
     <ClCompile Include="Src\Utils\BoxCollision.cpp" />
     <ClCompile Include="Src\Utils\SubTextureUtils.cpp" />
     <ClCompile Include="Src\Interpreters\MouseInterpreter.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="Include\Cards\MonsterCard.h" />
     <ClInclude Include="Include\Cards\RoomCard.h" />
     <ClInclude Include="Include\Interpreters\MouseInterpreter.h" />
+    <ClInclude Include="Include\LevelStates\LevelStateMachine.h" />
     <ClInclude Include="Include\Levels\Level.h" />
     <ClInclude Include="Include\Levels\LevelUtils.h" />
     <ClInclude Include="Include\Levels\MainLevel.h" />
