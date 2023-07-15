@@ -31,14 +31,14 @@ namespace game
 		TextTask textTask{};
 		textTask.center = true;
 		textTask.text = "choose a mode.";
-		textTask.position = glm::vec2(0, -.8f);
-		textTask.scale = .06f;
+		textTask.position = TEXT_CENTER_TOP_POSITION;
+		textTask.scale = TEXT_BIG_SCALE;
 		info.textTasks.Push(textTask);
 
 		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = -.18;
-		buttonRenderTask.scale.y *= .12f;
-		buttonRenderTask.scale.x = .4f;
+		buttonRenderTask.position.y = -BUTTON_Y_SCALE + CARD_HEIGHT_OFFSET;
+		buttonRenderTask.scale.y *= BUTTON_Y_SCALE;
+		buttonRenderTask.scale.x = BUTTON_X_DEFAULT_SCALE;
 		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
 		info.renderTasks.Push(buttonRenderTask);
 
@@ -54,7 +54,7 @@ namespace game
 		buttonTextTask.center = true;
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "standard";
-		buttonTextTask.scale = .06f;
+		buttonTextTask.scale = TEXT_MEDIUM_SCALE;
 		info.textTasks.Push(buttonTextTask);
 
 		buttonRenderTask.position.y *= -1;
@@ -105,7 +105,7 @@ namespace game
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.cards = cards;
 		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.center = glm::vec2(0, -.3);
+		renderInfo.center = glm::vec2(0, -CARD_HEIGHT_OFFSET);
 		renderInfo.highlight = monsterChoice;
 
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
@@ -125,8 +125,8 @@ namespace game
 		TextTask buttonTextTask{};
 		buttonTextTask.center = true;
 		buttonTextTask.text = "choose your starting cards.";
-		buttonTextTask.position = glm::vec2(0, -.8f);
-		buttonTextTask.scale = .06f;
+		buttonTextTask.position = TEXT_CENTER_TOP_POSITION;
+		buttonTextTask.scale = TEXT_BIG_SCALE;
 		info.textTasks.Push(buttonTextTask);
 
 		if (monsterChoice != -1 && artifactChoice != -1)
@@ -134,8 +134,8 @@ namespace game
 			TextTask textTask{};
 			textTask.center = true;
 			textTask.text = "press enter to confirm your choice.";
-			textTask.position = glm::vec2(0, .8f);
-			textTask.scale = .06f;
+			textTask.position = TEXT_CENTER_BOT_POSITION;
+			textTask.scale = TEXT_BIG_SCALE;
 			info.textTasks.Push(textTask);
 
 			if (info.inputState.enter == InputState::pressed)
@@ -154,8 +154,8 @@ namespace game
 		TextTask joinTextTask{};
 		joinTextTask.center = true;
 		joinTextTask.text = "daisy joins you on your adventure.";
-		joinTextTask.position = glm::vec2(0, -.8f);
-		joinTextTask.scale = .06f;
+		joinTextTask.position = TEXT_CENTER_TOP_POSITION;
+		joinTextTask.scale = TEXT_BIG_SCALE;
 		info.textTasks.Push(joinTextTask);
 
 		Card* cards = &info.monsters[0];
@@ -169,20 +169,16 @@ namespace game
 		TextTask textTask{};
 		textTask.center = true;
 		textTask.text = "press enter to continue.";
-		textTask.scale = .06f;
-		textTask.position = glm::vec2(0, .8f);
+		textTask.scale = TEXT_BIG_SCALE;
+		textTask.position = TEXT_CENTER_BOT_POSITION;
 		info.textTasks.Push(textTask);
 
 		if (info.inputState.enter == InputState::pressed)
 		{
-			auto& playerState = info.playerState;
-			playerState.monsterIds[0] = state.monsterId;
-			for (auto& artifact : playerState.artifacts)
-				artifact = -1;
-			playerState.artifactSlotCounts[0] = 1;
-			playerState.artifacts[0] = state.artifactId;
-			playerState.monsterIds[1] = 0;
-			playerState.partySize = 2;
+			auto& playerState = info.playerState = PlayerState::Create();
+			playerState.AddMonster(state.monsterId);
+			playerState.AddMonster(MONSTER_STARTING_COMPANION_ID);
+			playerState.AddArtifact(0, state.artifactId);
 			SaveData(playerState);
 			loadLevelIndex = LevelIndex::partySelect;
 		}
