@@ -176,5 +176,8 @@
     <ClInclude Include="Include\Levels\PartySelectLevel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\LevelStates\LevelStateMachine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

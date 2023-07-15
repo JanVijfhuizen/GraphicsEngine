@@ -2,6 +2,7 @@
 #include "Levels/NewGameLevel.h"
 #include "CardGame.h"
 #include "Levels/LevelUtils.h"
+#include "LevelStates/LevelStateMachine.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
 #include "Utils/BoxCollision.h"
@@ -11,13 +12,69 @@ namespace game
 {
 	void NewGameLevel::Create(const LevelCreateInfo& info)
 	{
-		monsterChoice = -1;
-		artifactChoice = -1;
-		confirmedMode = false;
-		confirmedChoices = false;
-
 		ClearSaveData();
 
+		const auto states = jv::CreateArray<LevelState<StateInfo>*>(info.arena, 3);
+		states[0] = info.arena.New<ModeSelectState>();
+		states[1] = info.arena.New<PartySelectState>();
+		states[2] = info.arena.New<JoinState>();
+		stateMachine = LevelStateMachine<StateInfo>::Create(info, states);
+	}
+
+	bool NewGameLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		return stateMachine.Update(info, loadLevelIndex);
+	}
+
+	bool NewGameLevel::ModeSelectState::Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
+	{
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.text = "choose a mode.";
+		textTask.position = glm::vec2(0, -.8f);
+		textTask.scale = .06f;
+		info.textTasks.Push(textTask);
+
+		RenderTask buttonRenderTask{};
+		buttonRenderTask.position.y = -.18;
+		buttonRenderTask.scale.y *= .12f;
+		buttonRenderTask.scale.x = .4f;
+		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		info.renderTasks.Push(buttonRenderTask);
+
+		if (info.inputState.lMouse == InputState::pressed)
+			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+			{
+				info.playerState.ironManMode = false;
+				stateIndex = 1;
+				return true;
+			}
+
+		TextTask buttonTextTask{};
+		buttonTextTask.center = true;
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.text = "standard";
+		buttonTextTask.scale = .06f;
+		info.textTasks.Push(buttonTextTask);
+
+		buttonRenderTask.position.y *= -1;
+		info.renderTasks.Push(buttonRenderTask);
+		if (info.inputState.lMouse == InputState::pressed)
+			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+			{
+				info.playerState.ironManMode = true;
+				stateIndex = 1;
+				return true;
+			}
+
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.text = "iron man";
+		info.textTasks.Push(buttonTextTask);
+		return true;
+	}
+
+	bool NewGameLevel::PartySelectState::Create(StateInfo& state, const LevelCreateInfo& info)
+	{
 		uint32_t count;
 		GetDeck(nullptr, &count, info.monsters);
 		monsterDeck = jv::CreateVector<uint32_t>(info.arena, count);
@@ -37,103 +94,63 @@ namespace game
 		Shuffle(artifactDeck.ptr, artifactDeck.count);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			artifactDiscoverOptions[i] = artifactDeck.Pop();
+		return true;
 	}
 
-	bool NewGameLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	bool NewGameLevel::PartySelectState::Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
-		if(!confirmedMode)
+		Card* cards[DISCOVER_LENGTH]{};
+
+		RenderCardInfo renderInfo{};
+		renderInfo.levelUpdateInfo = &info;
+		renderInfo.cards = cards;
+		renderInfo.length = DISCOVER_LENGTH;
+		renderInfo.center = glm::vec2(0, -.3);
+		renderInfo.highlight = monsterChoice;
+
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			cards[i] = &info.monsters[monsterDiscoverOptions[i]];
+		auto choice = RenderMonsterCards(info.frameArena, renderInfo);
+		if (info.inputState.lMouse == InputState::pressed && choice != -1)
+			monsterChoice = choice == monsterChoice ? -1 : choice;
+
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
+		renderInfo.center.y *= -1;
+		renderInfo.highlight = artifactChoice;
+		choice = RenderCards(renderInfo);
+		if (info.inputState.lMouse == InputState::pressed && choice != -1)
+			artifactChoice = choice == artifactChoice ? -1 : choice;
+
+		TextTask buttonTextTask{};
+		buttonTextTask.center = true;
+		buttonTextTask.text = "choose your starting cards.";
+		buttonTextTask.position = glm::vec2(0, -.8f);
+		buttonTextTask.scale = .06f;
+		info.textTasks.Push(buttonTextTask);
+
+		if (monsterChoice != -1 && artifactChoice != -1)
 		{
 			TextTask textTask{};
 			textTask.center = true;
-			textTask.text = "choose your mode.";
-			textTask.position = glm::vec2(0, -.8f);
+			textTask.text = "press enter to confirm your choice.";
+			textTask.position = glm::vec2(0, .8f);
 			textTask.scale = .06f;
 			info.textTasks.Push(textTask);
 
-			RenderTask buttonRenderTask{};
-			buttonRenderTask.position.y = -.18;
-			buttonRenderTask.scale.y *= .12f;
-			buttonRenderTask.scale.x = .4f;
-			buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
-			info.renderTasks.Push(buttonRenderTask);
-
-			if (info.inputState.lMouse == InputState::pressed)
-				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
-				{
-					info.playerState.ironManMode = false;
-					confirmedMode = true;
-				}
-
-			TextTask buttonTextTask{};
-			buttonTextTask.center = true;
-			buttonTextTask.position = buttonRenderTask.position;
-			buttonTextTask.text = "standard";
-			buttonTextTask.scale = .06f;
-			info.textTasks.Push(buttonTextTask);
-
-			buttonRenderTask.position.y *= -1;
-			info.renderTasks.Push(buttonRenderTask);
-			if (info.inputState.lMouse == InputState::pressed)
-				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
-				{
-					info.playerState.ironManMode = true;
-					confirmedMode = true;
-				}
-
-			buttonTextTask.position = buttonRenderTask.position;
-			buttonTextTask.text = "iron man";
-			info.textTasks.Push(buttonTextTask);
-
-			return true;
-		}
-
-		if (!confirmedChoices)
-		{
-			Card* cards[DISCOVER_LENGTH]{};
-
-			RenderCardInfo renderInfo{};
-			renderInfo.levelUpdateInfo = &info;
-			renderInfo.cards = cards;
-			renderInfo.length = DISCOVER_LENGTH;
-			renderInfo.center = glm::vec2(0, -.3);
-			renderInfo.highlight = monsterChoice;
-
-			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-				cards[i] = &info.monsters[monsterDiscoverOptions[i]];
-			auto choice = RenderMonsterCards(info.frameArena, renderInfo);
-			if (info.inputState.lMouse == InputState::pressed && choice != -1)
-				monsterChoice = choice == monsterChoice ? -1 : choice;
-
-			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-				cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
-			renderInfo.center.y *= -1;
-			renderInfo.highlight = artifactChoice;
-			choice = RenderCards(renderInfo);
-			if (info.inputState.lMouse == InputState::pressed && choice != -1)
-				artifactChoice = choice == artifactChoice ? -1 : choice;
-
-			TextTask buttonTextTask{};
-			buttonTextTask.center = true;
-			buttonTextTask.text = "choose your starting cards.";
-			buttonTextTask.position = glm::vec2(0, -.8f);
-			buttonTextTask.scale = .06f;
-			info.textTasks.Push(buttonTextTask);
-
-			if (monsterChoice != -1 && artifactChoice != -1)
+			if (info.inputState.enter == InputState::pressed)
 			{
-				TextTask textTask{};
-				textTask.center = true;
-				textTask.text = "press enter to confirm your choice.";
-				textTask.position = glm::vec2(0, .8f);
-				textTask.scale = .06f;
-				info.textTasks.Push(textTask);
-
-				if (info.inputState.enter == InputState::pressed)
-					confirmedChoices = true;
+				state.monsterId = monsterChoice;
+				state.artifactId = artifactChoice;
+				stateIndex = 2;
 			}
-			return true;
 		}
+		return true;
+	}
 
+	bool NewGameLevel::JoinState::Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
+	{
 		TextTask joinTextTask{};
 		joinTextTask.center = true;
 		joinTextTask.text = "daisy joins you on your adventure.";
@@ -159,17 +176,16 @@ namespace game
 		if (info.inputState.enter == InputState::pressed)
 		{
 			auto& playerState = info.playerState;
-			playerState.monsterIds[0] = monsterDiscoverOptions[monsterChoice];
+			playerState.monsterIds[0] = state.monsterId;
 			for (auto& artifact : playerState.artifacts)
 				artifact = -1;
 			playerState.artifactSlotCounts[0] = 1;
-			playerState.artifacts[0] = artifactDiscoverOptions[artifactChoice];
+			playerState.artifacts[0] = state.artifactId;
 			playerState.monsterIds[1] = 0;
 			playerState.partySize = 2;
 			SaveData(playerState);
 			loadLevelIndex = LevelIndex::partySelect;
 		}
-
 		return true;
 	}
 }
