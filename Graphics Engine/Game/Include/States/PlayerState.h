@@ -13,6 +13,6 @@ namespace game
 		void AddMonster(uint32_t id);
 		void AddArtifact(uint32_t monster, uint32_t id);
 
-		static PlayerState Create();
+		[[nodiscard]] static PlayerState Create();
 	};
 }

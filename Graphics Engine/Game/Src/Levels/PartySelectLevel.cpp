@@ -9,7 +9,7 @@ namespace game
 {
 	void PartySelectLevel::Create(const LevelCreateInfo& info)
 	{
-		info.gameState = {};
+		info.gameState = GameState::Create();
 		for (auto& b : selected)
 			b = false;
 	}

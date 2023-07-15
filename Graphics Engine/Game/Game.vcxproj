@@ -144,6 +144,7 @@
     <ClCompile Include="Src\Levels\MainLevel.cpp" />
     <ClCompile Include="Src\Levels\MainMenuLevel.cpp" />
     <ClCompile Include="Src\Levels\NewGameLevel.cpp" />
+    <ClCompile Include="Src\States\GameState.cpp" />
     <ClCompile Include="Src\States\PlayerState.cpp" />
     <ClCompile Include="Src\Utils\BoxCollision.cpp" />
     <ClCompile Include="Src\Utils\SubTextureUtils.cpp" />

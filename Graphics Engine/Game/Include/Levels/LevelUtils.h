@@ -5,6 +5,7 @@
 
 namespace game
 {
+	struct GameState;
 	struct Card;
 	struct LevelUpdateInfo;
 
@@ -25,6 +26,8 @@ namespace game
 	uint32_t RenderCards(const RenderCardInfo& info);
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
 	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
+	void RemoveFlawsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState);
+	void RemoveMagicsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState);
 	void RemoveDuplicates(jv::Vector<uint32_t>& deck, const uint32_t* duplicates, uint32_t duplicateCount);
 
 	template <typename T>

@@ -7,7 +7,7 @@ namespace game
 	struct LevelState
 	{
 		virtual bool Create(T& state, const LevelCreateInfo& info) { return true; }
-		virtual void Reset(T& state){}
+		virtual void Reset(T& state, const LevelInfo& info){}
 		virtual bool Update(T& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) = 0;
 	};
 
@@ -46,7 +46,7 @@ namespace game
 		for (auto& state : states)
 		{
 			state->Create(stateMachine.state, info);
-			state->Reset(stateMachine.state);
+			state->Reset(stateMachine.state, info);
 		}
 		return stateMachine;
 	}

@@ -13,6 +13,176 @@
 
 namespace game
 {
+	MainLevel::State::Decks MainLevel::State::Decks::Create(const LevelCreateInfo& info)
+	{
+		Decks decks{};
+		uint32_t count;
+
+		GetDeck(nullptr, &count, info.bosses);
+		decks.bosses = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
+		GetDeck(nullptr, &count, info.rooms);
+		decks.rooms = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(nullptr, &count, info.magics);
+		decks.magics = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(nullptr, &count, info.flaws);
+		decks.flaws = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(nullptr, &count, info.monsters);
+		decks.monsters = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(nullptr, &count, info.artifacts);
+		decks.artifacts = jv::CreateVector<uint32_t>(info.arena, count);
+
+		return decks;
+	}
+
+	void MainLevel::State::RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const
+	{
+		for (const auto& path : paths)
+			for (uint32_t i = 0; i < deck.count; ++i)
+				if (deck[i] == path.*mem)
+				{
+					deck.RemoveAt(i);
+					break;
+				}
+	}
+
+	uint32_t MainLevel::State::GetBoss(const LevelInfo& info)
+	{
+		auto& bosses = decks.bosses;
+		if (bosses.count == 0)
+		{
+			GetDeck(&bosses, nullptr, info.bosses);
+			RemoveDuplicates(info, bosses, &Path::boss);
+		}
+		return bosses.Pop();
+	}
+
+	uint32_t MainLevel::State::GetRoom(const LevelInfo& info)
+	{
+		auto& rooms = decks.rooms;
+		if (rooms.count == 0)
+		{
+			GetDeck(&rooms, nullptr, info.rooms);
+			RemoveDuplicates(info, rooms, &Path::room);
+		}
+		return rooms.Pop();
+	}
+
+	uint32_t MainLevel::State::GetMagic(const LevelInfo& info)
+	{
+		auto& magics = decks.magics;
+		if (magics.count == 0)
+		{
+			GetDeck(&magics, nullptr, info.magics);
+			RemoveDuplicates(info, magics, &Path::magic);
+		}
+		RemoveMagicsInParty(magics, info.gameState);
+		return magics.Pop();
+	}
+
+	uint32_t MainLevel::State::GetArtifact(const LevelInfo& info)
+	{
+		auto& artifacts = decks.artifacts;
+		if (artifacts.count == 0)
+		{
+			GetDeck(&artifacts, nullptr, info.artifacts);
+			RemoveDuplicates(info, artifacts, &Path::artifact);
+		}
+		RemoveArtifactsInParty(artifacts, info.playerState);
+		return artifacts.Pop();
+	}
+
+	uint32_t MainLevel::State::GetFlaw(const LevelInfo& info)
+	{
+		auto& flaws = decks.flaws;
+		if (flaws.count == 0)
+		{
+			GetDeck(&flaws, nullptr, info.flaws);
+			RemoveDuplicates(info, flaws, &Path::flaw);
+		}
+		RemoveFlawsInParty(flaws, info.gameState);
+		return flaws.Pop();
+	}
+
+	MainLevel::State MainLevel::State::Create(const LevelCreateInfo& info)
+	{
+		State state{};
+		state.decks = Decks::Create(info);
+		state.paths = jv::CreateArray<Path>(info.arena, DISCOVER_LENGTH);
+		return state;
+	}
+
+	void MainLevel::BossRevealState::Reset(State& state, const LevelInfo& info)
+	{
+		for (auto& path : state.paths)
+		{
+			path = {};
+			path.boss = state.GetBoss(info);
+		}
+	}
+
+	bool MainLevel::BossRevealState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
+	{
+		Card* cards[DISCOVER_LENGTH]{};
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			cards[i] = &info.bosses[state.paths[i].boss];
+
+		RenderCardInfo renderInfo{};
+		renderInfo.levelUpdateInfo = &info;
+		renderInfo.cards = cards;
+		renderInfo.length = DISCOVER_LENGTH;
+		RenderCards(renderInfo);
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.text = "the bosses for this stage have been revealed.";
+		textTask.lineLength = 20;
+		textTask.position = TEXT_CENTER_TOP_POSITION;
+		textTask.scale = TEXT_BIG_SCALE;
+		info.textTasks.Push(textTask);
+
+		textTask.position = TEXT_CENTER_BOT_POSITION;
+		textTask.text = "press enter to continue.";
+		info.textTasks.Push(textTask);
+
+		if (info.inputState.enter == InputState::pressed)
+			stateIndex = 1;
+		return true;
+	}
+
+	void MainLevel::PathSelectState::Reset(State& state, const LevelInfo& info)
+	{
+		discoverOption = -1;
+
+		const bool addFlaw = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW - 1;
+		const bool addArtifact = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1;
+
+		for (auto& path : state.paths)
+		{
+			path.room = state.GetRoom(info);
+			path.magic = state.GetMagic(info);
+			if (addFlaw)
+				path.flaw = state.GetFlaw(info);
+			if (addArtifact)
+				path.artifact = state.GetArtifact(info);
+		}
+	}
+
+	bool MainLevel::PathSelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
+	{
+	}
+
+	bool MainLevel::RewardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
+	{
+	}
+
+	bool MainLevel::ExitFoundState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
+	{
+	}
+
 	void MainLevel::Create(const LevelCreateInfo& info)
 	{
 		if (info.playerState.ironManMode)
@@ -20,177 +190,17 @@ namespace game
 
 		info.boardState = {};
 
-		for (auto& flaw : info.gameState.flaws)
-			flaw = -1;
-
-		stage = Stage::bossReveal;
-		switchingStage = true;
-		depth = 0;
-		chosenDiscoverOption = -1;
-
-		currentBosses = jv::CreateArray<Boss>(info.arena, DISCOVER_LENGTH);
-		currentRooms = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
-		currentMagics = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
-		currentFlaws = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
-		currentArtifacts = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
-
-		uint32_t count;
-
-		GetDeck(nullptr, &count, info.bosses);
-		bossDeck = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
-		GetDeck(&bossDeck, nullptr, info.bosses);
-		Shuffle(bossDeck.ptr, bossDeck.count);
-
-		GetDeck(nullptr, &count, info.rooms);
-		roomDeck = jv::CreateVector<uint32_t>(info.arena, count);
-
-		GetDeck(nullptr, &count, info.magics);
-		magicDeck = jv::CreateVector<uint32_t>(info.arena, count);
-		GetDeck(&magicDeck, nullptr, info.magics);
-		Shuffle(magicDeck.ptr, magicDeck.count);
-
-		GetDeck(nullptr, &count, info.flaws);
-		flawDeck = jv::CreateVector<uint32_t>(info.arena, count);
-		GetDeck(&flawDeck, nullptr, info.flaws);
-		Shuffle(flawDeck.ptr, flawDeck.count);
-		
-		GetDeck(nullptr, &count, info.monsters);
-		monsterDeck = jv::CreateVector<uint32_t>(info.arena, count);
-		GetDeck(nullptr, &count, info.artifacts);
-		artifactDeck = jv::CreateVector<uint32_t>(info.arena, count);
-
-		GetDeck(&monsterDeck, nullptr, info.monsters);
-		GetDeck(&artifactDeck, nullptr, info.artifacts);
-
-		RemoveMonstersInParty(monsterDeck, info.playerState);
-		RemoveArtifactsInParty(artifactDeck, info.playerState);
+		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 4);
+		states[0] = info.arena.New<BossRevealState>();
+		states[1] = info.arena.New<PathSelectState>();
+		states[2] = info.arena.New<RewardState>();
+		states[3] = info.arena.New<ExitFoundState>();
+		stateMachine = LevelStateMachine<State>::Create(info, states);
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
-		if(switchingStage)
-		{
-			switch (stage)
-			{
-			case Stage::bossReveal:
-				SwitchToBossRevealStage(info, loadLevelIndex);
-				break;
-			case Stage::roomSelection:
-				SwitchToRoomSelectionStage(info, loadLevelIndex);
-				break;
-			case Stage::receiveRewards:
-				SwitchToRewardStage(info, loadLevelIndex);
-				break;
-			case Stage::exitFound:
-				SwitchToExitFoundStage(info, loadLevelIndex);
-				break;
-			default:
-				throw std::exception("Stage not supported!");
-			}
-			switchingStage = false;
-		}
-		switch (stage)
-		{
-		case Stage::bossReveal:
-			UpdateBossRevealStage(info, loadLevelIndex);
-			break;
-		case Stage::roomSelection:
-			UpdateRoomSelectionStage(info, loadLevelIndex);
-			break;
-		case Stage::receiveRewards:
-			UpdateRewardStage(info, loadLevelIndex);
-			break;
-		case Stage::exitFound:
-			UpdateExitFoundStage(info, loadLevelIndex);
-			break;
-		default:
-			throw std::exception("Stage not supported!");
-		}
-
-		return true;
-	}
-
-	void MainLevel::SwitchToBossRevealStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
-	{
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			auto& boss = currentBosses[i];
-			boss.id = bossDeck.Pop();
-			boss.counters = 0;
-		}
-	}
-
-	void MainLevel::UpdateBossRevealStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
-	{
-		Card* cards[DISCOVER_LENGTH]{};
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.bosses[currentBosses[i].id];
-
-		RenderCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.cards = cards;
-		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.highlight = chosenDiscoverOption;
-		RenderCards(renderInfo);
-
-		TextTask textTask{};
-		textTask.center = true;
-		textTask.text = "the bosses for this stage have been revealed.";
-		textTask.lineLength = 20;
-		textTask.position = glm::vec2(0, -.8f);
-		textTask.scale = .06f;
-		info.textTasks.Push(textTask);
-
-		textTask.position.y *= -1;
-		textTask.text = "press enter to continue.";
-		info.textTasks.Push(textTask);
-
-		if(info.inputState.enter == InputState::pressed)
-		{
-			stage = Stage::roomSelection;
-			switchingStage = true;
-		}
-	}
-
-	void MainLevel::SwitchToRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
-	{
-		const bool addFlaw = depth % 10 == ROOM_COUNT_BEFORE_FLAW - 1;
-		const bool addArtifact = depth % 10 == ROOM_COUNT_BEFORE_BOSS -1;
-
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			jv::Vector<uint32_t>* decks[]
-			{
-				&roomDeck,
-				&magicDeck,
-				&flawDeck
-			};
-
-			for (auto& deck : decks)
-			{
-				if (deck->count > 0)
-					continue;
-				GetDeck(deck, nullptr, info.rooms);
-				Shuffle(deck->ptr, deck->count);
-				RemoveDuplicates(*deck, currentRooms.ptr, DISCOVER_LENGTH);
-			}
-
-			if(artifactDeck.count == 0)
-			{
-				GetDeck(&artifactDeck, nullptr, info.rooms);
-				Shuffle(artifactDeck.ptr, artifactDeck.count);
-				RemoveArtifactsInParty(artifactDeck, info.playerState);
-			}
-
-			currentRooms[i] = roomDeck.Pop();
-			currentMagics[i] = magicDeck.Pop();
-			if (addFlaw)
-				currentFlaws[i] = flawDeck.Pop();
-			else if (addArtifact)
-				currentArtifacts[i] = artifactDeck.Pop();
-		}
-
-		chosenDiscoverOption = -1;
+		return stateMachine.Update(info, loadLevelIndex);
 	}
 
 	void MainLevel::UpdateRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
