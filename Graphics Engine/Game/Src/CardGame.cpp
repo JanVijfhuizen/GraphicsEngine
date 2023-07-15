@@ -79,9 +79,6 @@ namespace game
 		jv::Array<MagicCard> magic;
 		jv::Array<FlawCard> flaws;
 
-		jv::Vector<uint32_t> monsterDeck;
-		jv::Vector<uint32_t> artifactDeck;
-
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
@@ -129,9 +126,7 @@ namespace game
 				bosses,
 				rooms,
 				magic,
-				flaws,
-				monsterDeck,
-				artifactDeck
+				flaws
 			};
 			
 			levels[static_cast<uint32_t>(levelIndex)]->Create(info);
@@ -153,8 +148,6 @@ namespace game
 			rooms,
 			magic,
 			flaws,
-			monsterDeck,
-			artifactDeck,
 			inputState,
 			*renderTasks,
 			*dynamicRenderTasks,
@@ -280,12 +273,6 @@ namespace game
 			outCardGame->rooms = cardGame.GetRoomCards(outCardGame->arena);
 			outCardGame->magic = cardGame.GetMagicCards(outCardGame->arena);
 			outCardGame->flaws = cardGame.GetFlawCards(outCardGame->arena);
-
-			uint32_t count;
-			GetDeck(nullptr, &count, outCardGame->monsters);
-			outCardGame->monsterDeck = jv::CreateVector<uint32_t>(outCardGame->arena, count);
-			GetDeck(nullptr, &count, outCardGame->artifacts);
-			outCardGame->artifactDeck = jv::CreateVector<uint32_t>(outCardGame->arena, count);
 		}
 
 		{

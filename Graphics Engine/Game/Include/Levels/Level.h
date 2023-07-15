@@ -35,9 +35,6 @@ namespace game
 		const jv::Array<RoomCard>& rooms;
 		const jv::Array<MagicCard>& magics;
 		const jv::Array<FlawCard>& flaws;
-
-		jv::Vector<uint32_t>& monsterDeck;
-		jv::Vector<uint32_t>& artifactDeck;
 	};
 
 	struct LevelCreateInfo final : LevelInfo

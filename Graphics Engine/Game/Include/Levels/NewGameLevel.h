@@ -5,6 +5,8 @@ namespace game
 {
 	struct NewGameLevel final : Level
 	{
+		jv::Vector<uint32_t> monsterDeck;
+		jv::Vector<uint32_t> artifactDeck;
 		jv::Array<uint32_t> monsterDiscoverOptions;
 		jv::Array<uint32_t> artifactDiscoverOptions;
 

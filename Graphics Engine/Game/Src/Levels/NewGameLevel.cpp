@@ -18,19 +18,25 @@ namespace game
 
 		ClearSaveData();
 
-		GetDeck(&info.monsterDeck, nullptr, info.monsters);
-		GetDeck(&info.artifactDeck, nullptr, info.artifacts);
+		uint32_t count;
+		GetDeck(nullptr, &count, info.monsters);
+		monsterDeck = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(nullptr, &count, info.artifacts);
+		artifactDeck = jv::CreateVector<uint32_t>(info.arena, count);
+
+		GetDeck(&monsterDeck, nullptr, info.monsters);
+		GetDeck(&artifactDeck, nullptr, info.artifacts);
 
 		// Create a discover option for your initial monster.
 		monsterDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
-		Shuffle(info.monsterDeck.ptr, info.monsterDeck.count);
+		Shuffle(monsterDeck.ptr, monsterDeck.count);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			monsterDiscoverOptions[i] = info.monsterDeck.Pop();
+			monsterDiscoverOptions[i] = monsterDeck.Pop();
 		// Create a discover option for your initial artifact.
 		artifactDiscoverOptions = jv::CreateArray<uint32_t>(info.arena, DISCOVER_LENGTH);
-		Shuffle(info.artifactDeck.ptr, info.artifactDeck.count);
+		Shuffle(artifactDeck.ptr, artifactDeck.count);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			artifactDiscoverOptions[i] = info.artifactDeck.Pop();
+			artifactDiscoverOptions[i] = artifactDeck.Pop();
 	}
 
 	bool NewGameLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

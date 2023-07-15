@@ -53,13 +53,17 @@ namespace game
 		flawDeck = jv::CreateVector<uint32_t>(info.arena, count);
 		GetDeck(&flawDeck, nullptr, info.flaws);
 		Shuffle(flawDeck.ptr, flawDeck.count);
+		
+		GetDeck(nullptr, &count, info.monsters);
+		monsterDeck = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(nullptr, &count, info.artifacts);
+		artifactDeck = jv::CreateVector<uint32_t>(info.arena, count);
 
-		info.monsterDeck.Clear();
-		info.artifactDeck.Clear();
-		GetDeck(&info.monsterDeck, nullptr, info.monsters);
-		GetDeck(&info.artifactDeck, nullptr, info.artifacts);
-		RemoveMonstersInParty(info.monsterDeck, info.playerState);
-		RemoveArtifactsInParty(info.artifactDeck, info.playerState);
+		GetDeck(&monsterDeck, nullptr, info.monsters);
+		GetDeck(&artifactDeck, nullptr, info.artifacts);
+
+		RemoveMonstersInParty(monsterDeck, info.playerState);
+		RemoveArtifactsInParty(artifactDeck, info.playerState);
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -171,11 +175,11 @@ namespace game
 				RemoveDuplicates(*deck, currentRooms.ptr, DISCOVER_LENGTH);
 			}
 
-			if(info.artifactDeck.count == 0)
+			if(artifactDeck.count == 0)
 			{
-				GetDeck(&info.artifactDeck, nullptr, info.rooms);
-				Shuffle(info.artifactDeck.ptr, info.artifactDeck.count);
-				RemoveArtifactsInParty(info.artifactDeck, info.playerState);
+				GetDeck(&artifactDeck, nullptr, info.rooms);
+				Shuffle(artifactDeck.ptr, artifactDeck.count);
+				RemoveArtifactsInParty(artifactDeck, info.playerState);
 			}
 
 			currentRooms[i] = roomDeck.Pop();
@@ -183,7 +187,7 @@ namespace game
 			if (addFlaw)
 				currentFlaws[i] = flawDeck.Pop();
 			else if (addArtifact)
-				currentArtifacts[i] = info.artifactDeck.Pop();
+				currentArtifacts[i] = artifactDeck.Pop();
 		}
 
 		chosenDiscoverOption = -1;

@@ -31,6 +31,8 @@ namespace game
 		jv::Array<uint32_t> currentMagics;
 		jv::Array<uint32_t> currentFlaws;
 		jv::Array<uint32_t> currentArtifacts;
+		jv::Vector<uint32_t> monsterDeck;
+		jv::Vector<uint32_t> artifactDeck;
 		jv::Vector<uint32_t> roomDeck;
 		jv::Vector<uint32_t> magicDeck;
 		jv::Vector<uint32_t> flawDeck;
