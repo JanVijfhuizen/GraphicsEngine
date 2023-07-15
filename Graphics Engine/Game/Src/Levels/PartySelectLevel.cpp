@@ -29,14 +29,29 @@ namespace game
 		renderInfo.selectedArr = selected;
 		const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo);
 
+		if(choice != -1)
+		{
+			const uint32_t artifactSlotCount = playerState.artifactSlotCounts[choice];
+			for (uint32_t i = 0; i < artifactSlotCount; ++i)
+			{
+				const uint32_t index = playerState.artifacts[choice * MONSTER_ARTIFACT_CAPACITY + i];
+				cards[i] = index == -1 ? nullptr : &info.artifacts[index];
+			}
+
+			renderInfo.length = artifactSlotCount;
+			renderInfo.center.y += CARD_HEIGHT * 2;
+			renderInfo.highlight = -1;
+			RenderCards(renderInfo);
+		}
+
 		if (info.inputState.lMouse == InputState::pressed && choice != -1)
 			selected[choice] = !selected[choice];
 
 		TextTask textTask{};
 		textTask.center = true;
 		textTask.text = "select up to 4 party members.";
-		textTask.position = glm::vec2(0, -.8f);
-		textTask.scale = .06f;
+		textTask.position = TEXT_CENTER_TOP_POSITION;
+		textTask.scale = TEXT_BIG_SCALE;
 		info.textTasks.Push(textTask);
 
 		uint32_t selectedAmount = 0;
@@ -45,7 +60,7 @@ namespace game
 
 		if(selectedAmount > 0 && selectedAmount < PARTY_ACTIVE_CAPACITY)
 		{
-			textTask.position.y *= -1;
+			textTask.position = TEXT_CENTER_BOT_POSITION;
 			textTask.text = "press enter to continue.";
 			info.textTasks.Push(textTask);
 

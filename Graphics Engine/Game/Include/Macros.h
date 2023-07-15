@@ -34,6 +34,7 @@ constexpr float TEXT_MEDIUM_SCALE = .04f;
 constexpr float TEXT_SMALL_SCALE = .02f;
 
 constexpr float BUTTON_Y_SCALE = .12f;
+constexpr float BUTTON_Y_OFFSET = .04f;
 constexpr float BUTTON_X_DEFAULT_SCALE = .4f;
 
 constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;

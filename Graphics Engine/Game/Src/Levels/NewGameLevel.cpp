@@ -36,7 +36,7 @@ namespace game
 		info.textTasks.Push(textTask);
 
 		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = -BUTTON_Y_SCALE + CARD_HEIGHT_OFFSET;
+		buttonRenderTask.position.y = -BUTTON_Y_SCALE - BUTTON_Y_OFFSET;
 		buttonRenderTask.scale.y *= BUTTON_Y_SCALE;
 		buttonRenderTask.scale.x = BUTTON_X_DEFAULT_SCALE;
 		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
