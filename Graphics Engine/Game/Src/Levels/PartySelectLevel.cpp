@@ -22,12 +22,12 @@ namespace game
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[i]];
 
-		RenderCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.cards = cards;
-		renderInfo.length = playerState.partySize;
-		renderInfo.selectedArr = selected;
-		const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo);
+		RenderCardInfo monsterRenderInfo{};
+		monsterRenderInfo.levelUpdateInfo = &info;
+		monsterRenderInfo.cards = cards;
+		monsterRenderInfo.length = playerState.partySize;
+		monsterRenderInfo.selectedArr = selected;
+		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo);
 
 		if(choice != -1)
 		{
@@ -38,10 +38,12 @@ namespace game
 				cards[i] = index == -1 ? nullptr : &info.artifacts[index];
 			}
 
-			renderInfo.length = artifactSlotCount;
-			renderInfo.center.y += CARD_HEIGHT * 2;
-			renderInfo.highlight = -1;
-			RenderCards(renderInfo);
+			RenderCardInfo artifactRenderInfo{};
+			artifactRenderInfo.levelUpdateInfo = &info;
+			artifactRenderInfo.cards = cards;
+			artifactRenderInfo.length = artifactSlotCount;
+			artifactRenderInfo.center.y += CARD_HEIGHT * 2;
+			RenderCards(artifactRenderInfo);
 		}
 
 		if (info.inputState.lMouse == InputState::pressed && choice != -1)
