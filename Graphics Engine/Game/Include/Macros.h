@@ -26,6 +26,8 @@ constexpr float CARD_STAT_SIZE = CARD_TEXT_SIZE * 2;
 constexpr float CARD_DARKENED_COLOR_MUL = .2f;
 constexpr float CARD_BORDER_OFFSET = CARD_WIDTH / 8;
 
+constexpr uint32_t CARD_SMALL_TEXT_CAPACITY = 8;
+
 constexpr glm::vec2 TEXT_CENTER_TOP_POSITION = glm::vec2(0, -.8f);
 constexpr glm::vec2 TEXT_CENTER_BOT_POSITION = TEXT_CENTER_TOP_POSITION * glm::vec2(1, -1);
 constexpr float TEXT_BIG_SCALE = .06f;

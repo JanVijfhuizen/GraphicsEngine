@@ -110,7 +110,8 @@ namespace game
 				TextTask ruleTextTask = titleTextTask;
 				ruleTextTask.position = pos + glm::vec2(0, bgRenderTask.scale.y / 2);
 				ruleTextTask.text = card->ruleText;
-				titleTextTask.scale = CARD_TEXT_SIZE;
+				ruleTextTask.maxLength = CARD_SMALL_TEXT_CAPACITY;
+				ruleTextTask.scale = CARD_TEXT_SIZE;
 				info.levelUpdateInfo->textTasks.Push(ruleTextTask);
 			}
 
