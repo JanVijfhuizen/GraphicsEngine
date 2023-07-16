@@ -14,11 +14,11 @@ namespace game
 	{
 		ClearSaveData();
 
-		const auto states = jv::CreateArray<LevelState<StateInfo>*>(info.arena, 3);
+		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 3);
 		states[0] = info.arena.New<ModeSelectState>();
 		states[1] = info.arena.New<PartySelectState>();
 		states[2] = info.arena.New<JoinState>();
-		stateMachine = LevelStateMachine<StateInfo>::Create(info, states);
+		stateMachine = LevelStateMachine<State>::Create(info, states);
 	}
 
 	bool NewGameLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -26,7 +26,7 @@ namespace game
 		return stateMachine.Update(info, loadLevelIndex);
 	}
 
-	bool NewGameLevel::ModeSelectState::Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
+	bool NewGameLevel::ModeSelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
 		TextTask textTask{};
 		textTask.center = true;
@@ -73,7 +73,7 @@ namespace game
 		return true;
 	}
 
-	bool NewGameLevel::PartySelectState::Create(StateInfo& state, const LevelCreateInfo& info)
+	bool NewGameLevel::PartySelectState::Create(State& state, const LevelCreateInfo& info)
 	{
 		uint32_t count;
 		GetDeck(nullptr, &count, info.monsters);
@@ -97,7 +97,7 @@ namespace game
 		return true;
 	}
 
-	bool NewGameLevel::PartySelectState::Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
+	bool NewGameLevel::PartySelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
 		Card* cards[DISCOVER_LENGTH]{};
 
@@ -148,7 +148,7 @@ namespace game
 		return true;
 	}
 
-	bool NewGameLevel::JoinState::Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool NewGameLevel::JoinState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		TextTask joinTextTask{};

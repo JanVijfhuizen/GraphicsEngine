@@ -4,6 +4,7 @@
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
 #include "Levels/Level.h"
+#include "States/GameState.h"
 #include "States/InputState.h"
 #include "Tasks/RenderTask.h"
 #include "Tasks/TextTask.h"
@@ -137,6 +138,28 @@ namespace game
 						break;
 					}
 		}
+	}
+
+	void RemoveFlawsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState)
+	{
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
+			for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
+				if (gameState.flaws[k] == deck[k])
+				{
+					deck.RemoveAt(k);
+					break;
+				}
+	}
+
+	void RemoveMagicsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState)
+	{
+		for (auto& magic : gameState.magics)
+			for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
+				if(deck[k] == magic)
+				{
+					deck.RemoveAt(k);
+					break;
+				}
 	}
 
 	void RemoveDuplicates(jv::Vector<uint32_t>& deck, const uint32_t* duplicates, const uint32_t duplicateCount)

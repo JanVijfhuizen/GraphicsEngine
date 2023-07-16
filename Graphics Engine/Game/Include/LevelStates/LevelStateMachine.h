@@ -7,7 +7,7 @@ namespace game
 	struct LevelState
 	{
 		virtual bool Create(T& state, const LevelCreateInfo& info) { return true; }
-		virtual void Reset(T& state){}
+		virtual void Reset(T& state, const LevelInfo& info){}
 		virtual bool Update(T& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) = 0;
 	};
 
@@ -20,7 +20,7 @@ namespace game
 		uint32_t length;
 
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
-		static LevelStateMachine Create(const LevelCreateInfo& info, const jv::Array<LevelState<T>*>& states);
+		static LevelStateMachine Create(const LevelCreateInfo& info, const jv::Array<LevelState<T>*>& states, const T& state = {});
 	};
 
 	template <typename T>
@@ -31,22 +31,23 @@ namespace game
 		if(index != current)
 		{
 			current = index;
-			states[index]->Reset(state);
+			states[index]->Reset(state, info);
 		}
 		return res;
 	}
 
 	template <typename T>
-	LevelStateMachine<T> LevelStateMachine<T>::Create(const LevelCreateInfo& info, const jv::Array<LevelState<T>*>& states)
+	LevelStateMachine<T> LevelStateMachine<T>::Create(const LevelCreateInfo& info, const jv::Array<LevelState<T>*>& states, const T& state)
 	{
 		LevelStateMachine<T> stateMachine{};
+		stateMachine.state = state;
 		stateMachine.states = states.ptr;
 		stateMachine.length = states.length;
 		
-		for (auto& state : states)
+		for (auto& levelState : states)
 		{
-			state->Create(stateMachine.state, info);
-			state->Reset(stateMachine.state);
+			levelState->Create(stateMachine.state, info);
+			levelState->Reset(stateMachine.state, info);
 		}
 		return stateMachine;
 	}

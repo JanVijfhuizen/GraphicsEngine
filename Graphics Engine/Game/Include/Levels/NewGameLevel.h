@@ -6,18 +6,18 @@ namespace game
 {
 	struct NewGameLevel final : Level
 	{
-		struct StateInfo final
+		struct State final
 		{
 			uint32_t monsterId;
 			uint32_t artifactId;
 		};
 
-		struct ModeSelectState final : LevelState<StateInfo>
+		struct ModeSelectState final : LevelState<State>
 		{
-			bool Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
+			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 		};
 
-		struct PartySelectState final : LevelState<StateInfo>
+		struct PartySelectState final : LevelState<State>
 		{
 			jv::Vector<uint32_t> monsterDeck;
 			jv::Vector<uint32_t> artifactDeck;
@@ -26,16 +26,16 @@ namespace game
 			uint32_t monsterChoice = -1;
 			uint32_t artifactChoice = -1;
 
-			bool Create(StateInfo& state, const LevelCreateInfo& info) override;
-			bool Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
+			bool Create(State& state, const LevelCreateInfo& info) override;
+			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 		};
 
-		struct JoinState final : LevelState<StateInfo>
+		struct JoinState final : LevelState<State>
 		{
-			bool Update(StateInfo& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
+			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 		};
 
-		LevelStateMachine<StateInfo> stateMachine;
+		LevelStateMachine<State> stateMachine;
 
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
