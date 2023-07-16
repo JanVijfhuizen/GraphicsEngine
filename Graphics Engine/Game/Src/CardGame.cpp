@@ -13,10 +13,10 @@
 #include "Interpreters/DynamicRenderInterpreter.h"
 #include "Interpreters/InstancedRenderInterpreter.h"
 #include "Interpreters/MouseInterpreter.h"
+#include "Interpreters/PriorityInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "Levels/Level.h"
-#include "Levels/LevelUtils.h"
 #include "Levels/MainLevel.h"
 #include "Levels/MainMenuLevel.h"
 #include "Levels/NewGameLevel.h"
@@ -51,12 +51,16 @@ namespace game
 		jv::Array<jv::ge::SubTexture> subTextures;
 		TaskSystem<RenderTask>* renderTasks;
 		TaskSystem<DynamicRenderTask>* dynamicRenderTasks;
-		TaskSystem<MouseTask>* mouseTasks;
+		TaskSystem<RenderTask>* priorityRenderTasks;
 		TaskSystem<TextTask>* textTasks;
+		TaskSystem<TextTask>* priorityTextTasks;
+		TaskSystem<MouseTask>* mouseTasks;
 		InstancedRenderInterpreter* renderInterpreter;
+		InstancedRenderInterpreter* priorityRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
-		MouseInterpreter* mouseInterpreter;
 		TextInterpreter* textInterpreter;
+		TextInterpreter* priorityTextInterpreter;
+		MouseInterpreter* mouseInterpreter;
 
 		GameState gameState{};
 		PlayerState playerState{};
@@ -148,10 +152,13 @@ namespace game
 			rooms,
 			magic,
 			flaws,
+			{800, 600}, // temp.
 			inputState,
 			*renderTasks,
 			*dynamicRenderTasks,
+			*priorityRenderTasks,
 			*textTasks,
+			*priorityTextTasks,
 			subTextures
 		};
 
@@ -218,10 +225,14 @@ namespace game
 			outCardGame->renderTasks->Allocate(outCardGame->arena, 1024);
 			outCardGame->dynamicRenderTasks = &outCardGame->engine.AddTaskSystem<DynamicRenderTask>();
 			outCardGame->dynamicRenderTasks->Allocate(outCardGame->arena, 32);
+			outCardGame->priorityRenderTasks = &outCardGame->engine.AddTaskSystem<RenderTask>();
+			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 64);
 			outCardGame->mouseTasks = &outCardGame->engine.AddTaskSystem<MouseTask>();
 			outCardGame->mouseTasks->Allocate(outCardGame->arena, 1);
 			outCardGame->textTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
 			outCardGame->textTasks->Allocate(outCardGame->arena, 16);
+			outCardGame->priorityTextTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
+			outCardGame->priorityTextTasks->Allocate(outCardGame->arena, 8);
 		}
 
 		{
@@ -232,6 +243,10 @@ namespace game
 			enableInfo.scene = outCardGame->scene;
 			enableInfo.capacity = 1024;
 
+			outCardGame->priorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter>(
+				*outCardGame->priorityRenderTasks, createInfo);
+			outCardGame->priorityRenderInterpreter->Enable(enableInfo);
+			outCardGame->priorityRenderInterpreter->image = outCardGame->atlas;
 			outCardGame->renderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter>(
 				*outCardGame->renderTasks, createInfo);
 			outCardGame->renderInterpreter->Enable(enableInfo);
@@ -245,25 +260,29 @@ namespace game
 			dynamicEnableInfo.arena = &outCardGame->arena;
 			dynamicEnableInfo.scene = outCardGame->scene;
 			dynamicEnableInfo.capacity = 32;
-
+			
 			outCardGame->dynamicRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
 				*outCardGame->dynamicRenderTasks, dynamicCreateInfo);
 			outCardGame->dynamicRenderInterpreter->Enable(dynamicEnableInfo);
+
+			TextInterpreterCreateInfo textInterpreterCreateInfo{};
+			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::alphabet)];
+			textInterpreterCreateInfo.symbolSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::symbols)];
+			textInterpreterCreateInfo.numberSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::numbers)];
+			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
+
+			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->priorityRenderTasks;
+			outCardGame->priorityTextInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
+				*outCardGame->priorityTextTasks, textInterpreterCreateInfo);
+			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->renderTasks;
+			outCardGame->textInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
+				*outCardGame->textTasks, textInterpreterCreateInfo);
 
 			MouseInterpreterCreateInfo mouseInterpreterCreateInfo{};
 			mouseInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
 			outCardGame->mouseInterpreter = &outCardGame->engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
 				*outCardGame->mouseTasks, mouseInterpreterCreateInfo);
 			outCardGame->mouseInterpreter->subTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::mouse)];
-
-			TextInterpreterCreateInfo textInterpreterCreateInfo{};
-			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->renderTasks;
-			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::alphabet)];
-			textInterpreterCreateInfo.symbolSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::symbols)];
-			textInterpreterCreateInfo.numberSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::numbers)];
-			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
-			outCardGame->textInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
-				*outCardGame->textTasks, textInterpreterCreateInfo);
 		}
 
 		{

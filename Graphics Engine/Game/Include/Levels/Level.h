@@ -7,7 +7,6 @@
 #include "Cards/RoomCard.h"
 #include "Engine/TaskSystem.h"
 #include "JLib/Array.h"
-#include "JLib/Vector.h"
 #include "Tasks/DynamicRenderTask.h"
 #include "Tasks/TextTask.h"
 
@@ -44,10 +43,13 @@ namespace game
 
 	struct LevelUpdateInfo final : LevelInfo
 	{
+		glm::ivec2 resolution;
 		const InputState& inputState;
 		TaskSystem<RenderTask>& renderTasks;
 		TaskSystem<DynamicRenderTask>& dynamicRenderTasks;
+		TaskSystem<RenderTask>& priorityRenderTasks;
 		TaskSystem<TextTask>& textTasks;
+		TaskSystem<TextTask>& priorityTextTasks;
 		const jv::Array<jv::ge::SubTexture>& subTextures;
 	};
 

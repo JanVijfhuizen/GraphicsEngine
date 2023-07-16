@@ -185,5 +185,8 @@
     <ClInclude Include="Include\LevelStates\LevelStateMachine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Interpreters\PriorityInterpreter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
