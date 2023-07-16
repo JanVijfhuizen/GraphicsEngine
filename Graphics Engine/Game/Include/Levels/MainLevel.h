@@ -6,6 +6,16 @@ namespace game
 {
 	struct MainLevel final : Level
 	{
+		enum class StateNames
+		{
+			bossReveal,
+			pathSelect,
+			rewardMagic,
+			rewardFlaw,
+			rewardArtifact,
+			exitFound
+		};
+
 		struct State final
 		{
 			struct Decks final
@@ -22,16 +32,17 @@ namespace game
 
 			struct Path final
 			{
-				uint32_t boss = -1;
-				uint32_t room = -1;
-				uint32_t magic = -1;
-				uint32_t artifact = -1;
-				uint32_t flaw = -1;
+				uint32_t boss = UINT32_MAX;
+				uint32_t room = UINT32_MAX;
+				uint32_t magic = UINT32_MAX;
+				uint32_t artifact = UINT32_MAX;
+				uint32_t flaw = UINT32_MAX;
 				uint32_t counters = 0;
 			};
 
 			uint32_t depth = 0;
 			jv::Array<Path> paths;
+			uint32_t chosenPath;
 
 			void RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const;
 			[[nodiscard]] uint32_t GetBoss(const LevelInfo& info);
@@ -59,8 +70,28 @@ namespace game
 				LevelIndex& loadLevelIndex) override;
 		};
 
-		struct RewardState final : LevelState<State>
+		struct RewardMagicCardState final : LevelState<State>
 		{
+			float scroll;
+			uint32_t discoverOption;
+
+			void Reset(State& state, const LevelInfo& info) override;
+			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+				LevelIndex& loadLevelIndex) override;
+		};
+
+		struct RewardFlawCardState final : LevelState<State>
+		{
+			uint32_t discoverOption;
+
+			void Reset(State& state, const LevelInfo& info) override;
+			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+				LevelIndex& loadLevelIndex) override;
+		};
+
+		struct RewardArtifactState final : LevelState<State>
+		{
+			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
@@ -73,18 +104,7 @@ namespace game
 
 		LevelStateMachine<State> stateMachine;
 		
-		uint32_t chosenDiscoverOption;
-		uint32_t chosenRoom;
-		float scroll;
-		bool rewardedMagicCard;
-
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
-		
-		void UpdateRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
-		void SwitchToRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
-		void UpdateRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
-		void SwitchToExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
-		void UpdateExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 	};
 }

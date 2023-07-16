@@ -146,7 +146,7 @@ namespace game
 		info.textTasks.Push(textTask);
 
 		if (info.inputState.enter == InputState::pressed)
-			stateIndex = 1;
+			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		return true;
 	}
 
@@ -171,82 +171,48 @@ namespace game
 	bool MainLevel::PathSelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-	}
-
-	bool MainLevel::RewardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
-		LevelIndex& loadLevelIndex)
-	{
-	}
-
-	bool MainLevel::ExitFoundState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
-		LevelIndex& loadLevelIndex)
-	{
-	}
-
-	void MainLevel::Create(const LevelCreateInfo& info)
-	{
-		if (info.playerState.ironManMode)
-			ClearSaveData();
-
-		info.boardState = {};
-
-		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 4);
-		states[0] = info.arena.New<BossRevealState>();
-		states[1] = info.arena.New<PathSelectState>();
-		states[2] = info.arena.New<RewardState>();
-		states[3] = info.arena.New<ExitFoundState>();
-		stateMachine = LevelStateMachine<State>::Create(info, states);
-	}
-
-	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
-	{
-		return stateMachine.Update(info, loadLevelIndex);
-	}
-
-	void MainLevel::UpdateRoomSelectionStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
-	{
 		// Render bosses.
 		Card* cards[DISCOVER_LENGTH]{};
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.bosses[currentBosses[i].id];
+			cards[i] = &info.bosses[state.paths[i].boss];
 
 		RenderCardInfo renderInfo{};
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.cards = cards;
 		renderInfo.length = DISCOVER_LENGTH;
 		renderInfo.center = glm::vec2(0, -CARD_HEIGHT);
-		renderInfo.highlight = chosenDiscoverOption;
+		renderInfo.highlight = discoverOption;
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 
 		uint32_t selected = RenderCards(renderInfo);
-		
+
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
-			uint32_t counters = currentBosses[i].counters;
-			counters += i == chosenDiscoverOption;
+			uint32_t counters = state.paths[i].counters;
+			counters += i == discoverOption;
 
 			TextTask textTask{};
 			textTask.center = true;
 			textTask.text = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
 			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * DISCOVER_LENGTH / 2 + CARD_WIDTH_OFFSET * 2 * i - CARD_WIDTH_OFFSET, -CARD_HEIGHT);
-			textTask.scale = .06f;
+			textTask.scale = TEXT_BIG_SCALE;
 			info.textTasks.Push(textTask);
 		}
 
 		// Render flaws.
-		if(depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW - 1)
+		if (state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW - 1)
 		{
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-				cards[i] = &info.flaws[currentFlaws[i]];
+				cards[i] = &info.flaws[state.paths[i].flaw];
 			renderInfo.center.x += CARD_WIDTH * 2;
 			const auto choice = RenderCards(renderInfo);
 			selected = choice != -1 ? choice : selected;
 		}
 		// Render artifacts.
-		else if (depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1)
+		else if (state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1)
 		{
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-				cards[i] = &info.artifacts[currentArtifacts[i]];
+				cards[i] = &info.artifacts[state.paths[i].artifact];
 			renderInfo.center.x += CARD_WIDTH * 2;
 			const auto choice = RenderCards(renderInfo);
 			selected = choice != -1 ? choice : selected;
@@ -254,8 +220,8 @@ namespace game
 
 		// Render rooms.
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.rooms[currentRooms[i]];
-		
+			cards[i] = &info.rooms[state.paths[i].room];
+
 		renderInfo.center = glm::vec2(0, CARD_HEIGHT);
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 		auto choice = RenderCards(renderInfo);
@@ -263,190 +229,142 @@ namespace game
 
 		// Render magics.
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.magics[currentMagics[i]];
-		
+			cards[i] = &info.magics[state.paths[i].magic];
+
 		renderInfo.center.x += CARD_WIDTH * 2;
 		choice = RenderMagicCards(info.frameArena, renderInfo);
 		selected = choice != -1 ? choice : selected;
 
 		if (info.inputState.lMouse == InputState::pressed)
-			chosenDiscoverOption = selected == chosenDiscoverOption ? -1 : selected;
+			discoverOption = selected == discoverOption ? -1 : selected;
 
 		TextTask textTask{};
 		textTask.center = true;
 		textTask.text = "select the road to take.";
 		textTask.lineLength = 20;
-		textTask.position = glm::vec2(0, -.8f);
-		textTask.scale = .06f;
+		textTask.position = TEXT_CENTER_TOP_POSITION;
+		textTask.scale = TEXT_BIG_SCALE;
 		info.textTasks.Push(textTask);
 
-		if(chosenDiscoverOption != -1)
+		if (discoverOption != -1)
 		{
-			textTask.position.y *= -1;
+			textTask.position = TEXT_CENTER_BOT_POSITION;
 			textTask.text = "press enter to continue.";
 			info.textTasks.Push(textTask);
 
 			if (info.inputState.enter == InputState::pressed)
 			{
-				chosenRoom = chosenDiscoverOption;
-				auto& counters = currentBosses[chosenDiscoverOption].counters;
-				++counters;
-				++depth;
-				
-				stage = Stage::receiveRewards;
-				switchingStage = true;
-				chosenDiscoverOption = -1;
+				state.chosenPath = discoverOption;
+				auto& path = state.paths[discoverOption];
+				++path.counters;
+				++state.depth;
+
+				stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 			}
 		}
+
+		return true;
 	}
 
-	void MainLevel::SwitchToRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
 	{
-		chosenDiscoverOption = -1;
 		scroll = 0;
-		rewardedMagicCard = false;
-
-		if(depth % ROOM_COUNT_BEFORE_BOSS == 0)
-			for (auto& slotCount : info.playerState.artifactSlotCounts)
-				slotCount = jv::Max(slotCount, depth / ROOM_COUNT_BEFORE_BOSS);
+		discoverOption = -1;
 	}
 
-	void MainLevel::UpdateRewardStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	bool MainLevel::RewardMagicCardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
 	{
 		Card* cards[MAGIC_CAPACITY]{};
 
-		if(!rewardedMagicCard)
+		for (uint32_t i = 0; i < MAGIC_CAPACITY; ++i)
+			cards[i] = &info.magics[info.gameState.magics[i]];
+
+		scroll += info.inputState.scroll * .1f;
+		scroll = jv::Clamp<float>(scroll, -1, 1);
+
+		RenderCardInfo renderInfo{};
+		renderInfo.levelUpdateInfo = &info;
+		renderInfo.length = MAGIC_CAPACITY;
+		renderInfo.highlight = discoverOption;
+		renderInfo.cards = cards;
+		renderInfo.center.x = scroll;
+		renderInfo.center.y = CARD_HEIGHT;
+		renderInfo.additionalSpacing = -CARD_SPACING;
+		renderInfo.lineLength = MAGIC_CAPACITY / 2;
+		const uint32_t choice = RenderMagicCards(info.frameArena, renderInfo);
+
+		auto& path = state.paths[state.chosenPath];
+
+		cards[0] = &info.magics[path.magic];
+		renderInfo.length = 1;
+		renderInfo.highlight = -1;
+		renderInfo.center.y *= -1;
+		renderInfo.center.x = 0;
+		RenderMagicCards(info.frameArena, renderInfo);
+
+		if (info.inputState.lMouse == InputState::pressed)
+			discoverOption = choice == discoverOption ? -1 : choice;
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.lineLength = 20;
+		textTask.scale = TEXT_BIG_SCALE;
+		textTask.position = TEXT_CENTER_BOT_POSITION;
+		textTask.text = "press enter to continue.";
+		info.textTasks.Push(textTask);
+
+		textTask.text = "select card to replace, if any.";
+		textTask.position = TEXT_CENTER_TOP_POSITION;
+		info.textTasks.Push(textTask);
+
+		if (info.inputState.enter == InputState::pressed)
 		{
-			for (uint32_t i = 0; i < MAGIC_CAPACITY; ++i)
-				cards[i] = &info.magics[info.gameState.magics[i]];
+			if (discoverOption != -1)
+				info.gameState.magics[discoverOption] = path.magic;
 
-			scroll += info.inputState.scroll * .1f;
-			scroll = jv::Clamp<float>(scroll, -1, 1);
+			if (state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW)
+				stateIndex = static_cast<uint32_t>(StateNames::rewardFlaw);
+			else if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
+				stateIndex = static_cast<uint32_t>(StateNames::rewardArtifact);
+			else
+				stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
+		}
+				
+		return true;
+	}
 
-			RenderCardInfo renderInfo{};
-			renderInfo.levelUpdateInfo = &info;
-			renderInfo.length = MAGIC_CAPACITY;
-			renderInfo.highlight = chosenDiscoverOption;
-			renderInfo.cards = cards;
-			renderInfo.center.x = scroll;
-			renderInfo.center.y = CARD_HEIGHT;
-			renderInfo.additionalSpacing = -CARD_SPACING;
-			renderInfo.lineLength = MAGIC_CAPACITY / 2;
-			const uint32_t choice = RenderMagicCards(info.frameArena, renderInfo);
+	void MainLevel::RewardFlawCardState::Reset(State& state, const LevelInfo& info)
+	{
+		discoverOption = -1;
+	}
 
-			cards[0] = &info.magics[currentMagics[chosenRoom]];
-			renderInfo.length = 1;
-			renderInfo.highlight = -1;
-			renderInfo.center.y *= -1;
-			renderInfo.center.x = 0;
-			RenderMagicCards(info.frameArena, renderInfo);
+	bool MainLevel::RewardFlawCardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
+	{
+		Card* cards[MAGIC_CAPACITY]{};
 
-			if (info.inputState.lMouse == InputState::pressed)
-				chosenDiscoverOption = choice == chosenDiscoverOption ? -1 : choice;
+		const auto& playerState = info.playerState;
+		const auto& gameState = info.gameState;
 
+		bool selected[PARTY_ACTIVE_CAPACITY];
+		bool flawSlotAvailable = false;
+
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
+		{
+			const auto& flaw = info.gameState.flaws[i];
+			selected[i] = flaw == -1;
+			flawSlotAvailable = flawSlotAvailable ? true : flaw == -1;
+		}
+
+		if (flawSlotAvailable)
+		{
 			TextTask textTask{};
 			textTask.center = true;
 			textTask.lineLength = 20;
-			textTask.scale = .06f;
-			textTask.position = glm::vec2(0, .8f);
-			textTask.text = "press enter to continue.";
-			info.textTasks.Push(textTask);
-
-			textTask.text = "select card to replace, if any.";
-			textTask.position.y *= -1;
-			info.textTasks.Push(textTask);
-
-			if (info.inputState.enter == InputState::pressed)
-			{
-				if (chosenDiscoverOption != -1)
-				{
-					magicDeck.Add() = info.gameState.magics[chosenDiscoverOption];
-					info.gameState.magics[chosenDiscoverOption] = currentMagics[chosenRoom];
-				}
-
-				rewardedMagicCard = true;
-			}
-			return;
-		}
-
-		if(depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW)
-		{
-			auto& playerState = info.playerState;
-			auto& gameState = info.gameState;
-
-			bool selected[PARTY_ACTIVE_CAPACITY];
-			bool flawSlotAvailable = false;
-
-			for (uint32_t i = 0; i < gameState.partySize; ++i)
-			{
-				auto& flaw = info.gameState.flaws[i];
-				selected[i] = flaw == -1;
-				flawSlotAvailable = flawSlotAvailable ? true : flaw == -1;
-			}
-
-			if(flawSlotAvailable)
-			{
-				TextTask textTask{};
-				textTask.center = true;
-				textTask.lineLength = 20;
-				textTask.scale = .06f;
-				textTask.position = glm::vec2(0, -.8f);
-				textTask.text = "select one ally to carry this flaw.";
-				info.textTasks.Push(textTask);
-
-				for (uint32_t i = 0; i < gameState.partySize; ++i)
-					cards[i] = &info.monsters[playerState.monsterIds[gameState.partyMembers[i]]];
-
-				RenderCardInfo renderInfo{};
-				renderInfo.levelUpdateInfo = &info;
-				renderInfo.length = gameState.partySize;
-				renderInfo.cards = cards;
-				renderInfo.selectedArr = selected;
-				renderInfo.highlight = chosenDiscoverOption;
-				renderInfo.center.y = CARD_HEIGHT;
-				renderInfo.additionalSpacing = -CARD_SPACING;
-				const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo);
-
-				cards[0] = &info.flaws[currentFlaws[chosenRoom]];
-				renderInfo.center.y *= -1;
-				renderInfo.length = 1;
-				renderInfo.selectedArr = nullptr;
-				renderInfo.highlight = -1;
-				RenderCards(renderInfo);
-
-				if (info.inputState.lMouse == InputState::pressed)
-					if (choice == -1 || selected[choice])
-						chosenDiscoverOption = choice == chosenDiscoverOption ? -1 : choice;
-
-				bool validChoice = false;
-				if(chosenDiscoverOption != -1)
-				{
-					textTask.position.y *= -1;
-					textTask.text = "press enter to continue.";
-					info.textTasks.Push(textTask);
-
-					if (info.inputState.enter == InputState::pressed)
-					{
-						info.gameState.flaws[chosenDiscoverOption] = currentFlaws[chosenRoom];
-						validChoice = true;
-					}
-				}
-
-				if (!validChoice)
-					return;
-			}
-		}
-		else if(depth % ROOM_COUNT_BEFORE_BOSS == 0)
-		{
-			auto& playerState = info.playerState;
-			auto& gameState = info.gameState;
-
-			TextTask textTask{};
-			textTask.center = true;
-			textTask.lineLength = 20;
-			textTask.scale = .06f;
-			textTask.position = glm::vec2(0, -.8f);
-			textTask.text = "you can switch your artifacts around. press enter to continue.";
+			textTask.scale = TEXT_BIG_SCALE;
+			textTask.position = TEXT_CENTER_TOP_POSITION;
+			textTask.text = "select one ally to carry this flaw.";
 			info.textTasks.Push(textTask);
 
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
@@ -456,98 +374,154 @@ namespace game
 			renderInfo.levelUpdateInfo = &info;
 			renderInfo.length = gameState.partySize;
 			renderInfo.cards = cards;
+			renderInfo.selectedArr = selected;
+			renderInfo.highlight = discoverOption;
 			renderInfo.center.y = CARD_HEIGHT;
-			renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
-			RenderMonsterCards(info.frameArena, renderInfo);
+			renderInfo.additionalSpacing = -CARD_SPACING;
+			const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo);
 
-			const uint32_t currentArtifactIndex = currentArtifacts[chosenRoom];
-			cards[0] = currentArtifactIndex == -1 ? nullptr : &info.artifacts[currentArtifactIndex];
+			const auto& path = state.paths[state.chosenPath];
+
+			cards[0] = &info.flaws[path.flaw];
 			renderInfo.center.y *= -1;
 			renderInfo.length = 1;
-			renderInfo.additionalSpacing = -CARD_SPACING;
+			renderInfo.selectedArr = nullptr;
+			renderInfo.highlight = -1;
 			RenderCards(renderInfo);
 
-			renderInfo.center.x = -static_cast<float>(gameState.partySize - 1) * CARD_WIDTH_OFFSET;
-			renderInfo.center.y *= -1;
-			renderInfo.center.y += CARD_HEIGHT * 2;
-			renderInfo.length = MONSTER_ARTIFACT_CAPACITY;
-			renderInfo.lineLength = MONSTER_ARTIFACT_CAPACITY / 2;
-
-			for (uint32_t i = 0; i < gameState.partySize; ++i)
+			if (info.inputState.lMouse == InputState::pressed)
+				if (choice == -1 || selected[choice])
+					discoverOption = choice == discoverOption ? -1 : choice;
+			
+			if (discoverOption != -1)
 			{
-				const uint32_t partyMember = gameState.partyMembers[i];
-				const uint32_t unlockedCount = playerState.artifactSlotCounts[partyMember];
-				const uint32_t artifactStartIndex = partyMember * MONSTER_ARTIFACT_CAPACITY;
+				textTask.position = TEXT_CENTER_BOT_POSITION;
+				textTask.text = "press enter to continue.";
+				info.textTasks.Push(textTask);
 
-				for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
-				{
-					const uint32_t index = playerState.artifacts[j + artifactStartIndex];
-					cards[j] = index == -1 ? nullptr : &info.artifacts[index];
-				}
-
-				bool unlocked[MONSTER_ARTIFACT_CAPACITY];
-				for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
-					unlocked[j] = unlockedCount > j;
-
-				renderInfo.selectedArr = unlocked;
-				const uint32_t choice = RenderCards(renderInfo);
-				if(info.inputState.lMouse == InputState::pressed && choice != -1 && choice < unlockedCount)
-				{
-					const uint32_t swappable = currentArtifacts[chosenRoom];
-					currentArtifacts[chosenRoom] = playerState.artifacts[artifactStartIndex + choice];
-					playerState.artifacts[artifactStartIndex + choice] = swappable;
-				}
-
-				renderInfo.center.x += CARD_WIDTH_OFFSET * 2;
+				if (info.inputState.enter != InputState::pressed)
+					return true;
+				info.gameState.flaws[discoverOption] = path.flaw;
 			}
-
-			if (info.inputState.enter != InputState::pressed)
-				return;
 		}
 
-		if (depth % ROOM_COUNT_BEFORE_EXIT == 0)
-			stage = Stage::exitFound;
-		else
-			stage = Stage::roomSelection;
-		switchingStage = true;
+		stateIndex = static_cast<uint32_t>(StateNames::exitFound);
+		return true;
 	}
 
-	void MainLevel::SwitchToExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	void MainLevel::RewardArtifactState::Reset(State& state, const LevelInfo& info)
 	{
+		if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
+			for (auto& slotCount : info.playerState.artifactSlotCounts)
+				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
+	}
+
+	bool MainLevel::RewardArtifactState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
+	{
+		Card* cards[MAGIC_CAPACITY]{};
+		
+		auto& playerState = info.playerState;
+		const auto& gameState = info.gameState;
+
 		TextTask textTask{};
 		textTask.center = true;
 		textTask.lineLength = 20;
 		textTask.scale = .06f;
 		textTask.position = glm::vec2(0, -.8f);
-		textTask.text = "an exit leading outside has been found.";
+		textTask.text = "you can switch your artifacts around. press enter to continue.";
 		info.textTasks.Push(textTask);
+
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
+			cards[i] = &info.monsters[playerState.monsterIds[gameState.partyMembers[i]]];
+
+		RenderCardInfo renderInfo{};
+		renderInfo.levelUpdateInfo = &info;
+		renderInfo.length = gameState.partySize;
+		renderInfo.cards = cards;
+		renderInfo.center.y = CARD_HEIGHT;
+		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
+		RenderMonsterCards(info.frameArena, renderInfo);
+
+		auto& path = state.paths[state.chosenPath];
+		
+		cards[0] = path.artifact == -1 ? nullptr : &info.artifacts[path.artifact];
+		renderInfo.center.y *= -1;
+		renderInfo.length = 1;
+		renderInfo.additionalSpacing = -CARD_SPACING;
+		RenderCards(renderInfo);
+
+		renderInfo.center.x = -static_cast<float>(gameState.partySize - 1) * CARD_WIDTH_OFFSET;
+		renderInfo.center.y *= -1;
+		renderInfo.center.y += CARD_HEIGHT * 2;
+		renderInfo.length = MONSTER_ARTIFACT_CAPACITY;
+		renderInfo.lineLength = MONSTER_ARTIFACT_CAPACITY / 2;
+
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
+		{
+			const uint32_t partyMember = gameState.partyMembers[i];
+			const uint32_t unlockedCount = playerState.artifactSlotCounts[partyMember];
+			const uint32_t artifactStartIndex = partyMember * MONSTER_ARTIFACT_CAPACITY;
+
+			for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
+			{
+				const uint32_t index = playerState.artifacts[j + artifactStartIndex];
+				cards[j] = index == -1 ? nullptr : &info.artifacts[index];
+			}
+
+			bool unlocked[MONSTER_ARTIFACT_CAPACITY];
+			for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
+				unlocked[j] = unlockedCount > j;
+
+			renderInfo.selectedArr = unlocked;
+			const uint32_t choice = RenderCards(renderInfo);
+			if (info.inputState.lMouse == InputState::pressed && choice != -1 && choice < unlockedCount)
+			{
+				const uint32_t swappable = path.artifact;
+				path.artifact = playerState.artifacts[artifactStartIndex + choice];
+				playerState.artifacts[artifactStartIndex + choice] = swappable;
+			}
+
+			renderInfo.center.x += CARD_WIDTH_OFFSET * 2;
+		}
+
+		if (info.inputState.enter == InputState::pressed)
+			stateIndex = static_cast<uint32_t>(StateNames::exitFound);
+		return true;
 	}
 
-	void MainLevel::UpdateExitFoundStage(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	bool MainLevel::ExitFoundState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
 	{
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.lineLength = 20;
+		textTask.scale = TEXT_BIG_SCALE;
+		textTask.position = TEXT_CENTER_TOP_POSITION;
+		textTask.text = "an exit leading outside has been found.";
+		info.textTasks.Push(textTask);
+
 		RenderTask buttonRenderTask{};
 		buttonRenderTask.position.y = -.18;
 		buttonRenderTask.scale.y *= .12f;
-		buttonRenderTask.scale.x = 1;
 		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
 		info.renderTasks.Push(buttonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)
 			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
 			{
-				if (depth % ROOM_COUNT_BEFORE_BOSS == 0)
-					stage = Stage::bossReveal;
+				if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
+					stateIndex = 3;
 				else
-					stage = Stage::roomSelection;
-				switchingStage = true;
-				return;
+					stateIndex = 1;
+				return true;
 			}
 
 		TextTask buttonTextTask{};
 		buttonTextTask.center = true;
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "continue forward";
-		buttonTextTask.scale = .06f;
+		buttonTextTask.scale = TEXT_BIG_SCALE;
 		info.textTasks.Push(buttonTextTask);
 
 		buttonRenderTask.position.y *= -1;
@@ -563,5 +537,28 @@ namespace game
 				SaveData(info.playerState);
 				loadLevelIndex = LevelIndex::mainMenu;
 			}
+		return true;
+	}
+
+	void MainLevel::Create(const LevelCreateInfo& info)
+	{
+		if (info.playerState.ironManMode)
+			ClearSaveData();
+
+		info.boardState = {};
+
+		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 6);
+		states[0] = info.arena.New<BossRevealState>();
+		states[1] = info.arena.New<PathSelectState>();
+		states[2] = info.arena.New<RewardMagicCardState>();
+		states[3] = info.arena.New<RewardFlawCardState>();
+		states[4] = info.arena.New<RewardArtifactState>();
+		states[5] = info.arena.New<ExitFoundState>();
+		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+	}
+
+	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		return stateMachine.Update(info, loadLevelIndex);
 	}
 }
