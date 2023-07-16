@@ -402,7 +402,9 @@ namespace game
 				if (info.inputState.enter != InputState::pressed)
 					return true;
 				info.gameState.flaws[discoverOption] = path.flaw;
+				stateIndex = static_cast<uint32_t>(StateNames::exitFound);
 			}
+			return true;
 		}
 
 		stateIndex = static_cast<uint32_t>(StateNames::exitFound);
@@ -510,10 +512,7 @@ namespace game
 		if (info.inputState.lMouse == InputState::pressed)
 			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
 			{
-				if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
-					stateIndex = 3;
-				else
-					stateIndex = 1;
+				stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 				return true;
 			}
 

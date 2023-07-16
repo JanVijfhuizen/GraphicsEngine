@@ -75,7 +75,46 @@ namespace game
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
 			const auto card = info.cards[i];
-			const auto pos = GetCardPosition(info, i);
+			auto pos = GetCardPosition(info, i);
+
+			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), info.levelUpdateInfo->inputState.mousePos))
+			{
+				selected = i;
+				pos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
+
+				// Draw large version.
+				if(card)
+				{
+					RenderTask bgRenderTask{};
+					bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
+					bgRenderTask.scale.x = CARD_WIDTH;
+					bgRenderTask.position = pos + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
+					bgRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+					info.levelUpdateInfo->renderTasks.Push(bgRenderTask);
+
+					RenderTask picRenderTask{};
+					picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
+					picRenderTask.scale.x = CARD_WIDTH;
+					picRenderTask.position = pos - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
+					picRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+					info.levelUpdateInfo->renderTasks.Push(picRenderTask);
+
+					TextTask titleTextTask{};
+					titleTextTask.lineLength = 12;
+					titleTextTask.center = true;
+					titleTextTask.position = pos - glm::vec2(0, CARD_HEIGHT);
+					titleTextTask.text = card->name;
+					titleTextTask.scale = CARD_TITLE_SIZE;
+					info.levelUpdateInfo->textTasks.Push(titleTextTask);
+
+					TextTask ruleTextTask = titleTextTask;
+					ruleTextTask.position = pos + glm::vec2(0, bgRenderTask.scale.y / 2);
+					ruleTextTask.text = card->ruleText;
+					ruleTextTask.maxLength = CARD_SMALL_TEXT_CAPACITY;
+					ruleTextTask.scale = CARD_TEXT_SIZE;
+					info.levelUpdateInfo->textTasks.Push(ruleTextTask);
+				}
+			}
 
 			auto finalColor = glm::vec4(1);
 			finalColor *= info.highlight != -1 ? info.highlight == i ? 1 : CARD_DARKENED_COLOR_MUL : 1;
@@ -114,9 +153,6 @@ namespace game
 				ruleTextTask.scale = CARD_TEXT_SIZE;
 				info.levelUpdateInfo->textTasks.Push(ruleTextTask);
 			}
-
-			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), info.levelUpdateInfo->inputState.mousePos))
-				selected = i;
 		}
 
 		return selected;
