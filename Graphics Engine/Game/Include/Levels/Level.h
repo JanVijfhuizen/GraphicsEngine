@@ -26,7 +26,6 @@ namespace game
 
 		GameState& gameState;
 		PlayerState& playerState;
-		BoardState& boardState;
 
 		const jv::Array<MonsterCard>& monsters;
 		const jv::Array<ArtifactCard>& artifacts;

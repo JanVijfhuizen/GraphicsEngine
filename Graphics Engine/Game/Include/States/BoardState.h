@@ -4,6 +4,8 @@ namespace game
 {
 	struct BoardState final
 	{
+		uint32_t partyIds[PARTY_ACTIVE_CAPACITY]{};
+		uint32_t partyCount = 0;
 		uint32_t monsterIds[BOARD_CAPACITY]{};
 		uint32_t healths[BOARD_CAPACITY]{};
 		uint8_t enemyTargetDices[BOARD_CAPACITY_PER_SIDE]{};

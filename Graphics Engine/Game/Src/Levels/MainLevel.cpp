@@ -45,6 +45,48 @@ namespace game
 				}
 	}
 
+	uint32_t MainLevel::State::GetMonster(const LevelInfo& info, const BoardState& boardState)
+	{
+		auto& monsters = decks.monsters;
+		if (monsters.count == 0)
+		{
+			GetDeck(&monsters, nullptr, info.monsters);
+
+			for (int32_t i = static_cast<int32_t>(monsters.count) - 1; i >= 0; --i)
+			{
+				bool removed = false;
+
+				for (uint32_t j = 0; j < boardState.alliedMonsterCount; ++j)
+					if (monsters[j] == boardState.monsterIds[j])
+					{
+						monsters.RemoveAt(i);
+						removed = true;
+						break;
+					}
+				if (removed)
+					continue;
+
+				for (uint32_t j = 0; j < boardState.enemyMonsterCount; ++j)
+					if (monsters[j] == boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + j])
+					{
+						monsters.RemoveAt(i);
+						removed = true;
+						break;
+					}
+				if (removed)
+					continue;
+
+				for (uint32_t j = 0; j < info.playerState.partySize; ++j)
+					if(monsters[j] == info.playerState.monsterIds[j])
+					{
+						monsters.RemoveAt(i);
+						break;
+					}
+			}
+		}
+		return monsters.Pop();
+	}
+
 	uint32_t MainLevel::State::GetBoss(const LevelInfo& info)
 	{
 		auto& bosses = decks.bosses;
@@ -259,9 +301,126 @@ namespace game
 				++path.counters;
 				++state.depth;
 
-				stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+				stateIndex = static_cast<uint32_t>(StateNames::combat);
 			}
 		}
+
+		return true;
+	}
+
+	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
+	{
+		const auto& playerState = info.playerState;
+		const auto& gameState = info.gameState;
+
+		boardState = {};
+		turnState = TurnState::untap;
+
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
+		{
+			const uint32_t partyMemberId = gameState.partyMembers[i];
+			boardState.monsterIds[i] = playerState.monsterIds[partyMemberId];
+			boardState.healths[i] = gameState.healths[i];
+			boardState.partyIds[i] = partyMemberId;
+		}
+		boardState.alliedMonsterCount = gameState.partySize;
+		boardState.partyCount = gameState.partySize;
+
+		const uint32_t enemyCount = MONSTER_CAPACITIES[jv::Min((state.depth - 1) / ROOM_COUNT_BEFORE_BOSS, TOTAL_BOSS_COUNT - 1)];
+		for (uint32_t i = 0; i < enemyCount; ++i)
+			boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + i] = state.GetMonster(info, boardState);
+		boardState.enemyMonsterCount = enemyCount;
+	}
+
+	bool MainLevel::CombatState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+		LevelIndex& loadLevelIndex)
+	{
+		if(turnState == TurnState::untap)
+		{
+			for (auto& b : tapped)
+				b = false;
+			turnState = TurnState::allied;
+			selectedAlly = -1;
+		}
+
+		Card* cards[BOARD_CAPACITY_PER_SIDE]{};
+
+		for (uint32_t i = 0; i < boardState.alliedMonsterCount; ++i)
+			cards[i] = &info.monsters[boardState.monsterIds[i]];
+
+		RenderCardInfo enemyRenderInfo{};
+		enemyRenderInfo.levelUpdateInfo = &info;
+		enemyRenderInfo.cards = cards;
+		enemyRenderInfo.length = boardState.enemyMonsterCount;
+		enemyRenderInfo.center.y = -CARD_HEIGHT_OFFSET;
+		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo);
+
+		bool selected[BOARD_CAPACITY_PER_SIDE]{};
+		for (uint32_t i = 0; i < BOARD_CAPACITY_PER_SIDE; ++i)
+			selected[i] = !tapped[i];
+
+		// If ally has been selected.
+		if (selectedAlly != -1)
+		{
+			for (auto& b : selected)
+				b = false;
+			selected[selectedAlly] = true;
+		}
+
+		RenderCardInfo alliedRenderInfo{};
+		alliedRenderInfo.levelUpdateInfo = &info;
+		alliedRenderInfo.cards = cards;
+		alliedRenderInfo.length = boardState.alliedMonsterCount;
+		alliedRenderInfo.center.y = CARD_HEIGHT_OFFSET;
+		alliedRenderInfo.selectedArr = selected;
+		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo);
+
+		if(info.inputState.lMouse == InputState::pressed)
+		{
+			if(selectedAlly != -1 && enemyChoice != -1)
+			{
+				const auto& allyMonster = info.monsters[boardState.monsterIds[selectedAlly]];
+				auto& health = boardState.healths[BOARD_CAPACITY_PER_SIDE + enemyChoice];
+
+				if(health <= allyMonster.attack)
+				{
+					for (uint32_t i = enemyChoice; i < boardState.enemyMonsterCount; ++i)
+					{
+						boardState.healths[BOARD_CAPACITY_PER_SIDE + i] = boardState.healths[BOARD_CAPACITY_PER_SIDE + i + 1];
+						boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + i] = boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + i + 1];
+					}
+
+					boardState.enemyMonsterCount--;
+				}
+				else
+					health -= allyMonster.attack;
+				tapped[selectedAlly] = true;
+			}
+
+			if(allyChoice != -1 && !tapped[allyChoice])
+				selectedAlly = allyChoice;
+		}
+
+		if (selectedAlly  != -1)
+		{
+			const uint32_t artifactSlotCount = info.playerState.artifactSlotCounts[selectedAlly];
+			for (uint32_t i = 0; i < artifactSlotCount; ++i)
+			{
+				const uint32_t partyMemberId = info.gameState.partyMembers[selectedAlly];
+				const uint32_t index = info.playerState.artifacts[partyMemberId * MONSTER_ARTIFACT_CAPACITY + i];
+				cards[i] = &info.artifacts[index];
+			}
+
+			RenderCardInfo artifactRenderInfo{};
+			artifactRenderInfo.levelUpdateInfo = &info;
+			artifactRenderInfo.cards = cards;
+			artifactRenderInfo.length = artifactSlotCount;
+			artifactRenderInfo.center.y += CARD_HEIGHT_OFFSET + CARD_HEIGHT * 2;
+			RenderCards(artifactRenderInfo);
+		}
+
+		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+			cards[i] = &info.monsters[boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + i]];
 
 		return true;
 	}
@@ -544,15 +703,14 @@ namespace game
 		if (info.playerState.ironManMode)
 			ClearSaveData();
 
-		info.boardState = {};
-
-		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 6);
+		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 7);
 		states[0] = info.arena.New<BossRevealState>();
 		states[1] = info.arena.New<PathSelectState>();
-		states[2] = info.arena.New<RewardMagicCardState>();
-		states[3] = info.arena.New<RewardFlawCardState>();
-		states[4] = info.arena.New<RewardArtifactState>();
-		states[5] = info.arena.New<ExitFoundState>();
+		states[2] = info.arena.New<CombatState>();
+		states[3] = info.arena.New<RewardMagicCardState>();
+		states[4] = info.arena.New<RewardFlawCardState>();
+		states[5] = info.arena.New<RewardArtifactState>();
+		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 	}
 

@@ -13,7 +13,6 @@
 #include "Interpreters/DynamicRenderInterpreter.h"
 #include "Interpreters/InstancedRenderInterpreter.h"
 #include "Interpreters/MouseInterpreter.h"
-#include "Interpreters/PriorityInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "Levels/Level.h"
@@ -21,7 +20,6 @@
 #include "Levels/MainMenuLevel.h"
 #include "Levels/NewGameLevel.h"
 #include "Levels/PartySelectLevel.h"
-#include "States/BoardState.h"
 #include "States/GameState.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
@@ -64,7 +62,6 @@ namespace game
 
 		GameState gameState{};
 		PlayerState playerState{};
-		BoardState boardState{};
 
 		LevelIndex levelIndex = LevelIndex::mainMenu;
 		bool levelLoading = true;
@@ -124,7 +121,6 @@ namespace game
 				levelScene,
 				gameState,
 				playerState,
-				boardState,
 				monsters,
 				artifacts,
 				bosses,
@@ -145,7 +141,6 @@ namespace game
 			levelScene,
 			gameState,
 			playerState,
-			boardState,
 			monsters,
 			artifacts,
 			bosses,

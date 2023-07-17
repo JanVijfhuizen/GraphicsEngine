@@ -43,6 +43,15 @@ constexpr float BUTTON_X_DEFAULT_SCALE = .4f;
 
 constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
 
+constexpr uint32_t MONSTER_CAPACITIES[TOTAL_BOSS_COUNT]
+{
+	2,
+	3,
+	4,
+	6,
+	8
+};
+
 enum class LevelIndex
 {
 	mainMenu,
