@@ -279,7 +279,7 @@ namespace game
 				*outCardGame->textTasks, textInterpreterCreateInfo);
 
 			MouseInterpreterCreateInfo mouseInterpreterCreateInfo{};
-			mouseInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
+			mouseInterpreterCreateInfo.renderTasks = outCardGame->priorityRenderTasks;
 			outCardGame->mouseInterpreter = &outCardGame->engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
 				*outCardGame->mouseTasks, mouseInterpreterCreateInfo);
 			outCardGame->mouseInterpreter->subTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::mouse)];
