@@ -75,7 +75,14 @@ namespace game
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
 			const auto card = info.cards[i];
-			const auto pos = GetCardPosition(info, i);
+			auto pos = GetCardPosition(info, i);
+			const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
+
+			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
+			{
+				selected = i;
+				pos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
+			}
 
 			auto finalColor = glm::vec4(1);
 			finalColor *= info.highlight != -1 ? info.highlight == i ? 1 : CARD_DARKENED_COLOR_MUL : 1;
@@ -110,12 +117,46 @@ namespace game
 				TextTask ruleTextTask = titleTextTask;
 				ruleTextTask.position = pos + glm::vec2(0, bgRenderTask.scale.y / 2);
 				ruleTextTask.text = card->ruleText;
-				titleTextTask.scale = CARD_TEXT_SIZE;
+				ruleTextTask.maxLength = CARD_SMALL_TEXT_CAPACITY;
+				ruleTextTask.scale = CARD_TEXT_SIZE;
 				info.levelUpdateInfo->textTasks.Push(ruleTextTask);
-			}
 
-			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), info.levelUpdateInfo->inputState.mousePos))
-				selected = i;
+				if(selected == i)
+				{
+					// Draw large version.
+					auto largeCardPos = pos;
+					const auto w = CARD_WIDTH * CARD_LARGE_SIZE_INCREASE_MUL + CARD_WIDTH;
+					largeCardPos.x += w * ((pos.x - w < -1) * 2 - 1);
+					
+					RenderTask bgRenderTask{};
+					bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT) * CARD_LARGE_SIZE_INCREASE_MUL;
+					bgRenderTask.scale.x = CARD_WIDTH * CARD_LARGE_SIZE_INCREASE_MUL;
+					bgRenderTask.position = largeCardPos + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT) * CARD_LARGE_SIZE_INCREASE_MUL);
+					bgRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+					info.levelUpdateInfo->priorityRenderTasks.Push(bgRenderTask);
+
+					RenderTask picRenderTask{};
+					picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL;
+					picRenderTask.scale.x = CARD_WIDTH * CARD_LARGE_SIZE_INCREASE_MUL;
+					picRenderTask.position = largeCardPos - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL);
+					picRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+					info.levelUpdateInfo->priorityRenderTasks.Push(picRenderTask);
+
+					TextTask titleTextTask{};
+					titleTextTask.lineLength = 12;
+					titleTextTask.center = true;
+					titleTextTask.position = largeCardPos - glm::vec2(0, CARD_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL);
+					titleTextTask.text = card->name;
+					titleTextTask.scale = CARD_TITLE_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
+					info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
+
+					TextTask ruleTextTask = titleTextTask;
+					ruleTextTask.position = largeCardPos + glm::vec2(0, bgRenderTask.scale.y / 2 * CARD_LARGE_SIZE_INCREASE_MUL);
+					ruleTextTask.text = card->ruleText;
+					ruleTextTask.scale = CARD_TEXT_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
+					info.levelUpdateInfo->priorityTextTasks.Push(ruleTextTask);
+				}
+			}
 		}
 
 		return selected;

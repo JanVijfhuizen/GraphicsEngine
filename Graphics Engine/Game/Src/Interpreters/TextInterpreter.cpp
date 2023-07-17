@@ -36,10 +36,9 @@ namespace game
 				const float spacing = job.scale * (1.f + static_cast<float>(job.spacing) / static_cast<float>(_createInfo.symbolSize));
 				const float lineSpacing = job.scale * (1.f + static_cast<float>(job.lineSpacing) / static_cast<float>(_createInfo.symbolSize));
 
-				uint32_t lineLength = 0;
-
 				const auto len = static_cast<uint32_t>(strlen(job.text));
 
+				uint32_t lineLength = 0;
 				uint32_t nextLineStart = 0;
 
 				float xOffset = 0;
@@ -78,7 +77,13 @@ namespace game
 						}
 					}
 
-					const auto& c = job.text[i];
+					auto c = job.text[i];
+					if (i >= job.maxLength)
+					{
+						c = '.';
+						if (!job.drawDotsOnMaxLengthReached || i >= job.maxLength + 3)
+							break;
+					}
 
 					if (c != ' ')
 					{

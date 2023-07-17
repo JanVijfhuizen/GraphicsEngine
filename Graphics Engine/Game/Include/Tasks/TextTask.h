@@ -10,6 +10,8 @@ namespace game
 		int32_t spacing = 2;
 		uint32_t lineLength = 96;
 		int32_t lineSpacing = 6;
+		uint32_t maxLength = UINT32_MAX;
+		bool drawDotsOnMaxLengthReached = true;
 		bool center = false;
 	};
 }

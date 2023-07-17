@@ -12,6 +12,7 @@ namespace game
 		info.gameState = GameState::Create();
 		for (auto& b : selected)
 			b = false;
+		lastHovered = -1;
 	}
 
 	bool PartySelectLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -29,22 +30,32 @@ namespace game
 		monsterRenderInfo.selectedArr = selected;
 		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo);
 
-		if(choice != -1)
-		{
-			const uint32_t artifactSlotCount = playerState.artifactSlotCounts[choice];
-			for (uint32_t i = 0; i < artifactSlotCount; ++i)
-			{
-				const uint32_t index = playerState.artifacts[choice * MONSTER_ARTIFACT_CAPACITY + i];
-				cards[i] = index == -1 ? nullptr : &info.artifacts[index];
-			}
+		if (choice != -1)
+			lastHovered = choice;
 
-			RenderCardInfo artifactRenderInfo{};
-			artifactRenderInfo.levelUpdateInfo = &info;
-			artifactRenderInfo.cards = cards;
-			artifactRenderInfo.length = artifactSlotCount;
-			artifactRenderInfo.center.y += CARD_HEIGHT * 2;
-			RenderCards(artifactRenderInfo);
+		bool selectedArtifacts[MONSTER_ARTIFACT_CAPACITY]{};
+
+		if(lastHovered != -1)
+		{
+			const uint32_t artifactSlotCount = playerState.artifactSlotCounts[lastHovered];
+			for (uint32_t i = 0; i < MONSTER_ARTIFACT_CAPACITY; ++i)
+			{
+				const uint32_t index = playerState.artifacts[lastHovered * MONSTER_ARTIFACT_CAPACITY + i];
+				cards[i] = index == -1 || artifactSlotCount <= i ? nullptr : &info.artifacts[index];
+				selectedArtifacts[i] = cards[i];
+			}
 		}
+		else
+			for (auto& card : cards)
+				card = nullptr;
+
+		RenderCardInfo artifactRenderInfo{};
+		artifactRenderInfo.levelUpdateInfo = &info;
+		artifactRenderInfo.cards = cards;
+		artifactRenderInfo.length = MONSTER_ARTIFACT_CAPACITY;
+		artifactRenderInfo.center.y += CARD_HEIGHT * 2;
+		artifactRenderInfo.selectedArr = selectedArtifacts;
+		RenderCards(artifactRenderInfo);
 
 		if (info.inputState.lMouse == InputState::pressed && choice != -1)
 			selected[choice] = !selected[choice];

@@ -175,6 +175,7 @@
     <ClInclude Include="Include\Cards\MonsterCard.h" />
     <ClInclude Include="Include\Cards\RoomCard.h" />
     <ClInclude Include="Include\Interpreters\MouseInterpreter.h" />
+    <ClInclude Include="Include\Interpreters\PriorityInterpreter.h" />
     <ClInclude Include="Include\LevelStates\LevelStateMachine.h" />
     <ClInclude Include="Include\Levels\Level.h" />
     <ClInclude Include="Include\Levels\LevelUtils.h" />
