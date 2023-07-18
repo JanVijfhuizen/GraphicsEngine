@@ -75,17 +75,10 @@ namespace game
 
 		struct CombatState final : LevelState<State>
 		{
-			enum class TurnState
-			{
-				untap,
-				allied,
-				enemy,
-				finished
-			} turnState;
-
 			BoardState boardState;
-			bool tapped[BOARD_CAPACITY_PER_SIDE]{};
-			uint32_t selectedAlly;
+			bool tapped[BOARD_CAPACITY_PER_SIDE];
+			uint32_t allySelected;
+			bool newTurn;
 			
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,

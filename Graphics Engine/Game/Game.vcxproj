@@ -144,6 +144,7 @@
     <ClCompile Include="Src\Levels\MainLevel.cpp" />
     <ClCompile Include="Src\Levels\MainMenuLevel.cpp" />
     <ClCompile Include="Src\Levels\NewGameLevel.cpp" />
+    <ClCompile Include="Src\States\BoardState.cpp" />
     <ClCompile Include="Src\States\GameState.cpp" />
     <ClCompile Include="Src\States\PlayerState.cpp" />
     <ClCompile Include="Src\Utils\BoxCollision.cpp" />
@@ -153,7 +154,6 @@
     <ClCompile Include="Src\Interpreters\DynamicRenderInterpreter.cpp" />
     <ClCompile Include="Src\Engine\TexturePool.cpp" />
     <ClCompile Include="Src\Interpreters\TextInterpreter.cpp" />
-    <ClCompile Include="Src\Interpreters\InstancedRenderInterpreter.cpp" />
     <ClCompile Include="Src\Engine\Engine.cpp" />
     <ClCompile Include="Src\Game.cpp" />
     <ClCompile Include="Src\pch_game.cpp">
@@ -167,8 +167,6 @@
     <ClInclude Include="Include\Cards\ArtifactCard.h" />
     <ClInclude Include="Include\Cards\BossCard.h" />
     <ClInclude Include="Include\Cards\Card.h" />
-    <ClInclude Include="Include\Cards\CriticalCard.h" />
-    <ClInclude Include="Include\Cards\CriticalFailCard.h" />
     <ClInclude Include="Include\Cards\EventCard.h" />
     <ClInclude Include="Include\Cards\FlawCard.h" />
     <ClInclude Include="Include\Cards\MagicCard.h" />

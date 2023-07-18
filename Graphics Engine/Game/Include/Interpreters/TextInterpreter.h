@@ -6,6 +6,7 @@
 
 namespace game
 {
+	template <typename T>
 	class InstancedRenderInterpreter;
 
 	struct TextInterpreterCreateInfo final

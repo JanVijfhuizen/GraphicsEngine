@@ -1,6 +1,5 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainLevel.h"
-#include "Utils/Shuffle.h"
 #include <Levels/LevelUtils.h>
 
 #include "CardGame.h"
@@ -310,43 +309,41 @@ namespace game
 
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
 	{
-		const auto& playerState = info.playerState;
-		const auto& gameState = info.gameState;
-
 		boardState = {};
-		turnState = TurnState::untap;
+		allySelected = -1;
+		newTurn = true;
 
-		for (uint32_t i = 0; i < gameState.partySize; ++i)
-		{
-			const uint32_t partyMemberId = gameState.partyMembers[i];
-			boardState.monsterIds[i] = playerState.monsterIds[partyMemberId];
-			boardState.healths[i] = gameState.healths[i];
-			boardState.partyIds[i] = partyMemberId;
-		}
-		boardState.alliedMonsterCount = gameState.partySize;
-		boardState.partyCount = gameState.partySize;
+		boardState.AddParty(info);
 
 		const uint32_t enemyCount = MONSTER_CAPACITIES[jv::Min((state.depth - 1) / ROOM_COUNT_BEFORE_BOSS, TOTAL_BOSS_COUNT - 1)];
 		for (uint32_t i = 0; i < enemyCount; ++i)
-			boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + i] = state.GetMonster(info, boardState);
-		boardState.enemyMonsterCount = enemyCount;
+			boardState.TryAddEnemy(info, state.GetMonster(info, boardState));
 	}
 
 	bool MainLevel::CombatState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		if(turnState == TurnState::untap)
+		if(newTurn)
 		{
 			for (auto& b : tapped)
 				b = false;
-			turnState = TurnState::allied;
-			selectedAlly = -1;
+			newTurn = false;
+			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+				boardState.RerollEnemyTarget(i);
 		}
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.text = "combat phase.";
+		textTask.lineLength = 20;
+		textTask.position = TEXT_CENTER_TOP_POSITION;
+		textTask.scale = TEXT_BIG_SCALE;
+		info.textTasks.Push(textTask);
 
 		Card* cards[BOARD_CAPACITY_PER_SIDE]{};
 
-		for (uint32_t i = 0; i < boardState.alliedMonsterCount; ++i)
-			cards[i] = &info.monsters[boardState.monsterIds[i]];
+		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+			cards[i] = &info.monsters[boardState.enemyIds[i]];
 
 		RenderCardInfo enemyRenderInfo{};
 		enemyRenderInfo.levelUpdateInfo = &info;
@@ -355,17 +352,15 @@ namespace game
 		enemyRenderInfo.center.y = -CARD_HEIGHT_OFFSET;
 		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo);
 
-		bool selected[BOARD_CAPACITY_PER_SIDE]{};
-		for (uint32_t i = 0; i < BOARD_CAPACITY_PER_SIDE; ++i)
-			selected[i] = !tapped[i];
+		for (uint32_t i = 0; i < boardState.alliedMonsterCount; ++i)
+			cards[i] = &info.monsters[boardState.allyIds[i]];
 
-		// If ally has been selected.
-		if (selectedAlly != -1)
-		{
-			for (auto& b : selected)
-				b = false;
-			selected[selectedAlly] = true;
-		}
+		bool selected[BOARD_CAPACITY_PER_SIDE]{};
+		if(allySelected != -1 && !tapped[allySelected])
+			selected[allySelected] = true;
+		else
+			for (uint32_t i = 0; i < BOARD_CAPACITY_PER_SIDE; ++i)
+				selected[i] = !tapped[i];
 
 		RenderCardInfo alliedRenderInfo{};
 		alliedRenderInfo.levelUpdateInfo = &info;
@@ -374,53 +369,45 @@ namespace game
 		alliedRenderInfo.center.y = CARD_HEIGHT_OFFSET;
 		alliedRenderInfo.selectedArr = selected;
 		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo);
+		
+		if(info.inputState.lMouse == InputState::pressed && allyChoice != -1 && !tapped[allyChoice])
+			allySelected = allyChoice;
 
-		if(info.inputState.lMouse == InputState::pressed)
+		if(info.inputState.lMouse == InputState::released)
 		{
-			if(selectedAlly != -1 && enemyChoice != -1)
+			if(allySelected != -1 && enemyChoice != -1)
 			{
-				const auto& allyMonster = info.monsters[boardState.monsterIds[selectedAlly]];
-				auto& health = boardState.healths[BOARD_CAPACITY_PER_SIDE + enemyChoice];
-
-				if(health <= allyMonster.attack)
+				const uint32_t allyMonsterId = boardState.allyIds[allySelected];
+				const auto& allyMonster = info.monsters[allyMonsterId];
+				auto& enemyHealth = boardState.enemyHealths[enemyChoice];
+				if (enemyHealth > allyMonster.attack)
 				{
-					for (uint32_t i = enemyChoice; i < boardState.enemyMonsterCount; ++i)
-					{
-						boardState.healths[BOARD_CAPACITY_PER_SIDE + i] = boardState.healths[BOARD_CAPACITY_PER_SIDE + i + 1];
-						boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + i] = boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + i + 1];
-					}
-
-					boardState.enemyMonsterCount--;
+					enemyHealth -= allyMonster.attack;
+					boardState.RerollEnemyTarget(enemyChoice);
 				}
 				else
-					health -= allyMonster.attack;
-				tapped[selectedAlly] = true;
-			}
+				{
+					boardState.RemoveEnemy(enemyChoice);
+					if(boardState.enemyMonsterCount == 0)
+						stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+				}
 
-			if(allyChoice != -1 && !tapped[allyChoice])
-				selectedAlly = allyChoice;
+				tapped[allySelected] = true;
+			}
+			allySelected = -1;
 		}
 
-		if (selectedAlly  != -1)
+		bool allTapped = true;
+		for (uint32_t i = 0; i < boardState.alliedMonsterCount; ++i)
 		{
-			const uint32_t artifactSlotCount = info.playerState.artifactSlotCounts[selectedAlly];
-			for (uint32_t i = 0; i < artifactSlotCount; ++i)
+			if(!tapped[i])
 			{
-				const uint32_t partyMemberId = info.gameState.partyMembers[selectedAlly];
-				const uint32_t index = info.playerState.artifacts[partyMemberId * MONSTER_ARTIFACT_CAPACITY + i];
-				cards[i] = &info.artifacts[index];
+				allTapped = false;
+				break;
 			}
-
-			RenderCardInfo artifactRenderInfo{};
-			artifactRenderInfo.levelUpdateInfo = &info;
-			artifactRenderInfo.cards = cards;
-			artifactRenderInfo.length = artifactSlotCount;
-			artifactRenderInfo.center.y += CARD_HEIGHT_OFFSET + CARD_HEIGHT * 2;
-			RenderCards(artifactRenderInfo);
 		}
-
-		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
-			cards[i] = &info.monsters[boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + i]];
+		if (allTapped)
+			newTurn = true;
 
 		return true;
 	}
