@@ -401,7 +401,17 @@ namespace game
 				const auto& allyMonster = info.monsters[allyMonsterId];
 				boardState.DealDamage(BOARD_CAPACITY_PER_SIDE + enemyChoice, allyMonster.attack);
 				if (boardState.enemyMonsterCount == 0)
+				{
+					auto& gameState = info.gameState;
+					for (uint32_t i = 0; i < boardState.partyCount; ++i)
+					{
+						gameState.partyMembers[boardState.partyIds[i]];
+						gameState.healths[i] = boardState.allyHealths[i];
+					}
+					gameState.partySize = boardState.partyCount;
+
 					stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+				}
 				tapped[allySelected] = true;
 			}
 			allySelected = -1;
