@@ -56,7 +56,7 @@ namespace game
 				bool removed = false;
 
 				for (uint32_t j = 0; j < boardState.alliedMonsterCount; ++j)
-					if (monsters[j] == boardState.monsterIds[j])
+					if (monsters[i] == boardState.monsterIds[j])
 					{
 						monsters.RemoveAt(i);
 						removed = true;
@@ -66,7 +66,7 @@ namespace game
 					continue;
 
 				for (uint32_t j = 0; j < boardState.enemyMonsterCount; ++j)
-					if (monsters[j] == boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + j])
+					if (monsters[i] == boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + j])
 					{
 						monsters.RemoveAt(i);
 						removed = true;
@@ -76,7 +76,7 @@ namespace game
 					continue;
 
 				for (uint32_t j = 0; j < info.playerState.partySize; ++j)
-					if(monsters[j] == info.playerState.monsterIds[j])
+					if(monsters[i] == info.playerState.monsterIds[j])
 					{
 						monsters.RemoveAt(i);
 						break;
@@ -352,6 +352,16 @@ namespace game
 		enemyRenderInfo.center.y = -CARD_HEIGHT_OFFSET;
 		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo);
 
+		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+		{
+			TextTask textTask{};
+			textTask.center = true;
+			textTask.text = TextInterpreter::IntToConstCharPtr(boardState.enemyTargets[i] + 1, info.frameArena);
+			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * (boardState.enemyMonsterCount - 1) / 2 + CARD_WIDTH_OFFSET * i, -CARD_HEIGHT_OFFSET);
+			textTask.scale = TEXT_MEDIUM_SCALE;
+			info.textTasks.Push(textTask);
+		}
+
 		for (uint32_t i = 0; i < boardState.alliedMonsterCount; ++i)
 			cards[i] = &info.monsters[boardState.allyIds[i]];
 
@@ -379,7 +389,7 @@ namespace game
 			{
 				const uint32_t allyMonsterId = boardState.allyIds[allySelected];
 				const auto& allyMonster = info.monsters[allyMonsterId];
-				boardState.DealDamage(enemyChoice, allyMonster.attack);
+				boardState.DealDamage(BOARD_CAPACITY_PER_SIDE + enemyChoice, allyMonster.attack);
 				if (boardState.enemyMonsterCount == 0)
 					stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 				tapped[allySelected] = true;
@@ -400,7 +410,7 @@ namespace game
 		{
 			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 			{
-				const uint32_t enemyMonsterId = boardState.allyIds[allySelected];
+				const uint32_t enemyMonsterId = boardState.enemyIds[i];
 				const auto& enemyMonster = info.monsters[enemyMonsterId];
 				const uint32_t target = boardState.enemyTargets[i];
 				if (target > boardState.alliedMonsterCount)

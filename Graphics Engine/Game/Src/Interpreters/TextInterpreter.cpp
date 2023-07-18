@@ -27,26 +27,36 @@ namespace game
 		
 		RenderTask task{};
 
+		float spacing;
+		float lineSpacing;
+		float xOffset;
+		uint32_t lineLength;
+		uint32_t nextLineStart;
+
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)
 			{
 				assert(job.text);
-				task.position = job.position;
-				task.scale = glm::vec2(job.scale);
-				const float spacing = job.scale * (1.f + static_cast<float>(job.spacing) / static_cast<float>(_createInfo.symbolSize));
-				const float lineSpacing = job.scale * (1.f + static_cast<float>(job.lineSpacing) / static_cast<float>(_createInfo.symbolSize));
 
 				const auto len = static_cast<uint32_t>(strlen(job.text));
 
-				uint32_t lineLength = 0;
-				uint32_t nextLineStart = 0;
-
-				float xOffset = 0;
-				if (job.center)
+				if(!job.continueFromLastTask)
 				{
-					const auto l = jv::Min<uint32_t>(len, job.lineLength);
-					xOffset = spacing * static_cast<float>(l - 1) * -.5f;
+					task.position = job.position;
+					task.scale = glm::vec2(job.scale);
+					spacing = job.scale * (1.f + static_cast<float>(job.spacing) / static_cast<float>(_createInfo.symbolSize));
+					lineSpacing = job.scale * (1.f + static_cast<float>(job.lineSpacing) / static_cast<float>(_createInfo.symbolSize));
+
+					xOffset = 0;
+					if (job.center)
+					{
+						const auto l = jv::Min<uint32_t>(len, job.lineLength);
+						xOffset = spacing * static_cast<float>(l - 1) * -.5f;
+					}
 				}
+				
+				lineLength = 0;
+				nextLineStart = 0;
 
 				for (uint32_t i = 0; i < len; ++i)
 				{

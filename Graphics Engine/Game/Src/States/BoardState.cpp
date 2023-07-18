@@ -43,11 +43,11 @@ namespace game
 			--partyCount;
 	}
 
-	bool BoardState::TryAddEnemy(const LevelInfo& info, uint32_t id)
+	bool BoardState::TryAddEnemy(const LevelInfo& info, const uint32_t id)
 	{
 		if (enemyMonsterCount > BOARD_CAPACITY_PER_SIDE)
 			return false;
-		enemyIds[alliedMonsterCount] = id;
+		enemyIds[enemyMonsterCount] = id;
 		enemyHealths[enemyMonsterCount++] = info.monsters[id].health;
 		return true;
 	}
@@ -81,11 +81,7 @@ namespace game
 
 	void BoardState::RerollEnemyTarget(const uint32_t i)
 	{
-		uint32_t target;
-		do
-		{
-			target = rand() % BOARD_CAPACITY_PER_SIDE;
-		} while (target > alliedMonsterCount);
+		const uint32_t target = rand() % alliedMonsterCount;
 		enemyTargets[i] = target;
 	}
 }
