@@ -13,7 +13,6 @@
 #include "Interpreters/DynamicRenderInterpreter.h"
 #include "Interpreters/InstancedRenderInterpreter.h"
 #include "Interpreters/MouseInterpreter.h"
-#include "Interpreters/PriorityInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "Levels/Level.h"
@@ -21,7 +20,6 @@
 #include "Levels/MainMenuLevel.h"
 #include "Levels/NewGameLevel.h"
 #include "Levels/PartySelectLevel.h"
-#include "States/BoardState.h"
 #include "States/GameState.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
@@ -55,8 +53,8 @@ namespace game
 		TaskSystem<TextTask>* textTasks;
 		TaskSystem<TextTask>* priorityTextTasks;
 		TaskSystem<MouseTask>* mouseTasks;
-		InstancedRenderInterpreter* renderInterpreter;
-		InstancedRenderInterpreter* priorityRenderInterpreter;
+		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
+		InstancedRenderInterpreter<RenderTask>* priorityRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
 		TextInterpreter* textInterpreter;
 		TextInterpreter* priorityTextInterpreter;
@@ -64,7 +62,6 @@ namespace game
 
 		GameState gameState{};
 		PlayerState playerState{};
-		BoardState boardState{};
 
 		LevelIndex levelIndex = LevelIndex::mainMenu;
 		bool levelLoading = true;
@@ -124,7 +121,6 @@ namespace game
 				levelScene,
 				gameState,
 				playerState,
-				boardState,
 				monsters,
 				artifacts,
 				bosses,
@@ -145,7 +141,6 @@ namespace game
 			levelScene,
 			gameState,
 			playerState,
-			boardState,
 			monsters,
 			artifacts,
 			bosses,
@@ -243,11 +238,11 @@ namespace game
 			enableInfo.scene = outCardGame->scene;
 			enableInfo.capacity = 1024;
 
-			outCardGame->priorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter>(
+			outCardGame->priorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
 				*outCardGame->priorityRenderTasks, createInfo);
 			outCardGame->priorityRenderInterpreter->Enable(enableInfo);
 			outCardGame->priorityRenderInterpreter->image = outCardGame->atlas;
-			outCardGame->renderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter>(
+			outCardGame->renderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
 				*outCardGame->renderTasks, createInfo);
 			outCardGame->renderInterpreter->Enable(enableInfo);
 			outCardGame->renderInterpreter->image = outCardGame->atlas;
@@ -277,7 +272,7 @@ namespace game
 			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->renderTasks;
 			outCardGame->textInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
 				*outCardGame->textTasks, textInterpreterCreateInfo);
-
+			
 			MouseInterpreterCreateInfo mouseInterpreterCreateInfo{};
 			mouseInterpreterCreateInfo.renderTasks = outCardGame->priorityRenderTasks;
 			outCardGame->mouseInterpreter = &outCardGame->engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(

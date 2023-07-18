@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Level.h"
 #include "LevelStates/LevelStateMachine.h"
+#include "States/BoardState.h"
 
 namespace game
 {
@@ -10,6 +11,7 @@ namespace game
 		{
 			bossReveal,
 			pathSelect,
+			combat,
 			rewardMagic,
 			rewardFlaw,
 			rewardArtifact,
@@ -45,6 +47,7 @@ namespace game
 			uint32_t chosenPath;
 
 			void RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const;
+			[[nodiscard]] uint32_t GetMonster(const LevelInfo& info, const BoardState& boardState);
 			[[nodiscard]] uint32_t GetBoss(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetRoom(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetMagic(const LevelInfo& info);
@@ -65,6 +68,18 @@ namespace game
 		{
 			uint32_t discoverOption;
 
+			void Reset(State& state, const LevelInfo& info) override;
+			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+				LevelIndex& loadLevelIndex) override;
+		};
+
+		struct CombatState final : LevelState<State>
+		{
+			BoardState boardState;
+			bool tapped[BOARD_CAPACITY_PER_SIDE];
+			uint32_t allySelected;
+			bool newTurn;
+			
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;

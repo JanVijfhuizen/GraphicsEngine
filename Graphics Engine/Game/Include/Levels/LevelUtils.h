@@ -1,15 +1,15 @@
 ﻿#pragma once
 #include "JLib/Vector.h"
 #include "JLib/Array.h"
-#include "States/PlayerState.h"
 
 namespace game
 {
+	struct PlayerState;
 	struct GameState;
 	struct Card;
 	struct LevelUpdateInfo;
 
-	struct RenderCardInfo final
+	struct RenderCardInfo
 	{
 		LevelUpdateInfo const* levelUpdateInfo;
 		Card** cards;
@@ -21,7 +21,12 @@ namespace game
 		uint32_t lineLength = -1;
 	};
 
-	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderCardInfo& info);
+	struct RenderMonsterCardInfo final : RenderCardInfo
+	{
+		uint32_t* currentHealthArr = nullptr;
+	};
+
+	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);
 	uint32_t RenderMagicCards(jv::Arena& frameArena, const RenderCardInfo& info);
 	uint32_t RenderCards(const RenderCardInfo& info);
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);

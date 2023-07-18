@@ -8,11 +8,11 @@ namespace game
 {
 	const char* TextInterpreter::IntToConstCharPtr(const uint32_t i, jv::Arena& arena)
 	{
-		constexpr uint32_t size = (sizeof i * CHAR_BIT + 2) / 3 + 2;
-		const auto ptr = static_cast<char*>(arena.Alloc(size));
-		char s[size];
+		char s[9 + sizeof(char)];
+		const uint32_t size = GetNumberOfDigits(i);
+		const auto ptr = static_cast<char*>(arena.Alloc(size + 1));
 		sprintf_s(s, "%d", i);
-		memcpy(ptr, s, size);
+		memcpy(ptr, s, size + 1);
 		return ptr;
 	}
 
@@ -31,15 +31,13 @@ namespace game
 			for (const auto& job : batch)
 			{
 				assert(job.text);
-				task.position = job.position;
-				task.scale = glm::vec2(job.scale);
-				const float spacing = job.scale * (1.f + static_cast<float>(job.spacing) / static_cast<float>(_createInfo.symbolSize));
-				const float lineSpacing = job.scale * (1.f + static_cast<float>(job.lineSpacing) / static_cast<float>(_createInfo.symbolSize));
 
 				const auto len = static_cast<uint32_t>(strlen(job.text));
 
-				uint32_t lineLength = 0;
-				uint32_t nextLineStart = 0;
+				task.position = job.position;
+				task.scale = glm::vec2(job.scale);
+				float spacing = job.scale * (1.f + static_cast<float>(job.spacing) / static_cast<float>(_createInfo.symbolSize));
+				float lineSpacing = job.scale * (1.f + static_cast<float>(job.lineSpacing) / static_cast<float>(_createInfo.symbolSize));
 
 				float xOffset = 0;
 				if (job.center)
@@ -47,6 +45,9 @@ namespace game
 					const auto l = jv::Min<uint32_t>(len, job.lineLength);
 					xOffset = spacing * static_cast<float>(l - 1) * -.5f;
 				}
+
+				uint32_t lineLength = 0;
+				uint32_t nextLineStart = 0;
 
 				for (uint32_t i = 0; i < len; ++i)
 				{

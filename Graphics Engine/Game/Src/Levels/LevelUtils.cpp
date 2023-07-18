@@ -6,6 +6,7 @@
 #include "Levels/Level.h"
 #include "States/GameState.h"
 #include "States/InputState.h"
+#include "States/PlayerState.h"
 #include "Tasks/RenderTask.h"
 #include "Tasks/TextTask.h"
 #include "Utils/BoxCollision.h"
@@ -23,7 +24,7 @@ namespace game
 		return pos;
 	}
 
-	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderCardInfo& info)
+	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info)
 	{
 		const auto result = RenderCards(info);
 
@@ -41,7 +42,22 @@ namespace game
 			textTask.text = TextInterpreter::IntToConstCharPtr(monsterCard->attack, frameArena);
 			info.levelUpdateInfo->textTasks.Push(textTask);
 			textTask.position = pos + glm::vec2(CARD_WIDTH - CARD_BORDER_OFFSET, f);
-			textTask.text = TextInterpreter::IntToConstCharPtr(monsterCard->health, frameArena);
+
+			const char* maxHealthText = TextInterpreter::IntToConstCharPtr(monsterCard->health, frameArena);
+			textTask.text = maxHealthText;
+
+			if(info.currentHealthArr)
+			{
+				const uint32_t l1 = GetNumberOfDigits(info.currentHealthArr[i]);
+				const uint32_t l2 = GetNumberOfDigits(monsterCard->health);
+				const char* currentHealthText = TextInterpreter::IntToConstCharPtr(info.currentHealthArr[i], frameArena);
+				const auto ptr = static_cast<char*>(frameArena.Alloc(l1 + l2 + 1));
+				memcpy(ptr, currentHealthText, l1);
+				memcpy(&ptr[l1 + 1], maxHealthText, l2 + 1);
+				ptr[l1] = '/';
+				textTask.text = ptr;
+			}
+
 			info.levelUpdateInfo->textTasks.Push(textTask);
 		}
 
