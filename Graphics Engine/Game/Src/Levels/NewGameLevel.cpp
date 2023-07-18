@@ -101,7 +101,7 @@ namespace game
 	{
 		Card* cards[DISCOVER_LENGTH]{};
 
-		RenderCardInfo renderInfo{};
+		RenderMonsterCardInfo renderInfo{};
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.cards = cards;
 		renderInfo.length = DISCOVER_LENGTH;

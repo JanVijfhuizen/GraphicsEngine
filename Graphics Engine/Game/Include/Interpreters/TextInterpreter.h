@@ -22,7 +22,7 @@ namespace game
 	class TextInterpreter final : public TaskInterpreter<TextTask, TextInterpreterCreateInfo>
 	{
 	public:
-		static const char* IntToConstCharPtr(uint32_t i, jv::Arena& arena);
+		[[nodiscard]] static const char* IntToConstCharPtr(uint32_t i, jv::Arena& arena);
 
 	private:
 		TextInterpreterCreateInfo _createInfo;

@@ -13,6 +13,5 @@ namespace game
 		uint32_t maxLength = UINT32_MAX;
 		bool drawDotsOnMaxLengthReached = true;
 		bool center = false;
-		bool continueFromLastTask = false;
 	};
 }

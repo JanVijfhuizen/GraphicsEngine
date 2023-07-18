@@ -4,6 +4,7 @@
 #include "Levels/LevelUtils.h"
 #include "States/GameState.h"
 #include "States/InputState.h"
+#include "States/PlayerState.h"
 
 namespace game
 {
@@ -23,7 +24,7 @@ namespace game
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[i]];
 
-		RenderCardInfo monsterRenderInfo{};
+		RenderMonsterCardInfo monsterRenderInfo{};
 		monsterRenderInfo.levelUpdateInfo = &info;
 		monsterRenderInfo.cards = cards;
 		monsterRenderInfo.length = playerState.partySize;

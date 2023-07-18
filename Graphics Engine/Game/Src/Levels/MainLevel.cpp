@@ -8,6 +8,7 @@
 #include "States/InputState.h"
 #include "States/GameState.h"
 #include "States/BoardState.h"
+#include "States/PlayerState.h"
 #include "Utils/BoxCollision.h"
 
 namespace game
@@ -345,11 +346,16 @@ namespace game
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 			cards[i] = &info.monsters[boardState.enemyIds[i]];
 
-		RenderCardInfo enemyRenderInfo{};
+		uint32_t currentHealths[BOARD_CAPACITY_PER_SIDE]{};
+		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+			currentHealths[i] = boardState.enemyHealths[i];
+
+		RenderMonsterCardInfo enemyRenderInfo{};
 		enemyRenderInfo.levelUpdateInfo = &info;
 		enemyRenderInfo.cards = cards;
 		enemyRenderInfo.length = boardState.enemyMonsterCount;
 		enemyRenderInfo.center.y = -CARD_HEIGHT_OFFSET;
+		enemyRenderInfo.currentHealthArr = currentHealths;
 		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo);
 
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
@@ -372,12 +378,16 @@ namespace game
 			for (uint32_t i = 0; i < BOARD_CAPACITY_PER_SIDE; ++i)
 				selected[i] = !tapped[i];
 
-		RenderCardInfo alliedRenderInfo{};
+		for (uint32_t i = 0; i < boardState.alliedMonsterCount; ++i)
+			currentHealths[i] = boardState.allyHealths[i];
+
+		RenderMonsterCardInfo alliedRenderInfo{};
 		alliedRenderInfo.levelUpdateInfo = &info;
 		alliedRenderInfo.cards = cards;
 		alliedRenderInfo.length = boardState.alliedMonsterCount;
 		alliedRenderInfo.center.y = CARD_HEIGHT_OFFSET;
 		alliedRenderInfo.selectedArr = selected;
+		alliedRenderInfo.currentHealthArr = currentHealths;
 		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo);
 		
 		if(info.inputState.lMouse == InputState::pressed && allyChoice != -1 && !tapped[allyChoice])
@@ -529,7 +539,7 @@ namespace game
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
 				cards[i] = &info.monsters[playerState.monsterIds[gameState.partyMembers[i]]];
 
-			RenderCardInfo renderInfo{};
+			RenderMonsterCardInfo renderInfo{};
 			renderInfo.levelUpdateInfo = &info;
 			renderInfo.length = gameState.partySize;
 			renderInfo.cards = cards;
@@ -596,7 +606,7 @@ namespace game
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[gameState.partyMembers[i]]];
 
-		RenderCardInfo renderInfo{};
+		RenderMonsterCardInfo renderInfo{};
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.length = gameState.partySize;
 		renderInfo.cards = cards;

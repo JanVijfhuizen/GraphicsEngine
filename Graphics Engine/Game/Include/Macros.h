@@ -1,5 +1,10 @@
 #pragma once
 
+[[nodiscard]] inline uint32_t GetNumberOfDigits(const uint32_t i)
+{
+	return i > 0 ? static_cast<int32_t>(log10(static_cast<double>(i))) + 1 : 1;
+}
+
 constexpr uint32_t PARTY_ACTIVE_CAPACITY = 4;
 constexpr uint32_t PARTY_INACTIVE_CAPACITY = 2;
 constexpr uint32_t PARTY_CAPACITY = PARTY_ACTIVE_CAPACITY + PARTY_INACTIVE_CAPACITY;
