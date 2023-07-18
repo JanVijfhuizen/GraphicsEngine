@@ -39,6 +39,7 @@ namespace game
 		bool TryAddEnemy(const LevelInfo& info, uint32_t id);
 		void RemoveEnemy(uint32_t i);
 
+		void DealDamage(uint32_t i, uint32_t damage);
 		void RerollEnemyTarget(uint32_t i);
 	};
 }

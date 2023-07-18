@@ -62,6 +62,23 @@ namespace game
 		--enemyMonsterCount;
 	}
 
+	void BoardState::DealDamage(const uint32_t i, const uint32_t damage)
+	{
+		if (healths[i] > damage)
+		{
+			healths[i] -= damage;
+			if(i > BOARD_CAPACITY_PER_SIDE)
+				RerollEnemyTarget(i - BOARD_CAPACITY_PER_SIDE);
+		}
+		else
+		{
+			if (i < BOARD_CAPACITY_PER_SIDE)
+				RemoveAlly(i);
+			else
+				RemoveEnemy(BOARD_CAPACITY_PER_SIDE + i);
+		}
+	}
+
 	void BoardState::RerollEnemyTarget(const uint32_t i)
 	{
 		uint32_t target;

@@ -379,19 +379,9 @@ namespace game
 			{
 				const uint32_t allyMonsterId = boardState.allyIds[allySelected];
 				const auto& allyMonster = info.monsters[allyMonsterId];
-				auto& enemyHealth = boardState.enemyHealths[enemyChoice];
-				if (enemyHealth > allyMonster.attack)
-				{
-					enemyHealth -= allyMonster.attack;
-					boardState.RerollEnemyTarget(enemyChoice);
-				}
-				else
-				{
-					boardState.RemoveEnemy(enemyChoice);
-					if(boardState.enemyMonsterCount == 0)
-						stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
-				}
-
+				boardState.DealDamage(enemyChoice, allyMonster.attack);
+				if (boardState.enemyMonsterCount == 0)
+					stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 				tapped[allySelected] = true;
 			}
 			allySelected = -1;
@@ -407,7 +397,20 @@ namespace game
 			}
 		}
 		if (allTapped)
+		{
+			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
+			{
+				const uint32_t enemyMonsterId = boardState.allyIds[allySelected];
+				const auto& enemyMonster = info.monsters[enemyMonsterId];
+				const uint32_t target = boardState.enemyTargets[i];
+				if (target > boardState.alliedMonsterCount)
+					continue;
+				boardState.DealDamage(target, enemyMonster.attack);
+				if (boardState.alliedMonsterCount == 0)
+					loadLevelIndex = LevelIndex::mainMenu;
+			}
 			newTurn = true;
+		}
 
 		return true;
 	}
