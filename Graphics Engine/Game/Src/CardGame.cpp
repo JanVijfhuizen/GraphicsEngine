@@ -79,6 +79,7 @@ namespace game
 		jv::Array<RoomCard> rooms;
 		jv::Array<MagicCard> magic;
 		jv::Array<FlawCard> flaws;
+		jv::Array<EventCard> events;
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -91,6 +92,7 @@ namespace game
 		[[nodiscard]] static jv::Array<RoomCard> GetRoomCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<MagicCard> GetMagicCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<FlawCard> GetFlawCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<EventCard> GetEventCards(jv::Arena& arena);
 		
 		void UpdateInput();
 		static void SetInputState(InputState::State& state, uint32_t target, KeyCallback callback);
@@ -126,7 +128,8 @@ namespace game
 				bosses,
 				rooms,
 				magic,
-				flaws
+				flaws,
+				events
 			};
 			
 			levels[static_cast<uint32_t>(levelIndex)]->Create(info);
@@ -147,6 +150,7 @@ namespace game
 			rooms,
 			magic,
 			flaws,
+			events,
 			{800, 600}, // temp.
 			inputState,
 			*renderTasks,
@@ -287,6 +291,7 @@ namespace game
 			outCardGame->rooms = cardGame.GetRoomCards(outCardGame->arena);
 			outCardGame->magic = cardGame.GetMagicCards(outCardGame->arena);
 			outCardGame->flaws = cardGame.GetFlawCards(outCardGame->arena);
+			outCardGame->events = cardGame.GetEventCards(outCardGame->arena);
 		}
 
 		{
@@ -356,6 +361,12 @@ namespace game
 	jv::Array<FlawCard> CardGame::GetFlawCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<FlawCard>(arena, 24);
+		return arr;
+	}
+
+	jv::Array<EventCard> CardGame::GetEventCards(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<EventCard>(arena, 24);
 		return arr;
 	}
 

@@ -84,7 +84,7 @@ namespace game
 			{
 				if (!selected[i])
 					continue;
-				gameState.partyMembers[j] = i;
+				gameState.partyIds[j] = i;
 
 				const auto& monster = info.monsters[playerState.monsterIds[i]];
 				gameState.healths[j++] = monster.health;

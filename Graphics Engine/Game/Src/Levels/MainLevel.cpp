@@ -26,6 +26,8 @@ namespace game
 		decks.magics = jv::CreateVector<uint32_t>(info.arena, count);
 		GetDeck(nullptr, &count, info.flaws);
 		decks.flaws = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(nullptr, &count, info.events);
+		decks.events = jv::CreateVector<uint32_t>(info.arena, count);
 		GetDeck(nullptr, &count, info.monsters);
 		decks.monsters = jv::CreateVector<uint32_t>(info.arena, count);
 		GetDeck(nullptr, &count, info.artifacts);
@@ -143,6 +145,14 @@ namespace game
 		}
 		RemoveFlawsInParty(flaws, info.gameState);
 		return flaws.Pop();
+	}
+
+	uint32_t MainLevel::State::GetEvent(const LevelInfo& info)
+	{
+		auto& events = decks.events;
+		if (events.count == 0)
+			GetDeck(&events, nullptr, info.flaws);
+		return events.Pop();
 	}
 
 	MainLevel::State MainLevel::State::Create(const LevelCreateInfo& info)
@@ -331,6 +341,7 @@ namespace game
 			newTurn = false;
 			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 				boardState.RerollEnemyTarget(i);
+			eventCard = state.GetEvent(info);
 		}
 
 		TextTask textTask{};
@@ -342,6 +353,16 @@ namespace game
 		info.textTasks.Push(textTask);
 
 		Card* cards[BOARD_CAPACITY_PER_SIDE]{};
+
+		cards[0] = &info.rooms[state.paths[state.chosenPath].room];
+		cards[1] = &info.events[eventCard];
+		RenderCardInfo roomRenderInfo{};
+		roomRenderInfo.levelUpdateInfo = &info;
+		roomRenderInfo.cards = cards;
+		roomRenderInfo.length = 2;
+		roomRenderInfo.center = glm::vec2(.8f, -.5f);
+		roomRenderInfo.additionalSpacing = -CARD_SPACING;
+		RenderCards(roomRenderInfo);
 
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 			cards[i] = &info.monsters[boardState.enemyIds[i]];
@@ -424,7 +445,7 @@ namespace game
 					auto& gameState = info.gameState;
 					for (uint32_t i = 0; i < boardState.partyCount; ++i)
 					{
-						gameState.partyMembers[boardState.partyIds[i]];
+						gameState.partyIds[i] = boardState.partyIds[i];
 						gameState.healths[i] = boardState.allyHealths[i];
 					}
 					gameState.partySize = boardState.partyCount;
@@ -566,7 +587,7 @@ namespace game
 			info.textTasks.Push(textTask);
 
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
-				cards[i] = &info.monsters[gameState.partyMembers[i]];
+				cards[i] = &info.monsters[gameState.partyIds[i]];
 
 			RenderMonsterCardInfo renderInfo{};
 			renderInfo.levelUpdateInfo = &info;
@@ -637,7 +658,7 @@ namespace game
 		info.textTasks.Push(textTask);
 
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
-			cards[i] = &info.monsters[playerState.monsterIds[gameState.partyMembers[i]]];
+			cards[i] = &info.monsters[playerState.monsterIds[gameState.partyIds[i]]];
 
 		const auto tempScope = info.tempArena.CreateScope();
 
