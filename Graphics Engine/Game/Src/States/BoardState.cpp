@@ -12,7 +12,7 @@ namespace game
 		alliedMonsterCount = info.gameState.partySize;
 		for (uint32_t i = 0; i < partyCount; ++i)
 		{
-			partyIds[i] = info.gameState.partyMembers[i];
+			partyIds[i] = info.gameState.partyIds[i];
 			allyIds[i] = info.playerState.monsterIds[partyIds[i]];
 			allyHealths[i] = info.gameState.healths[i];
 		}
@@ -58,6 +58,7 @@ namespace game
 		{
 			enemyIds[j] = enemyIds[j + 1];
 			enemyHealths[j] = enemyHealths[j + 1];
+			enemyTargets[j] = enemyTargets[j + 1];
 		}
 		--enemyMonsterCount;
 	}
@@ -75,7 +76,7 @@ namespace game
 			if (i < BOARD_CAPACITY_PER_SIDE)
 				RemoveAlly(i);
 			else
-				RemoveEnemy(BOARD_CAPACITY_PER_SIDE + i);
+				RemoveEnemy(i - BOARD_CAPACITY_PER_SIDE);
 		}
 	}
 

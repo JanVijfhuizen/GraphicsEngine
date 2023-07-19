@@ -28,6 +28,7 @@ namespace game
 				jv::Vector<uint32_t> rooms;
 				jv::Vector<uint32_t> magics;
 				jv::Vector<uint32_t> flaws;
+				jv::Vector<uint32_t> events;
 
 				[[nodiscard]] static Decks Create(const LevelCreateInfo& info);
 			} decks{};
@@ -53,6 +54,7 @@ namespace game
 			[[nodiscard]] uint32_t GetMagic(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetArtifact(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetFlaw(const LevelInfo& info);
+			[[nodiscard]] uint32_t GetEvent(const LevelInfo& info);
 
 			[[nodiscard]] static State Create(const LevelCreateInfo& info);
 		};
@@ -78,6 +80,7 @@ namespace game
 			BoardState boardState;
 			bool tapped[BOARD_CAPACITY_PER_SIDE];
 			uint32_t allySelected;
+			uint32_t eventCard;
 			bool newTurn;
 			
 			void Reset(State& state, const LevelInfo& info) override;

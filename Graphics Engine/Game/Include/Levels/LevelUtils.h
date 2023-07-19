@@ -1,9 +1,12 @@
 ﻿#pragma once
+#include "Cards/ArtifactCard.h"
 #include "JLib/Vector.h"
 #include "JLib/Array.h"
 
 namespace game
 {
+	struct FlawCard;
+	struct LevelInfo;
 	struct PlayerState;
 	struct GameState;
 	struct Card;
@@ -24,9 +27,19 @@ namespace game
 	struct RenderMonsterCardInfo final : RenderCardInfo
 	{
 		uint32_t* currentHealthArr = nullptr;
+		ArtifactCard*** artifactArr = nullptr;
+		uint32_t* artifactCounts = nullptr;
+		FlawCard** flawArr = nullptr;
 	};
 
-	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);
+	struct RenderMonsterCardReturnInfo final
+	{
+		uint32_t selectedMonster = -1;
+		uint32_t selectedArtifact = -1;
+		uint32_t selectedFlaw = -1;
+	};
+	
+	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);
 	uint32_t RenderMagicCards(jv::Arena& frameArena, const RenderCardInfo& info);
 	uint32_t RenderCards(const RenderCardInfo& info);
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);

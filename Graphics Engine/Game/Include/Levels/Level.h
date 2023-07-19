@@ -1,6 +1,7 @@
 #pragma once
 #include "Cards/ArtifactCard.h"
 #include "Cards/BossCard.h"
+#include "Cards/EventCard.h"
 #include "Cards/FlawCard.h"
 #include "Cards/MagicCard.h"
 #include "Cards/MonsterCard.h"
@@ -33,6 +34,7 @@ namespace game
 		const jv::Array<RoomCard>& rooms;
 		const jv::Array<MagicCard>& magics;
 		const jv::Array<FlawCard>& flaws;
+		const jv::Array<EventCard>& events;
 	};
 
 	struct LevelCreateInfo final : LevelInfo
