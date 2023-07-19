@@ -381,6 +381,23 @@ namespace game
 		for (uint32_t i = 0; i < boardState.alliedMonsterCount; ++i)
 			currentHealths[i] = boardState.allyHealths[i];
 
+		ArtifactCard** artifacts[PARTY_ACTIVE_CAPACITY]{};
+		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
+
+		const auto& playerState = info.playerState;
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		{
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+			if (count == 0)
+				continue;
+			const auto arr = artifacts[i] = static_cast<ArtifactCard**>(info.frameArena.Alloc(sizeof(void*) * count));
+			for (uint32_t j = 0; j < count; ++j)
+			{
+				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
+				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
+			}
+		}
+
 		RenderMonsterCardInfo alliedRenderInfo{};
 		alliedRenderInfo.levelUpdateInfo = &info;
 		alliedRenderInfo.cards = cards;
@@ -388,6 +405,8 @@ namespace game
 		alliedRenderInfo.center.y = CARD_HEIGHT_OFFSET;
 		alliedRenderInfo.selectedArr = selected;
 		alliedRenderInfo.currentHealthArr = currentHealths;
+		alliedRenderInfo.artifactArr = artifacts;
+		alliedRenderInfo.artifactCounts = artifactCounts;
 		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo).selectedMonster;
 		
 		if(info.inputState.lMouse == InputState::pressed && allyChoice != -1 && !tapped[allyChoice])
@@ -600,7 +619,7 @@ namespace game
 	bool MainLevel::RewardArtifactState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		Card* cards[MAGIC_CAPACITY]{};
+		Card* cards[PARTY_ACTIVE_CAPACITY]{};
 		
 		auto& playerState = info.playerState;
 		const auto& gameState = info.gameState;
@@ -620,8 +639,10 @@ namespace game
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[gameState.partyMembers[i]]];
 
-		ArtifactCard** artifacts[PARTY_CAPACITY]{};
-		uint32_t artifactCounts[PARTY_CAPACITY]{};
+		const auto tempScope = info.tempArena.CreateScope();
+
+		ArtifactCard** artifacts[PARTY_ACTIVE_CAPACITY]{};
+		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
 
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 		{
@@ -644,6 +665,8 @@ namespace game
 		renderInfo.artifactArr = artifacts;
 		renderInfo.artifactCounts = artifactCounts;
 		const auto choice = RenderMonsterCards(info.frameArena, renderInfo);
+
+		info.tempArena.DestroyScope(tempScope);
 
 		auto& path = state.paths[state.chosenPath];
 		
@@ -726,7 +749,6 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 9;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

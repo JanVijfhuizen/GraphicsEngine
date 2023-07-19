@@ -5,6 +5,7 @@
 
 namespace game
 {
+	struct LevelInfo;
 	struct PlayerState;
 	struct GameState;
 	struct Card;
@@ -34,7 +35,7 @@ namespace game
 		uint32_t selectedMonster = -1;
 		uint32_t selectedArtifact = -1;
 	};
-
+	
 	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);
 	uint32_t RenderMagicCards(jv::Arena& frameArena, const RenderCardInfo& info);
 	uint32_t RenderCards(const RenderCardInfo& info);
