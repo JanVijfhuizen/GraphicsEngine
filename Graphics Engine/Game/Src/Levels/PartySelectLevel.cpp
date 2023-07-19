@@ -24,39 +24,37 @@ namespace game
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[i]];
 
+		const auto tempScope = info.tempArena.CreateScope();
+
+		ArtifactCard** artifacts[PARTY_CAPACITY]{};
+		uint32_t artifactCounts[PARTY_CAPACITY]{};
+
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		{
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+			if (count == 0)
+				continue;
+			auto arr = artifacts[i] = static_cast<ArtifactCard**>(info.tempArena.Alloc(sizeof(void*) * count));
+			for (uint32_t j = 0; j < count; ++j)
+			{
+				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
+				arr[j] = &info.artifacts[index];
+			}
+		}
+
 		RenderMonsterCardInfo monsterRenderInfo{};
 		monsterRenderInfo.levelUpdateInfo = &info;
 		monsterRenderInfo.cards = cards;
 		monsterRenderInfo.length = playerState.partySize;
 		monsterRenderInfo.selectedArr = selected;
+		monsterRenderInfo.artifactArr = artifacts;
+		monsterRenderInfo.artifactCounts = artifactCounts;
 		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo);
+
+		info.tempArena.DestroyScope(tempScope);
 
 		if (choice != -1)
 			lastHovered = choice;
-
-		bool selectedArtifacts[MONSTER_ARTIFACT_CAPACITY]{};
-
-		if(lastHovered != -1)
-		{
-			const uint32_t artifactSlotCount = playerState.artifactSlotCounts[lastHovered];
-			for (uint32_t i = 0; i < MONSTER_ARTIFACT_CAPACITY; ++i)
-			{
-				const uint32_t index = playerState.artifacts[lastHovered * MONSTER_ARTIFACT_CAPACITY + i];
-				cards[i] = index == -1 || artifactSlotCount <= i ? nullptr : &info.artifacts[index];
-				selectedArtifacts[i] = cards[i];
-			}
-		}
-		else
-			for (auto& card : cards)
-				card = nullptr;
-
-		RenderCardInfo artifactRenderInfo{};
-		artifactRenderInfo.levelUpdateInfo = &info;
-		artifactRenderInfo.cards = cards;
-		artifactRenderInfo.length = MONSTER_ARTIFACT_CAPACITY;
-		artifactRenderInfo.center.y += CARD_HEIGHT * 2;
-		artifactRenderInfo.selectedArr = selectedArtifacts;
-		RenderCards(artifactRenderInfo);
 
 		if (info.inputState.lMouse == InputState::pressed && choice != -1)
 			selected[choice] = !selected[choice];

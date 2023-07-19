@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Cards/ArtifactCard.h"
 #include "JLib/Vector.h"
 #include "JLib/Array.h"
 
@@ -24,6 +25,8 @@ namespace game
 	struct RenderMonsterCardInfo final : RenderCardInfo
 	{
 		uint32_t* currentHealthArr = nullptr;
+		ArtifactCard*** artifactArr = nullptr;
+		uint32_t* artifactCounts = nullptr;
 	};
 
 	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);
