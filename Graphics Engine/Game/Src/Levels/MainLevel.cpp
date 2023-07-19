@@ -419,6 +419,13 @@ namespace game
 			}
 		}
 
+		FlawCard* flaws[PARTY_ACTIVE_CAPACITY]{};
+		for (uint32_t i = 0; i < boardState.partyCount; ++i)
+		{
+			const uint32_t index = info.gameState.flaws[boardState.partyIds[i]];
+			flaws[i] = index == -1 ? nullptr : &info.flaws[index];
+		}
+
 		RenderMonsterCardInfo alliedRenderInfo{};
 		alliedRenderInfo.levelUpdateInfo = &info;
 		alliedRenderInfo.cards = cards;
@@ -428,6 +435,7 @@ namespace game
 		alliedRenderInfo.currentHealthArr = currentHealths;
 		alliedRenderInfo.artifactArr = artifacts;
 		alliedRenderInfo.artifactCounts = artifactCounts;
+		alliedRenderInfo.flawArr = flaws;
 		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo).selectedMonster;
 		
 		if(info.inputState.lMouse == InputState::pressed && allyChoice != -1 && !tapped[allyChoice])
@@ -513,7 +521,7 @@ namespace game
 		renderInfo.lineLength = MAGIC_CAPACITY / 2;
 		const uint32_t choice = RenderMagicCards(info.frameArena, renderInfo);
 
-		auto& path = state.paths[state.chosenPath];
+		const auto& path = state.paths[state.chosenPath];
 
 		cards[0] = &info.magics[path.magic];
 		renderInfo.length = 1;
@@ -587,7 +595,7 @@ namespace game
 			info.textTasks.Push(textTask);
 
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
-				cards[i] = &info.monsters[gameState.partyIds[i]];
+				cards[i] = &info.monsters[playerState.monsterIds[gameState.partyIds[i]]];
 
 			RenderMonsterCardInfo renderInfo{};
 			renderInfo.levelUpdateInfo = &info;
@@ -620,7 +628,7 @@ namespace game
 
 				if (info.inputState.enter != InputState::pressed)
 					return true;
-				info.gameState.flaws[discoverOption] = path.flaw;
+				info.gameState.flaws[gameState.partyIds[discoverOption]] = path.flaw;
 				stateIndex = static_cast<uint32_t>(StateNames::exitFound);
 			}
 			return true;
@@ -770,6 +778,7 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+		stateMachine.state.depth = 4;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

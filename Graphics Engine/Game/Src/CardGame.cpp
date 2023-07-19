@@ -323,6 +323,8 @@ namespace game
 	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MonsterCard>(arena, 10);
+		for (auto& card : arr)
+			card.name = "monster";
 		// Starting pet.
 		arr[0].unique = true;
 		arr[0].name = "daisy, loyal protector";
@@ -334,6 +336,8 @@ namespace game
 	jv::Array<ArtifactCard> CardGame::GetArtifactCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<ArtifactCard>(arena, 10);
+		for (auto& card : arr)
+			card.name = "artifact";
 		arr[0].unique = true;
 		arr[0].name = "sword of a thousand truths";
 		arr[0].ruleText = "whenever you attack, win the game.";
@@ -343,30 +347,40 @@ namespace game
 	jv::Array<BossCard> CardGame::GetBossCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<BossCard>(arena, 10);
+		for (auto& card : arr)
+			card.name = "boss";
 		return arr;
 	}
 
 	jv::Array<RoomCard> CardGame::GetRoomCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<RoomCard>(arena, 10);
+		for (auto& card : arr)
+			card.name = "room";
 		return arr;
 	}
 
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
+		for (auto& card : arr)
+			card.name = "magic";
 		return arr;
 	}
 
 	jv::Array<FlawCard> CardGame::GetFlawCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<FlawCard>(arena, 24);
+		for (auto& card : arr)
+			card.name = "flaw";
 		return arr;
 	}
 
 	jv::Array<EventCard> CardGame::GetEventCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<EventCard>(arena, 24);
+		for (auto& card : arr)
+			card.name = "event";
 		return arr;
 	}
 

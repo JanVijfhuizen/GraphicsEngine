@@ -5,6 +5,7 @@
 
 namespace game
 {
+	struct FlawCard;
 	struct LevelInfo;
 	struct PlayerState;
 	struct GameState;
@@ -28,12 +29,14 @@ namespace game
 		uint32_t* currentHealthArr = nullptr;
 		ArtifactCard*** artifactArr = nullptr;
 		uint32_t* artifactCounts = nullptr;
+		FlawCard** flawArr = nullptr;
 	};
 
 	struct RenderMonsterCardReturnInfo final
 	{
 		uint32_t selectedMonster = -1;
 		uint32_t selectedArtifact = -1;
+		uint32_t selectedFlaw = -1;
 	};
 	
 	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);

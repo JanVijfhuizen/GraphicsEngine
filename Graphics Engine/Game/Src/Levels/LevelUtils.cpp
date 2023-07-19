@@ -91,12 +91,44 @@ namespace game
 				textTask.text = ptr;
 			}
 
+			if(info.flawArr && info.flawArr[i])
+			{
+				auto flawPos = pos - glm::vec2(0, CARD_HEIGHT + CARD_STACKED_TOP_SIZE);
+				constexpr auto scale = glm::vec2(CARD_WIDTH, CARD_STACKED_TOP_SIZE);
+				const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
+				const bool collided = CollidesShape(flawPos, scale, mousePos);
+
+				if (collided)
+				{
+					flawPos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
+					RenderLargeCard(info, info.flawArr[i]);
+					ret.selectedMonster = i;
+					ret.selectedFlaw = i;
+				}
+
+				RenderTask stackedRenderTask{};
+				stackedRenderTask.scale = scale;
+				stackedRenderTask.position = flawPos;
+				stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+				stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
+				info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
+
+				TextTask titleTextTask{};
+				titleTextTask.lineLength = 12;
+				titleTextTask.center = true;
+				titleTextTask.position = flawPos;
+				titleTextTask.text = info.flawArr[i]->name;
+				titleTextTask.scale = CARD_TITLE_SIZE;
+				info.levelUpdateInfo->textTasks.Push(titleTextTask);
+			}
+
 			if(info.artifactArr && info.artifactArr[i])
 			{
+				const uint32_t startIndex = info.flawArr && info.flawArr[i] ? 1 : 0;
 				const uint32_t artifactCount = info.artifactCounts[i];
 				for (uint32_t j = 0; j < artifactCount; ++j)
 				{
-					auto artifactPos = pos - glm::vec2(0, CARD_HEIGHT + CARD_STACKED_TOP_SIZE * static_cast<float>(j + 1));
+					auto artifactPos = pos - glm::vec2(0, CARD_HEIGHT + CARD_STACKED_TOP_SIZE * static_cast<float>(j + 1 + startIndex));
 					constexpr auto scale = glm::vec2(CARD_WIDTH, CARD_STACKED_TOP_SIZE);
 
 					const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
