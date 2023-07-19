@@ -356,7 +356,7 @@ namespace game
 		enemyRenderInfo.length = boardState.enemyMonsterCount;
 		enemyRenderInfo.center.y = -CARD_HEIGHT_OFFSET;
 		enemyRenderInfo.currentHealthArr = currentHealths;
-		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo);
+		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo).selectedCard;
 
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 		{
@@ -388,7 +388,7 @@ namespace game
 		alliedRenderInfo.center.y = CARD_HEIGHT_OFFSET;
 		alliedRenderInfo.selectedArr = selected;
 		alliedRenderInfo.currentHealthArr = currentHealths;
-		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo);
+		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo).selectedCard;
 		
 		if(info.inputState.lMouse == InputState::pressed && allyChoice != -1 && !tapped[allyChoice])
 			allySelected = allyChoice;
@@ -557,7 +557,7 @@ namespace game
 			renderInfo.highlight = discoverOption;
 			renderInfo.center.y = CARD_HEIGHT;
 			renderInfo.additionalSpacing = -CARD_SPACING;
-			const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo);
+			const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo).selectedCard;
 
 			const auto& path = state.paths[state.chosenPath];
 

@@ -34,6 +34,7 @@ constexpr float CARD_HOVERED_SIZE_PCT_INCREASE = .1f;
 constexpr float CARD_SELECTED_Y_POSITION_INCREASE = CARD_HEIGHT / 10;
 constexpr float CARD_LARGE_SIZE_INCREASE_MUL = 2;
 constexpr float CARD_STACKED_TOP_SIZE = CARD_HEIGHT / 4;
+constexpr glm::vec2 LARGE_CARD_POS = glm::vec2(-.8f, 0);
 
 constexpr uint32_t CARD_SMALL_TEXT_CAPACITY = 8;
 

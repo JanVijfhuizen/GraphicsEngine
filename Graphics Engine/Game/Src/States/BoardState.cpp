@@ -75,7 +75,7 @@ namespace game
 			if (i < BOARD_CAPACITY_PER_SIDE)
 				RemoveAlly(i);
 			else
-				RemoveEnemy(BOARD_CAPACITY_PER_SIDE + i);
+				RemoveEnemy(i - BOARD_CAPACITY_PER_SIDE);
 		}
 	}
 

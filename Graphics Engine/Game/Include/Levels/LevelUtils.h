@@ -29,7 +29,13 @@ namespace game
 		uint32_t* artifactCounts = nullptr;
 	};
 
-	uint32_t RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);
+	struct RenderMonsterCardReturnInfo final
+	{
+		uint32_t selectedCard;
+		uint32_t selectedArtifact;
+	};
+
+	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);
 	uint32_t RenderMagicCards(jv::Arena& frameArena, const RenderCardInfo& info);
 	uint32_t RenderCards(const RenderCardInfo& info);
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);

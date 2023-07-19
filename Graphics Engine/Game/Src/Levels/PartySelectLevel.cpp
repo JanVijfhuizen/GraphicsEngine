@@ -49,7 +49,7 @@ namespace game
 		monsterRenderInfo.selectedArr = selected;
 		monsterRenderInfo.artifactArr = artifacts;
 		monsterRenderInfo.artifactCounts = artifactCounts;
-		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo);
+		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo).selectedCard;
 
 		info.tempArena.DestroyScope(tempScope);
 
