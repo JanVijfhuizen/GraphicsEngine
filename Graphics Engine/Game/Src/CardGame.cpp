@@ -322,6 +322,7 @@ namespace game
 		arr[0].unique = true;
 		arr[0].name = "daisy, loyal protector";
 		arr[0].ruleText = "follows you around.";
+		arr[0].health = 999;
 		return arr;
 	}
 

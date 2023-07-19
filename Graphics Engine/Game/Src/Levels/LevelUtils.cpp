@@ -24,10 +24,8 @@ namespace game
 		return pos;
 	}
 
-	void RenderLargeCard(const RenderCardInfo& info, const uint32_t index)
+	void RenderLargeCard(const RenderCardInfo& info, Card* card)
 	{
-		const auto card = info.cards[index];
-
 		// Draw large version.
 		RenderTask bgRenderTask{};
 		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT) * CARD_LARGE_SIZE_INCREASE_MUL;
@@ -61,7 +59,7 @@ namespace game
 	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info)
 	{
 		RenderMonsterCardReturnInfo ret{};
-		ret.selectedCard = RenderCards(info);
+		ret.selectedMonster = RenderCards(info);
 
 		TextTask textTask{};
 		textTask.center = true;
@@ -106,8 +104,9 @@ namespace game
 					if (collided)
 					{
 						artifactPos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
-						RenderLargeCard(info, i);
+						RenderLargeCard(info, info.artifactArr[i][j]);
 						ret.selectedArtifact = j;
+						ret.selectedMonster = i;
 					}
 
 					RenderTask stackedRenderTask{};
@@ -210,7 +209,7 @@ namespace game
 				info.levelUpdateInfo->textTasks.Push(ruleTextTask);
 
 				if(selected == i)
-					RenderLargeCard(info, i);
+					RenderLargeCard(info, card);
 			}
 		}
 

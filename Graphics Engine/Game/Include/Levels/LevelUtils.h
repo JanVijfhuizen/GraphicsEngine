@@ -31,8 +31,8 @@ namespace game
 
 	struct RenderMonsterCardReturnInfo final
 	{
-		uint32_t selectedCard;
-		uint32_t selectedArtifact;
+		uint32_t selectedMonster = -1;
+		uint32_t selectedArtifact = -1;
 	};
 
 	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);

@@ -34,11 +34,11 @@ namespace game
 			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
 			if (count == 0)
 				continue;
-			auto arr = artifacts[i] = static_cast<ArtifactCard**>(info.tempArena.Alloc(sizeof(void*) * count));
+			const auto arr = artifacts[i] = static_cast<ArtifactCard**>(info.tempArena.Alloc(sizeof(void*) * count));
 			for (uint32_t j = 0; j < count; ++j)
 			{
 				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
-				arr[j] = &info.artifacts[index];
+				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 			}
 		}
 
@@ -49,7 +49,7 @@ namespace game
 		monsterRenderInfo.selectedArr = selected;
 		monsterRenderInfo.artifactArr = artifacts;
 		monsterRenderInfo.artifactCounts = artifactCounts;
-		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo).selectedCard;
+		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo).selectedMonster;
 
 		info.tempArena.DestroyScope(tempScope);
 
