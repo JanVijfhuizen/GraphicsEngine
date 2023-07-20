@@ -86,6 +86,7 @@ namespace game
 			uint32_t allySelected;
 			uint32_t eventCard;
 			bool newTurn;
+			uint32_t recruitableMonster = -1;
 			
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,

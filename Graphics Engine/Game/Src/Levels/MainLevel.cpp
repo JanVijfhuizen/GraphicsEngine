@@ -338,6 +338,7 @@ namespace game
 		boardState = {};
 		allySelected = -1;
 		newTurn = true;
+		recruitableMonster = -1;
 
 		boardState.AddParty(info);
 
@@ -349,6 +350,78 @@ namespace game
 	bool MainLevel::CombatState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
+		if(recruitableMonster != -1)
+		{
+			if(boardState.partySize < PARTY_ACTIVE_CAPACITY)
+			{
+				TextTask textTask{};
+				textTask.center = true;
+				textTask.text = "you may recruit the last monster defeated.";
+				textTask.lineLength = 20;
+				textTask.position = TEXT_CENTER_TOP_POSITION;
+				textTask.scale = TEXT_BIG_SCALE;
+				info.textTasks.Push(textTask);
+
+				Card* card = &info.monsters[recruitableMonster];
+				RenderMonsterCardInfo handRenderInfo{};
+				handRenderInfo.levelUpdateInfo = &info;
+				handRenderInfo.cards = &card;
+				handRenderInfo.length = 1;
+				handRenderInfo.center.y -= .25f;
+				RenderMonsterCards(info.frameArena, handRenderInfo);
+
+				RenderTask buttonRenderTask{};
+				buttonRenderTask.position.y = .5f;
+				buttonRenderTask.scale.y *= .12f;
+				buttonRenderTask.scale.x = .4f;
+				buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+				info.renderTasks.Push(buttonRenderTask);
+
+				TextTask buttonTextTask{};
+				buttonTextTask.center = true;
+				buttonTextTask.position = buttonRenderTask.position;
+				buttonTextTask.text = "recruit";
+				buttonTextTask.scale = .06f;
+				info.textTasks.Push(buttonTextTask);
+
+				bool decided = false;
+				bool joins = false;
+
+				if (info.inputState.lMouse == InputState::pressed)
+					if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+					{
+						joins = true;
+						decided = true;
+					}
+
+				buttonRenderTask.position.y -= BUTTON_Y_SCALE * 2 + BUTTON_Y_OFFSET;
+				info.renderTasks.Push(buttonRenderTask);
+
+				buttonTextTask.position.y -= BUTTON_Y_SCALE * 2 + BUTTON_Y_OFFSET;
+				buttonTextTask.text = "pass";
+				info.textTasks.Push(buttonTextTask);
+
+				auto& gameState = info.gameState;
+
+				if (info.inputState.lMouse == InputState::pressed)
+					if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+						decided = true;
+
+				if(!decided)
+					return true;
+
+				if(joins)
+				{
+					info.playerState.AddMonster(recruitableMonster);
+					gameState.healths[gameState.partySize] = info.monsters[recruitableMonster].health;
+					gameState.partyIds[gameState.partySize++] = info.playerState.partySize - 1;
+				}
+			}
+
+			stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+			return true;
+		}
+
 		if(newTurn)
 		{
 			for (auto& b : tapped)
@@ -453,7 +526,7 @@ namespace game
 		}
 
 		FlawCard* flaws[PARTY_ACTIVE_CAPACITY]{};
-		for (uint32_t i = 0; i < boardState.partyCount; ++i)
+		for (uint32_t i = 0; i < boardState.partySize; ++i)
 		{
 			const uint32_t index = info.gameState.flaws[boardState.partyIds[i]];
 			flaws[i] = index == -1 ? nullptr : &info.flaws[index];
@@ -480,19 +553,22 @@ namespace game
 			{
 				const uint32_t allyMonsterId = boardState.allyIds[allySelected];
 				const auto& allyMonster = info.monsters[allyMonsterId];
+				const uint32_t monsterId = boardState.monsterIds[enemyChoice];
+
 				boardState.DealDamage(BOARD_CAPACITY_PER_SIDE + enemyChoice, allyMonster.attack);
+
 				if (boardState.enemyMonsterCount == 0)
 				{
 					auto& gameState = info.gameState;
-					for (uint32_t i = 0; i < boardState.partyCount; ++i)
+					for (uint32_t i = 0; i < boardState.partySize; ++i)
 					{
 						gameState.partyIds[i] = boardState.partyIds[i];
 						gameState.healths[i] = boardState.allyHealths[i];
 					}
-					gameState.partySize = boardState.partyCount;
-
-					stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+					gameState.partySize = boardState.partySize;
+					recruitableMonster = monsterId;
 				}
+					
 				tapped[allySelected] = true;
 			}
 			allySelected = -1;
