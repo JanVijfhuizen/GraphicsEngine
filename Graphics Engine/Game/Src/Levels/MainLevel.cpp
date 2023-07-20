@@ -247,7 +247,7 @@ namespace game
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.cards = cards;
 		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.center = glm::vec2(0, -CARD_HEIGHT);
+		renderInfo.position = glm::vec2(0, -CARD_HEIGHT);
 		renderInfo.highlight = discoverOption;
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 
@@ -271,7 +271,7 @@ namespace game
 		{
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.flaws[state.paths[i].flaw];
-			renderInfo.center.x += CARD_WIDTH * 2;
+			renderInfo.position.x += CARD_WIDTH * 2;
 			const auto choice = RenderCards(renderInfo);
 			selected = choice != -1 ? choice : selected;
 		}
@@ -280,7 +280,7 @@ namespace game
 		{
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.artifacts[state.paths[i].artifact];
-			renderInfo.center.x += CARD_WIDTH * 2;
+			renderInfo.position.x += CARD_WIDTH * 2;
 			const auto choice = RenderCards(renderInfo);
 			selected = choice != -1 ? choice : selected;
 		}
@@ -289,7 +289,7 @@ namespace game
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.rooms[state.paths[i].room];
 
-		renderInfo.center = glm::vec2(0, CARD_HEIGHT);
+		renderInfo.position = glm::vec2(0, CARD_HEIGHT);
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 		auto choice = RenderCards(renderInfo);
 		selected = choice != -1 ? choice : selected;
@@ -298,7 +298,7 @@ namespace game
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.magics[state.paths[i].magic];
 
-		renderInfo.center.x += CARD_WIDTH * 2;
+		renderInfo.position.x += CARD_WIDTH * 2;
 		choice = RenderMagicCards(info.frameArena, renderInfo);
 		selected = choice != -1 ? choice : selected;
 
@@ -367,7 +367,7 @@ namespace game
 				handRenderInfo.levelUpdateInfo = &info;
 				handRenderInfo.cards = &card;
 				handRenderInfo.length = 1;
-				handRenderInfo.center.y -= .25f;
+				handRenderInfo.position.y -= .25f;
 				RenderMonsterCards(info.frameArena, handRenderInfo);
 
 				RenderTask buttonRenderTask{};
@@ -453,7 +453,7 @@ namespace game
 		handRenderInfo.levelUpdateInfo = &info;
 		handRenderInfo.cards = cards;
 		handRenderInfo.length = state.hand.count;
-		handRenderInfo.center = glm::vec2(0, .75f);
+		handRenderInfo.position = glm::vec2(0, .75f);
 		handRenderInfo.additionalSpacing = -CARD_SPACING / 2;
 		RenderCards(handRenderInfo);
 
@@ -461,13 +461,13 @@ namespace game
 		roomRenderInfo.levelUpdateInfo = &info;
 		roomRenderInfo.cards = cards;
 		roomRenderInfo.length = 1;
-		roomRenderInfo.center = glm::vec2(.8f, -.5f);
+		roomRenderInfo.position = glm::vec2(.8f, -.5f);
 		roomRenderInfo.additionalSpacing = -CARD_SPACING;
 		cards[0] = &info.rooms[state.paths[state.chosenPath].room];
 		RenderCards(roomRenderInfo);
 
 		cards[0] = &info.events[eventCard];
-		roomRenderInfo.center.x *= -1;
+		roomRenderInfo.position.x *= -1;
 		RenderCards(roomRenderInfo);
 
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
@@ -481,7 +481,7 @@ namespace game
 		enemyRenderInfo.levelUpdateInfo = &info;
 		enemyRenderInfo.cards = cards;
 		enemyRenderInfo.length = boardState.enemyMonsterCount;
-		enemyRenderInfo.center.y = -CARD_HEIGHT_OFFSET;
+		enemyRenderInfo.position.y = -CARD_HEIGHT_OFFSET;
 		enemyRenderInfo.currentHealthArr = currentHealths;
 		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo).selectedMonster;
 
@@ -536,7 +536,7 @@ namespace game
 		alliedRenderInfo.levelUpdateInfo = &info;
 		alliedRenderInfo.cards = cards;
 		alliedRenderInfo.length = boardState.alliedMonsterCount;
-		alliedRenderInfo.center.y = CARD_HEIGHT_OFFSET;
+		alliedRenderInfo.position.y = CARD_HEIGHT_OFFSET;
 		alliedRenderInfo.selectedArr = selected;
 		alliedRenderInfo.currentHealthArr = currentHealths;
 		alliedRenderInfo.artifactArr = artifacts;
@@ -624,8 +624,8 @@ namespace game
 		renderInfo.length = MAGIC_DECK_SIZE;
 		renderInfo.highlight = discoverOption;
 		renderInfo.cards = cards;
-		renderInfo.center.x = scroll;
-		renderInfo.center.y = CARD_HEIGHT;
+		renderInfo.position.x = scroll;
+		renderInfo.position.y = CARD_HEIGHT;
 		renderInfo.additionalSpacing = -CARD_SPACING;
 		renderInfo.lineLength = MAGIC_DECK_SIZE / 2;
 		const uint32_t choice = RenderMagicCards(info.frameArena, renderInfo);
@@ -635,8 +635,8 @@ namespace game
 		cards[0] = &info.magics[path.magic];
 		renderInfo.length = 1;
 		renderInfo.highlight = -1;
-		renderInfo.center.y *= -1;
-		renderInfo.center.x = 0;
+		renderInfo.position.y *= -1;
+		renderInfo.position.x = 0;
 		RenderMagicCards(info.frameArena, renderInfo);
 
 		if (info.inputState.lMouse == InputState::pressed)
@@ -712,14 +712,14 @@ namespace game
 			renderInfo.cards = cards;
 			renderInfo.selectedArr = selected;
 			renderInfo.highlight = discoverOption;
-			renderInfo.center.y = CARD_HEIGHT;
+			renderInfo.position.y = CARD_HEIGHT;
 			renderInfo.additionalSpacing = -CARD_SPACING;
 			const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo).selectedMonster;
 
 			const auto& path = state.paths[state.chosenPath];
 
 			cards[0] = &info.flaws[path.flaw];
-			renderInfo.center.y *= -1;
+			renderInfo.position.y *= -1;
 			renderInfo.length = 1;
 			renderInfo.selectedArr = nullptr;
 			renderInfo.highlight = -1;
@@ -799,7 +799,7 @@ namespace game
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.length = gameState.partySize;
 		renderInfo.cards = cards;
-		renderInfo.center.y = CARD_HEIGHT_OFFSET;
+		renderInfo.position.y = CARD_HEIGHT_OFFSET;
 		renderInfo.artifactArr = artifacts;
 		renderInfo.artifactCounts = artifactCounts;
 		const auto choice = RenderMonsterCards(info.frameArena, renderInfo);
@@ -809,7 +809,7 @@ namespace game
 		auto& path = state.paths[state.chosenPath];
 		
 		cards[0] = path.artifact == -1 ? nullptr : &info.artifacts[path.artifact];
-		renderInfo.center.y *= -1;
+		renderInfo.position.y *= -1;
 		renderInfo.length = 1;
 		RenderCards(renderInfo);
 

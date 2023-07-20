@@ -28,7 +28,7 @@ namespace game
 		buttonRenderTask.position.y = buttonYOffset;
 		buttonRenderTask.scale.y *= .12f;
 		buttonRenderTask.scale.x = .4f;
-		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::button)];
 		info.renderTasks.Push(buttonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)

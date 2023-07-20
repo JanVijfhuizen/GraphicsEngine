@@ -18,40 +18,10 @@ namespace game
 		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (jv::Min<uint32_t>(info.length, info.lineLength) - 1) / 2;
 		const uint32_t w = i % info.lineLength;
 		const uint32_t h = i / info.lineLength;
-		const auto pos = info.center + glm::vec2(
+		const auto pos = info.position + glm::vec2(
 			offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(w),
 			h * CARD_HEIGHT * 2);
 		return pos;
-	}
-
-	bool RenderCard(const RenderCardInfo& info, Card* card, glm::vec2 pos, const float scale, const bool priority = false)
-	{
-		RenderTask renderTask{};
-		renderTask.scale *= scale;
-		renderTask.position = pos;
-		renderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::card)];
-
-		if (priority)
-			info.levelUpdateInfo->priorityRenderTasks.Push(renderTask);
-		else
-			info.levelUpdateInfo->renderTasks.Push(renderTask);
-
-		TextTask titleTextTask{};
-		titleTextTask.lineLength = 12;
-		titleTextTask.center = true;
-		titleTextTask.position = pos - glm::vec2(0, renderTask.scale.y);
-		titleTextTask.text = card->name;
-		titleTextTask.scale = CARD_TITLE_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
-		info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
-
-		TextTask ruleTextTask = titleTextTask;
-		ruleTextTask.position = pos + glm::vec2(0, renderTask.scale.y);
-		ruleTextTask.text = card->ruleText;
-		ruleTextTask.scale = CARD_TEXT_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
-		info.levelUpdateInfo->priorityTextTasks.Push(ruleTextTask);
-
-		const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
-		return CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos);
 	}
 
 	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info)
@@ -100,7 +70,17 @@ namespace game
 				if (collided)
 				{
 					flawPos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
-					RenderCard(info, info.flawArr[i], LARGE_CARD_POS, CARD_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL, true);
+
+					Card* flaw[]{ info.flawArr[i] };
+					RenderCardInfo renderFlawCardInfo{};
+					renderFlawCardInfo.levelUpdateInfo = info.levelUpdateInfo;
+					renderFlawCardInfo.position = LARGE_CARD_POS;
+					renderFlawCardInfo.cards = flaw;
+					renderFlawCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
+					renderFlawCardInfo.priority = true;
+					renderFlawCardInfo.interactable = false;
+					RenderCards(renderFlawCardInfo);
+
 					ret.selectedMonster = i;
 					ret.selectedFlaw = i;
 				}
@@ -135,7 +115,17 @@ namespace game
 					if (collided)
 					{
 						artifactPos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
-						RenderCard(info, info.artifactArr[i][j], LARGE_CARD_POS, CARD_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL, true);
+
+						Card* flaw[]{ info.artifactArr[i][j] };
+						RenderCardInfo renderFlawCardInfo{};
+						renderFlawCardInfo.levelUpdateInfo = info.levelUpdateInfo;
+						renderFlawCardInfo.position = LARGE_CARD_POS;
+						renderFlawCardInfo.cards = flaw;
+						renderFlawCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
+						renderFlawCardInfo.priority = true;
+						renderFlawCardInfo.interactable = false;
+						RenderCards(renderFlawCardInfo);
+
 						ret.selectedArtifact = j;
 						ret.selectedMonster = i;
 					}
@@ -188,54 +178,61 @@ namespace game
 
 	uint32_t RenderCards(const RenderCardInfo& info)
 	{
-		uint32_t selected = -1;
+		uint32_t collided = -1;
+		const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
+
+		RenderTask renderTask{};
+		renderTask.scale *= info.scale;
+		renderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::card)];
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
-			const auto card = info.cards[i];
 			auto pos = GetCardPosition(info, i);
-			const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
+			const auto card = info.cards[i];
 
-			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
+			if (info.interactable && CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
 			{
-				selected = i;
+				collided = i;
 				pos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
+
+				RenderCardInfo renderLargeCardInfo{};
+				renderLargeCardInfo.levelUpdateInfo = info.levelUpdateInfo;
+				renderLargeCardInfo.position = LARGE_CARD_POS;
+				renderLargeCardInfo.cards = &info.cards[i];
+				renderLargeCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
+				renderLargeCardInfo.priority = true;
+				renderLargeCardInfo.interactable = false;
+				RenderCards(renderLargeCardInfo);
 			}
 
-			auto finalColor = glm::vec4(1);
-			finalColor *= info.highlight != -1 ? info.highlight == i ? 1 : CARD_DARKENED_COLOR_MUL : 1;
-			finalColor *= info.selectedArr ? info.selectedArr[i] ? 1 : CARD_DARKENED_COLOR_MUL : 1;
-			
-			RenderTask renderTask{};
-			renderTask.scale = glm::vec2(CARD_HEIGHT);
-			renderTask.position = pos + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
-			renderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::card)];
-			renderTask.color = finalColor;
-			info.levelUpdateInfo->renderTasks.Push(renderTask);
-			
-			if(card)
-			{
-				TextTask titleTextTask{};
-				titleTextTask.lineLength = 12;
-				titleTextTask.center = true;
-				titleTextTask.position = pos - glm::vec2(0, CARD_HEIGHT);
-				titleTextTask.text = card->name;
-				titleTextTask.scale = CARD_TITLE_SIZE;
-				info.levelUpdateInfo->textTasks.Push(titleTextTask);
+			renderTask.position = pos;
+			renderTask.color = glm::vec4(1);
+			if (info.selectedArr && !info.selectedArr[i])
+				renderTask.color *= CARD_DARKENED_COLOR_MUL;
+			if (info.highlight != -1 && info.highlight != i)
+				renderTask.color *= CARD_DARKENED_COLOR_MUL;
 
-				TextTask ruleTextTask = titleTextTask;
-				ruleTextTask.position = pos + glm::vec2(0, renderTask.scale.y / 2);
-				ruleTextTask.text = card->ruleText;
-				ruleTextTask.maxLength = CARD_SMALL_TEXT_CAPACITY;
-				ruleTextTask.scale = CARD_TEXT_SIZE;
-				info.levelUpdateInfo->textTasks.Push(ruleTextTask);
+			if (info.priority)
+				info.levelUpdateInfo->priorityRenderTasks.Push(renderTask);
+			else
+				info.levelUpdateInfo->renderTasks.Push(renderTask);
 
-				if(selected == i)
-					RenderCard(info, card, LARGE_CARD_POS, CARD_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL, true);
-			}
+			TextTask titleTextTask{};
+			titleTextTask.lineLength = 12;
+			titleTextTask.center = true;
+			titleTextTask.position = pos - glm::vec2(0, renderTask.scale.y);
+			titleTextTask.text = card->name;
+			titleTextTask.scale = CARD_TITLE_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
+			info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
+
+			TextTask ruleTextTask = titleTextTask;
+			ruleTextTask.position = pos + glm::vec2(0, renderTask.scale.y);
+			ruleTextTask.text = card->ruleText;
+			ruleTextTask.scale = CARD_TEXT_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
+			info.levelUpdateInfo->priorityTextTasks.Push(ruleTextTask);
 		}
 
-		return selected;
+		return collided;
 	}
 
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)

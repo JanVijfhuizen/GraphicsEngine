@@ -105,7 +105,7 @@ namespace game
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.cards = cards;
 		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.center = glm::vec2(0, -CARD_HEIGHT_OFFSET);
+		renderInfo.position = glm::vec2(0, -CARD_HEIGHT_OFFSET);
 		renderInfo.highlight = monsterChoice;
 
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
@@ -116,7 +116,7 @@ namespace game
 
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
-		renderInfo.center.y *= -1;
+		renderInfo.position.y *= -1;
 		renderInfo.highlight = artifactChoice;
 		choice = RenderCards(renderInfo);
 		if (info.inputState.lMouse == InputState::pressed && choice != -1)
