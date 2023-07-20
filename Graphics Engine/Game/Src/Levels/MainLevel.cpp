@@ -10,6 +10,7 @@
 #include "States/BoardState.h"
 #include "States/PlayerState.h"
 #include "Utils/BoxCollision.h"
+#include "Utils/Shuffle.h"
 
 namespace game
 {
@@ -155,11 +156,25 @@ namespace game
 		return events.Pop();
 	}
 
+	uint32_t MainLevel::State::Draw(const LevelInfo& info)
+	{
+		if(magicDeck.count == 0)
+		{
+			for (const auto& magic : info.gameState.magics)
+				magicDeck.Add() = magic;
+			Shuffle(magicDeck.ptr, magicDeck.count);
+		}
+
+		return magicDeck.Pop();
+	}
+
 	MainLevel::State MainLevel::State::Create(const LevelCreateInfo& info)
 	{
 		State state{};
 		state.decks = Decks::Create(info);
 		state.paths = jv::CreateArray<Path>(info.arena, DISCOVER_LENGTH);
+		state.magicDeck = jv::CreateVector<uint32_t>(info.arena, MAGIC_DECK_SIZE);
+		state.hand = jv::CreateVector<uint32_t>(info.arena, HAND_DRAW_COUNT);
 		return state;
 	}
 
@@ -342,6 +357,10 @@ namespace game
 			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 				boardState.RerollEnemyTarget(i);
 			eventCard = state.GetEvent(info);
+
+			state.hand.Clear();
+			for (uint32_t i = 0; i < HAND_DRAW_COUNT; ++i)
+				state.hand.Add() = state.Draw(info);
 		}
 
 		TextTask textTask{};
@@ -352,16 +371,30 @@ namespace game
 		textTask.scale = TEXT_BIG_SCALE;
 		info.textTasks.Push(textTask);
 
-		Card* cards[BOARD_CAPACITY_PER_SIDE]{};
+		Card* cards[BOARD_CAPACITY_PER_SIDE > HAND_MAX_SIZE ? BOARD_CAPACITY_PER_SIDE : HAND_MAX_SIZE]{};
 
-		cards[0] = &info.rooms[state.paths[state.chosenPath].room];
-		cards[1] = &info.events[eventCard];
+		for (uint32_t i = 0; i < state.hand.count; ++i)
+			cards[i] = &info.magics[state.hand[i]];
+
+		RenderCardInfo handRenderInfo{};
+		handRenderInfo.levelUpdateInfo = &info;
+		handRenderInfo.cards = cards;
+		handRenderInfo.length = state.hand.count;
+		handRenderInfo.center = glm::vec2(0, .75f);
+		handRenderInfo.additionalSpacing = -CARD_SPACING / 2;
+		RenderCards(handRenderInfo);
+
 		RenderCardInfo roomRenderInfo{};
 		roomRenderInfo.levelUpdateInfo = &info;
 		roomRenderInfo.cards = cards;
-		roomRenderInfo.length = 2;
+		roomRenderInfo.length = 1;
 		roomRenderInfo.center = glm::vec2(.8f, -.5f);
 		roomRenderInfo.additionalSpacing = -CARD_SPACING;
+		cards[0] = &info.rooms[state.paths[state.chosenPath].room];
+		RenderCards(roomRenderInfo);
+
+		cards[0] = &info.events[eventCard];
+		roomRenderInfo.center.x *= -1;
 		RenderCards(roomRenderInfo);
 
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
@@ -474,7 +507,7 @@ namespace game
 				break;
 			}
 		}
-		if (allTapped)
+		if (allTapped || info.inputState.enter == InputState::pressed)
 		{
 			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 			{
@@ -502,9 +535,9 @@ namespace game
 	bool MainLevel::RewardMagicCardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		Card* cards[MAGIC_CAPACITY]{};
+		Card* cards[MAGIC_DECK_SIZE]{};
 
-		for (uint32_t i = 0; i < MAGIC_CAPACITY; ++i)
+		for (uint32_t i = 0; i < MAGIC_DECK_SIZE; ++i)
 			cards[i] = &info.magics[info.gameState.magics[i]];
 
 		scroll += info.inputState.scroll * .1f;
@@ -512,13 +545,13 @@ namespace game
 
 		RenderCardInfo renderInfo{};
 		renderInfo.levelUpdateInfo = &info;
-		renderInfo.length = MAGIC_CAPACITY;
+		renderInfo.length = MAGIC_DECK_SIZE;
 		renderInfo.highlight = discoverOption;
 		renderInfo.cards = cards;
 		renderInfo.center.x = scroll;
 		renderInfo.center.y = CARD_HEIGHT;
 		renderInfo.additionalSpacing = -CARD_SPACING;
-		renderInfo.lineLength = MAGIC_CAPACITY / 2;
+		renderInfo.lineLength = MAGIC_DECK_SIZE / 2;
 		const uint32_t choice = RenderMagicCards(info.frameArena, renderInfo);
 
 		const auto& path = state.paths[state.chosenPath];
@@ -569,7 +602,7 @@ namespace game
 	bool MainLevel::RewardFlawCardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		Card* cards[MAGIC_CAPACITY]{};
+		Card* cards[MAGIC_DECK_SIZE]{};
 
 		const auto& playerState = info.playerState;
 		const auto& gameState = info.gameState;
@@ -778,7 +811,6 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 4;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

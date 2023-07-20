@@ -14,7 +14,7 @@ constexpr uint32_t MONSTER_ARTIFACT_CAPACITY = 4;
 constexpr uint32_t MONSTER_FLAW_CAPACITY = 4;
 constexpr uint32_t ROOM_COUNT_BEFORE_BOSS = 10;
 constexpr uint32_t ROOM_COUNT_BEFORE_FLAW = ROOM_COUNT_BEFORE_BOSS / 2;
-constexpr uint32_t MAGIC_CAPACITY = 24;
+constexpr uint32_t MAGIC_DECK_SIZE = 24;
 constexpr uint32_t DISCOVER_LENGTH = 3;
 constexpr uint32_t SUB_BOSS_COUNT = 4;
 constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
@@ -36,8 +36,10 @@ constexpr float CARD_LARGE_SIZE_INCREASE_MUL = 2;
 constexpr float CARD_STACKED_TOP_SIZE = CARD_HEIGHT / 4;
 constexpr glm::vec2 LARGE_CARD_POS = glm::vec2(-.8f, 0);
 
-constexpr uint32_t CARD_SMALL_TEXT_CAPACITY = 8;
+constexpr uint32_t HAND_DRAW_COUNT = 5;
+constexpr uint32_t HAND_MAX_SIZE = 8;
 
+constexpr uint32_t CARD_SMALL_TEXT_CAPACITY = 8;
 constexpr glm::vec2 TEXT_CENTER_TOP_POSITION = glm::vec2(0, -.8f);
 constexpr glm::vec2 TEXT_CENTER_BOT_POSITION = TEXT_CENTER_TOP_POSITION * glm::vec2(1, -1);
 constexpr float TEXT_BIG_SCALE = .06f;

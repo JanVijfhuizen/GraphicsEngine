@@ -47,6 +47,9 @@ namespace game
 			jv::Array<Path> paths;
 			uint32_t chosenPath;
 
+			jv::Vector<uint32_t> magicDeck;
+			jv::Vector<uint32_t> hand;
+
 			void RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const;
 			[[nodiscard]] uint32_t GetMonster(const LevelInfo& info, const BoardState& boardState);
 			[[nodiscard]] uint32_t GetBoss(const LevelInfo& info);
@@ -55,6 +58,7 @@ namespace game
 			[[nodiscard]] uint32_t GetArtifact(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetFlaw(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetEvent(const LevelInfo& info);
+			[[nodiscard]] uint32_t Draw(const LevelInfo& info);
 
 			[[nodiscard]] static State Create(const LevelCreateInfo& info);
 		};
