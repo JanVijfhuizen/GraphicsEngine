@@ -24,6 +24,7 @@ namespace game
 		jv::Arena& tempArena;
 		jv::Arena& frameArena;
 		const jv::ge::Resource scene;
+		const jv::Array<jv::ge::SubTexture>& subTextures;
 
 		GameState& gameState;
 		PlayerState& playerState;

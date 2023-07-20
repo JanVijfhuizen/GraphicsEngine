@@ -75,6 +75,9 @@ enum class TextureId
 	numbers,
 	symbols,
 	mouse,
+	card,
+	button,
+	stats,
 	fallback,
 	length
 };

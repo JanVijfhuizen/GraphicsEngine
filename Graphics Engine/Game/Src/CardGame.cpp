@@ -121,6 +121,7 @@ namespace game
 				engine.GetMemory().tempArena,
 				engine.GetMemory().frameArena,
 				levelScene,
+				subTextures,
 				gameState,
 				playerState,
 				monsters,
@@ -142,6 +143,7 @@ namespace game
 			engine.GetMemory().tempArena,
 			engine.GetMemory().frameArena,
 			levelScene,
+			subTextures,
 			gameState,
 			playerState,
 			monsters,
@@ -316,7 +318,10 @@ namespace game
 		arr[1] = "Art/numbers.png";
 		arr[2] = "Art/symbols.png";
 		arr[3] = "Art/mouse.png";
-		arr[4] = "Art/fallback.png";
+		arr[4] = "Art/card.png";
+		arr[5] = "Art/button.png";
+		arr[6] = "Art/stats.png";
+		arr[7] = "Art/fallback.png";
 		return arr;
 	}
 
