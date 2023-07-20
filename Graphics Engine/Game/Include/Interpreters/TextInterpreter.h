@@ -16,7 +16,7 @@ namespace game
 		jv::ge::SubTexture alphabetSubTexture;
 		jv::ge::SubTexture numberSubTexture;
 		jv::ge::SubTexture symbolSubTexture;
-		uint32_t symbolSize = 8;
+		uint32_t symbolSize = 9;
 	};
 
 	class TextInterpreter final : public TaskInterpreter<TextTask, TextInterpreterCreateInfo>
