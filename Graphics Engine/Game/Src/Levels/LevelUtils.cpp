@@ -69,7 +69,7 @@ namespace game
 
 				if (collided)
 				{
-					flawPos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
+					flawPos.y -= info.cardHeightPctIncreaseOnHovered;
 
 					Card* flaw[]{ info.flawArr[i] };
 					RenderCardInfo renderFlawCardInfo{};
@@ -79,6 +79,7 @@ namespace game
 					renderFlawCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
 					renderFlawCardInfo.priority = true;
 					renderFlawCardInfo.interactable = false;
+					renderFlawCardInfo.state = RenderCardInfo::State::full;
 					RenderCards(renderFlawCardInfo);
 
 					ret.selectedMonster = i;
@@ -86,9 +87,9 @@ namespace game
 				}
 
 				RenderTask stackedRenderTask{};
-				stackedRenderTask.scale = scale;
+				stackedRenderTask.scale = glm::vec2(CARD_HEIGHT);
 				stackedRenderTask.position = flawPos;
-				stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+				stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::cardMod)];
 				stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
 				info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
 
@@ -114,7 +115,7 @@ namespace game
 					const bool collided = CollidesShape(artifactPos, scale, mousePos);
 					if (collided)
 					{
-						artifactPos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
+						artifactPos.y -= info.cardHeightPctIncreaseOnHovered;
 
 						Card* flaw[]{ info.artifactArr[i][j] };
 						RenderCardInfo renderFlawCardInfo{};
@@ -124,6 +125,7 @@ namespace game
 						renderFlawCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
 						renderFlawCardInfo.priority = true;
 						renderFlawCardInfo.interactable = false;
+						renderFlawCardInfo.state = RenderCardInfo::State::full;
 						RenderCards(renderFlawCardInfo);
 
 						ret.selectedArtifact = j;
@@ -131,9 +133,9 @@ namespace game
 					}
 
 					RenderTask stackedRenderTask{};
-					stackedRenderTask.scale = scale;
+					stackedRenderTask.scale = glm::vec2(CARD_HEIGHT);
 					stackedRenderTask.position = artifactPos;
-					stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+					stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::cardMod)];
 					stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
 					info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
 
@@ -181,27 +183,32 @@ namespace game
 		uint32_t collided = -1;
 		const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
 
+		TextureId id = TextureId::card;
+		if (info.state == RenderCardInfo::State::field)
+			id = TextureId::cardField;
+
 		RenderTask renderTask{};
 		renderTask.scale *= info.scale;
-		renderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::card)];
+		renderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(id)];
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
 			auto pos = GetCardPosition(info, i);
-			const auto card = info.cards[i];
+			auto card = info.cards[i];
 
 			if (info.interactable && CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
 			{
 				collided = i;
-				pos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
+				pos.y -= info.cardHeightPctIncreaseOnHovered;
 
 				RenderCardInfo renderLargeCardInfo{};
 				renderLargeCardInfo.levelUpdateInfo = info.levelUpdateInfo;
 				renderLargeCardInfo.position = LARGE_CARD_POS;
-				renderLargeCardInfo.cards = &info.cards[i];
+				renderLargeCardInfo.cards = &card;
 				renderLargeCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
 				renderLargeCardInfo.priority = true;
 				renderLargeCardInfo.interactable = false;
+				renderLargeCardInfo.state = RenderCardInfo::State::full;
 				RenderCards(renderLargeCardInfo);
 			}
 

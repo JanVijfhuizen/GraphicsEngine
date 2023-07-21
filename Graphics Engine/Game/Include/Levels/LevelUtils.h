@@ -14,6 +14,13 @@ namespace game
 
 	struct RenderCardInfo
 	{
+		enum class State
+		{
+			summary,
+			field,
+			full
+		} state = State::summary;
+
 		LevelUpdateInfo const* levelUpdateInfo;
 		Card** cards;
 		uint32_t length = 1;
@@ -25,6 +32,7 @@ namespace game
 		uint32_t lineLength = -1;
 		bool interactable = true;
 		bool priority = false;
+		float cardHeightPctIncreaseOnHovered = .1f;
 	};
 
 	struct RenderMonsterCardInfo final : RenderCardInfo

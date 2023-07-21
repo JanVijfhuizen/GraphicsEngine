@@ -31,7 +31,6 @@ constexpr float CARD_STAT_SIZE = CARD_TEXT_SIZE * 2;
 constexpr float CARD_DARKENED_COLOR_MUL = .2f;
 constexpr float CARD_BORDER_OFFSET = CARD_WIDTH / 8;
 constexpr float CARD_HOVERED_SIZE_PCT_INCREASE = .1f;
-constexpr float CARD_SELECTED_Y_POSITION_INCREASE = CARD_HEIGHT / 10;
 constexpr float CARD_LARGE_SIZE_INCREASE_MUL = 2;
 constexpr float CARD_STACKED_TOP_SIZE = CARD_HEIGHT / 4;
 constexpr glm::vec2 LARGE_CARD_POS = glm::vec2(-.8f, 0);
@@ -76,6 +75,8 @@ enum class TextureId
 	symbols,
 	mouse,
 	card,
+	cardField,
+	cardMod,
 	button,
 	stats,
 	fallback,

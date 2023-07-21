@@ -363,12 +363,12 @@ namespace game
 				info.textTasks.Push(textTask);
 
 				Card* card = &info.monsters[recruitableMonster];
-				RenderMonsterCardInfo handRenderInfo{};
-				handRenderInfo.levelUpdateInfo = &info;
-				handRenderInfo.cards = &card;
-				handRenderInfo.length = 1;
-				handRenderInfo.position.y -= .25f;
-				RenderMonsterCards(info.frameArena, handRenderInfo);
+				RenderMonsterCardInfo renderInfo{};
+				renderInfo.levelUpdateInfo = &info;
+				renderInfo.cards = &card;
+				renderInfo.length = 1;
+				renderInfo.position.y -= .25f;
+				RenderMonsterCards(info.frameArena, renderInfo);
 
 				RenderTask buttonRenderTask{};
 				buttonRenderTask.position.y = .5f;
@@ -449,13 +449,15 @@ namespace game
 		for (uint32_t i = 0; i < state.hand.count; ++i)
 			cards[i] = &info.magics[state.hand[i]];
 
-		RenderCardInfo handRenderInfo{};
-		handRenderInfo.levelUpdateInfo = &info;
-		handRenderInfo.cards = cards;
-		handRenderInfo.length = state.hand.count;
-		handRenderInfo.position = glm::vec2(0, .75f);
-		handRenderInfo.additionalSpacing = -CARD_SPACING / 2;
-		RenderCards(handRenderInfo);
+		RenderCardInfo fieldRenderInfo{};
+		fieldRenderInfo.levelUpdateInfo = &info;
+		fieldRenderInfo.cards = cards;
+		fieldRenderInfo.length = state.hand.count;
+		fieldRenderInfo.position = glm::vec2(0, 1);
+		fieldRenderInfo.additionalSpacing = -CARD_SPACING / 2;
+		fieldRenderInfo.state = RenderCardInfo::State::summary;
+		fieldRenderInfo.cardHeightPctIncreaseOnHovered = CARD_HEIGHT;
+		RenderCards(fieldRenderInfo);
 
 		RenderCardInfo roomRenderInfo{};
 		roomRenderInfo.levelUpdateInfo = &info;
@@ -463,6 +465,7 @@ namespace game
 		roomRenderInfo.length = 1;
 		roomRenderInfo.position = glm::vec2(.8f, -.5f);
 		roomRenderInfo.additionalSpacing = -CARD_SPACING;
+		roomRenderInfo.state = RenderCardInfo::State::field;
 		cards[0] = &info.rooms[state.paths[state.chosenPath].room];
 		RenderCards(roomRenderInfo);
 
@@ -483,6 +486,7 @@ namespace game
 		enemyRenderInfo.length = boardState.enemyMonsterCount;
 		enemyRenderInfo.position.y = -CARD_HEIGHT_OFFSET;
 		enemyRenderInfo.currentHealthArr = currentHealths;
+		enemyRenderInfo.state = RenderCardInfo::State::field;
 		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo).selectedMonster;
 
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
@@ -542,6 +546,7 @@ namespace game
 		alliedRenderInfo.artifactArr = artifacts;
 		alliedRenderInfo.artifactCounts = artifactCounts;
 		alliedRenderInfo.flawArr = flaws;
+		alliedRenderInfo.state = RenderCardInfo::State::field;
 		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo).selectedMonster;
 		
 		if(info.inputState.lMouse == InputState::pressed && allyChoice != -1 && !tapped[allyChoice])

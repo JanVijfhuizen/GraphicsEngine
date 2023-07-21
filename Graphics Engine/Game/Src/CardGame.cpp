@@ -159,8 +159,7 @@ namespace game
 			*dynamicRenderTasks,
 			*priorityRenderTasks,
 			*textTasks,
-			*priorityTextTasks,
-			subTextures
+			*priorityTextTasks
 		};
 
 		auto loadLevelIndex = levelIndex;
@@ -227,13 +226,13 @@ namespace game
 			outCardGame->dynamicRenderTasks = &outCardGame->engine.AddTaskSystem<DynamicRenderTask>();
 			outCardGame->dynamicRenderTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->priorityRenderTasks = &outCardGame->engine.AddTaskSystem<RenderTask>();
-			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 64);
+			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 512);
 			outCardGame->mouseTasks = &outCardGame->engine.AddTaskSystem<MouseTask>();
 			outCardGame->mouseTasks->Allocate(outCardGame->arena, 1);
 			outCardGame->textTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
-			outCardGame->textTasks->Allocate(outCardGame->arena, 16);
+			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->priorityTextTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
-			outCardGame->priorityTextTasks->Allocate(outCardGame->arena, 8);
+			outCardGame->priorityTextTasks->Allocate(outCardGame->arena, 32);
 		}
 
 		{
@@ -266,6 +265,12 @@ namespace game
 				*outCardGame->dynamicRenderTasks, dynamicCreateInfo);
 			outCardGame->dynamicRenderInterpreter->Enable(dynamicEnableInfo);
 
+			MouseInterpreterCreateInfo mouseInterpreterCreateInfo{};
+			mouseInterpreterCreateInfo.renderTasks = outCardGame->priorityRenderTasks;
+			outCardGame->mouseInterpreter = &outCardGame->engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
+				*outCardGame->mouseTasks, mouseInterpreterCreateInfo);
+			outCardGame->mouseInterpreter->subTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::mouse)];
+
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
 			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::alphabet)];
 			textInterpreterCreateInfo.symbolSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::symbols)];
@@ -278,12 +283,6 @@ namespace game
 			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->renderTasks;
 			outCardGame->textInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
 				*outCardGame->textTasks, textInterpreterCreateInfo);
-			
-			MouseInterpreterCreateInfo mouseInterpreterCreateInfo{};
-			mouseInterpreterCreateInfo.renderTasks = outCardGame->priorityRenderTasks;
-			outCardGame->mouseInterpreter = &outCardGame->engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
-				*outCardGame->mouseTasks, mouseInterpreterCreateInfo);
-			outCardGame->mouseInterpreter->subTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::mouse)];
 		}
 
 		{
@@ -319,9 +318,11 @@ namespace game
 		arr[2] = "Art/symbols.png";
 		arr[3] = "Art/mouse.png";
 		arr[4] = "Art/card.png";
-		arr[5] = "Art/button.png";
-		arr[6] = "Art/stats.png";
-		arr[7] = "Art/fallback.png";
+		arr[5] = "Art/card-field.png";
+		arr[6] = "Art/card-mod.png";
+		arr[7] = "Art/button.png";
+		arr[8] = "Art/stats.png";
+		arr[9] = "Art/fallback.png";
 		return arr;
 	}
 

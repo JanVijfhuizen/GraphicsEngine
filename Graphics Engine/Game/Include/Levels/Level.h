@@ -52,7 +52,6 @@ namespace game
 		TaskSystem<RenderTask>& priorityRenderTasks;
 		TaskSystem<TextTask>& textTasks;
 		TaskSystem<TextTask>& priorityTextTasks;
-		const jv::Array<jv::ge::SubTexture>& subTextures;
 	};
 
 	struct Level
