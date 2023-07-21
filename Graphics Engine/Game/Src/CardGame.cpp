@@ -328,7 +328,7 @@ namespace game
 
 	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<MonsterCard>(arena, 10);
+		const auto arr = jv::CreateArray<MonsterCard>(arena, 30);
 		for (auto& card : arr)
 			card.name = "monster";
 		// Starting pet.

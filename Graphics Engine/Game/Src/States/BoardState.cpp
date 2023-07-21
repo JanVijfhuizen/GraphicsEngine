@@ -68,7 +68,7 @@ namespace game
 		if (healths[i] > damage)
 		{
 			healths[i] -= damage;
-			if(i > BOARD_CAPACITY_PER_SIDE)
+			if(i >= BOARD_CAPACITY_PER_SIDE)
 				RerollEnemyTarget(i - BOARD_CAPACITY_PER_SIDE);
 		}
 		else
