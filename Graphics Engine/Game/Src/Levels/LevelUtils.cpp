@@ -31,7 +31,7 @@ namespace game
 
 		TextTask textTask{};
 		textTask.center = true;
-		textTask.scale = CARD_STAT_SIZE;
+		textTask.scale = CARD_STAT_SIZE * info.scale;
 
 		constexpr float f = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
 
@@ -50,14 +50,8 @@ namespace game
 
 			if(info.currentHealthArr)
 			{
-				const uint32_t l1 = GetNumberOfDigits(info.currentHealthArr[i]);
-				const uint32_t l2 = GetNumberOfDigits(monsterCard->health);
 				const char* currentHealthText = TextInterpreter::IntToConstCharPtr(info.currentHealthArr[i], frameArena);
-				const auto ptr = static_cast<char*>(frameArena.Alloc(l1 + l2 + 1));
-				memcpy(ptr, currentHealthText, l1);
-				memcpy(&ptr[l1 + 1], maxHealthText, l2 + 1);
-				ptr[l1] = '/';
-				textTask.text = ptr;
+				textTask.text = currentHealthText;
 			}
 
 			if(info.flawArr && info.flawArr[i])
@@ -69,7 +63,7 @@ namespace game
 
 				if (collided)
 				{
-					flawPos.y -= info.cardHeightPctIncreaseOnHovered;
+					flawPos.y -= info.scale * info.cardHeightPctIncreaseOnHovered;
 
 					Card* flaw[]{ info.flawArr[i] };
 					RenderCardInfo renderFlawCardInfo{};
@@ -98,7 +92,7 @@ namespace game
 				titleTextTask.center = true;
 				titleTextTask.position = flawPos;
 				titleTextTask.text = info.flawArr[i]->name;
-				titleTextTask.scale = CARD_TITLE_SIZE;
+				titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
 				info.levelUpdateInfo->textTasks.Push(titleTextTask);
 			}
 
@@ -115,7 +109,7 @@ namespace game
 					const bool collided = CollidesShape(artifactPos, scale, mousePos);
 					if (collided)
 					{
-						artifactPos.y -= info.cardHeightPctIncreaseOnHovered;
+						artifactPos.y -= info.scale * info.cardHeightPctIncreaseOnHovered;
 
 						Card* flaw[]{ info.artifactArr[i][j] };
 						RenderCardInfo renderFlawCardInfo{};
@@ -146,7 +140,7 @@ namespace game
 						titleTextTask.center = true;
 						titleTextTask.position = artifactPos;
 						titleTextTask.text = artifactCard->name;
-						titleTextTask.scale = CARD_TITLE_SIZE;
+						titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
 						info.levelUpdateInfo->textTasks.Push(titleTextTask);
 					}
 				}
@@ -164,7 +158,7 @@ namespace game
 
 		TextTask costTextTask{};
 		costTextTask.center = true;
-		costTextTask.scale = CARD_STAT_SIZE;
+		costTextTask.scale = CARD_STAT_SIZE * info.scale;
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
@@ -199,7 +193,7 @@ namespace game
 			if (info.interactable && CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
 			{
 				collided = i;
-				pos.y -= info.cardHeightPctIncreaseOnHovered;
+				pos.y -= info.scale * info.cardHeightPctIncreaseOnHovered;
 
 				RenderCardInfo renderLargeCardInfo{};
 				renderLargeCardInfo.levelUpdateInfo = info.levelUpdateInfo;
@@ -224,19 +218,24 @@ namespace game
 			else
 				info.levelUpdateInfo->renderTasks.Push(renderTask);
 
-			TextTask titleTextTask{};
-			titleTextTask.lineLength = 12;
-			titleTextTask.center = true;
-			titleTextTask.position = pos - glm::vec2(0, renderTask.scale.y);
-			titleTextTask.text = card->name;
-			titleTextTask.scale = CARD_TITLE_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
-			info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
+			if(info.state != RenderCardInfo::State::field)
+			{
+				const bool full = info.state == RenderCardInfo::State::full;
 
-			TextTask ruleTextTask = titleTextTask;
-			ruleTextTask.position = pos + glm::vec2(0, renderTask.scale.y);
-			ruleTextTask.text = card->ruleText;
-			ruleTextTask.scale = CARD_TEXT_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
-			info.levelUpdateInfo->priorityTextTasks.Push(ruleTextTask);
+				TextTask titleTextTask{};
+				titleTextTask.lineLength = 12;
+				titleTextTask.center = true;
+				titleTextTask.position = pos - glm::vec2(0, renderTask.scale.y - CARD_HEIGHT / 5);
+				titleTextTask.text = card->name;
+				titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
+				info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
+
+				TextTask ruleTextTask = titleTextTask;
+				ruleTextTask.position = pos + glm::vec2(0, renderTask.scale.y - CARD_HEIGHT / 2);
+				ruleTextTask.text = full ? card->ruleText : "...";
+				ruleTextTask.scale = CARD_TEXT_SIZE * info.scale;
+				info.levelUpdateInfo->priorityTextTasks.Push(ruleTextTask);
+			}
 		}
 
 		return collided;

@@ -449,21 +449,21 @@ namespace game
 		for (uint32_t i = 0; i < state.hand.count; ++i)
 			cards[i] = &info.magics[state.hand[i]];
 
-		RenderCardInfo fieldRenderInfo{};
-		fieldRenderInfo.levelUpdateInfo = &info;
-		fieldRenderInfo.cards = cards;
-		fieldRenderInfo.length = state.hand.count;
-		fieldRenderInfo.position = glm::vec2(0, 1);
-		fieldRenderInfo.additionalSpacing = -CARD_SPACING / 2;
-		fieldRenderInfo.state = RenderCardInfo::State::summary;
-		fieldRenderInfo.cardHeightPctIncreaseOnHovered = CARD_HEIGHT;
-		RenderCards(fieldRenderInfo);
+		RenderCardInfo handRenderInfo{};
+		handRenderInfo.levelUpdateInfo = &info;
+		handRenderInfo.cards = cards;
+		handRenderInfo.length = state.hand.count;
+		handRenderInfo.position = glm::vec2(0, 1);
+		handRenderInfo.additionalSpacing = -CARD_SPACING / 2;
+		handRenderInfo.state = RenderCardInfo::State::summary;
+		handRenderInfo.cardHeightPctIncreaseOnHovered = 1;
+		RenderCards(handRenderInfo);
 
 		RenderCardInfo roomRenderInfo{};
 		roomRenderInfo.levelUpdateInfo = &info;
 		roomRenderInfo.cards = cards;
 		roomRenderInfo.length = 1;
-		roomRenderInfo.position = glm::vec2(.8f, -.5f);
+		roomRenderInfo.position = glm::vec2(.8f, -.75);
 		roomRenderInfo.additionalSpacing = -CARD_SPACING;
 		roomRenderInfo.state = RenderCardInfo::State::field;
 		cards[0] = &info.rooms[state.paths[state.chosenPath].room];
@@ -540,7 +540,7 @@ namespace game
 		alliedRenderInfo.levelUpdateInfo = &info;
 		alliedRenderInfo.cards = cards;
 		alliedRenderInfo.length = boardState.alliedMonsterCount;
-		alliedRenderInfo.position.y = CARD_HEIGHT_OFFSET;
+		alliedRenderInfo.position.y = CARD_HEIGHT_OFFSET * 1.4f;
 		alliedRenderInfo.selectedArr = selected;
 		alliedRenderInfo.currentHealthArr = currentHealths;
 		alliedRenderInfo.artifactArr = artifacts;
@@ -892,6 +892,7 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+		stateMachine.state.depth = 100;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

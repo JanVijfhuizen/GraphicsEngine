@@ -73,9 +73,6 @@ namespace game
 
 						if(i != 0)
 						{
-							if (job.onlyRenderFirstWord)
-								break;
-
 							task.position.y += lineSpacing;
 							task.position.x -= spacing;
 						}
