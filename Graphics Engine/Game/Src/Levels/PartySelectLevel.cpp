@@ -70,7 +70,7 @@ namespace game
 		for (const auto& b : selected)
 			selectedAmount += 1 * b;
 
-		if(selectedAmount > 0 && selectedAmount < PARTY_ACTIVE_CAPACITY)
+		if(selectedAmount > 0 && selectedAmount <= PARTY_ACTIVE_CAPACITY)
 		{
 			textTask.position = TEXT_CENTER_BOT_POSITION;
 			textTask.text = "press enter to continue.";
