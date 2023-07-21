@@ -352,7 +352,7 @@ namespace game
 	{
 		if(recruitableMonster != -1)
 		{
-			if(boardState.partySize < PARTY_ACTIVE_CAPACITY)
+			if(boardState.partySize < PARTY_ACTIVE_CAPACITY && info.playerState.partySize < PARTY_CAPACITY)
 			{
 				TextTask textTask{};
 				textTask.center = true;
@@ -457,6 +457,7 @@ namespace game
 		handRenderInfo.additionalSpacing = -CARD_SPACING / 2;
 		handRenderInfo.state = RenderCardInfo::State::summary;
 		handRenderInfo.cardHeightPctIncreaseOnHovered = 1;
+		handRenderInfo.priority = true;
 		RenderCards(handRenderInfo);
 
 		RenderCardInfo roomRenderInfo{};
@@ -516,9 +517,12 @@ namespace game
 		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
 
 		const auto& playerState = info.playerState;
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		const auto& gameState = info.gameState;
+
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+			const uint32_t partyId = gameState.partyIds[i];
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[partyId];
 			if (count == 0)
 				continue;
 			const auto arr = artifacts[i] = static_cast<ArtifactCard**>(info.frameArena.Alloc(sizeof(void*) * count));
@@ -532,7 +536,7 @@ namespace game
 		FlawCard* flaws[PARTY_ACTIVE_CAPACITY]{};
 		for (uint32_t i = 0; i < boardState.partySize; ++i)
 		{
-			const uint32_t index = info.gameState.flaws[boardState.partyIds[i]];
+			const uint32_t index = info.gameState.flaws[i];
 			flaws[i] = index == -1 ? nullptr : &info.flaws[index];
 		}
 
@@ -540,7 +544,7 @@ namespace game
 		alliedRenderInfo.levelUpdateInfo = &info;
 		alliedRenderInfo.cards = cards;
 		alliedRenderInfo.length = boardState.alliedMonsterCount;
-		alliedRenderInfo.position.y = CARD_HEIGHT_OFFSET * 1.4f;
+		alliedRenderInfo.position.y = CARD_HEIGHT_OFFSET * 2;
 		alliedRenderInfo.selectedArr = selected;
 		alliedRenderInfo.currentHealthArr = currentHealths;
 		alliedRenderInfo.artifactArr = artifacts;
@@ -558,7 +562,7 @@ namespace game
 			{
 				const uint32_t allyMonsterId = boardState.allyIds[allySelected];
 				const auto& allyMonster = info.monsters[allyMonsterId];
-				const uint32_t monsterId = boardState.monsterIds[enemyChoice];
+				const uint32_t monsterId = boardState.enemyIds[enemyChoice];
 
 				boardState.DealDamage(BOARD_CAPACITY_PER_SIDE + enemyChoice, allyMonster.attack);
 
@@ -892,7 +896,6 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 100;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
