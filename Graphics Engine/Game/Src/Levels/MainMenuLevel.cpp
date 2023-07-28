@@ -25,12 +25,13 @@ namespace game
 
 		const float buttonYOffset = saveDataValid ? -.18 : 0;
 
-		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = buttonYOffset;
-		buttonRenderTask.scale.y *= .12f;
-		buttonRenderTask.scale.x = .4f;
-		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)].subTexture;
-		info.renderTasks.Push(buttonRenderTask);
+		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)];
+
+		PixelPerfectRenderTask buttonRenderTask{};
+		buttonRenderTask.position.y = buttonTexture.resolution.y + 4;
+		buttonRenderTask.scale = buttonTexture.resolution;
+		buttonRenderTask.subTexture = buttonTexture.subTexture;
+		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)
 			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
@@ -48,7 +49,7 @@ namespace game
 		if (saveDataValid)
 		{
 			buttonRenderTask.position.y *= -1;
-			info.renderTasks.Push(buttonRenderTask);
+			info.pixelPerfectRenderTasks.Push(buttonRenderTask);
 
 			buttonTextTask.position = buttonRenderTask.position;
 			buttonTextTask.text = "continue";

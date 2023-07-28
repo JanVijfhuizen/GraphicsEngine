@@ -295,7 +295,7 @@ namespace game
 			pixelPerfectRenderInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
-			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = { 640, 480 };
+			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = { 160, 120 };
 
 			outCardGame->pixelPerfectRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<PixelPerfectRenderTask, PixelPerfectRenderInterpreter>(
 				*outCardGame->pixelPerfectRenderTasks, pixelPerfectRenderInterpreterCreateInfo);

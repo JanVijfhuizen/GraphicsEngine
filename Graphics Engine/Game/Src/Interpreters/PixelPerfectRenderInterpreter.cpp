@@ -20,7 +20,7 @@ namespace game
 			upscaleMul *= 2;
 		}
 
-		const auto pixelSize = glm::vec2(1) / glm::vec2(_createInfo.resolution.x, _createInfo.resolution.y) * glm::vec2(upscaleMul);
+		const auto pixelSize = glm::vec2(1) / glm::vec2(_createInfo.resolution.y) * glm::vec2(upscaleMul);
 
 		for (const auto& batch : tasks)
 			for (const auto& task : batch)
