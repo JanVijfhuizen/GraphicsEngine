@@ -3,6 +3,7 @@
 #include <Levels/LevelUtils.h>
 
 #include "CardGame.h"
+#include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
 #include "States/InputState.h"
@@ -374,7 +375,7 @@ namespace game
 				buttonRenderTask.position.y = .5f;
 				buttonRenderTask.scale.y *= .12f;
 				buttonRenderTask.scale.x = .4f;
-				buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+				buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
 				info.renderTasks.Push(buttonRenderTask);
 
 				TextTask buttonTextTask{};
@@ -849,7 +850,7 @@ namespace game
 		RenderTask buttonRenderTask{};
 		buttonRenderTask.position.y = -.18;
 		buttonRenderTask.scale.y *= .12f;
-		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
 		info.renderTasks.Push(buttonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)

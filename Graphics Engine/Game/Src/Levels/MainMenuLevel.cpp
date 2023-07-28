@@ -2,6 +2,7 @@
 #include "Levels/MainMenuLevel.h"
 
 #include "CardGame.h"
+#include "GE/AtlasGenerator.h"
 #include "States/InputState.h"
 #include "Utils/BoxCollision.h"
 
@@ -28,7 +29,7 @@ namespace game
 		buttonRenderTask.position.y = buttonYOffset;
 		buttonRenderTask.scale.y *= .12f;
 		buttonRenderTask.scale.x = .4f;
-		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::button)];
+		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)].subTexture;
 		info.renderTasks.Push(buttonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)

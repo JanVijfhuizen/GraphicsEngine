@@ -11,6 +11,11 @@
 #include "Tasks/DynamicRenderTask.h"
 #include "Tasks/TextTask.h"
 
+namespace jv::ge
+{
+	struct AtlasTexture;
+}
+
 namespace game
 {
 	struct InputState;
@@ -24,7 +29,7 @@ namespace game
 		jv::Arena& tempArena;
 		jv::Arena& frameArena;
 		const jv::ge::Resource scene;
-		const jv::Array<jv::ge::SubTexture>& subTextures;
+		const jv::Array<jv::ge::AtlasTexture>& atlasTextures;
 
 		GameState& gameState;
 		PlayerState& playerState;

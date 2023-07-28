@@ -13,6 +13,7 @@
 #include "Interpreters/DynamicRenderInterpreter.h"
 #include "Interpreters/InstancedRenderInterpreter.h"
 #include "Interpreters/MouseInterpreter.h"
+#include "Interpreters/PixelPerfectRenderInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "Levels/Level.h"
@@ -46,18 +47,21 @@ namespace game
 		jv::ge::Resource levelScene;
 		jv::ge::Resource atlas;
 		InputState inputState{};
-		jv::Array<jv::ge::SubTexture> subTextures;
+		jv::Array<jv::ge::AtlasTexture> atlasTextures;
+		jv::Array<glm::ivec2> subTextureResolutions;
 		TaskSystem<RenderTask>* renderTasks;
 		TaskSystem<DynamicRenderTask>* dynamicRenderTasks;
 		TaskSystem<RenderTask>* priorityRenderTasks;
 		TaskSystem<TextTask>* textTasks;
 		TaskSystem<TextTask>* priorityTextTasks;
+		TaskSystem<PixelPerfectRenderTask>* pixelPerfectRenderTasks;
 		TaskSystem<MouseTask>* mouseTasks;
 		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
 		InstancedRenderInterpreter<RenderTask>* priorityRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
 		TextInterpreter* textInterpreter;
 		TextInterpreter* priorityTextInterpreter;
+		PixelPerfectRenderInterpreter* pixelPerfectRenderInterpreter;
 		MouseInterpreter* mouseInterpreter;
 
 		GameState gameState{};
@@ -121,7 +125,7 @@ namespace game
 				engine.GetMemory().tempArena,
 				engine.GetMemory().frameArena,
 				levelScene,
-				subTextures,
+				atlasTextures,
 				gameState,
 				playerState,
 				monsters,
@@ -143,7 +147,7 @@ namespace game
 			engine.GetMemory().tempArena,
 			engine.GetMemory().frameArena,
 			levelScene,
-			subTextures,
+			atlasTextures,
 			gameState,
 			playerState,
 			monsters,
@@ -217,7 +221,7 @@ namespace game
 			outCardGame->atlas = AddImage(imageCreateInfo);
 			jv::ge::FillImage(outCardGame->atlas, pixels);
 			stbi_image_free(pixels);
-			outCardGame->subTextures = jv::ge::LoadAtlasMetaData(outCardGame->arena, ATLAS_META_DATA_PATH);
+			outCardGame->atlasTextures = jv::ge::LoadAtlasMetaData(outCardGame->arena, ATLAS_META_DATA_PATH);
 		}
 
 		{
@@ -233,6 +237,8 @@ namespace game
 			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->priorityTextTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
 			outCardGame->priorityTextTasks->Allocate(outCardGame->arena, 32);
+			outCardGame->pixelPerfectRenderTasks = &outCardGame->engine.AddTaskSystem<PixelPerfectRenderTask>();
+			outCardGame->pixelPerfectRenderTasks->Allocate(outCardGame->arena, 128);
 		}
 
 		{
@@ -269,12 +275,12 @@ namespace game
 			mouseInterpreterCreateInfo.renderTasks = outCardGame->priorityRenderTasks;
 			outCardGame->mouseInterpreter = &outCardGame->engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
 				*outCardGame->mouseTasks, mouseInterpreterCreateInfo);
-			outCardGame->mouseInterpreter->subTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::mouse)];
+			outCardGame->mouseInterpreter->subTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::mouse)].subTexture;
 
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
-			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::alphabet)];
-			textInterpreterCreateInfo.symbolSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::symbols)];
-			textInterpreterCreateInfo.numberSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::numbers)];
+			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::alphabet)].subTexture;
+			textInterpreterCreateInfo.symbolSubTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)].subTexture;
+			textInterpreterCreateInfo.numberSubTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)].subTexture;
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
 
 			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->priorityRenderTasks;
@@ -283,6 +289,15 @@ namespace game
 			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->renderTasks;
 			outCardGame->textInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
 				*outCardGame->textTasks, textInterpreterCreateInfo);
+
+			PixelPerfectRenderInterpreterCreateInfo pixelPerfectRenderInterpreterCreateInfo{};
+			pixelPerfectRenderInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
+			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = { 640, 480 };
+
+			outCardGame->pixelPerfectRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<PixelPerfectRenderTask, PixelPerfectRenderInterpreter>(
+				*outCardGame->pixelPerfectRenderTasks, pixelPerfectRenderInterpreterCreateInfo);
 		}
 
 		{

@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/LevelUtils.h"
 
+#include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
 #include "Levels/Level.h"
@@ -83,7 +84,7 @@ namespace game
 				RenderTask stackedRenderTask{};
 				stackedRenderTask.scale = glm::vec2(CARD_HEIGHT);
 				stackedRenderTask.position = flawPos;
-				stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::cardMod)];
+				stackedRenderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(TextureId::cardMod)].subTexture;
 				stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
 				info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
 
@@ -129,7 +130,7 @@ namespace game
 					RenderTask stackedRenderTask{};
 					stackedRenderTask.scale = glm::vec2(CARD_HEIGHT);
 					stackedRenderTask.position = artifactPos;
-					stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::cardMod)];
+					stackedRenderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(TextureId::cardMod)].subTexture;
 					stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
 					info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
 
@@ -183,7 +184,7 @@ namespace game
 
 		RenderTask renderTask{};
 		renderTask.scale *= info.scale;
-		renderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(id)];
+		renderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(id)].subTexture;
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
@@ -228,13 +229,21 @@ namespace game
 				titleTextTask.position = pos - glm::vec2(0, renderTask.scale.y - CARD_HEIGHT / 5);
 				titleTextTask.text = card->name;
 				titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
-				info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
+
+				if (info.priority)
+					info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
+				else
+					info.levelUpdateInfo->textTasks.Push(titleTextTask);
 
 				TextTask ruleTextTask = titleTextTask;
 				ruleTextTask.position = pos + glm::vec2(0, renderTask.scale.y - CARD_HEIGHT / 2);
 				ruleTextTask.text = full ? card->ruleText : "...";
 				ruleTextTask.scale = CARD_TEXT_SIZE * info.scale;
-				info.levelUpdateInfo->priorityTextTasks.Push(ruleTextTask);
+
+				if (info.priority)
+					info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
+				else
+					info.levelUpdateInfo->textTasks.Push(titleTextTask);
 			}
 		}
 

@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/NewGameLevel.h"
 #include "CardGame.h"
+#include "GE/AtlasGenerator.h"
 #include "Levels/LevelUtils.h"
 #include "LevelStates/LevelStateMachine.h"
 #include "States/InputState.h"
@@ -39,7 +40,7 @@ namespace game
 		buttonRenderTask.position.y = -BUTTON_Y_SCALE - BUTTON_Y_OFFSET;
 		buttonRenderTask.scale.y *= BUTTON_Y_SCALE;
 		buttonRenderTask.scale.x = BUTTON_X_DEFAULT_SCALE;
-		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
 		info.renderTasks.Push(buttonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)
