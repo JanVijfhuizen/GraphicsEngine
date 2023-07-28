@@ -163,7 +163,8 @@ namespace game
 			*dynamicRenderTasks,
 			*priorityRenderTasks,
 			*textTasks,
-			*priorityTextTasks
+			*priorityTextTasks,
+			*pixelPerfectRenderTasks
 		};
 
 		auto loadLevelIndex = levelIndex;

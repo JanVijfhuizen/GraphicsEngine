@@ -188,5 +188,8 @@
     <ClInclude Include="Include\Interpreters\PixelPerfectRenderInterpreter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Tasks\PixelPerfectRenderTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

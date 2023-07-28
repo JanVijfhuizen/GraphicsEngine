@@ -10,6 +10,7 @@
 #include "JLib/Array.h"
 #include "Tasks/DynamicRenderTask.h"
 #include "Tasks/TextTask.h"
+#include "Tasks/PixelPerfectRenderTask.h"
 
 namespace jv::ge
 {
@@ -57,6 +58,7 @@ namespace game
 		TaskSystem<RenderTask>& priorityRenderTasks;
 		TaskSystem<TextTask>& textTasks;
 		TaskSystem<TextTask>& priorityTextTasks;
+		TaskSystem<PixelPerfectRenderTask>& pixelPerfectRenderTasks;
 	};
 
 	struct Level
