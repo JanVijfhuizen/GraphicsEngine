@@ -21,13 +21,20 @@ namespace game
 		}
 
 		const auto pixelSize = glm::vec2(1) / glm::vec2(_createInfo.resolution.y) * glm::vec2(upscaleMul);
+		const auto lBot = pixelSize * glm::vec2(_createInfo.simulatedResolution) * glm::vec2(-1, 1);
 
+		RenderTask bgRenderTask{};
+		bgRenderTask.color = glm::vec4(0, 0, 0, 1);
+		bgRenderTask.scale = pixelSize * glm::vec2(_createInfo.simulatedResolution);
+		bgRenderTask.subTexture = _createInfo.background;
+		_createInfo.renderTasks->Push(bgRenderTask);
+		
 		for (const auto& batch : tasks)
 			for (const auto& task : batch)
 			{
 				RenderTask renderTask{};
-				renderTask.position = pixelSize * glm::vec2(task.position.x, task.position.y);
 				renderTask.scale = pixelSize * glm::vec2(task.scale.x, task.scale.y);
+				renderTask.position = lBot + pixelSize * glm::vec2(2) * glm::vec2(task.position.x, -task.position.y) + renderTask.scale * glm::vec2(1, -1);
 				renderTask.color = task.color;
 				renderTask.subTexture = task.subTexture;
 

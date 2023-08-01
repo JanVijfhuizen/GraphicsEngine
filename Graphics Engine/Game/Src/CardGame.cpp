@@ -295,7 +295,8 @@ namespace game
 			pixelPerfectRenderInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
-			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = { 160, 120 };
+			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = SIMULATED_RESOLUTION;
+			pixelPerfectRenderInterpreterCreateInfo.background = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 
 			outCardGame->pixelPerfectRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<PixelPerfectRenderTask, PixelPerfectRenderInterpreter>(
 				*outCardGame->pixelPerfectRenderTasks, pixelPerfectRenderInterpreterCreateInfo);
@@ -339,6 +340,7 @@ namespace game
 		arr[7] = "Art/button.png";
 		arr[8] = "Art/stats.png";
 		arr[9] = "Art/fallback.png";
+		arr[10] = "Art/empty.png";
 		return arr;
 	}
 

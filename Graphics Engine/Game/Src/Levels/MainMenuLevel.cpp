@@ -22,41 +22,42 @@ namespace game
 		titleTextTask.text = "untitled card game";
 		titleTextTask.scale = .12f;
 		info.textTasks.Push(titleTextTask);
-
-		const float buttonYOffset = saveDataValid ? -.18 : 0;
-
+		
 		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)];
 
-		PixelPerfectRenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = buttonTexture.resolution.y + 4;
-		buttonRenderTask.scale = buttonTexture.resolution;
-		buttonRenderTask.subTexture = buttonTexture.subTexture;
-		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
+		PixelPerfectRenderTask newGameButtonRenderTask{};
+		newGameButtonRenderTask.position = SIMULATED_RESOLUTION / 2 + glm::ivec2(-buttonTexture.resolution.x / 2, 0);
+		newGameButtonRenderTask.scale = buttonTexture.resolution;
+		newGameButtonRenderTask.subTexture = buttonTexture.subTexture;
+		info.pixelPerfectRenderTasks.Push(newGameButtonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+			if (CollidesShape(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
 			{
 				loadLevelIndex = LevelIndex::newGame;
 			}
 
 		TextTask buttonTextTask{};
 		buttonTextTask.center = true;
-		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.position = newGameButtonRenderTask.position;
 		buttonTextTask.text = "new game";
 		buttonTextTask.scale = .06f;
 		info.textTasks.Push(buttonTextTask);
 
 		if (saveDataValid)
 		{
-			buttonRenderTask.position.y *= -1;
-			info.pixelPerfectRenderTasks.Push(buttonRenderTask);
+			PixelPerfectRenderTask continueButtonRenderTask{};
+			continueButtonRenderTask.position = SIMULATED_RESOLUTION / 2 - glm::ivec2(buttonTexture.resolution.x / 2, buttonTexture.resolution.y);
+			continueButtonRenderTask.scale = buttonTexture.resolution;
+			continueButtonRenderTask.subTexture = buttonTexture.subTexture;
+			info.pixelPerfectRenderTasks.Push(continueButtonRenderTask);
 
-			buttonTextTask.position = buttonRenderTask.position;
+			buttonTextTask.position = continueButtonRenderTask.position;
 			buttonTextTask.text = "continue";
 			info.textTasks.Push(buttonTextTask);
 
 			if (info.inputState.lMouse == InputState::pressed)
-				if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+				if (CollidesShape(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
 				{
 					loadLevelIndex = LevelIndex::partySelect;
 				}

@@ -11,6 +11,7 @@ namespace game
 		glm::ivec2 simulatedResolution;
 		TaskSystem<RenderTask>* renderTasks;
 		TaskSystem<RenderTask>* priorityRenderTasks;
+		jv::ge::SubTexture background;
 	};
 
 	class PixelPerfectRenderInterpreter final : public TaskInterpreter<PixelPerfectRenderTask, PixelPerfectRenderInterpreterCreateInfo>

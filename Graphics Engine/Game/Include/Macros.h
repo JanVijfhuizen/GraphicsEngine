@@ -5,6 +5,8 @@
 	return i > 0 ? static_cast<int32_t>(log10(static_cast<double>(i))) + 1 : 1;
 }
 
+constexpr glm::ivec2 SIMULATED_RESOLUTION(160, 120);
+
 constexpr uint32_t PARTY_ACTIVE_CAPACITY = 4;
 constexpr uint32_t PARTY_INACTIVE_CAPACITY = 2;
 constexpr uint32_t PARTY_CAPACITY = PARTY_ACTIVE_CAPACITY + PARTY_INACTIVE_CAPACITY;
@@ -80,5 +82,6 @@ enum class TextureId
 	button,
 	stats,
 	fallback,
+	empty,
 	length
 };
