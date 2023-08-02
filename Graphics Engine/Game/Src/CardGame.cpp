@@ -396,7 +396,9 @@ namespace game
 		const auto mousePos = jv::ge::GetMousePosition();
 
 		inputState = {};
-		inputState.mousePos = mousePos;
+		inputState.fullScreenMousePos = mousePos;
+		inputState.mousePos = PixelPerfectRenderTask::ToPixelPosition(
+			{ 800, 600 }, SIMULATED_RESOLUTION, mousePos);
 		inputState.scroll = scrollCallback;
 		
 		for (const auto& callback : mouseCallbacks)

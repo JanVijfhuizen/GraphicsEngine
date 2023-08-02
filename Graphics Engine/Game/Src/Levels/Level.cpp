@@ -33,10 +33,9 @@ namespace game
 			throw std::exception("Mouse button state not supported!");
 		}
 		
-		const auto pixelPos = PixelPerfectRenderTask::ToPixelPosition(info.resolution, SIMULATED_RESOLUTION, info.inputState.mousePos);
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = atlasTexture.resolution / glm::ivec2(2, 1);
-		renderTask.position = pixelPos - glm::ivec2(0, renderTask.scale.y);
+		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
 		renderTask.priority = true;
 		renderTask.subTexture = _lMousePressed ? subTextures[1] : subTextures[0];
 		info.pixelPerfectRenderTasks.Push(renderTask);

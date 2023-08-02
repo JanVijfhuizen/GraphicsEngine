@@ -32,7 +32,7 @@ namespace game
 		info.pixelPerfectRenderTasks.Push(newGameButtonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShape(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
+			if (CollidesShapeInt(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
 			{
 				loadLevelIndex = LevelIndex::newGame;
 			}
@@ -55,7 +55,7 @@ namespace game
 			info.textTasks.Push(buttonTextTask);
 
 			if (info.inputState.lMouse == InputState::pressed)
-				if (CollidesShape(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
+				if (CollidesShapeInt(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
 				{
 					loadLevelIndex = LevelIndex::partySelect;
 				}
