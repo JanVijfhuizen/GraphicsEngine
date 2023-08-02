@@ -11,6 +11,7 @@ namespace game
 		uint32_t lineLength = 96;
 		uint32_t maxLength = UINT32_MAX;
 		bool drawDotsOnMaxLengthReached = true;
+		bool center = false;
 		bool priority = false;
 	};
 }

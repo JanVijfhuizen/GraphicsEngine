@@ -32,8 +32,9 @@ namespace game
 	{
 		TextTask textTask{};
 		textTask.text = "choose a mode.";
-		textTask.position = TEXT_CENTER_TOP_POSITION;
-		textTask.scale = TEXT_BIG_SCALE;
+		textTask.position.x = SIMULATED_RESOLUTION.x / 2;
+		textTask.scale = 2;
+		textTask.center = true;
 		info.textTasks.Push(textTask);
 
 		RenderTask buttonRenderTask{};

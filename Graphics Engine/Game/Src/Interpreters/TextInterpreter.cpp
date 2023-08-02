@@ -41,6 +41,7 @@ namespace game
 
 				uint32_t lineLength = 0;
 				uint32_t nextLineStart = 0;
+				uint32_t xStart = 0;
 
 				for (uint32_t i = 0; i < len; ++i)
 				{
@@ -60,13 +61,18 @@ namespace game
 								break;
 							}
 						}
+						if (nextLineStart == i)
+							nextLineStart = len;
 						
 						lineLength = 0;
+						if(job.center)
+							xStart = (nextLineStart - i) * (_createInfo.symbolSize + _createInfo.spacing)* job.scale / 2;
+						task.position.x = job.position.x - xStart;
 
 						if(i != 0)
 						{
 							task.position.y -= _createInfo.symbolSize * job.scale;
-							task.position.x = job.position.x - spacing;
+							task.position.x -= spacing;
 						}
 					}
 
