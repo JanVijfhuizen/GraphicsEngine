@@ -9,9 +9,14 @@ namespace game
 		const glm::vec2 position)
 	{
 		const auto upscaleMul = GetUpscaleMultiplier(resolution, simulatedResolution);
-		const auto pixelSize = GetPixelSize(resolution, upscaleMul);
+		const auto pixelSize = glm::vec2(1) / glm::vec2(resolution) * glm::vec2(static_cast<float>(upscaleMul));
 		const auto lBot = pixelSize * glm::vec2(simulatedResolution) * glm::vec2(-1, 1);
-		return lBot + (position + glm::vec2(.5f)) / pixelSize;
+		const auto rPos = glm::vec2(position.x, resolution.y - position.y) / glm::vec2(upscaleMul);
+		const auto diff = (resolution - simulatedResolution * glm::ivec2(upscaleMul)) / 2;
+
+		const auto res = glm::ivec2(rPos);
+		std::cout << res.x << " " << res.y << std::endl;
+		return res;
 	}
 
 	uint32_t PixelPerfectRenderTask::GetUpscaleMultiplier(const glm::ivec2 resolution, const glm::ivec2 simulatedResolution)

@@ -885,6 +885,8 @@ namespace game
 
 	void MainLevel::Create(const LevelCreateInfo& info)
 	{
+		Level::Create(info);
+
 		if (info.playerState.ironManMode)
 			ClearSaveData();
 

@@ -13,6 +13,7 @@ namespace game
 {
 	void NewGameLevel::Create(const LevelCreateInfo& info)
 	{
+		Level::Create(info);
 		ClearSaveData();
 
 		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 3);

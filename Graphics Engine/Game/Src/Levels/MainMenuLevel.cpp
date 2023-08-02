@@ -10,6 +10,7 @@ namespace game
 {
 	void MainMenuLevel::Create(const LevelCreateInfo& info)
 	{
+		Level::Create(info);
 		saveDataValid = TryLoadSaveData(info.playerState);
 	}
 

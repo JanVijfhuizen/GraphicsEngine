@@ -12,7 +12,6 @@
 #include "GE/GraphicsEngine.h"
 #include "Interpreters/DynamicRenderInterpreter.h"
 #include "Interpreters/InstancedRenderInterpreter.h"
-#include "Interpreters/MouseInterpreter.h"
 #include "Interpreters/PixelPerfectRenderInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
@@ -24,7 +23,6 @@
 #include "States/GameState.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
-#include "Tasks/MouseTask.h"
 
 namespace game 
 {
@@ -55,14 +53,12 @@ namespace game
 		TaskSystem<TextTask>* textTasks;
 		TaskSystem<TextTask>* priorityTextTasks;
 		TaskSystem<PixelPerfectRenderTask>* pixelPerfectRenderTasks;
-		TaskSystem<MouseTask>* mouseTasks;
 		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
 		InstancedRenderInterpreter<RenderTask>* priorityRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
 		TextInterpreter* textInterpreter;
 		TextInterpreter* priorityTextInterpreter;
 		PixelPerfectRenderInterpreter* pixelPerfectRenderInterpreter;
-		MouseInterpreter* mouseInterpreter;
 
 		GameState gameState{};
 		PlayerState playerState{};
@@ -168,9 +164,12 @@ namespace game
 		};
 
 		auto loadLevelIndex = levelIndex;
-		auto result = levels[static_cast<uint32_t>(levelIndex)]->Update(info, loadLevelIndex);
+		const auto level = levels[static_cast<uint32_t>(levelIndex)];
+
+		auto result = level->Update(info, loadLevelIndex);
 		if (!result)
 			return result;
+		level->PostUpdate(info);
 
 		if(loadLevelIndex != levelIndex)
 		{
@@ -232,8 +231,6 @@ namespace game
 			outCardGame->dynamicRenderTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->priorityRenderTasks = &outCardGame->engine.AddTaskSystem<RenderTask>();
 			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 512);
-			outCardGame->mouseTasks = &outCardGame->engine.AddTaskSystem<MouseTask>();
-			outCardGame->mouseTasks->Allocate(outCardGame->arena, 1);
 			outCardGame->textTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
 			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->priorityTextTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
@@ -271,13 +268,7 @@ namespace game
 			outCardGame->dynamicRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
 				*outCardGame->dynamicRenderTasks, dynamicCreateInfo);
 			outCardGame->dynamicRenderInterpreter->Enable(dynamicEnableInfo);
-
-			MouseInterpreterCreateInfo mouseInterpreterCreateInfo{};
-			mouseInterpreterCreateInfo.renderTasks = outCardGame->priorityRenderTasks;
-			outCardGame->mouseInterpreter = &outCardGame->engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
-				*outCardGame->mouseTasks, mouseInterpreterCreateInfo);
-			outCardGame->mouseInterpreter->subTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::mouse)].subTexture;
-
+			
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
 			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::alphabet)].subTexture;
 			textInterpreterCreateInfo.symbolSubTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)].subTexture;
@@ -411,14 +402,9 @@ namespace game
 	void CardGame::UpdateInput()
 	{
 		const auto mousePos = jv::ge::GetMousePosition();
-		const auto resolution = jv::ge::GetResolution();
-		auto cPos = glm::vec2(mousePos.x, mousePos.y) / glm::vec2(resolution.x, resolution.y);
-		cPos *= 2;
-		cPos -= glm::vec2(1, 1);
-		cPos.x *= static_cast<float>(resolution.x) / static_cast<float>(resolution.y);
 
 		inputState = {};
-		inputState.mousePos = cPos;
+		inputState.mousePos = mousePos;
 		inputState.scroll = scrollCallback;
 		
 		for (const auto& callback : mouseCallbacks)
@@ -428,14 +414,7 @@ namespace game
 		}
 		for (const auto& callback : keyCallbacks)
 			SetInputState(inputState.enter, GLFW_KEY_ENTER, callback);
-
-		MouseTask mouseTask{};
-		mouseTask.position = inputState.mousePos;
-		mouseTask.lButton = inputState.lMouse;
-		mouseTask.rButton = inputState.rMouse;
-		mouseTask.scroll = inputState.scroll;
-		mouseTasks->Push(mouseTask);
-
+		
 		// Reset callbacks.
 		keyCallbacks = {};
 		mouseCallbacks = {};

@@ -17,13 +17,12 @@ namespace game
 		const auto pixelSize = glm::vec2(1) / glm::vec2(_createInfo.resolution.y) * glm::vec2(upscaleMul);
 		const auto lBot = pixelSize * glm::vec2(_createInfo.simulatedResolution) * glm::vec2(-1, 1);
 
-		RenderTask bgRenderTask{};
+		PixelPerfectRenderTask bgRenderTask{};
 		bgRenderTask.color = glm::vec4(0, 0, 0, 1);
-		bgRenderTask.scale = pixelSize * glm::vec2(_createInfo.simulatedResolution);
+		bgRenderTask.scale = _createInfo.simulatedResolution;
 		bgRenderTask.subTexture = _createInfo.background;
-		_createInfo.renderTasks->Push(bgRenderTask);
-
-		//const auto test = PixelPerfectRenderTask::ToPixelPosition(_createInfo.resolution, _createInfo.simulatedResolution, glm::vec2(0));
+		const auto normalBgTask = PixelPerfectRenderTask::ToNormalTask(bgRenderTask, _createInfo.resolution, _createInfo.simulatedResolution);
+		_createInfo.renderTasks->Push(normalBgTask);
 		
 		for (const auto& batch : tasks)
 			for (const auto& task : batch)

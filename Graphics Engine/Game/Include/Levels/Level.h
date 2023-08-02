@@ -63,7 +63,11 @@ namespace game
 
 	struct Level
 	{
-		virtual void Create(const LevelCreateInfo& info) = 0;
+		virtual void Create(const LevelCreateInfo& info);
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) = 0;
+		virtual void PostUpdate(const LevelUpdateInfo& info);
+
+	private:
+		bool _lMousePressed = false;
 	};
 }
