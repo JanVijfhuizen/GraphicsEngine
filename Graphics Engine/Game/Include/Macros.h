@@ -83,5 +83,6 @@ enum class TextureId
 	stats,
 	fallback,
 	empty,
+	buttonSmall,
 	length
 };

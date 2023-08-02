@@ -33,19 +33,23 @@ namespace game
 		TextTask textTask{};
 		textTask.text = "choose a mode.";
 		textTask.position.x = SIMULATED_RESOLUTION.x / 2;
+		textTask.position.y = SIMULATED_RESOLUTION.y - 90;
 		textTask.scale = 2;
 		textTask.center = true;
 		info.textTasks.Push(textTask);
 
-		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = -BUTTON_Y_SCALE - BUTTON_Y_OFFSET;
-		buttonRenderTask.scale.y *= BUTTON_Y_SCALE;
-		buttonRenderTask.scale.x = BUTTON_X_DEFAULT_SCALE;
-		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
-		info.renderTasks.Push(buttonRenderTask);
+		const auto& buttonSmall = info.atlasTextures[static_cast<uint32_t>(TextureId::buttonSmall)];
+
+		PixelPerfectRenderTask buttonRenderTask{};
+		buttonRenderTask.position.x = SIMULATED_RESOLUTION.x / 2;
+		buttonRenderTask.position.y = textTask.position.y - 36;
+		buttonRenderTask.scale = buttonSmall.resolution;
+		buttonRenderTask.subTexture = buttonSmall.subTexture;
+		buttonRenderTask.xCenter = true;
+		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+			if (CollidesShapeInt(buttonRenderTask.position - glm::ivec2(buttonRenderTask.scale.x / 2, 0), buttonRenderTask.scale, info.inputState.mousePos))
 			{
 				info.playerState.ironManMode = false;
 				stateIndex = 1;
@@ -55,13 +59,14 @@ namespace game
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "standard";
-		buttonTextTask.scale = TEXT_MEDIUM_SCALE;
+		buttonTextTask.center = true;
 		info.textTasks.Push(buttonTextTask);
 
-		buttonRenderTask.position.y *= -1;
-		info.renderTasks.Push(buttonRenderTask);
+		buttonRenderTask.position.y -= buttonSmall.resolution.y + 9;
+		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
+
 		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+			if (CollidesShapeInt(buttonRenderTask.position - glm::ivec2(buttonRenderTask.scale.x / 2, 0), buttonRenderTask.scale, info.inputState.mousePos))
 			{
 				info.playerState.ironManMode = true;
 				stateIndex = 1;

@@ -47,6 +47,11 @@ namespace game
 		renderTask.position = lBot + pixelSize * glm::vec2(2) * glm::vec2(task.position.x, -task.position.y) + renderTask.scale * glm::vec2(1, -1);
 		renderTask.color = task.color;
 		renderTask.subTexture = task.subTexture;
+
+		if (task.xCenter)
+			renderTask.position.x -= renderTask.scale.x;
+		if (task.yCenter)
+			renderTask.position.y -= renderTask.scale.y;
 		return renderTask;
 	}
 }

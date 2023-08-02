@@ -30,7 +30,7 @@ namespace game
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
 
-	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 4;
+	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 2;
 
 	struct KeyCallback final
 	{
@@ -327,6 +327,7 @@ namespace game
 		arr[8] = "Art/stats.png";
 		arr[9] = "Art/fallback.png";
 		arr[10] = "Art/empty.png";
+		arr[11] = "Art/button-small.png";
 		return arr;
 	}
 

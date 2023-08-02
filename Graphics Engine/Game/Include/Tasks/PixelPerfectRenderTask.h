@@ -10,6 +10,8 @@ namespace game
 		glm::ivec2 scale{ 32 };
 		glm::vec4 color{ 1 };
 		jv::ge::SubTexture subTexture{};
+		bool xCenter = false;
+		bool yCenter = false;
 		bool priority = false;
 
 		[[nodiscard]] static uint32_t GetUpscaleMultiplier(glm::ivec2 resolution, glm::ivec2 simulatedResolution);
