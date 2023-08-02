@@ -30,6 +30,8 @@ namespace game
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
 
+	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 4;
+
 	struct KeyCallback final
 	{
 		uint32_t key;
@@ -151,7 +153,7 @@ namespace game
 			magic,
 			flaws,
 			events,
-			{800, 600}, // temp.
+			RESOLUTION,
 			inputState,
 			*renderTasks,
 			*dynamicRenderTasks,
@@ -186,6 +188,7 @@ namespace game
 			engineCreateInfo.onKeyCallback = OnKeyCallback;
 			engineCreateInfo.onMouseCallback = OnMouseCallback;
 			engineCreateInfo.onScrollCallback = OnScrollCallback;
+			engineCreateInfo.resolution = RESOLUTION;
 			outCardGame->engine = Engine::Create(engineCreateInfo);
 		}
 
@@ -398,7 +401,7 @@ namespace game
 		inputState = {};
 		inputState.fullScreenMousePos = mousePos;
 		inputState.mousePos = PixelPerfectRenderTask::ToPixelPosition(
-			{ 800, 600 }, SIMULATED_RESOLUTION, mousePos);
+			jv::ge::GetResolution(), SIMULATED_RESOLUTION, mousePos);
 		inputState.scroll = scrollCallback;
 		
 		for (const auto& callback : mouseCallbacks)

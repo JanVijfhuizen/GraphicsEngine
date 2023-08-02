@@ -20,6 +20,7 @@ namespace game
 		uint32_t arenaSize = 4096;
 		uint32_t tempArenaSize = 4096;
 		uint32_t frameArenaSize = 4096;
+		glm::ivec2 resolution{ 800, 600 };
 
 		void (*onKeyCallback)(size_t key, size_t action) = nullptr;
 		void (*onMouseCallback)(size_t key, size_t action) = nullptr;

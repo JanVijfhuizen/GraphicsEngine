@@ -22,7 +22,7 @@ namespace game
 	{
 		glm::ivec2 r = simulatedResolution;
 		uint32_t upscaleMul = 1;
-		while (r.x * 2 < resolution.x || r.y * 2 < resolution.y)
+		while (r.x * 2 <= resolution.x || r.y * 2 <= resolution.y)
 		{
 			r *= 2;
 			upscaleMul *= 2;

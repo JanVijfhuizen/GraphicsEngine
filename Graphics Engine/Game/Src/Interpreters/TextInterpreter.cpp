@@ -26,18 +26,18 @@ namespace game
 		const float symbolPctSize = static_cast<float>(_createInfo.symbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
 		
 		PixelPerfectRenderTask task{};
-
-		const auto charScale = _createInfo.numberAtlasTexture.resolution / glm::ivec2(10, 1);
-
+		
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)
 			{
 				assert(job.text);
 
 				const auto len = static_cast<uint32_t>(strlen(job.text));
+				const auto s = glm::ivec2(_createInfo.symbolSize) * glm::ivec2(job.scale);
+				const auto spacing = (_createInfo.spacing + job.spacing + _createInfo.symbolSize) * job.scale;
 
 				task.position = job.position;
-				task.scale = charScale;
+				task.scale = s;
 
 				uint32_t lineLength = 0;
 				uint32_t nextLineStart = 0;
@@ -65,8 +65,8 @@ namespace game
 
 						if(i != 0)
 						{
-							task.position.y -= charScale.y;
-							task.position.x = job.position.x - job.spacing - _createInfo.spacing - _createInfo.symbolSize;
+							task.position.y -= _createInfo.symbolSize * job.scale;
+							task.position.x = job.position.x - spacing;
 						}
 					}
 
@@ -97,7 +97,7 @@ namespace game
 						_createInfo.renderTasks->Push(task);
 					}
 
-					task.position.x += charScale.x + job.spacing + _createInfo.spacing;
+					task.position.x += spacing;
 					lineLength++;
 				}
 			}
