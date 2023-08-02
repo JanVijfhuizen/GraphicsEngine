@@ -72,6 +72,9 @@
     <ClCompile Include="Src\Interpreters\PixelPerfectRenderInterpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Tasks\PixelPerfectRenderTask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Shuffle.h">

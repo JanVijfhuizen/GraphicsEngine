@@ -148,6 +148,7 @@
     <ClCompile Include="Src\States\BoardState.cpp" />
     <ClCompile Include="Src\States\GameState.cpp" />
     <ClCompile Include="Src\States\PlayerState.cpp" />
+    <ClCompile Include="Src\Tasks\PixelPerfectRenderTask.cpp" />
     <ClCompile Include="Src\Utils\BoxCollision.cpp" />
     <ClCompile Include="Src\Utils\SubTextureUtils.cpp" />
     <ClCompile Include="Src\Interpreters\MouseInterpreter.cpp" />
