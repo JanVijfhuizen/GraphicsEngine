@@ -25,7 +25,9 @@ namespace game
 	{
 		const float symbolPctSize = static_cast<float>(_createInfo.symbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
 		
-		RenderTask task{};
+		PixelPerfectRenderTask task{};
+
+		const auto charScale = _createInfo.numberAtlasTexture.resolution / glm::ivec2(10, 1);
 
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)
@@ -35,16 +37,7 @@ namespace game
 				const auto len = static_cast<uint32_t>(strlen(job.text));
 
 				task.position = job.position;
-				task.scale = glm::vec2(job.scale);
-				float spacing = job.scale * (1.f + static_cast<float>(job.spacing) / static_cast<float>(_createInfo.symbolSize));
-				float lineSpacing = job.scale * (1.f + static_cast<float>(job.lineSpacing) / static_cast<float>(_createInfo.symbolSize));
-
-				float xOffset = 0;
-				if (job.center)
-				{
-					const auto l = jv::Min<uint32_t>(len, job.lineLength);
-					xOffset = spacing * static_cast<float>(l - 1) * -.5f;
-				}
+				task.scale = charScale;
 
 				uint32_t lineLength = 0;
 				uint32_t nextLineStart = 0;
@@ -69,12 +62,11 @@ namespace game
 						}
 						
 						lineLength = 0;
-						task.position.x = job.position.x + xOffset;
 
 						if(i != 0)
 						{
-							task.position.y += lineSpacing;
-							task.position.x -= spacing;
+							task.position.y -= charScale.y;
+							task.position.x = job.position.x - job.spacing - _createInfo.spacing - _createInfo.symbolSize;
 						}
 					}
 
@@ -95,16 +87,17 @@ namespace game
 						assert(isInteger ? c >= '0' && c <= '9' : isSymbol ? c >= ',' && c <= '/' : c >= 'a' && c <= 'z');
 						const auto position = c - (isInteger ? '0' : isSymbol ? ',' : 'a');
 
-						auto subTexture = isInteger ? _createInfo.numberSubTexture : isSymbol ? _createInfo.symbolSubTexture : _createInfo.alphabetSubTexture;
+						auto subTexture = isInteger ? _createInfo.numberAtlasTexture.subTexture : isSymbol ? 
+							_createInfo.symbolAtlasTexture.subTexture : _createInfo.alphabetAtlasTexture.subTexture;
 						subTexture.lTop.x += symbolPctSize * static_cast<float>(position);
 						subTexture.rBot.x = subTexture.lTop.x + symbolPctSize;
 
 						task.subTexture = subTexture;
 
-						_createInfo.instancedRenderTasks->Push(task);
+						_createInfo.renderTasks->Push(task);
 					}
 
-					task.position.x += spacing;
+					task.position.x += charScale.x + job.spacing + _createInfo.spacing;
 					lineLength++;
 				}
 			}

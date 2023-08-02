@@ -18,7 +18,6 @@ namespace game
 	{
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 10;
-		titleTextTask.center = true;
 		titleTextTask.position.y = -0.75f;
 		titleTextTask.text = "untitled card game";
 		titleTextTask.scale = .12f;
@@ -39,10 +38,8 @@ namespace game
 			}
 
 		TextTask buttonTextTask{};
-		buttonTextTask.center = true;
 		buttonTextTask.position = newGameButtonRenderTask.position;
 		buttonTextTask.text = "new game";
-		buttonTextTask.scale = .06f;
 		info.textTasks.Push(buttonTextTask);
 
 		if (saveDataValid)

@@ -202,7 +202,6 @@ namespace game
 		RenderCards(renderInfo);
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "the bosses for this stage have been revealed.";
 		textTask.lineLength = 20;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -260,7 +259,6 @@ namespace game
 			counters += i == discoverOption;
 
 			TextTask textTask{};
-			textTask.center = true;
 			textTask.text = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
 			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * DISCOVER_LENGTH / 2 + CARD_WIDTH_OFFSET * 2 * i - CARD_WIDTH_OFFSET, -CARD_HEIGHT);
 			textTask.scale = TEXT_BIG_SCALE;
@@ -307,7 +305,6 @@ namespace game
 			discoverOption = selected == discoverOption ? -1 : selected;
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "select the road to take.";
 		textTask.lineLength = 20;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -355,8 +352,7 @@ namespace game
 		{
 			if(boardState.partySize < PARTY_ACTIVE_CAPACITY && info.playerState.partySize < PARTY_CAPACITY)
 			{
-				TextTask textTask{};
-				textTask.center = true;
+				TextTask textTask{};\
 				textTask.text = "you may recruit the last monster defeated.";
 				textTask.lineLength = 20;
 				textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -379,7 +375,6 @@ namespace game
 				info.renderTasks.Push(buttonRenderTask);
 
 				TextTask buttonTextTask{};
-				buttonTextTask.center = true;
 				buttonTextTask.position = buttonRenderTask.position;
 				buttonTextTask.text = "recruit";
 				buttonTextTask.scale = .06f;
@@ -438,7 +433,6 @@ namespace game
 		}
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "combat phase.";
 		textTask.lineLength = 20;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -494,7 +488,6 @@ namespace game
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 		{
 			TextTask textTask{};
-			textTask.center = true;
 			textTask.text = TextInterpreter::IntToConstCharPtr(boardState.enemyTargets[i] + 1, info.frameArena);
 			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * (boardState.enemyMonsterCount - 1) / 2 + CARD_WIDTH_OFFSET * i, -CARD_HEIGHT_OFFSET);
 			textTask.scale = TEXT_MEDIUM_SCALE;
@@ -653,7 +646,6 @@ namespace game
 			discoverOption = choice == discoverOption ? -1 : choice;
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.lineLength = 20;
 		textTask.scale = TEXT_BIG_SCALE;
 		textTask.position = TEXT_CENTER_BOT_POSITION;
@@ -706,7 +698,6 @@ namespace game
 		if (flawSlotAvailable)
 		{
 			TextTask textTask{};
-			textTask.center = true;
 			textTask.lineLength = 20;
 			textTask.scale = TEXT_BIG_SCALE;
 			textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -773,7 +764,6 @@ namespace game
 		const auto& gameState = info.gameState;
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.lineLength = 20;
 		textTask.scale = .06f;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -840,7 +830,6 @@ namespace game
 		LevelIndex& loadLevelIndex)
 	{
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.lineLength = 20;
 		textTask.scale = TEXT_BIG_SCALE;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -861,7 +850,6 @@ namespace game
 			}
 
 		TextTask buttonTextTask{};
-		buttonTextTask.center = true;
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "continue forward";
 		buttonTextTask.scale = TEXT_BIG_SCALE;

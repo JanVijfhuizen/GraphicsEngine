@@ -12,11 +12,6 @@ namespace game
 	void PixelPerfectRenderInterpreter::OnUpdate(const EngineMemory& memory,
 		const jv::LinkedList<jv::Vector<PixelPerfectRenderTask>>& tasks)
 	{
-		uint32_t upscaleMul = PixelPerfectRenderTask::GetUpscaleMultiplier(_createInfo.resolution, _createInfo.simulatedResolution);
-
-		const auto pixelSize = glm::vec2(1) / glm::vec2(_createInfo.resolution.y) * glm::vec2(upscaleMul);
-		const auto lBot = pixelSize * glm::vec2(_createInfo.simulatedResolution) * glm::vec2(-1, 1);
-
 		PixelPerfectRenderTask bgRenderTask{};
 		bgRenderTask.color = glm::vec4(0, 0, 0, 1);
 		bgRenderTask.scale = _createInfo.simulatedResolution;

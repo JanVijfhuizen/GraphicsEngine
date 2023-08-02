@@ -11,11 +11,10 @@ namespace game
 		const auto upscaleMul = GetUpscaleMultiplier(resolution, simulatedResolution);
 		const auto pixelSize = glm::vec2(1) / glm::vec2(resolution) * glm::vec2(static_cast<float>(upscaleMul));
 		const auto lBot = pixelSize * glm::vec2(simulatedResolution) * glm::vec2(-1, 1);
-		const auto rPos = glm::vec2(position.x, resolution.y - position.y) / glm::vec2(upscaleMul);
-		const auto diff = (resolution / glm::ivec2(upscaleMul) - simulatedResolution) / 2;
+		const auto rPos = glm::vec2(position.x, static_cast<float>(resolution.y) - position.y) / glm::vec2(upscaleMul);
+		const auto diff = (resolution / glm::ivec2(static_cast<float>(upscaleMul)) - simulatedResolution) / 2;
 
 		const auto res = glm::ivec2(rPos) - diff;
-		std::cout << res.x << " " << res.y << std::endl;
 		return res;
 	}
 

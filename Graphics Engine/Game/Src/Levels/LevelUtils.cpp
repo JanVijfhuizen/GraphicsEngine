@@ -31,7 +31,6 @@ namespace game
 		ret.selectedMonster = RenderCards(info);
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.scale = CARD_STAT_SIZE * info.scale;
 
 		constexpr float f = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
@@ -90,7 +89,6 @@ namespace game
 
 				TextTask titleTextTask{};
 				titleTextTask.lineLength = 12;
-				titleTextTask.center = true;
 				titleTextTask.position = flawPos;
 				titleTextTask.text = info.flawArr[i]->name;
 				titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
@@ -138,7 +136,6 @@ namespace game
 					{
 						TextTask titleTextTask{};
 						titleTextTask.lineLength = 12;
-						titleTextTask.center = true;
 						titleTextTask.position = artifactPos;
 						titleTextTask.text = artifactCard->name;
 						titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
@@ -158,7 +155,6 @@ namespace game
 		const auto result = RenderCards(info);
 
 		TextTask costTextTask{};
-		costTextTask.center = true;
 		costTextTask.scale = CARD_STAT_SIZE * info.scale;
 
 		for (uint32_t i = 0; i < info.length; ++i)
@@ -225,25 +221,18 @@ namespace game
 
 				TextTask titleTextTask{};
 				titleTextTask.lineLength = 12;
-				titleTextTask.center = true;
 				titleTextTask.position = pos - glm::vec2(0, renderTask.scale.y - CARD_HEIGHT / 5);
 				titleTextTask.text = card->name;
 				titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
-
-				if (info.priority)
-					info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
-				else
-					info.levelUpdateInfo->textTasks.Push(titleTextTask);
+				titleTextTask.priority = info.priority;
+				info.levelUpdateInfo->textTasks.Push(titleTextTask);
 
 				TextTask ruleTextTask = titleTextTask;
 				ruleTextTask.position = pos + glm::vec2(0, renderTask.scale.y - CARD_HEIGHT / 2);
 				ruleTextTask.text = full ? card->ruleText : "...";
 				ruleTextTask.scale = CARD_TEXT_SIZE * info.scale;
-
-				if (info.priority)
-					info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
-				else
-					info.levelUpdateInfo->textTasks.Push(titleTextTask);
+				ruleTextTask.priority = info.priority;
+				info.levelUpdateInfo->textTasks.Push(titleTextTask);
 			}
 		}
 

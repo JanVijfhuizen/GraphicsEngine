@@ -57,7 +57,6 @@ namespace game
 		TaskSystem<DynamicRenderTask>& dynamicRenderTasks;
 		TaskSystem<RenderTask>& priorityRenderTasks;
 		TaskSystem<TextTask>& textTasks;
-		TaskSystem<TextTask>& priorityTextTasks;
 		TaskSystem<PixelPerfectRenderTask>& pixelPerfectRenderTasks;
 	};
 

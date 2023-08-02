@@ -61,7 +61,6 @@ namespace game
 			selected[choice] = !selected[choice];
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "select up to 4 party members.";
 		textTask.position = TEXT_CENTER_TOP_POSITION;
 		textTask.scale = TEXT_BIG_SCALE;

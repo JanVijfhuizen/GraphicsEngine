@@ -31,7 +31,6 @@ namespace game
 	bool NewGameLevel::ModeSelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "choose a mode.";
 		textTask.position = TEXT_CENTER_TOP_POSITION;
 		textTask.scale = TEXT_BIG_SCALE;
@@ -53,7 +52,6 @@ namespace game
 			}
 
 		TextTask buttonTextTask{};
-		buttonTextTask.center = true;
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "standard";
 		buttonTextTask.scale = TEXT_MEDIUM_SCALE;
@@ -125,7 +123,6 @@ namespace game
 			artifactChoice = choice == artifactChoice ? -1 : choice;
 
 		TextTask buttonTextTask{};
-		buttonTextTask.center = true;
 		buttonTextTask.text = "choose your starting cards.";
 		buttonTextTask.position = TEXT_CENTER_TOP_POSITION;
 		buttonTextTask.scale = TEXT_BIG_SCALE;
@@ -134,7 +131,6 @@ namespace game
 		if (monsterChoice != -1 && artifactChoice != -1)
 		{
 			TextTask textTask{};
-			textTask.center = true;
 			textTask.text = "press enter to confirm your choice.";
 			textTask.position = TEXT_CENTER_BOT_POSITION;
 			textTask.scale = TEXT_BIG_SCALE;
@@ -154,7 +150,6 @@ namespace game
 		LevelIndex& loadLevelIndex)
 	{
 		TextTask joinTextTask{};
-		joinTextTask.center = true;
 		joinTextTask.text = "daisy joins you on your adventure.";
 		joinTextTask.position = TEXT_CENTER_TOP_POSITION;
 		joinTextTask.scale = TEXT_BIG_SCALE;
@@ -169,7 +164,6 @@ namespace game
 		RenderCards(renderInfo);
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "press enter to continue.";
 		textTask.scale = TEXT_BIG_SCALE;
 		textTask.position = TEXT_CENTER_BOT_POSITION;
