@@ -1,6 +1,5 @@
 ﻿#include "pch.h"
 #include "JLib/Curve.h"
-
 #include "JLib/Math.h"
 
 namespace je

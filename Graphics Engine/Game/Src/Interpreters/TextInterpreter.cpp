@@ -1,8 +1,6 @@
 ﻿#include "pch_game.h"
 #include "Interpreters/TextInterpreter.h"
-
-#include "JLib/Math.h"
-#include "Tasks/RenderTask.h"
+#include "JLib/Curve.h"
 
 namespace game
 {
@@ -33,7 +31,7 @@ namespace game
 				assert(job.text);
 
 				const auto len = static_cast<uint32_t>(strlen(job.text));
-				const auto s = glm::ivec2(_createInfo.symbolSize) * glm::ivec2(job.scale);
+				const auto s = glm::ivec2(static_cast<int32_t>(_createInfo.symbolSize)) * glm::ivec2(static_cast<int32_t>(job.scale));
 				const auto spacing = (_createInfo.spacing + job.spacing + _createInfo.symbolSize) * job.scale;
 
 				task.position = job.position;
@@ -67,12 +65,12 @@ namespace game
 						lineLength = 0;
 						if(job.center)
 							xStart = (nextLineStart - i) * (_createInfo.symbolSize + _createInfo.spacing)* job.scale / 2;
-						task.position.x = job.position.x - xStart;
+						task.position.x = static_cast<int32_t>(job.position.x - xStart);
 
 						if(i != 0)
 						{
 							task.position.y -= _createInfo.symbolSize * job.scale;
-							task.position.x -= spacing;
+							task.position.x -= static_cast<int32_t>(spacing);
 						}
 					}
 
@@ -100,10 +98,16 @@ namespace game
 
 						task.subTexture = subTexture;
 
-						_createInfo.renderTasks->Push(task);
+						float yMod = 0;
+						if(job.bounceCurve)
+							yMod = job.bounceCurve->Evaluate(job.lerp);
+
+						PixelPerfectRenderTask cpyTask = task;
+						cpyTask.position.y += static_cast<int32_t>(yMod * static_cast<float>(job.bounceMul));
+						_createInfo.renderTasks->Push(cpyTask);
 					}
 
-					task.position.x += spacing;
+					task.position.x += static_cast<int32_t>(spacing);
 					lineLength++;
 				}
 			}

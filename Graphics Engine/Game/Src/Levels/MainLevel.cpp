@@ -891,6 +891,8 @@ namespace game
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
+		if (!Level::Update(info, loadLevelIndex))
+			return false;
 		return stateMachine.Update(info, loadLevelIndex);
 	}
 }

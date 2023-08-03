@@ -1,5 +1,7 @@
 ﻿#include "pch_game.h"
 #include "CardGame.h"
+
+#include <chrono>
 #include <fstream>
 #include <stb_image.h>
 #include <Engine/Engine.h>
@@ -81,6 +83,9 @@ namespace game
 		jv::Array<FlawCard> flaws;
 		jv::Array<EventCard> events;
 
+		std::chrono::high_resolution_clock timer{};
+		std::chrono::time_point<std::chrono::steady_clock> time{};
+
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
@@ -137,6 +142,9 @@ namespace game
 			levelLoading = false;
 		}
 
+		const auto currentTime = timer.now();
+		const auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - time).count();
+
 		const LevelUpdateInfo info
 		{
 			levelArena,
@@ -159,9 +167,11 @@ namespace game
 			*dynamicRenderTasks,
 			*priorityRenderTasks,
 			*textTasks,
-			*pixelPerfectRenderTasks
+			*pixelPerfectRenderTasks,
+			static_cast<float>(deltaTime) / 1e3f
 		};
 
+		time = currentTime;
 		auto loadLevelIndex = levelIndex;
 		const auto level = levels[static_cast<uint32_t>(levelIndex)];
 
@@ -305,6 +315,8 @@ namespace game
 			outCardGame->levels[2] = outCardGame->arena.New<PartySelectLevel>();
 			outCardGame->levels[3] = outCardGame->arena.New<MainLevel>();
 		}
+
+		outCardGame->time = outCardGame->timer.now();
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)

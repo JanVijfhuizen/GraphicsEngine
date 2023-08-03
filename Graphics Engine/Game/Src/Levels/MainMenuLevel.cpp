@@ -16,6 +16,8 @@ namespace game
 
 	bool MainMenuLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
+		if (!Level::Update(info, loadLevelIndex))
+			return false;
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 10;
 		titleTextTask.position.x = 9;

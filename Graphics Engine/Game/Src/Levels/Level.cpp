@@ -10,6 +10,13 @@ namespace game
 	void Level::Create(const LevelCreateInfo& info)
 	{
 		_lMousePressed = false;
+		_timeSinceOpened = 0;
+	}
+
+	bool Level::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	{
+		_timeSinceOpened += info.deltaTime;
+		return true;
 	}
 
 	void Level::PostUpdate(const LevelUpdateInfo& info)

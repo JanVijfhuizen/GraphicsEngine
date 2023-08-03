@@ -1,5 +1,10 @@
 #pragma once
 
+namespace je
+{
+	struct Curve;
+}
+
 namespace game
 {
 	struct TextTask final
@@ -13,5 +18,8 @@ namespace game
 		bool drawDotsOnMaxLengthReached = true;
 		bool center = false;
 		bool priority = false;
+		je::Curve* bounceCurve = nullptr;
+		uint32_t bounceMul = 3;
+		float lerp = 1;
 	};
 }

@@ -19,6 +19,8 @@ namespace game
 
 	bool PartySelectLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
+		if (!Level::Update(info, loadLevelIndex))
+			return false;
 		const auto& playerState = info.playerState;
 
 		Card* cards[PARTY_CAPACITY]{};
