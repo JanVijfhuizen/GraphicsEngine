@@ -3,6 +3,7 @@
 
 #include "CardGame.h"
 #include "GE/AtlasGenerator.h"
+#include "JLib/Curve.h"
 #include "States/InputState.h"
 #include "Utils/BoxCollision.h"
 
@@ -15,6 +16,8 @@ namespace game
 		selectedButton = false;
 		selectedNewGame = false;
 		selectedContinue = false;
+		loading = false;
+		timeSinceLoading = 0;
 	}
 
 	bool MainMenuLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -22,9 +25,32 @@ namespace game
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
 
+		int32_t xMod = 0;
+		if(loading)
+		{
+			if (timeSinceLoading >= .75f)
+			{
+				if (selectedNewGame)
+					loadLevelIndex = LevelIndex::newGame;
+				else if (selectedContinue)
+					loadLevelIndex = LevelIndex::partySelect;
+				return true;
+			}
+
+			const auto loadCurve = je::CreateCurveDecelerate();
+			xMod = static_cast<int32_t>((1.f - loadCurve.Evaluate(1.f - timeSinceLoading / .75f)) * SIMULATED_RESOLUTION.x);
+			timeSinceLoading += info.deltaTime;
+
+			PixelPerfectRenderTask loadTask{};
+			loadTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
+			loadTask.scale = { 3, SIMULATED_RESOLUTION.y };
+			loadTask.position.x = xMod - 3;
+			info.pixelPerfectRenderTasks.Push(loadTask);
+		}
+
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 10;
-		titleTextTask.position.x = 9;
+		titleTextTask.position.x = 9 + xMod;
 		titleTextTask.position.y = SIMULATED_RESOLUTION.y - 36;
 		titleTextTask.text = "untitled card game";
 		titleTextTask.scale = 2;
@@ -35,20 +61,20 @@ namespace game
 
 		PixelPerfectRenderTask newGameButtonRenderTask{};
 		newGameButtonRenderTask.position.y = titleTextTask.position.y - 36;
+		newGameButtonRenderTask.position.x = xMod;
 		newGameButtonRenderTask.scale = buttonTexture.resolution;
 		newGameButtonRenderTask.subTexture = buttonTexture.subTexture;
 
 		TextTask buttonTextTask{};
-		newGameButtonRenderTask.position.y = titleTextTask.position.y - 36;
 		buttonTextTask.position = newGameButtonRenderTask.position;
-		buttonTextTask.position.x = 9;
+		buttonTextTask.position.x = 9 + xMod;
 		buttonTextTask.text = "new game";
 		buttonTextTask.lifetime = GetTime();
 
 		const bool released = info.inputState.lMouse == InputState::released;
 
 		{
-			const bool collided = CollidesShapeInt(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos);
+			const bool collided = loading ? false : CollidesShapeInt(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos);
 			if(collided || selectedNewGame)
 			{
 				buttonTextTask.loop = true;
@@ -62,7 +88,10 @@ namespace game
 					selectedButton = true;
 				}
 				else if (released && selectedNewGame)
-					loadLevelIndex = LevelIndex::newGame;
+				{
+					loading = true;
+					timeSinceLoading = 0;
+				}
 			}
 		}
 
@@ -73,16 +102,17 @@ namespace game
 		{
 			PixelPerfectRenderTask continueButtonRenderTask{};
 			continueButtonRenderTask.position.y = newGameButtonRenderTask.position.y - 18;
+			continueButtonRenderTask.position.x = xMod;
 			continueButtonRenderTask.scale = buttonTexture.resolution;
 			continueButtonRenderTask.subTexture = buttonTexture.subTexture;
 
 			buttonTextTask.position = continueButtonRenderTask.position;
-			buttonTextTask.position.x = 9;
+			buttonTextTask.position.x = 9 + xMod;
 			buttonTextTask.text = "continue";
 			buttonTextTask.lifetime = GetTime();
 
 			{
-				const bool collided = CollidesShapeInt(continueButtonRenderTask.position, continueButtonRenderTask.scale, info.inputState.mousePos);
+				const bool collided = loading ? false : CollidesShapeInt(continueButtonRenderTask.position, continueButtonRenderTask.scale, info.inputState.mousePos);
 				if (collided || selectedContinue)
 				{
 					continueButtonRenderTask.color = glm::vec4(1, 0, 0, 1);
@@ -95,8 +125,11 @@ namespace game
 						selectedContinue = true;
 						selectedButton = true;
 					}
-					else if(released && selectedContinue)
-						loadLevelIndex = LevelIndex::partySelect;
+					else if (released && selectedContinue)
+					{
+						loading = true;
+						timeSinceLoading = 0;
+					}
 				}
 			}
 
@@ -104,7 +137,7 @@ namespace game
 			info.pixelPerfectRenderTasks.Push(continueButtonRenderTask);
 		}
 
-		if(released)
+		if(released && !loading)
 		{
 			selectedButton = false;
 			selectedNewGame = false;
