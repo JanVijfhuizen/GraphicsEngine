@@ -12,12 +12,16 @@ namespace game
 	{
 		Level::Create(info);
 		saveDataValid = TryLoadSaveData(info.playerState);
+		selectedButton = false;
+		selectedNewGame = false;
+		selectedContinue = false;
 	}
 
 	bool MainMenuLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
+
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = 10;
 		titleTextTask.position.x = 9;
@@ -33,7 +37,6 @@ namespace game
 		newGameButtonRenderTask.position.y = titleTextTask.position.y - 36;
 		newGameButtonRenderTask.scale = buttonTexture.resolution;
 		newGameButtonRenderTask.subTexture = buttonTexture.subTexture;
-		info.pixelPerfectRenderTasks.Push(newGameButtonRenderTask);
 
 		TextTask buttonTextTask{};
 		newGameButtonRenderTask.position.y = titleTextTask.position.y - 36;
@@ -42,14 +45,29 @@ namespace game
 		buttonTextTask.text = "new game";
 		buttonTextTask.lifetime = GetTime();
 
-		if (CollidesShapeInt(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
+		const bool released = info.inputState.lMouse == InputState::released;
+
 		{
-			buttonTextTask.loop = true;
-			if (info.inputState.lMouse == InputState::pressed)
-				loadLevelIndex = LevelIndex::newGame;
+			const bool collided = CollidesShapeInt(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos);
+			if(collided || selectedNewGame)
+			{
+				buttonTextTask.loop = true;
+				newGameButtonRenderTask.color = glm::vec4(1, 0, 0, 1);
+			}
+			if (collided)
+			{
+				if (info.inputState.lMouse == InputState::pressed)
+				{
+					selectedNewGame = true;
+					selectedButton = true;
+				}
+				else if (released && selectedNewGame)
+					loadLevelIndex = LevelIndex::newGame;
+			}
 		}
 
 		info.textTasks.Push(buttonTextTask);
+		info.pixelPerfectRenderTasks.Push(newGameButtonRenderTask);
 
 		if (saveDataValid)
 		{
@@ -57,21 +75,40 @@ namespace game
 			continueButtonRenderTask.position.y = newGameButtonRenderTask.position.y - 18;
 			continueButtonRenderTask.scale = buttonTexture.resolution;
 			continueButtonRenderTask.subTexture = buttonTexture.subTexture;
-			info.pixelPerfectRenderTasks.Push(continueButtonRenderTask);
 
 			buttonTextTask.position = continueButtonRenderTask.position;
 			buttonTextTask.position.x = 9;
 			buttonTextTask.text = "continue";
 			buttonTextTask.lifetime = GetTime();
 
-			if (CollidesShapeInt(continueButtonRenderTask.position, continueButtonRenderTask.scale, info.inputState.mousePos))
 			{
-				buttonTextTask.loop = true;
-				if (info.inputState.lMouse == InputState::pressed)
-					loadLevelIndex = LevelIndex::partySelect;
+				const bool collided = CollidesShapeInt(continueButtonRenderTask.position, continueButtonRenderTask.scale, info.inputState.mousePos);
+				if (collided || selectedContinue)
+				{
+					continueButtonRenderTask.color = glm::vec4(1, 0, 0, 1);
+					buttonTextTask.loop = true;
+				}
+				if(collided)
+				{
+					if (info.inputState.lMouse == InputState::pressed)
+					{
+						selectedContinue = true;
+						selectedButton = true;
+					}
+					else if(released && selectedContinue)
+						loadLevelIndex = LevelIndex::partySelect;
+				}
 			}
 
 			info.textTasks.Push(buttonTextTask);
+			info.pixelPerfectRenderTasks.Push(continueButtonRenderTask);
+		}
+
+		if(released)
+		{
+			selectedButton = false;
+			selectedNewGame = false;
+			selectedContinue = false;
 		}
 
 		return true;

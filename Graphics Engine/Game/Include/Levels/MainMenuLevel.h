@@ -6,6 +6,9 @@ namespace game
 	struct MainMenuLevel final : Level
 	{
 		bool saveDataValid;
+		bool selectedButton;
+		bool selectedNewGame;
+		bool selectedContinue;
 
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
