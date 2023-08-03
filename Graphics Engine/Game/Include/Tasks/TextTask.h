@@ -14,5 +14,6 @@ namespace game
 		bool priority = false;
 
 		float lifetime = -1;
+		bool loop = false;
 	};
 }

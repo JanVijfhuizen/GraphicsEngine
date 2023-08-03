@@ -41,8 +41,6 @@ namespace game
 				if(fadeIn)
 					maxLen = jv::Min<uint32_t>(len, static_cast<uint32_t>(job.lifetime * _createInfo.fadeInSpeed) + 1);
 
-				
-
 				const auto s = glm::ivec2(static_cast<int32_t>(_createInfo.symbolSize)) * glm::ivec2(static_cast<int32_t>(job.scale));
 				const auto spacing = (_createInfo.spacing + job.spacing + _createInfo.symbolSize) * job.scale;
 
@@ -109,8 +107,12 @@ namespace game
 
 						float yMod = 0;
 
-						const float timeDiff = job.lifetime * _createInfo.fadeInSpeed - static_cast<float>(i);
-						if(fadeIn && timeDiff > 0 && timeDiff < _createInfo.bounceDuration)
+						float lifeTime = job.lifetime;
+						if (job.loop)
+							lifeTime = fmodf(lifeTime, (static_cast<float>(len) + _createInfo.bounceDuration) / _createInfo.fadeInSpeed);
+
+						const float timeDiff = lifeTime * _createInfo.fadeInSpeed - static_cast<float>(i);
+						if(fadeIn || job.loop && timeDiff > 0 && timeDiff < _createInfo.bounceDuration)
 							yMod = DoubleCurveEvaluate(timeDiff / _createInfo.bounceDuration, bounceUpCurve, bounceDownCurve);
 
 						PixelPerfectRenderTask cpyTask = task;

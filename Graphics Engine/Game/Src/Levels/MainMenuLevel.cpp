@@ -35,18 +35,20 @@ namespace game
 		newGameButtonRenderTask.subTexture = buttonTexture.subTexture;
 		info.pixelPerfectRenderTasks.Push(newGameButtonRenderTask);
 
-		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShapeInt(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
-			{
-				loadLevelIndex = LevelIndex::newGame;
-			}
-
 		TextTask buttonTextTask{};
 		newGameButtonRenderTask.position.y = titleTextTask.position.y - 36;
 		buttonTextTask.position = newGameButtonRenderTask.position;
 		buttonTextTask.position.x = 9;
 		buttonTextTask.text = "new game";
 		buttonTextTask.lifetime = GetTime();
+
+		if (CollidesShapeInt(newGameButtonRenderTask.position, newGameButtonRenderTask.scale, info.inputState.mousePos))
+		{
+			buttonTextTask.loop = true;
+			if (info.inputState.lMouse == InputState::pressed)
+				loadLevelIndex = LevelIndex::newGame;
+		}
+
 		info.textTasks.Push(buttonTextTask);
 
 		if (saveDataValid)
@@ -61,13 +63,15 @@ namespace game
 			buttonTextTask.position.x = 9;
 			buttonTextTask.text = "continue";
 			buttonTextTask.lifetime = GetTime();
-			info.textTasks.Push(buttonTextTask);
 
-			if (info.inputState.lMouse == InputState::pressed)
-				if (CollidesShapeInt(continueButtonRenderTask.position, continueButtonRenderTask.scale, info.inputState.mousePos))
-				{
+			if (CollidesShapeInt(continueButtonRenderTask.position, continueButtonRenderTask.scale, info.inputState.mousePos))
+			{
+				buttonTextTask.loop = true;
+				if (info.inputState.lMouse == InputState::pressed)
 					loadLevelIndex = LevelIndex::partySelect;
-				}
+			}
+
+			info.textTasks.Push(buttonTextTask);
 		}
 
 		return true;

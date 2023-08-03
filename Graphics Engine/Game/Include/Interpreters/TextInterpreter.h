@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "Engine/Engine.h"
 #include "GE/AtlasGenerator.h"
-#include "GE/SubTexture.h"
 #include "Tasks/PixelPerfectRenderTask.h"
 #include "Tasks/TextTask.h"
 
