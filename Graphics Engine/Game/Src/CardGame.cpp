@@ -143,8 +143,8 @@ namespace game
 		}
 
 		const auto currentTime = timer.now();
-		const auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - time).count();
-
+		const auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - time).count();
+		
 		const LevelUpdateInfo info
 		{
 			levelArena,

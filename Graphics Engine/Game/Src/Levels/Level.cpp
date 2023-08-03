@@ -47,4 +47,9 @@ namespace game
 		renderTask.subTexture = _lMousePressed ? subTextures[1] : subTextures[0];
 		info.pixelPerfectRenderTasks.Push(renderTask);
 	}
+
+	float Level::GetTime() const
+	{
+		return _timeSinceOpened;
+	}
 }

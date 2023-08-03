@@ -19,6 +19,8 @@ namespace game
 		jv::ge::AtlasTexture symbolAtlasTexture;
 		uint32_t symbolSize = 9;
 		int32_t spacing = -2;
+		float fadeInSpeed = 20;
+		float bounceDuration = 4;
 	};
 
 	class TextInterpreter final : public TaskInterpreter<TextTask, TextInterpreterCreateInfo>

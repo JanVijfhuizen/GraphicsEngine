@@ -67,6 +67,8 @@ namespace game
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		virtual void PostUpdate(const LevelUpdateInfo& info);
 
+		[[nodiscard]] float GetTime() const;
+
 	private:
 		bool _lMousePressed = false;
 		float _timeSinceOpened;

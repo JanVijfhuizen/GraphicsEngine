@@ -24,6 +24,7 @@ namespace game
 		titleTextTask.position.y = SIMULATED_RESOLUTION.y - 36;
 		titleTextTask.text = "untitled card game";
 		titleTextTask.scale = 2;
+		titleTextTask.lifetime = GetTime();
 		info.textTasks.Push(titleTextTask);
 		
 		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)];
@@ -45,6 +46,7 @@ namespace game
 		buttonTextTask.position = newGameButtonRenderTask.position;
 		buttonTextTask.position.x = 9;
 		buttonTextTask.text = "new game";
+		buttonTextTask.lifetime = GetTime();
 		info.textTasks.Push(buttonTextTask);
 
 		if (saveDataValid)
@@ -58,6 +60,7 @@ namespace game
 			buttonTextTask.position = continueButtonRenderTask.position;
 			buttonTextTask.position.x = 9;
 			buttonTextTask.text = "continue";
+			buttonTextTask.lifetime = GetTime();
 			info.textTasks.Push(buttonTextTask);
 
 			if (info.inputState.lMouse == InputState::pressed)

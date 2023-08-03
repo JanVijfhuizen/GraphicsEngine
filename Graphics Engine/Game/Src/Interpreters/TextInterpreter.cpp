@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Curve.h"
+#include "JLib/Math.h"
 
 namespace game
 {
@@ -24,13 +25,24 @@ namespace game
 		const float symbolPctSize = static_cast<float>(_createInfo.symbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
 		
 		PixelPerfectRenderTask task{};
+
+		const auto bounceUpCurve = je::CreateCurveOvershooting();
+		const auto bounceDownCurve = je::CreateCurveDecelerate();
 		
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)
 			{
 				assert(job.text);
-
+				
 				const auto len = static_cast<uint32_t>(strlen(job.text));
+				auto maxLen = job.maxLength == UINT32_MAX ? len : job.maxLength;
+
+				const bool fadeIn = job.lifetime > 0 && job.lifetime < _createInfo.fadeInSpeed* static_cast<float>(len);
+				if(fadeIn)
+					maxLen = jv::Min<uint32_t>(len, static_cast<uint32_t>(job.lifetime * _createInfo.fadeInSpeed) + 1);
+
+				
+
 				const auto s = glm::ivec2(static_cast<int32_t>(_createInfo.symbolSize)) * glm::ivec2(static_cast<int32_t>(job.scale));
 				const auto spacing = (_createInfo.spacing + job.spacing + _createInfo.symbolSize) * job.scale;
 
@@ -40,9 +52,12 @@ namespace game
 				uint32_t lineLength = 0;
 				uint32_t nextLineStart = 0;
 				uint32_t xStart = 0;
-
+				
 				for (uint32_t i = 0; i < len; ++i)
 				{
+					if (i == maxLen)
+						break;
+
 					if (nextLineStart == i)
 					{
 						uint32_t previousBreak = i;
@@ -69,18 +84,12 @@ namespace game
 
 						if(i != 0)
 						{
-							task.position.y -= _createInfo.symbolSize * job.scale;
+							task.position.y -= static_cast<int32_t>(_createInfo.symbolSize * job.scale);
 							task.position.x -= static_cast<int32_t>(spacing);
 						}
 					}
 
 					auto c = job.text[i];
-					if (i >= job.maxLength)
-					{
-						c = '.';
-						if (!job.drawDotsOnMaxLengthReached || i >= job.maxLength + 3)
-							break;
-					}
 
 					if (c != ' ')
 					{
@@ -99,11 +108,13 @@ namespace game
 						task.subTexture = subTexture;
 
 						float yMod = 0;
-						if(job.bounceCurve)
-							yMod = job.bounceCurve->Evaluate(job.lerp);
+
+						const float timeDiff = job.lifetime * _createInfo.fadeInSpeed - static_cast<float>(i);
+						if(fadeIn && timeDiff > 0 && timeDiff < _createInfo.bounceDuration)
+							yMod = DoubleCurveEvaluate(timeDiff / _createInfo.bounceDuration, bounceUpCurve, bounceDownCurve);
 
 						PixelPerfectRenderTask cpyTask = task;
-						cpyTask.position.y += static_cast<int32_t>(yMod * static_cast<float>(job.bounceMul));
+						cpyTask.position.y += static_cast<int32_t>(yMod * 3);
 						_createInfo.renderTasks->Push(cpyTask);
 					}
 
