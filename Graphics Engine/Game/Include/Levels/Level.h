@@ -66,12 +66,19 @@ namespace game
 		virtual void Create(const LevelCreateInfo& info);
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		virtual void PostUpdate(const LevelUpdateInfo& info);
-		
-		[[nodiscard]] static bool DrawButton(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text, float lifeTime, bool reverse);
+
+		[[nodiscard]] void DrawHeader(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text) const;
+		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text) const;
 
 		[[nodiscard]] float GetTime() const;
+		[[nodiscard]] bool GetIsLoading() const;
+		void Load(LevelIndex index);
 
 	private:
+		const float _LOAD_DURATION = 1;
+		bool _loading;
+		float _timeSinceLoading;
+		LevelIndex _loadingLevelIndex;
 		bool _lMousePressed = false;
 		float _timeSinceOpened;
 	};

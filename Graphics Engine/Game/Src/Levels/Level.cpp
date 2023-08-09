@@ -12,10 +12,21 @@ namespace game
 	{
 		_lMousePressed = false;
 		_timeSinceOpened = 0;
+		_loading = false;
 	}
 
 	bool Level::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
+		if(_loading)
+		{
+			_timeSinceLoading += info.deltaTime;
+			if (_timeSinceLoading > _LOAD_DURATION)
+			{
+				loadLevelIndex = _loadingLevelIndex;
+				return true;
+			}
+		}
+
 		_timeSinceOpened += info.deltaTime;
 		return true;
 	}
@@ -49,29 +60,72 @@ namespace game
 		info.pixelPerfectRenderTasks.Push(renderTask);
 	}
 
+	void Level::DrawHeader(const LevelUpdateInfo& info, 
+		const glm::ivec2 origin, const char* text) const
+	{
+		uint32_t textMaxLen = -1;
+		if(_loading)
+		{
+			if (_timeSinceLoading > _LOAD_DURATION)
+				return;
+			const float lerp = _timeSinceLoading / _LOAD_DURATION;
+			const auto len = static_cast<uint32_t>(strlen(text));
+			textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
+		}
+
+		TextTask titleTextTask{};
+		titleTextTask.lineLength = 10;
+		titleTextTask.position = origin;
+		titleTextTask.text = text;
+		titleTextTask.scale = 2;
+		titleTextTask.lifetime = _loading ? 1e2f : GetTime();
+		titleTextTask.maxLength = textMaxLen;
+		info.textTasks.Push(titleTextTask);
+	}
+
 	bool Level::DrawButton(const LevelUpdateInfo& info, 
-		const glm::ivec2 origin, const char* text, 
-		const float lifeTime, const bool reverse)
+		const glm::ivec2 origin, const char* text) const
 	{
 		constexpr uint32_t BUTTON_ANIM_LENGTH = 6;
+		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
+
 		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)];
 		jv::ge::SubTexture buttonAnim[BUTTON_ANIM_LENGTH];
 		Divide(buttonTexture.subTexture, buttonAnim, BUTTON_ANIM_LENGTH);
 
+		uint32_t buttonAnimIndex = _loading ? 0 : BUTTON_ANIM_LENGTH - 1;
+		uint32_t textMaxLen = -1;
+
+		const float lifeTime = _loading ? _timeSinceLoading : GetTime();
+		if (lifeTime <= BUTTON_SPAWN_ANIM_DURATION)
+		{
+			const float lerp = lifeTime / BUTTON_SPAWN_ANIM_DURATION;
+			buttonAnimIndex = static_cast<uint32_t>(lerp * BUTTON_ANIM_LENGTH);
+			if (_loading)
+			{
+				buttonAnimIndex = BUTTON_ANIM_LENGTH - buttonAnimIndex - 1;
+				const auto len = static_cast<uint32_t>(strlen(text));
+				textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
+			}
+		}
+		else if (_loading)
+			textMaxLen = 0;
+
 		PixelPerfectRenderTask buttonRenderTask{};
 		buttonRenderTask.position = origin;
 		buttonRenderTask.scale = buttonTexture.resolution / glm::ivec2(BUTTON_ANIM_LENGTH, 1);
-		buttonRenderTask.subTexture = buttonAnim[5];
+		buttonRenderTask.subTexture = buttonAnim[buttonAnimIndex];
 
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.position.x += 5;
 		buttonTextTask.text = text;
-		buttonTextTask.lifetime = lifeTime;
+		buttonTextTask.lifetime = _loading ? 1e2f : lifeTime;
+		buttonTextTask.maxLength = textMaxLen;
 
 		const bool released = info.inputState.lMouse == InputState::released;
 		bool pressed = false;
-		const bool collided = CollidesShapeInt(origin, buttonRenderTask.scale, info.inputState.mousePos);
+		const bool collided = _loading ? false : CollidesShapeInt(origin, buttonRenderTask.scale, info.inputState.mousePos);
 		if (collided)
 		{
 			buttonTextTask.loop = true;
@@ -88,5 +142,17 @@ namespace game
 	float Level::GetTime() const
 	{
 		return _timeSinceOpened;
+	}
+
+	bool Level::GetIsLoading() const
+	{
+		return _loading;
+	}
+
+	void Level::Load(const LevelIndex index)
+	{
+		_loading = true;
+		_loadingLevelIndex = index;
+		_timeSinceLoading = 0;
 	}
 }

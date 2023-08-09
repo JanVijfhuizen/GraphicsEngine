@@ -35,11 +35,11 @@ namespace game
 				assert(job.text);
 				
 				const auto len = static_cast<uint32_t>(strlen(job.text));
-				auto maxLen = job.maxLength == UINT32_MAX ? len : job.maxLength;
+				auto maxLen = job.maxLength == -1 ? len : job.maxLength;
 
-				const bool fadeIn = job.lifetime > 0 && job.lifetime < _createInfo.fadeInSpeed* static_cast<float>(len);
+				const bool fadeIn = job.lifetime > 0 && job.lifetime < _createInfo.fadeInSpeed * static_cast<float>(len);
 				if(fadeIn)
-					maxLen = jv::Min<uint32_t>(len, static_cast<uint32_t>(job.lifetime * _createInfo.fadeInSpeed) + 1);
+					maxLen = jv::Min<uint32_t>(maxLen, static_cast<uint32_t>(job.lifetime * _createInfo.fadeInSpeed) + 1);
 
 				const auto s = glm::ivec2(static_cast<int32_t>(_createInfo.symbolSize)) * glm::ivec2(static_cast<int32_t>(job.scale));
 				const auto spacing = (_createInfo.spacing + job.spacing + _createInfo.symbolSize) * job.scale;
@@ -116,7 +116,7 @@ namespace game
 							yMod = DoubleCurveEvaluate(timeDiff / _createInfo.bounceDuration, bounceUpCurve, bounceDownCurve);
 
 						PixelPerfectRenderTask cpyTask = task;
-						cpyTask.position.y += static_cast<int32_t>(yMod * 3);
+						cpyTask.position.y += static_cast<int32_t>(yMod * _createInfo.bounceHeight);
 						_createInfo.renderTasks->Push(cpyTask);
 					}
 
