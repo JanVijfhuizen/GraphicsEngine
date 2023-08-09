@@ -3,6 +3,7 @@
 
 #include "GE/AtlasGenerator.h"
 #include "States/InputState.h"
+#include "Utils/BoxCollision.h"
 #include "Utils/SubTextureUtils.h"
 
 namespace game
@@ -46,6 +47,42 @@ namespace game
 		renderTask.priority = true;
 		renderTask.subTexture = _lMousePressed ? subTextures[1] : subTextures[0];
 		info.pixelPerfectRenderTasks.Push(renderTask);
+	}
+
+	bool Level::DrawButton(const LevelUpdateInfo& info, 
+		const glm::ivec2 origin, const char* text, 
+		const float lifeTime, const bool reverse)
+	{
+		constexpr uint32_t BUTTON_ANIM_LENGTH = 6;
+		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)];
+		jv::ge::SubTexture buttonAnim[BUTTON_ANIM_LENGTH];
+		Divide(buttonTexture.subTexture, buttonAnim, BUTTON_ANIM_LENGTH);
+
+		PixelPerfectRenderTask buttonRenderTask{};
+		buttonRenderTask.position = origin;
+		buttonRenderTask.scale = buttonTexture.resolution / glm::ivec2(BUTTON_ANIM_LENGTH, 1);
+		buttonRenderTask.subTexture = buttonAnim[5];
+
+		TextTask buttonTextTask{};
+		buttonTextTask.position = buttonRenderTask.position;
+		buttonTextTask.position.x += 5;
+		buttonTextTask.text = text;
+		buttonTextTask.lifetime = lifeTime;
+
+		const bool released = info.inputState.lMouse == InputState::released;
+		bool pressed = false;
+		const bool collided = CollidesShapeInt(origin, buttonRenderTask.scale, info.inputState.mousePos);
+		if (collided)
+		{
+			buttonTextTask.loop = true;
+			buttonRenderTask.color = glm::vec4(1, 0, 0, 1);
+		}
+		if (collided && released)
+			pressed = true;
+
+		info.textTasks.Push(buttonTextTask);
+		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
+		return pressed;
 	}
 
 	float Level::GetTime() const

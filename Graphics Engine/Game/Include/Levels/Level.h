@@ -66,6 +66,8 @@ namespace game
 		virtual void Create(const LevelCreateInfo& info);
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		virtual void PostUpdate(const LevelUpdateInfo& info);
+		
+		[[nodiscard]] static bool DrawButton(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text, float lifeTime, bool reverse);
 
 		[[nodiscard]] float GetTime() const;
 

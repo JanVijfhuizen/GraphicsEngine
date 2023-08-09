@@ -6,7 +6,6 @@ namespace game
 	struct MainMenuLevel final : Level
 	{
 		bool saveDataValid;
-		bool selectedButton;
 		bool selectedNewGame;
 		bool selectedContinue;
 		bool loading;
