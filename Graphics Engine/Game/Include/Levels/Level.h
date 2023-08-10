@@ -70,6 +70,7 @@ namespace game
 			bool center = false;
 			bool overflow = false;
 			uint32_t scale = 2;
+			float overrideLifeTime = -1;
 		};
 
 		struct ButtonDrawInfo final
@@ -99,10 +100,11 @@ namespace game
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		virtual void PostUpdate(const LevelUpdateInfo& info);
 
-		[[nodiscard]] void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
+		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
 		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
 		[[nodiscard]] static uint32_t DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo);
 		[[nodiscard]] static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
+		static void DrawFullCard(const LevelUpdateInfo& info, Card* card);
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;
@@ -113,7 +115,6 @@ namespace game
 		bool _loading;
 		float _timeSinceLoading;
 		LevelIndex _loadingLevelIndex;
-		bool _lMousePressed = false;
 		float _timeSinceOpened;
 	};
 }

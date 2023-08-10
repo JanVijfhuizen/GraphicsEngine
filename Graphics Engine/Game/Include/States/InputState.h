@@ -4,11 +4,13 @@ namespace game
 {
 	struct InputState final
 	{
-		enum State
+		struct State
 		{
-			idle,
-			pressed,
-			released
+			bool pressed = false;
+			bool change = false;
+
+			[[nodiscard]] bool ReleaseEvent() const;
+			[[nodiscard]] bool PressEvent() const;
 		};
 
 		glm::ivec2 mousePos{};
@@ -18,4 +20,14 @@ namespace game
 		float scroll = 0;
 		State enter{};
 	};
+
+	inline bool InputState::State::ReleaseEvent() const
+	{
+		return !pressed && change;
+	}
+
+	inline bool InputState::State::PressEvent() const
+	{
+		return pressed && change;
+	}
 }

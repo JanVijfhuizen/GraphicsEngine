@@ -66,6 +66,10 @@ namespace game
 
 	bool NewGameLevel::PartySelectState::Create(State& state, const LevelCreateInfo& info)
 	{
+		monsterChoice = -1;
+		artifactChoice = -1;
+		timeSinceFirstChoicesMade = -1;
+
 		uint32_t count;
 		GetDeck(nullptr, &count, info.monsters);
 		monsterDeck = jv::CreateVector<uint32_t>(info.arena, count);
@@ -98,9 +102,23 @@ namespace game
 		headerDrawInfo.overflow = true;
 		level->DrawHeader(info, headerDrawInfo);
 
-		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, 64 };
-		headerDrawInfo.text = "press enter to confirm your choice.";
-		level->DrawHeader(info, headerDrawInfo);
+		if (monsterChoice != -1 && artifactChoice != -1)
+		{
+			if (timeSinceFirstChoicesMade < 0)
+				timeSinceFirstChoicesMade = level->GetTime();
+
+			headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, 64 };
+			headerDrawInfo.text = "press enter to confirm your choice.";
+			headerDrawInfo.overrideLifeTime = level->GetTime() - timeSinceFirstChoicesMade;
+			level->DrawHeader(info, headerDrawInfo);
+
+			if (info.inputState.enter.PressEvent())
+			{
+				state.monsterId = monsterChoice;
+				state.artifactId = artifactChoice;
+				stateIndex = 2;
+			}
+		}
 
 		DiscoveredCardDrawInfo discoveredCardDrawInfo{};
 		discoveredCardDrawInfo.highlighted = monsterChoice;
@@ -119,52 +137,7 @@ namespace game
 			monsterChoice = discoveredMonster;
 		if (discoveredArtifact != -1)
 			artifactChoice = discoveredArtifact;
-		
-		return true;
 
-		Card* cards[DISCOVER_LENGTH]{};
-		RenderMonsterCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.cards = cards;
-		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.position = glm::vec2(0, -CARD_HEIGHT_OFFSET);
-		renderInfo.highlight = monsterChoice;
-
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.monsters[monsterDiscoverOptions[i]];
-		auto choice = RenderMonsterCards(info.frameArena, renderInfo).selectedMonster;
-		if (info.inputState.lMouse == InputState::pressed && choice != -1)
-			monsterChoice = choice == monsterChoice ? -1 : choice;
-
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
-		renderInfo.position.y *= -1;
-		renderInfo.highlight = artifactChoice;
-		choice = RenderCards(renderInfo);
-		if (info.inputState.lMouse == InputState::pressed && choice != -1)
-			artifactChoice = choice == artifactChoice ? -1 : choice;
-
-		TextTask buttonTextTask{};
-		buttonTextTask.text = "choose your starting cards.";
-		buttonTextTask.position = TEXT_CENTER_TOP_POSITION;
-		buttonTextTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(buttonTextTask);
-
-		if (monsterChoice != -1 && artifactChoice != -1)
-		{
-			TextTask textTask{};
-			textTask.text = "press enter to confirm your choice.";
-			textTask.position = TEXT_CENTER_BOT_POSITION;
-			textTask.scale = TEXT_BIG_SCALE;
-			info.textTasks.Push(textTask);
-
-			if (info.inputState.enter == InputState::pressed)
-			{
-				state.monsterId = monsterChoice;
-				state.artifactId = artifactChoice;
-				stateIndex = 2;
-			}
-		}
 		return true;
 	}
 
@@ -191,7 +164,7 @@ namespace game
 		textTask.position = TEXT_CENTER_BOT_POSITION;
 		info.textTasks.Push(textTask);
 
-		if (info.inputState.enter == InputState::pressed)
+		if (info.inputState.enter.PressEvent())
 		{
 			auto& playerState = info.playerState = PlayerState::Create();
 			playerState.AddMonster(state.monsterId);
