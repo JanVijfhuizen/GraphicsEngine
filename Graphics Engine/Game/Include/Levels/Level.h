@@ -63,12 +63,37 @@ namespace game
 
 	struct Level
 	{
+		struct HeaderDrawInfo final
+		{
+			glm::ivec2 origin;
+			const char* text;
+			bool center = false;
+			bool overflow = false;
+			uint32_t scale = 2;
+		};
+
+		struct ButtonDrawInfo final
+		{
+			glm::ivec2 origin;
+			const char* text;
+			bool center = false;
+		};
+
+		struct CardDrawInfo final
+		{
+			glm::ivec2 origin;
+			Card* cards;
+			uint32_t length;
+			bool center = false;
+		};
+
 		virtual void Create(const LevelCreateInfo& info);
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		virtual void PostUpdate(const LevelUpdateInfo& info);
 
-		[[nodiscard]] void DrawHeader(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text, bool center = false, bool overflow = false) const;
-		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text, bool center = false) const;
+		[[nodiscard]] void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
+		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
+		[[nodiscard]] uint32_t DrawCards(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo) const;
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;

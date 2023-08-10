@@ -33,18 +33,29 @@ namespace game
 	bool NewGameLevel::ModeSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
 		constexpr glm::ivec2 headerPos{ SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 90 };
-		level->DrawHeader(info, headerPos, "choose a mode", true, true);
 
-		const bool standardPressed = level->DrawButton(info, { SIMULATED_RESOLUTION.x / 2, headerPos.y - 36 }, "standard", true);
-		const bool ironManPressed = level->DrawButton(info, { SIMULATED_RESOLUTION.x / 2, headerPos.y - 60 }, "iron man", true);
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = headerPos;
+		headerDrawInfo.text = "choose a mode";
+		headerDrawInfo.center = true;
+		headerDrawInfo.overflow = true;
+		level->DrawHeader(info, headerDrawInfo);
 
-		if(standardPressed)
+		ButtonDrawInfo buttonDrawInfo{};
+		buttonDrawInfo.origin = { headerPos.x, headerPos.y - 36 };
+		buttonDrawInfo.text = "standard";
+		buttonDrawInfo.center = true;
+
+		if (level->DrawButton(info, buttonDrawInfo))
 		{
 			info.playerState.ironManMode = false;
 			stateIndex = 1;
 			return true;
 		}
-		if(ironManPressed)
+
+		buttonDrawInfo.origin.y -= 18;
+		buttonDrawInfo.text = "iron man";
+		if (level->DrawButton(info, buttonDrawInfo))
 		{
 			info.playerState.ironManMode = true;
 			stateIndex = 1;
@@ -80,6 +91,19 @@ namespace game
 
 	bool NewGameLevel::PartySelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 90 };
+		headerDrawInfo.text = "choose your starting cards.";
+		headerDrawInfo.center = true;
+		headerDrawInfo.scale = 1;
+		level->DrawHeader(info, headerDrawInfo);
+
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 180 };
+		headerDrawInfo.text = "press enter to confirm your choice.";
+		level->DrawHeader(info, headerDrawInfo);
+		
+		return true;
+
 		Card* cards[DISCOVER_LENGTH]{};
 
 		RenderMonsterCardInfo renderInfo{};

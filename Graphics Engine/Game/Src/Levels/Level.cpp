@@ -12,6 +12,7 @@ namespace game
 	{
 		_lMousePressed = false;
 		_timeSinceOpened = 0;
+		_timeSinceLoading = 0;
 		_loading = false;
 	}
 
@@ -26,6 +27,7 @@ namespace game
 				{
 					_lMousePressed = false;
 					_timeSinceOpened = 0;
+					_timeSinceLoading = 0;
 					_loading = false;
 					return true;
 				}
@@ -68,9 +70,7 @@ namespace game
 		info.pixelPerfectRenderTasks.Push(renderTask);
 	}
 
-	void Level::DrawHeader(const LevelUpdateInfo& info, 
-		const glm::ivec2 origin, const char* text, 
-		const bool center, bool overflow) const
+	void Level::DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const
 	{
 		uint32_t textMaxLen = -1;
 		if(_loading)
@@ -78,23 +78,22 @@ namespace game
 			if (_timeSinceLoading > _LOAD_DURATION)
 				return;
 			const float lerp = _timeSinceLoading / _LOAD_DURATION;
-			const auto len = static_cast<uint32_t>(strlen(text));
+			const auto len = static_cast<uint32_t>(strlen(drawInfo.text));
 			textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
 		}
 
 		TextTask titleTextTask{};
-		titleTextTask.lineLength = overflow ? -1 : 10;
-		titleTextTask.position = origin;
-		titleTextTask.text = text;
-		titleTextTask.scale = 2;
+		titleTextTask.lineLength = drawInfo.overflow ? -1 : 10;
+		titleTextTask.position = drawInfo.origin;
+		titleTextTask.text = drawInfo.text;
+		titleTextTask.scale = drawInfo.scale;
 		titleTextTask.lifetime = _loading ? 1e2f : GetTime();
 		titleTextTask.maxLength = textMaxLen;
-		titleTextTask.center = center;
+		titleTextTask.center = drawInfo.center;
 		info.textTasks.Push(titleTextTask);
 	}
 
-	bool Level::DrawButton(const LevelUpdateInfo& info, 
-		const glm::ivec2 origin, const char* text, const bool center) const
+	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const
 	{
 		constexpr uint32_t BUTTON_ANIM_LENGTH = 6;
 		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
@@ -114,7 +113,7 @@ namespace game
 			if (_loading)
 			{
 				buttonAnimIndex = BUTTON_ANIM_LENGTH - buttonAnimIndex - 1;
-				const auto len = static_cast<uint32_t>(strlen(text));
+				const auto len = static_cast<uint32_t>(strlen(drawInfo.text));
 				textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
 			}
 		}
@@ -122,22 +121,22 @@ namespace game
 			textMaxLen = 0;
 
 		PixelPerfectRenderTask buttonRenderTask{};
-		buttonRenderTask.position = origin;
+		buttonRenderTask.position = drawInfo.origin;
 		buttonRenderTask.scale = buttonTexture.resolution / glm::ivec2(BUTTON_ANIM_LENGTH, 1);
 		buttonRenderTask.subTexture = buttonAnim[buttonAnimIndex];
-		buttonRenderTask.xCenter = center;
+		buttonRenderTask.xCenter = drawInfo.center;
 
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.position.x += center ? 0 : buttonRenderTask.scale.x / 2;
-		buttonTextTask.text = text;
+		buttonTextTask.position.x += drawInfo.center ? 0 : buttonRenderTask.scale.x / 2;
+		buttonTextTask.text = drawInfo.text;
 		buttonTextTask.lifetime = _loading ? 1e2f : lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
 		buttonTextTask.center = true;
 
 		const bool released = info.inputState.lMouse == InputState::released;
 		bool pressed = false;
-		const bool collided = _loading ? false : CollidesShapeInt(origin, buttonRenderTask.scale, info.inputState.mousePos);
+		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin, buttonRenderTask.scale, info.inputState.mousePos);
 		if (collided)
 		{
 			buttonTextTask.loop = true;
@@ -149,6 +148,23 @@ namespace game
 		info.textTasks.Push(buttonTextTask);
 		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
 		return pressed;
+	}
+
+	uint32_t Level::DrawCards(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo) const
+	{
+		constexpr uint32_t CARD_FRAME_COUNT = 3;
+
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
+		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
+
+		PixelPerfectRenderTask bgRenderTask{};
+		bgRenderTask.position = drawInfo.origin;
+		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
+		bgRenderTask.subTexture = cardFrames[0];
+		bgRenderTask.xCenter = drawInfo.center;
+		info.pixelPerfectRenderTasks.Push(bgRenderTask);
+		return -1;
 	}
 
 	float Level::GetTime() const

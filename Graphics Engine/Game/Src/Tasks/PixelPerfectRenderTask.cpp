@@ -21,12 +21,15 @@ namespace game
 	uint32_t PixelPerfectRenderTask::GetUpscaleMultiplier(const glm::ivec2 resolution, const glm::ivec2 simulatedResolution)
 	{
 		glm::ivec2 r = simulatedResolution;
-		uint32_t upscaleMul = 1;
-		while (r.x * 2 <= resolution.x || r.y * 2 <= resolution.y)
+		uint32_t upscaleMul = 0;
+		
+		while(r.x <= resolution.x && r.y <= resolution.y)
 		{
-			r *= 2;
-			upscaleMul *= 2;
+			++upscaleMul;
+			r.x += simulatedResolution.x;
+			r.y += simulatedResolution.y;
 		}
+		
 		return upscaleMul;
 	}
 
