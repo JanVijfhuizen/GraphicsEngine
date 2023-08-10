@@ -116,6 +116,7 @@ namespace game
 							yMod = DoubleCurveEvaluate(timeDiff / _createInfo.bounceDuration, bounceUpCurve, bounceDownCurve);
 
 						PixelPerfectRenderTask cpyTask = task;
+						cpyTask.priority = job.priority;
 						cpyTask.position.y += static_cast<int32_t>(yMod * _createInfo.bounceHeight);
 						_createInfo.renderTasks->Push(cpyTask);
 					}

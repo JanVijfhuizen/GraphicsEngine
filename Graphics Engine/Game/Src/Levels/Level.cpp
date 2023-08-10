@@ -187,6 +187,7 @@ namespace game
 	void Level::DrawFullCard(const LevelUpdateInfo& info, Card* card)
 	{
 		constexpr uint32_t CARD_FRAME_COUNT = 3;
+		constexpr int32_t SCALE_MULTIPLIER = 6;
 
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
 		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
@@ -194,7 +195,7 @@ namespace game
 
 		PixelPerfectRenderTask bgRenderTask{};
 		bgRenderTask.position = SIMULATED_RESOLUTION / 2;
-		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1) * 6;
+		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1) * SCALE_MULTIPLIER;
 		bgRenderTask.subTexture = cardFrames[0];
 		bgRenderTask.xCenter = true;
 		bgRenderTask.yCenter = true;
@@ -210,6 +211,21 @@ namespace game
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 		info.pixelPerfectRenderTasks.Push(titleBoxRenderTask);
 		info.pixelPerfectRenderTasks.Push(textBoxRenderTask);
+
+		TextTask titleTextTask{};
+		titleTextTask.position = bgRenderTask.position;
+		titleTextTask.position.y += bgRenderTask.scale.y / 2 - 5 * SCALE_MULTIPLIER;
+		titleTextTask.text = card->name;
+		titleTextTask.lifetime = 1e2f;
+		titleTextTask.center = true;
+		titleTextTask.priority = true;
+		info.textTasks.Push(titleTextTask);
+
+		auto ruleTextTask = titleTextTask;
+		ruleTextTask.text = card->ruleText;
+		ruleTextTask.position = bgRenderTask.position;
+		ruleTextTask.position.y -= 7 * SCALE_MULTIPLIER;
+		info.textTasks.Push(ruleTextTask);
 	}
 
 	float Level::GetTime() const
