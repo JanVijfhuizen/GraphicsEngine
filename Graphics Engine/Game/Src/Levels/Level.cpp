@@ -22,6 +22,14 @@ namespace game
 			_timeSinceLoading += info.deltaTime;
 			if (_timeSinceLoading > _LOAD_DURATION)
 			{
+				if(_loadingLevelIndex == LevelIndex::animOnly)
+				{
+					_lMousePressed = false;
+					_timeSinceOpened = 0;
+					_loading = false;
+					return true;
+				}
+
 				loadLevelIndex = _loadingLevelIndex;
 				return true;
 			}
@@ -61,7 +69,8 @@ namespace game
 	}
 
 	void Level::DrawHeader(const LevelUpdateInfo& info, 
-		const glm::ivec2 origin, const char* text) const
+		const glm::ivec2 origin, const char* text, 
+		const bool center, bool overflow) const
 	{
 		uint32_t textMaxLen = -1;
 		if(_loading)
@@ -74,17 +83,18 @@ namespace game
 		}
 
 		TextTask titleTextTask{};
-		titleTextTask.lineLength = 10;
+		titleTextTask.lineLength = overflow ? -1 : 10;
 		titleTextTask.position = origin;
 		titleTextTask.text = text;
 		titleTextTask.scale = 2;
 		titleTextTask.lifetime = _loading ? 1e2f : GetTime();
 		titleTextTask.maxLength = textMaxLen;
+		titleTextTask.center = center;
 		info.textTasks.Push(titleTextTask);
 	}
 
 	bool Level::DrawButton(const LevelUpdateInfo& info, 
-		const glm::ivec2 origin, const char* text) const
+		const glm::ivec2 origin, const char* text, const bool center) const
 	{
 		constexpr uint32_t BUTTON_ANIM_LENGTH = 6;
 		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
@@ -115,13 +125,15 @@ namespace game
 		buttonRenderTask.position = origin;
 		buttonRenderTask.scale = buttonTexture.resolution / glm::ivec2(BUTTON_ANIM_LENGTH, 1);
 		buttonRenderTask.subTexture = buttonAnim[buttonAnimIndex];
+		buttonRenderTask.xCenter = center;
 
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.position.x += 5;
+		buttonTextTask.position.x += center ? 0 : buttonRenderTask.scale.x / 2;
 		buttonTextTask.text = text;
 		buttonTextTask.lifetime = _loading ? 1e2f : lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
+		buttonTextTask.center = true;
 
 		const bool released = info.inputState.lMouse == InputState::released;
 		bool pressed = false;

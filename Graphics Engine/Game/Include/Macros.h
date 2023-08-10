@@ -67,7 +67,8 @@ enum class LevelIndex
 	mainMenu,
 	newGame,
 	partySelect,
-	main
+	main,
+	animOnly
 };
 
 enum class TextureId

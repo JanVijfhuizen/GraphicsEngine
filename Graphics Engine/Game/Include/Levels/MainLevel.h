@@ -66,7 +66,7 @@ namespace game
 		struct BossRevealState final : LevelState<State>
 		{
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
@@ -75,7 +75,7 @@ namespace game
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
@@ -89,7 +89,7 @@ namespace game
 			uint32_t recruitableMonster = -1;
 			
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
@@ -99,7 +99,7 @@ namespace game
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
@@ -108,20 +108,20 @@ namespace game
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
 		struct RewardArtifactState final : LevelState<State>
 		{
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
 		struct ExitFoundState final : LevelState<State>
 		{
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 

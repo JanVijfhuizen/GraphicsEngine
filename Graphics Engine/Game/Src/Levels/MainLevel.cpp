@@ -188,7 +188,7 @@ namespace game
 		}
 	}
 
-	bool MainLevel::BossRevealState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::BossRevealState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		Card* cards[DISCOVER_LENGTH]{};
@@ -235,7 +235,7 @@ namespace game
 		}
 	}
 
-	bool MainLevel::PathSelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::PathSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		// Render bosses.
@@ -345,7 +345,7 @@ namespace game
 			boardState.TryAddEnemy(info, state.GetMonster(info, boardState));
 	}
 
-	bool MainLevel::CombatState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::CombatState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		if(recruitableMonster != -1)
@@ -611,7 +611,7 @@ namespace game
 		discoverOption = -1;
 	}
 
-	bool MainLevel::RewardMagicCardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::RewardMagicCardState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		Card* cards[MAGIC_DECK_SIZE]{};
@@ -677,7 +677,7 @@ namespace game
 		discoverOption = -1;
 	}
 
-	bool MainLevel::RewardFlawCardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::RewardFlawCardState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		Card* cards[MAGIC_DECK_SIZE]{};
@@ -755,7 +755,7 @@ namespace game
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
 	}
 
-	bool MainLevel::RewardArtifactState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::RewardArtifactState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		Card* cards[PARTY_ACTIVE_CAPACITY]{};
@@ -826,7 +826,7 @@ namespace game
 		return true;
 	}
 
-	bool MainLevel::ExitFoundState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		TextTask textTask{};
@@ -893,6 +893,6 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
-		return stateMachine.Update(info, loadLevelIndex);
+		return stateMachine.Update(info, this, loadLevelIndex);
 	}
 }

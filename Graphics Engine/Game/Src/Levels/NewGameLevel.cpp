@@ -27,57 +27,30 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
-		return stateMachine.Update(info, loadLevelIndex);
+		return stateMachine.Update(info, this, loadLevelIndex);
 	}
 
-	bool NewGameLevel::ModeSelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
+	bool NewGameLevel::ModeSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
-		TextTask textTask{};
-		textTask.text = "choose a mode.";
-		textTask.position.x = SIMULATED_RESOLUTION.x / 2;
-		textTask.position.y = SIMULATED_RESOLUTION.y - 90;
-		textTask.scale = 2;
-		textTask.center = true;
-		info.textTasks.Push(textTask);
+		constexpr glm::ivec2 headerPos{ SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 90 };
+		level->DrawHeader(info, headerPos, "choose a mode", true, true);
 
-		const auto& buttonSmall = info.atlasTextures[static_cast<uint32_t>(TextureId::buttonSmall)];
+		const bool standardPressed = level->DrawButton(info, { SIMULATED_RESOLUTION.x / 2, headerPos.y - 36 }, "standard", true);
+		const bool ironManPressed = level->DrawButton(info, { SIMULATED_RESOLUTION.x / 2, headerPos.y - 60 }, "iron man", true);
 
-		PixelPerfectRenderTask buttonRenderTask{};
-		buttonRenderTask.position.x = SIMULATED_RESOLUTION.x / 2;
-		buttonRenderTask.position.y = textTask.position.y - 36;
-		buttonRenderTask.scale = buttonSmall.resolution;
-		buttonRenderTask.subTexture = buttonSmall.subTexture;
-		buttonRenderTask.xCenter = true;
-		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
+		if(standardPressed)
+		{
+			info.playerState.ironManMode = false;
+			stateIndex = 1;
+			return true;
+		}
+		if(ironManPressed)
+		{
+			info.playerState.ironManMode = true;
+			stateIndex = 1;
+			return true;
+		}
 
-		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShapeInt(buttonRenderTask.position - glm::ivec2(buttonRenderTask.scale.x / 2, 0), buttonRenderTask.scale, info.inputState.mousePos))
-			{
-				info.playerState.ironManMode = false;
-				stateIndex = 1;
-				return true;
-			}
-
-		TextTask buttonTextTask{};
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "standard";
-		buttonTextTask.center = true;
-		info.textTasks.Push(buttonTextTask);
-
-		buttonRenderTask.position.y -= buttonSmall.resolution.y + 9;
-		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
-
-		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShapeInt(buttonRenderTask.position - glm::ivec2(buttonRenderTask.scale.x / 2, 0), buttonRenderTask.scale, info.inputState.mousePos))
-			{
-				info.playerState.ironManMode = true;
-				stateIndex = 1;
-				return true;
-			}
-
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "iron man";
-		info.textTasks.Push(buttonTextTask);
 		return true;
 	}
 
@@ -105,7 +78,7 @@ namespace game
 		return true;
 	}
 
-	bool NewGameLevel::PartySelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
+	bool NewGameLevel::PartySelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
 		Card* cards[DISCOVER_LENGTH]{};
 
@@ -154,7 +127,7 @@ namespace game
 		return true;
 	}
 
-	bool NewGameLevel::JoinState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool NewGameLevel::JoinState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		TextTask joinTextTask{};
