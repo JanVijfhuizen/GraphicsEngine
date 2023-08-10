@@ -410,12 +410,15 @@ namespace game
 	void CardGame::UpdateInput()
 	{
 		const auto mousePos = jv::ge::GetMousePosition();
-
-		inputState = {};
+		
 		inputState.fullScreenMousePos = mousePos;
 		inputState.mousePos = PixelPerfectRenderTask::ToPixelPosition(
 			jv::ge::GetResolution(), SIMULATED_RESOLUTION, mousePos);
 		inputState.scroll = scrollCallback;
+
+		inputState.lMouse.change = false;
+		inputState.rMouse.change = false;
+		inputState.enter.change = false;
 		
 		for (const auto& callback : mouseCallbacks)
 		{
@@ -436,9 +439,15 @@ namespace game
 		if (callback.key == target)
 		{
 			if (callback.action == GLFW_PRESS)
-				state = InputState::pressed;
+			{
+				state.pressed = true;
+				state.change = true;
+			}
 			else if (callback.action == GLFW_RELEASE)
-				state = InputState::released;
+			{
+				state.pressed = false;
+				state.change = true;
+			}
 		}
 	}
 

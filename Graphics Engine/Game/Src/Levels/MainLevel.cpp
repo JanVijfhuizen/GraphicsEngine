@@ -212,7 +212,7 @@ namespace game
 		textTask.text = "press enter to continue.";
 		info.textTasks.Push(textTask);
 
-		if (info.inputState.enter == InputState::pressed)
+		if (info.inputState.enter.PressEvent())
 			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		return true;
 	}
@@ -301,8 +301,8 @@ namespace game
 		choice = RenderMagicCards(info.frameArena, renderInfo);
 		selected = choice != -1 ? choice : selected;
 
-		if (info.inputState.lMouse == InputState::pressed)
-			discoverOption = selected == discoverOption ? -1 : selected;
+		//if (info.inputState.lMouse == InputState::pressed)
+			//discoverOption = selected == discoverOption ? -1 : selected;
 
 		TextTask textTask{};
 		textTask.text = "select the road to take.";
@@ -316,7 +316,7 @@ namespace game
 			textTask.position = TEXT_CENTER_BOT_POSITION;
 			textTask.text = "press enter to continue.";
 			info.textTasks.Push(textTask);
-
+			/*
 			if (info.inputState.enter == InputState::pressed)
 			{
 				state.chosenPath = discoverOption;
@@ -326,6 +326,7 @@ namespace game
 
 				stateIndex = static_cast<uint32_t>(StateNames::combat);
 			}
+			*/
 		}
 
 		return true;
@@ -382,14 +383,14 @@ namespace game
 
 				bool decided = false;
 				bool joins = false;
-
+				/*
 				if (info.inputState.lMouse == InputState::pressed)
 					if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
 					{
 						joins = true;
 						decided = true;
 					}
-
+					*/
 				buttonRenderTask.position.y -= BUTTON_Y_SCALE * 2 + BUTTON_Y_OFFSET;
 				info.renderTasks.Push(buttonRenderTask);
 
@@ -398,11 +399,11 @@ namespace game
 				info.textTasks.Push(buttonTextTask);
 
 				auto& gameState = info.gameState;
-
+				/*
 				if (info.inputState.lMouse == InputState::pressed)
 					if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
 						decided = true;
-
+						*/
 				if(!decided)
 					return true;
 
@@ -546,7 +547,7 @@ namespace game
 		alliedRenderInfo.flawArr = flaws;
 		alliedRenderInfo.state = RenderCardInfo::State::field;
 		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo).selectedMonster;
-		
+		/*
 		if(info.inputState.lMouse == InputState::pressed && allyChoice != -1 && !tapped[allyChoice])
 			allySelected = allyChoice;
 
@@ -602,6 +603,7 @@ namespace game
 			newTurn = true;
 		}
 
+		*/
 		return true;
 	}
 
@@ -641,7 +643,7 @@ namespace game
 		renderInfo.position.y *= -1;
 		renderInfo.position.x = 0;
 		RenderMagicCards(info.frameArena, renderInfo);
-
+		/*
 		if (info.inputState.lMouse == InputState::pressed)
 			discoverOption = choice == discoverOption ? -1 : choice;
 
@@ -668,7 +670,7 @@ namespace game
 			else
 				stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		}
-				
+				*/
 		return true;
 	}
 
@@ -725,7 +727,7 @@ namespace game
 			renderInfo.selectedArr = nullptr;
 			renderInfo.highlight = -1;
 			RenderCards(renderInfo);
-
+			/*
 			if (info.inputState.lMouse == InputState::pressed)
 				if (choice == -1 || selected[choice])
 					discoverOption = choice == discoverOption ? -1 : choice;
@@ -741,6 +743,7 @@ namespace game
 				info.gameState.flaws[gameState.partyIds[discoverOption]] = path.flaw;
 				stateIndex = static_cast<uint32_t>(StateNames::exitFound);
 			}
+			*/
 			return true;
 		}
 
@@ -812,7 +815,7 @@ namespace game
 		renderInfo.position.y *= -1;
 		renderInfo.length = 1;
 		RenderCards(renderInfo);
-
+		/*
 		if (info.inputState.lMouse == InputState::pressed && choice.selectedArtifact != -1 && 
 			choice.selectedArtifact < playerState.artifactSlotCounts[choice.selectedMonster])
 		{
@@ -823,6 +826,7 @@ namespace game
 
 		if (info.inputState.enter == InputState::pressed)
 			stateIndex = static_cast<uint32_t>(StateNames::exitFound);
+			*/
 		return true;
 	}
 
@@ -841,7 +845,7 @@ namespace game
 		buttonRenderTask.scale.y *= .12f;
 		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
 		info.renderTasks.Push(buttonRenderTask);
-
+		/*
 		if (info.inputState.lMouse == InputState::pressed)
 			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
 			{
@@ -868,6 +872,7 @@ namespace game
 				SaveData(info.playerState);
 				loadLevelIndex = LevelIndex::mainMenu;
 			}
+			*/
 		return true;
 	}
 

@@ -10,8 +10,8 @@ namespace game
 {
 	void Level::Create(const LevelCreateInfo& info)
 	{
-		_lMousePressed = false;
 		_timeSinceOpened = 0;
+		_timeSinceLoading = 0;
 		_loading = false;
 	}
 
@@ -24,8 +24,8 @@ namespace game
 			{
 				if(_loadingLevelIndex == LevelIndex::animOnly)
 				{
-					_lMousePressed = false;
 					_timeSinceOpened = 0;
+					_timeSinceLoading = 0;
 					_loading = false;
 					return true;
 				}
@@ -45,32 +45,16 @@ namespace game
 
 		jv::ge::SubTexture subTextures[2];
 		Divide(atlasTexture.subTexture, subTextures, (sizeof subTextures) / sizeof(jv::ge::SubTexture));
-
-		switch (info.inputState.lMouse)
-		{
-		case InputState::idle:
-			break;
-		case InputState::pressed:
-			_lMousePressed = true;
-			break;
-		case InputState::released:
-			_lMousePressed = false;
-			break;
-		default:
-			throw std::exception("Mouse button state not supported!");
-		}
 		
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = atlasTexture.resolution / glm::ivec2(2, 1);
 		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
 		renderTask.priority = true;
-		renderTask.subTexture = _lMousePressed ? subTextures[1] : subTextures[0];
+		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
 		info.pixelPerfectRenderTasks.Push(renderTask);
 	}
 
-	void Level::DrawHeader(const LevelUpdateInfo& info, 
-		const glm::ivec2 origin, const char* text, 
-		const bool center, bool overflow) const
+	void Level::DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const
 	{
 		uint32_t textMaxLen = -1;
 		if(_loading)
@@ -78,23 +62,22 @@ namespace game
 			if (_timeSinceLoading > _LOAD_DURATION)
 				return;
 			const float lerp = _timeSinceLoading / _LOAD_DURATION;
-			const auto len = static_cast<uint32_t>(strlen(text));
+			const auto len = static_cast<uint32_t>(strlen(drawInfo.text));
 			textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
 		}
 
 		TextTask titleTextTask{};
-		titleTextTask.lineLength = overflow ? -1 : 10;
-		titleTextTask.position = origin;
-		titleTextTask.text = text;
-		titleTextTask.scale = 2;
-		titleTextTask.lifetime = _loading ? 1e2f : GetTime();
+		titleTextTask.lineLength = drawInfo.overflow ? -1 : 10;
+		titleTextTask.position = drawInfo.origin;
+		titleTextTask.text = drawInfo.text;
+		titleTextTask.scale = drawInfo.scale;
+		titleTextTask.lifetime = _loading ? 1e2f : drawInfo.overrideLifeTime < 0 ? GetTime() : drawInfo.overrideLifeTime;
 		titleTextTask.maxLength = textMaxLen;
-		titleTextTask.center = center;
+		titleTextTask.center = drawInfo.center;
 		info.textTasks.Push(titleTextTask);
 	}
 
-	bool Level::DrawButton(const LevelUpdateInfo& info, 
-		const glm::ivec2 origin, const char* text, const bool center) const
+	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const
 	{
 		constexpr uint32_t BUTTON_ANIM_LENGTH = 6;
 		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
@@ -114,7 +97,7 @@ namespace game
 			if (_loading)
 			{
 				buttonAnimIndex = BUTTON_ANIM_LENGTH - buttonAnimIndex - 1;
-				const auto len = static_cast<uint32_t>(strlen(text));
+				const auto len = static_cast<uint32_t>(strlen(drawInfo.text));
 				textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
 			}
 		}
@@ -122,33 +105,127 @@ namespace game
 			textMaxLen = 0;
 
 		PixelPerfectRenderTask buttonRenderTask{};
-		buttonRenderTask.position = origin;
+		buttonRenderTask.position = drawInfo.origin;
 		buttonRenderTask.scale = buttonTexture.resolution / glm::ivec2(BUTTON_ANIM_LENGTH, 1);
 		buttonRenderTask.subTexture = buttonAnim[buttonAnimIndex];
-		buttonRenderTask.xCenter = center;
+		buttonRenderTask.xCenter = drawInfo.center;
 
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.position.x += center ? 0 : buttonRenderTask.scale.x / 2;
-		buttonTextTask.text = text;
+		buttonTextTask.position.x += drawInfo.center ? 0 : buttonRenderTask.scale.x / 2;
+		buttonTextTask.text = drawInfo.text;
 		buttonTextTask.lifetime = _loading ? 1e2f : lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
 		buttonTextTask.center = true;
-
-		const bool released = info.inputState.lMouse == InputState::released;
+		
 		bool pressed = false;
-		const bool collided = _loading ? false : CollidesShapeInt(origin, buttonRenderTask.scale, info.inputState.mousePos);
+		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin, buttonRenderTask.scale, info.inputState.mousePos);
 		if (collided)
 		{
 			buttonTextTask.loop = true;
 			buttonRenderTask.color = glm::vec4(1, 0, 0, 1);
 		}
-		if (collided && released)
+		if (collided && info.inputState.lMouse.ReleaseEvent())
 			pressed = true;
 
 		info.textTasks.Push(buttonTextTask);
 		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
 		return pressed;
+	}
+
+	uint32_t Level::DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo)
+	{
+		CardDrawInfo cardDrawInfo{};
+		cardDrawInfo.length = 1;
+		cardDrawInfo.center = true;
+		cardDrawInfo.origin.x = SIMULATED_RESOLUTION.x / 2 - 32;
+		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
+		
+		const bool released = info.inputState.lMouse.pressed;
+
+		uint32_t choice = -1;
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+		{
+			cardDrawInfo.borderColor = drawInfo.highlighted == i ? glm::ivec4(0, 1, 0, 1) : glm::ivec4(1);
+			cardDrawInfo.card = drawInfo.cards[i];
+			const bool b = DrawCard(info, cardDrawInfo);
+			cardDrawInfo.origin.x += 32;
+
+			if (b && released)
+				choice = i;
+		}
+
+		return choice;
+	}
+
+	bool Level::DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo)
+	{
+		constexpr uint32_t CARD_FRAME_COUNT = 3;
+
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
+		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
+
+		PixelPerfectRenderTask bgRenderTask{};
+		bgRenderTask.position = drawInfo.origin;
+		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
+		bgRenderTask.subTexture = cardFrames[0];
+		bgRenderTask.xCenter = drawInfo.center;
+		bgRenderTask.yCenter = drawInfo.center;
+		bgRenderTask.color = drawInfo.borderColor;
+
+		const bool collided = CollidesShapeInt(drawInfo.origin - 
+			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
+		bgRenderTask.color = collided ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
+		info.pixelPerfectRenderTasks.Push(bgRenderTask);
+
+		if (collided && info.inputState.rMouse.pressed)
+			DrawFullCard(info, drawInfo.card);
+		return collided;
+	}
+
+	void Level::DrawFullCard(const LevelUpdateInfo& info, Card* card)
+	{
+		constexpr uint32_t CARD_FRAME_COUNT = 3;
+		constexpr int32_t SCALE_MULTIPLIER = 6;
+
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
+		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
+
+		PixelPerfectRenderTask bgRenderTask{};
+		bgRenderTask.position = SIMULATED_RESOLUTION / 2;
+		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1) * SCALE_MULTIPLIER;
+		bgRenderTask.subTexture = cardFrames[0];
+		bgRenderTask.xCenter = true;
+		bgRenderTask.yCenter = true;
+		bgRenderTask.priority = true;
+
+		auto titleBoxRenderTask = bgRenderTask;
+		titleBoxRenderTask.subTexture = cardFrames[1];
+
+		auto textBoxRenderTask = bgRenderTask;
+		textBoxRenderTask.subTexture = cardFrames[2];
+
+		bgRenderTask.color = glm::ivec4(1, 0, 0, 1);
+		info.pixelPerfectRenderTasks.Push(bgRenderTask);
+		info.pixelPerfectRenderTasks.Push(titleBoxRenderTask);
+		info.pixelPerfectRenderTasks.Push(textBoxRenderTask);
+
+		TextTask titleTextTask{};
+		titleTextTask.position = bgRenderTask.position;
+		titleTextTask.position.y += bgRenderTask.scale.y / 2 - 5 * SCALE_MULTIPLIER;
+		titleTextTask.text = card->name;
+		titleTextTask.lifetime = 1e2f;
+		titleTextTask.center = true;
+		titleTextTask.priority = true;
+		info.textTasks.Push(titleTextTask);
+
+		auto ruleTextTask = titleTextTask;
+		ruleTextTask.text = card->ruleText;
+		ruleTextTask.position = bgRenderTask.position;
+		ruleTextTask.position.y -= 7 * SCALE_MULTIPLIER;
+		info.textTasks.Push(ruleTextTask);
 	}
 
 	float Level::GetTime() const

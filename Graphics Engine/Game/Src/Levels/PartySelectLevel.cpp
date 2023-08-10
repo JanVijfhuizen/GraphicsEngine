@@ -59,8 +59,8 @@ namespace game
 		if (choice != -1)
 			lastHovered = choice;
 
-		if (info.inputState.lMouse == InputState::pressed && choice != -1)
-			selected[choice] = !selected[choice];
+		//if (info.inputState.lMouse == InputState::pressed && choice != -1)
+			//selected[choice] = !selected[choice];
 
 		TextTask textTask{};
 		textTask.text = "select up to 4 party members.";
@@ -92,8 +92,8 @@ namespace game
 				gameState.healths[j++] = monster.health;
 			}
 
-			if (info.inputState.enter == InputState::pressed)
-				loadLevelIndex = LevelIndex::main;
+			//if (info.inputState.enter == InputState::pressed)
+				//loadLevelIndex = LevelIndex::main;
 		}
 
 		return true;

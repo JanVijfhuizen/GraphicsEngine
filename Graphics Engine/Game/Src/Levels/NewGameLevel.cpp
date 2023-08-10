@@ -6,7 +6,6 @@
 #include "LevelStates/LevelStateMachine.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
-#include "Utils/BoxCollision.h"
 #include "Utils/Shuffle.h"
 
 namespace game
@@ -33,18 +32,29 @@ namespace game
 	bool NewGameLevel::ModeSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
 		constexpr glm::ivec2 headerPos{ SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 90 };
-		level->DrawHeader(info, headerPos, "choose a mode", true, true);
 
-		const bool standardPressed = level->DrawButton(info, { SIMULATED_RESOLUTION.x / 2, headerPos.y - 36 }, "standard", true);
-		const bool ironManPressed = level->DrawButton(info, { SIMULATED_RESOLUTION.x / 2, headerPos.y - 60 }, "iron man", true);
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = headerPos;
+		headerDrawInfo.text = "choose a mode";
+		headerDrawInfo.center = true;
+		headerDrawInfo.overflow = true;
+		level->DrawHeader(info, headerDrawInfo);
 
-		if(standardPressed)
+		ButtonDrawInfo buttonDrawInfo{};
+		buttonDrawInfo.origin = { headerPos.x, headerPos.y - 36 };
+		buttonDrawInfo.text = "standard";
+		buttonDrawInfo.center = true;
+
+		if (level->DrawButton(info, buttonDrawInfo))
 		{
 			info.playerState.ironManMode = false;
 			stateIndex = 1;
 			return true;
 		}
-		if(ironManPressed)
+
+		buttonDrawInfo.origin.y -= 18;
+		buttonDrawInfo.text = "iron man";
+		if (level->DrawButton(info, buttonDrawInfo))
 		{
 			info.playerState.ironManMode = true;
 			stateIndex = 1;
@@ -56,6 +66,10 @@ namespace game
 
 	bool NewGameLevel::PartySelectState::Create(State& state, const LevelCreateInfo& info)
 	{
+		monsterChoice = -1;
+		artifactChoice = -1;
+		timeSinceFirstChoicesMade = -1;
+
 		uint32_t count;
 		GetDeck(nullptr, &count, info.monsters);
 		monsterDeck = jv::CreateVector<uint32_t>(info.arena, count);
@@ -80,50 +94,50 @@ namespace game
 
 	bool NewGameLevel::PartySelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
-		Card* cards[DISCOVER_LENGTH]{};
-
-		RenderMonsterCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.cards = cards;
-		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.position = glm::vec2(0, -CARD_HEIGHT_OFFSET);
-		renderInfo.highlight = monsterChoice;
-
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.monsters[monsterDiscoverOptions[i]];
-		auto choice = RenderMonsterCards(info.frameArena, renderInfo).selectedMonster;
-		if (info.inputState.lMouse == InputState::pressed && choice != -1)
-			monsterChoice = choice == monsterChoice ? -1 : choice;
-
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
-		renderInfo.position.y *= -1;
-		renderInfo.highlight = artifactChoice;
-		choice = RenderCards(renderInfo);
-		if (info.inputState.lMouse == InputState::pressed && choice != -1)
-			artifactChoice = choice == artifactChoice ? -1 : choice;
-
-		TextTask buttonTextTask{};
-		buttonTextTask.text = "choose your starting cards.";
-		buttonTextTask.position = TEXT_CENTER_TOP_POSITION;
-		buttonTextTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(buttonTextTask);
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 64 };
+		headerDrawInfo.text = "choose your starting cards.";
+		headerDrawInfo.center = true;
+		headerDrawInfo.scale = 1;
+		headerDrawInfo.overflow = true;
+		level->DrawHeader(info, headerDrawInfo);
 
 		if (monsterChoice != -1 && artifactChoice != -1)
 		{
-			TextTask textTask{};
-			textTask.text = "press enter to confirm your choice.";
-			textTask.position = TEXT_CENTER_BOT_POSITION;
-			textTask.scale = TEXT_BIG_SCALE;
-			info.textTasks.Push(textTask);
+			if (timeSinceFirstChoicesMade < 0)
+				timeSinceFirstChoicesMade = level->GetTime();
 
-			if (info.inputState.enter == InputState::pressed)
+			headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, 64 };
+			headerDrawInfo.text = "press enter to confirm your choice.";
+			headerDrawInfo.overrideLifeTime = level->GetTime() - timeSinceFirstChoicesMade;
+			level->DrawHeader(info, headerDrawInfo);
+
+			if (info.inputState.enter.PressEvent())
 			{
 				state.monsterId = monsterChoice;
 				state.artifactId = artifactChoice;
 				stateIndex = 2;
 			}
 		}
+
+		DiscoveredCardDrawInfo discoveredCardDrawInfo{};
+		discoveredCardDrawInfo.highlighted = monsterChoice;
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			discoveredCardDrawInfo.cards[i] = &info.monsters[monsterDiscoverOptions[i]];
+		discoveredCardDrawInfo.height = SIMULATED_RESOLUTION.y / 2 + 18;
+		const uint32_t discoveredMonster = DrawDiscoveredCards(info, discoveredCardDrawInfo);
+
+		discoveredCardDrawInfo.highlighted = artifactChoice;
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			discoveredCardDrawInfo.cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
+		discoveredCardDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - 18;
+		const uint32_t discoveredArtifact = DrawDiscoveredCards(info, discoveredCardDrawInfo);
+
+		if (discoveredMonster != -1)
+			monsterChoice = discoveredMonster;
+		if (discoveredArtifact != -1)
+			artifactChoice = discoveredArtifact;
+
 		return true;
 	}
 
@@ -150,7 +164,7 @@ namespace game
 		textTask.position = TEXT_CENTER_BOT_POSITION;
 		info.textTasks.Push(textTask);
 
-		if (info.inputState.enter == InputState::pressed)
+		if (info.inputState.enter.PressEvent())
 		{
 			auto& playerState = info.playerState = PlayerState::Create();
 			playerState.AddMonster(state.monsterId);

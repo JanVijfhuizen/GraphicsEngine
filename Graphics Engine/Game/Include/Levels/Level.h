@@ -63,12 +63,48 @@ namespace game
 
 	struct Level
 	{
+		struct HeaderDrawInfo final
+		{
+			glm::ivec2 origin;
+			const char* text;
+			bool center = false;
+			bool overflow = false;
+			uint32_t scale = 2;
+			float overrideLifeTime = -1;
+		};
+
+		struct ButtonDrawInfo final
+		{
+			glm::ivec2 origin;
+			const char* text;
+			bool center = false;
+		};
+
+		struct CardDrawInfo final
+		{
+			glm::ivec2 origin;
+			Card* card;
+			uint32_t length;
+			bool center = false;
+			glm::ivec4 borderColor{1};
+		};
+
+		struct DiscoveredCardDrawInfo final
+		{
+			Card* cards[DISCOVER_LENGTH]{};
+			uint32_t height;
+			uint32_t highlighted = -1;
+		};
+
 		virtual void Create(const LevelCreateInfo& info);
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		virtual void PostUpdate(const LevelUpdateInfo& info);
 
-		[[nodiscard]] void DrawHeader(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text, bool center = false, bool overflow = false) const;
-		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text, bool center = false) const;
+		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
+		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
+		[[nodiscard]] static uint32_t DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo);
+		[[nodiscard]] static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
+		static void DrawFullCard(const LevelUpdateInfo& info, Card* card);
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;
@@ -79,7 +115,6 @@ namespace game
 		bool _loading;
 		float _timeSinceLoading;
 		LevelIndex _loadingLevelIndex;
-		bool _lMousePressed = false;
 		float _timeSinceOpened;
 	};
 }

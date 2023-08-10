@@ -23,8 +23,9 @@ namespace game
 			jv::Vector<uint32_t> artifactDeck;
 			jv::Array<uint32_t> monsterDiscoverOptions;
 			jv::Array<uint32_t> artifactDiscoverOptions;
-			uint32_t monsterChoice = -1;
-			uint32_t artifactChoice = -1;
+			uint32_t monsterChoice;
+			uint32_t artifactChoice;
+			float timeSinceFirstChoicesMade;
 
 			bool Create(State& state, const LevelCreateInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;

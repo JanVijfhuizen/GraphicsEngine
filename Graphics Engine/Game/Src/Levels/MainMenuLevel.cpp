@@ -15,18 +15,22 @@ namespace game
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
 
-		constexpr glm::ivec2 headerPos{9, SIMULATED_RESOLUTION.y - 36};
-		DrawHeader(info, headerPos, "untitled card game");
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = { 9, SIMULATED_RESOLUTION.y - 36 };
+		headerDrawInfo.text = "untitled card game";
+		DrawHeader(info, headerDrawInfo);
 
-		glm::ivec2 buttonPos = headerPos;
-		buttonPos.y -= 36;
-		if(DrawButton(info, buttonPos, "new game"))
+		ButtonDrawInfo buttonDrawInfo{};
+		buttonDrawInfo.origin = headerDrawInfo.origin - glm::ivec2(0, 36);
+		buttonDrawInfo.text = "new game";
+		if (DrawButton(info, buttonDrawInfo))
 			Load(LevelIndex::newGame);
-
+		
 		if (saveDataValid)
 		{
-			buttonPos.y -= 18;
-			if (DrawButton(info, buttonPos, "continue"))
+			buttonDrawInfo.origin.y -= 18;
+			buttonDrawInfo.text = "continue";
+			if (DrawButton(info, buttonDrawInfo))
 				Load(LevelIndex::partySelect);
 		}
 
