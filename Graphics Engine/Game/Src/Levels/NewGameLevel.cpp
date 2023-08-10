@@ -31,7 +31,12 @@ namespace game
 
 	bool NewGameLevel::ModeSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
-		level->DrawTopCenterHeader(info, "choose a mode.");
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 27 };
+		headerDrawInfo.text = "choose a mode.";
+		headerDrawInfo.center = true;
+		headerDrawInfo.overflow = true;
+		level->DrawHeader(info, headerDrawInfo);
 
 		ButtonDrawInfo buttonDrawInfo{};
 		buttonDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 9 };
