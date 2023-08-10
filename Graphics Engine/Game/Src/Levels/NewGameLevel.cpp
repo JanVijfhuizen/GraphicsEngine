@@ -31,17 +31,10 @@ namespace game
 
 	bool NewGameLevel::ModeSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
-		constexpr glm::ivec2 headerPos{ SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 90 };
-
-		HeaderDrawInfo headerDrawInfo{};
-		headerDrawInfo.origin = headerPos;
-		headerDrawInfo.text = "choose a mode";
-		headerDrawInfo.center = true;
-		headerDrawInfo.overflow = true;
-		level->DrawHeader(info, headerDrawInfo);
+		level->DrawTopCenterHeader(info, "choose a mode.");
 
 		ButtonDrawInfo buttonDrawInfo{};
-		buttonDrawInfo.origin = { headerPos.x, headerPos.y - 36 };
+		buttonDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 9 };
 		buttonDrawInfo.text = "standard";
 		buttonDrawInfo.center = true;
 
@@ -94,23 +87,14 @@ namespace game
 
 	bool NewGameLevel::PartySelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
-		HeaderDrawInfo headerDrawInfo{};
-		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 64 };
-		headerDrawInfo.text = "choose your starting cards.";
-		headerDrawInfo.center = true;
-		headerDrawInfo.scale = 1;
-		headerDrawInfo.overflow = true;
-		level->DrawHeader(info, headerDrawInfo);
+		level->DrawTopCenterHeader(info, "choose your starting cards.");
 
 		if (monsterChoice != -1 && artifactChoice != -1)
 		{
 			if (timeSinceFirstChoicesMade < 0)
 				timeSinceFirstChoicesMade = level->GetTime();
 
-			headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, 64 };
-			headerDrawInfo.text = "press enter to confirm your choice.";
-			headerDrawInfo.overrideLifeTime = level->GetTime() - timeSinceFirstChoicesMade;
-			level->DrawHeader(info, headerDrawInfo);
+			level->DrawPressEnterToContinue(info, level->GetTime() - timeSinceFirstChoicesMade);
 
 			if (info.inputState.enter.PressEvent())
 			{
@@ -144,25 +128,12 @@ namespace game
 	bool NewGameLevel::JoinState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		TextTask joinTextTask{};
-		joinTextTask.text = "daisy joins you on your adventure.";
-		joinTextTask.position = TEXT_CENTER_TOP_POSITION;
-		joinTextTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(joinTextTask);
-
-		Card* cards = &info.monsters[0];
-
-		RenderCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.cards = &cards;
-		renderInfo.length = 1;
-		RenderCards(renderInfo);
-
-		TextTask textTask{};
-		textTask.text = "press enter to continue.";
-		textTask.scale = TEXT_BIG_SCALE;
-		textTask.position = TEXT_CENTER_BOT_POSITION;
-		info.textTasks.Push(textTask);
+		const char* text = "daisy joins you on your adventure.";
+		level->DrawTopCenterHeader(info, text);
+		DrawFullCard(info, &info.monsters[0]);
+		const float f = level->GetTime() - static_cast<float>(strlen(text)) / 20.f;
+		if(f >= 0)
+			level->DrawPressEnterToContinue(info, f);
 
 		if (info.inputState.enter.PressEvent())
 		{

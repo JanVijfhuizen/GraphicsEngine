@@ -105,6 +105,8 @@ namespace game
 		[[nodiscard]] static uint32_t DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo);
 		[[nodiscard]] static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
 		static void DrawFullCard(const LevelUpdateInfo& info, Card* card);
+		void DrawTopCenterHeader(const LevelUpdateInfo& info, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
+		void DrawPressEnterToContinue(const LevelUpdateInfo& info, float overrideLifeTime = -1) const;
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;

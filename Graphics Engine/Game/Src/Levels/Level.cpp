@@ -187,7 +187,7 @@ namespace game
 	void Level::DrawFullCard(const LevelUpdateInfo& info, Card* card)
 	{
 		constexpr uint32_t CARD_FRAME_COUNT = 3;
-		constexpr int32_t SCALE_MULTIPLIER = 6;
+		constexpr int32_t SCALE_MULTIPLIER = 4;
 
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
 		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
@@ -226,6 +226,30 @@ namespace game
 		ruleTextTask.position = bgRenderTask.position;
 		ruleTextTask.position.y -= 7 * SCALE_MULTIPLIER;
 		info.textTasks.Push(ruleTextTask);
+	}
+
+	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const char* text, const uint32_t scale, const float overrideLifeTime) const
+	{
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 32 };
+		headerDrawInfo.text = text;
+		headerDrawInfo.center = true;
+		headerDrawInfo.overflow = true;
+		headerDrawInfo.overrideLifeTime = overrideLifeTime;
+		headerDrawInfo.scale = scale;
+		DrawHeader(info, headerDrawInfo);
+	}
+
+	void Level::DrawPressEnterToContinue(const LevelUpdateInfo& info, float overrideLifeTime) const
+	{
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, 32 };
+		headerDrawInfo.text = "press enter to continue...";
+		headerDrawInfo.center = true;
+		headerDrawInfo.overflow = true;
+		headerDrawInfo.overrideLifeTime = overrideLifeTime;
+		headerDrawInfo.scale = 1;
+		DrawHeader(info, headerDrawInfo);
 	}
 
 	float Level::GetTime() const
