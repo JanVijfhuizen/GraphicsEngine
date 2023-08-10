@@ -8,7 +8,7 @@ namespace game
 	{
 		virtual bool Create(T& state, const LevelCreateInfo& info) { return true; }
 		virtual void Reset(T& state, const LevelInfo& info){}
-		virtual bool Update(T& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) = 0;
+		virtual bool Update(T& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) = 0;
 	};
 
 	template <typename T>
@@ -16,22 +16,30 @@ namespace game
 	{
 		T state{};
 		uint32_t current = 0;
+		uint32_t next = -1;
 		LevelState<T>** states;
 		uint32_t length;
 
-		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
+		bool Update(const LevelUpdateInfo& info, Level* level, LevelIndex& loadLevelIndex);
 		static LevelStateMachine Create(const LevelCreateInfo& info, const jv::Array<LevelState<T>*>& states, const T& state = {});
 	};
 
 	template <typename T>
-	bool LevelStateMachine<T>::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
+	bool LevelStateMachine<T>::Update(const LevelUpdateInfo& info, Level* level, LevelIndex& loadLevelIndex)
 	{
+		if(next != -1 && !level->GetIsLoading())
+		{
+			current = next;
+			next = -1;
+			states[current]->Reset(state, info);
+		}
+
 		uint32_t index = current;
-		const auto res = states[current]->Update(state, info, index, loadLevelIndex);
+		const auto res = states[current]->Update(state, level, info, index, loadLevelIndex);
 		if(index != current)
 		{
-			current = index;
-			states[index]->Reset(state, info);
+			next = index;
+			level->Load(LevelIndex::animOnly);
 		}
 		return res;
 	}

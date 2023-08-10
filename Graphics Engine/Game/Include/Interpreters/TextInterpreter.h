@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Engine/Engine.h"
-#include "GE/SubTexture.h"
-#include "Tasks/RenderTask.h"
+#include "GE/AtlasGenerator.h"
+#include "Tasks/PixelPerfectRenderTask.h"
 #include "Tasks/TextTask.h"
 
 namespace game
@@ -11,12 +11,16 @@ namespace game
 
 	struct TextInterpreterCreateInfo final
 	{
-		TaskSystem<RenderTask>* instancedRenderTasks;
+		TaskSystem<PixelPerfectRenderTask>* renderTasks;
 		glm::ivec2 atlasResolution;
-		jv::ge::SubTexture alphabetSubTexture;
-		jv::ge::SubTexture numberSubTexture;
-		jv::ge::SubTexture symbolSubTexture;
-		uint32_t symbolSize = 8;
+		jv::ge::AtlasTexture alphabetAtlasTexture;
+		jv::ge::AtlasTexture numberAtlasTexture;
+		jv::ge::AtlasTexture symbolAtlasTexture;
+		uint32_t symbolSize = 9;
+		int32_t spacing = -2;
+		uint32_t bounceHeight = 3;
+		float fadeInSpeed = 20;
+		float bounceDuration = 4;
 	};
 
 	class TextInterpreter final : public TaskInterpreter<TextTask, TextInterpreterCreateInfo>

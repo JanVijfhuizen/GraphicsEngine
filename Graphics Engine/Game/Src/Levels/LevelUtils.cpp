@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/LevelUtils.h"
 
+#include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
 #include "Levels/Level.h"
@@ -18,42 +19,10 @@ namespace game
 		const float offset = -(CARD_WIDTH_OFFSET + info.additionalSpacing) * (jv::Min<uint32_t>(info.length, info.lineLength) - 1) / 2;
 		const uint32_t w = i % info.lineLength;
 		const uint32_t h = i / info.lineLength;
-		const auto pos = info.center + glm::vec2(
+		const auto pos = info.position + glm::vec2(
 			offset + (CARD_WIDTH_OFFSET + info.additionalSpacing) * static_cast<float>(w),
 			h * CARD_HEIGHT * 2);
 		return pos;
-	}
-
-	void RenderLargeCard(const RenderCardInfo& info, Card* card)
-	{
-		// Draw large version.
-		RenderTask bgRenderTask{};
-		bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT) * CARD_LARGE_SIZE_INCREASE_MUL;
-		bgRenderTask.scale.x = CARD_WIDTH * CARD_LARGE_SIZE_INCREASE_MUL;
-		bgRenderTask.position = LARGE_CARD_POS + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT) * CARD_LARGE_SIZE_INCREASE_MUL);
-		bgRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		info.levelUpdateInfo->priorityRenderTasks.Push(bgRenderTask);
-
-		RenderTask picRenderTask{};
-		picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL;
-		picRenderTask.scale.x = CARD_WIDTH * CARD_LARGE_SIZE_INCREASE_MUL;
-		picRenderTask.position = LARGE_CARD_POS - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL);
-		picRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		info.levelUpdateInfo->priorityRenderTasks.Push(picRenderTask);
-
-		TextTask titleTextTask{};
-		titleTextTask.lineLength = 12;
-		titleTextTask.center = true;
-		titleTextTask.position = LARGE_CARD_POS - glm::vec2(0, CARD_HEIGHT * CARD_LARGE_SIZE_INCREASE_MUL);
-		titleTextTask.text = card->name;
-		titleTextTask.scale = CARD_TITLE_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
-		info.levelUpdateInfo->priorityTextTasks.Push(titleTextTask);
-
-		TextTask ruleTextTask = titleTextTask;
-		ruleTextTask.position = LARGE_CARD_POS + glm::vec2(0, bgRenderTask.scale.y / 2 * CARD_LARGE_SIZE_INCREASE_MUL);
-		ruleTextTask.text = card->ruleText;
-		ruleTextTask.scale = CARD_TEXT_SIZE * CARD_LARGE_SIZE_INCREASE_MUL;
-		info.levelUpdateInfo->priorityTextTasks.Push(ruleTextTask);
 	}
 
 	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info)
@@ -62,8 +31,7 @@ namespace game
 		ret.selectedMonster = RenderCards(info);
 
 		TextTask textTask{};
-		textTask.center = true;
-		textTask.scale = CARD_STAT_SIZE;
+		textTask.scale = CARD_STAT_SIZE * info.scale;
 
 		constexpr float f = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
 
@@ -71,6 +39,7 @@ namespace game
 		{
 			const auto pos = GetCardPosition(info, i);
 			const auto monsterCard = static_cast<MonsterCard*>(info.cards[i]);
+
 			textTask.position = pos - glm::vec2(CARD_WIDTH - CARD_BORDER_OFFSET, -f);
 			textTask.text = TextInterpreter::IntToConstCharPtr(monsterCard->attack, frameArena);
 			info.levelUpdateInfo->textTasks.Push(textTask);
@@ -81,14 +50,8 @@ namespace game
 
 			if(info.currentHealthArr)
 			{
-				const uint32_t l1 = GetNumberOfDigits(info.currentHealthArr[i]);
-				const uint32_t l2 = GetNumberOfDigits(monsterCard->health);
 				const char* currentHealthText = TextInterpreter::IntToConstCharPtr(info.currentHealthArr[i], frameArena);
-				const auto ptr = static_cast<char*>(frameArena.Alloc(l1 + l2 + 1));
-				memcpy(ptr, currentHealthText, l1);
-				memcpy(&ptr[l1 + 1], maxHealthText, l2 + 1);
-				ptr[l1] = '/';
-				textTask.text = ptr;
+				textTask.text = currentHealthText;
 			}
 
 			if(info.flawArr && info.flawArr[i])
@@ -100,25 +63,35 @@ namespace game
 
 				if (collided)
 				{
-					flawPos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
-					RenderLargeCard(info, info.flawArr[i]);
+					flawPos.y -= info.scale * info.cardHeightPctIncreaseOnHovered;
+
+					Card* flaw[]{ info.flawArr[i] };
+					RenderCardInfo renderFlawCardInfo{};
+					renderFlawCardInfo.levelUpdateInfo = info.levelUpdateInfo;
+					renderFlawCardInfo.position = LARGE_CARD_POS;
+					renderFlawCardInfo.cards = flaw;
+					renderFlawCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
+					renderFlawCardInfo.priority = true;
+					renderFlawCardInfo.interactable = false;
+					renderFlawCardInfo.state = RenderCardInfo::State::full;
+					RenderCards(renderFlawCardInfo);
+
 					ret.selectedMonster = i;
 					ret.selectedFlaw = i;
 				}
 
 				RenderTask stackedRenderTask{};
-				stackedRenderTask.scale = scale;
+				stackedRenderTask.scale = glm::vec2(CARD_HEIGHT);
 				stackedRenderTask.position = flawPos;
-				stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+				stackedRenderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(TextureId::cardMod)].subTexture;
 				stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
 				info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
 
 				TextTask titleTextTask{};
 				titleTextTask.lineLength = 12;
-				titleTextTask.center = true;
 				titleTextTask.position = flawPos;
 				titleTextTask.text = info.flawArr[i]->name;
-				titleTextTask.scale = CARD_TITLE_SIZE;
+				titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
 				info.levelUpdateInfo->textTasks.Push(titleTextTask);
 			}
 
@@ -135,16 +108,27 @@ namespace game
 					const bool collided = CollidesShape(artifactPos, scale, mousePos);
 					if (collided)
 					{
-						artifactPos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
-						RenderLargeCard(info, info.artifactArr[i][j]);
+						artifactPos.y -= info.scale * info.cardHeightPctIncreaseOnHovered;
+
+						Card* flaw[]{ info.artifactArr[i][j] };
+						RenderCardInfo renderFlawCardInfo{};
+						renderFlawCardInfo.levelUpdateInfo = info.levelUpdateInfo;
+						renderFlawCardInfo.position = LARGE_CARD_POS;
+						renderFlawCardInfo.cards = flaw;
+						renderFlawCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
+						renderFlawCardInfo.priority = true;
+						renderFlawCardInfo.interactable = false;
+						renderFlawCardInfo.state = RenderCardInfo::State::full;
+						RenderCards(renderFlawCardInfo);
+
 						ret.selectedArtifact = j;
 						ret.selectedMonster = i;
 					}
 
 					RenderTask stackedRenderTask{};
-					stackedRenderTask.scale = scale;
+					stackedRenderTask.scale = glm::vec2(CARD_HEIGHT);
 					stackedRenderTask.position = artifactPos;
-					stackedRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
+					stackedRenderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(TextureId::cardMod)].subTexture;
 					stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
 					info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
 
@@ -152,10 +136,9 @@ namespace game
 					{
 						TextTask titleTextTask{};
 						titleTextTask.lineLength = 12;
-						titleTextTask.center = true;
 						titleTextTask.position = artifactPos;
 						titleTextTask.text = artifactCard->name;
-						titleTextTask.scale = CARD_TITLE_SIZE;
+						titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
 						info.levelUpdateInfo->textTasks.Push(titleTextTask);
 					}
 				}
@@ -172,8 +155,7 @@ namespace game
 		const auto result = RenderCards(info);
 
 		TextTask costTextTask{};
-		costTextTask.center = true;
-		costTextTask.scale = CARD_STAT_SIZE;
+		costTextTask.scale = CARD_STAT_SIZE * info.scale;
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
@@ -189,63 +171,72 @@ namespace game
 
 	uint32_t RenderCards(const RenderCardInfo& info)
 	{
-		uint32_t selected = -1;
+		uint32_t collided = -1;
+		const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
+
+		TextureId id = TextureId::card;
+		if (info.state == RenderCardInfo::State::field)
+			id = TextureId::cardField;
+
+		RenderTask renderTask{};
+		renderTask.scale *= info.scale;
+		renderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(id)].subTexture;
 
 		for (uint32_t i = 0; i < info.length; ++i)
 		{
-			const auto card = info.cards[i];
 			auto pos = GetCardPosition(info, i);
-			const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
+			auto card = info.cards[i];
 
-			if (CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
+			if (info.interactable && CollidesShape(pos, glm::vec2(CARD_WIDTH, CARD_HEIGHT), mousePos))
 			{
-				selected = i;
-				pos.y -= CARD_SELECTED_Y_POSITION_INCREASE;
+				collided = i;
+				pos.y -= info.scale * info.cardHeightPctIncreaseOnHovered;
+
+				RenderCardInfo renderLargeCardInfo{};
+				renderLargeCardInfo.levelUpdateInfo = info.levelUpdateInfo;
+				renderLargeCardInfo.position = LARGE_CARD_POS;
+				renderLargeCardInfo.cards = &card;
+				renderLargeCardInfo.scale *= CARD_LARGE_SIZE_INCREASE_MUL;
+				renderLargeCardInfo.priority = true;
+				renderLargeCardInfo.interactable = false;
+				renderLargeCardInfo.state = RenderCardInfo::State::full;
+				RenderCards(renderLargeCardInfo);
 			}
 
-			auto finalColor = glm::vec4(1);
-			finalColor *= info.highlight != -1 ? info.highlight == i ? 1 : CARD_DARKENED_COLOR_MUL : 1;
-			finalColor *= info.selectedArr ? info.selectedArr[i] ? 1 : CARD_DARKENED_COLOR_MUL : 1;
+			renderTask.position = pos;
+			renderTask.color = glm::vec4(1);
+			if (info.selectedArr && !info.selectedArr[i])
+				renderTask.color *= CARD_DARKENED_COLOR_MUL;
+			if (info.highlight != -1 && info.highlight != i)
+				renderTask.color *= CARD_DARKENED_COLOR_MUL;
 
-			RenderTask bgRenderTask{};
-			bgRenderTask.scale.y = CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT);
-			bgRenderTask.scale.x = CARD_WIDTH;
-			bgRenderTask.position = pos + glm::vec2(0, CARD_HEIGHT * (1.f - CARD_PIC_FILL_HEIGHT));
-			bgRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
-			bgRenderTask.color = finalColor;
-			info.levelUpdateInfo->renderTasks.Push(bgRenderTask);
+			if (info.priority)
+				info.levelUpdateInfo->priorityRenderTasks.Push(renderTask);
+			else
+				info.levelUpdateInfo->renderTasks.Push(renderTask);
 
-			RenderTask picRenderTask{};
-			picRenderTask.scale.y = CARD_HEIGHT * CARD_PIC_FILL_HEIGHT;
-			picRenderTask.scale.x = CARD_WIDTH;
-			picRenderTask.position = pos - glm::vec2(0, CARD_HEIGHT * CARD_PIC_FILL_HEIGHT);
-			picRenderTask.subTexture = info.levelUpdateInfo->subTextures[static_cast<uint32_t>(TextureId::fallback)];
-			picRenderTask.color = finalColor;
-			info.levelUpdateInfo->renderTasks.Push(picRenderTask);
-
-			if(card)
+			if(info.state != RenderCardInfo::State::field)
 			{
+				const bool full = info.state == RenderCardInfo::State::full;
+
 				TextTask titleTextTask{};
 				titleTextTask.lineLength = 12;
-				titleTextTask.center = true;
-				titleTextTask.position = pos - glm::vec2(0, CARD_HEIGHT);
+				titleTextTask.position = pos - glm::vec2(0, renderTask.scale.y - CARD_HEIGHT / 5);
 				titleTextTask.text = card->name;
-				titleTextTask.scale = CARD_TITLE_SIZE;
+				titleTextTask.scale = CARD_TITLE_SIZE * info.scale;
+				titleTextTask.priority = info.priority;
 				info.levelUpdateInfo->textTasks.Push(titleTextTask);
 
 				TextTask ruleTextTask = titleTextTask;
-				ruleTextTask.position = pos + glm::vec2(0, bgRenderTask.scale.y / 2);
-				ruleTextTask.text = card->ruleText;
-				ruleTextTask.maxLength = CARD_SMALL_TEXT_CAPACITY;
-				ruleTextTask.scale = CARD_TEXT_SIZE;
-				info.levelUpdateInfo->textTasks.Push(ruleTextTask);
-
-				if(selected == i)
-					RenderLargeCard(info, card);
+				ruleTextTask.position = pos + glm::vec2(0, renderTask.scale.y - CARD_HEIGHT / 2);
+				ruleTextTask.text = full ? card->ruleText : "...";
+				ruleTextTask.scale = CARD_TEXT_SIZE * info.scale;
+				ruleTextTask.priority = info.priority;
+				info.levelUpdateInfo->textTasks.Push(titleTextTask);
 			}
 		}
 
-		return selected;
+		return collided;
 	}
 
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)

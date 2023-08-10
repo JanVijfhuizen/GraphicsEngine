@@ -3,6 +3,7 @@
 #include <Levels/LevelUtils.h>
 
 #include "CardGame.h"
+#include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
 #include "States/InputState.h"
@@ -10,6 +11,7 @@
 #include "States/BoardState.h"
 #include "States/PlayerState.h"
 #include "Utils/BoxCollision.h"
+#include "Utils/Shuffle.h"
 
 namespace game
 {
@@ -155,11 +157,25 @@ namespace game
 		return events.Pop();
 	}
 
+	uint32_t MainLevel::State::Draw(const LevelInfo& info)
+	{
+		if(magicDeck.count == 0)
+		{
+			for (const auto& magic : info.gameState.magics)
+				magicDeck.Add() = magic;
+			Shuffle(magicDeck.ptr, magicDeck.count);
+		}
+
+		return magicDeck.Pop();
+	}
+
 	MainLevel::State MainLevel::State::Create(const LevelCreateInfo& info)
 	{
 		State state{};
 		state.decks = Decks::Create(info);
 		state.paths = jv::CreateArray<Path>(info.arena, DISCOVER_LENGTH);
+		state.magicDeck = jv::CreateVector<uint32_t>(info.arena, MAGIC_DECK_SIZE);
+		state.hand = jv::CreateVector<uint32_t>(info.arena, HAND_DRAW_COUNT);
 		return state;
 	}
 
@@ -172,7 +188,7 @@ namespace game
 		}
 	}
 
-	bool MainLevel::BossRevealState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::BossRevealState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		Card* cards[DISCOVER_LENGTH]{};
@@ -186,7 +202,6 @@ namespace game
 		RenderCards(renderInfo);
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "the bosses for this stage have been revealed.";
 		textTask.lineLength = 20;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -220,7 +235,7 @@ namespace game
 		}
 	}
 
-	bool MainLevel::PathSelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::PathSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		// Render bosses.
@@ -232,7 +247,7 @@ namespace game
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.cards = cards;
 		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.center = glm::vec2(0, -CARD_HEIGHT);
+		renderInfo.position = glm::vec2(0, -CARD_HEIGHT);
 		renderInfo.highlight = discoverOption;
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 
@@ -244,7 +259,6 @@ namespace game
 			counters += i == discoverOption;
 
 			TextTask textTask{};
-			textTask.center = true;
 			textTask.text = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
 			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * DISCOVER_LENGTH / 2 + CARD_WIDTH_OFFSET * 2 * i - CARD_WIDTH_OFFSET, -CARD_HEIGHT);
 			textTask.scale = TEXT_BIG_SCALE;
@@ -256,7 +270,7 @@ namespace game
 		{
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.flaws[state.paths[i].flaw];
-			renderInfo.center.x += CARD_WIDTH * 2;
+			renderInfo.position.x += CARD_WIDTH * 2;
 			const auto choice = RenderCards(renderInfo);
 			selected = choice != -1 ? choice : selected;
 		}
@@ -265,7 +279,7 @@ namespace game
 		{
 			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 				cards[i] = &info.artifacts[state.paths[i].artifact];
-			renderInfo.center.x += CARD_WIDTH * 2;
+			renderInfo.position.x += CARD_WIDTH * 2;
 			const auto choice = RenderCards(renderInfo);
 			selected = choice != -1 ? choice : selected;
 		}
@@ -274,7 +288,7 @@ namespace game
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.rooms[state.paths[i].room];
 
-		renderInfo.center = glm::vec2(0, CARD_HEIGHT);
+		renderInfo.position = glm::vec2(0, CARD_HEIGHT);
 		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
 		auto choice = RenderCards(renderInfo);
 		selected = choice != -1 ? choice : selected;
@@ -283,7 +297,7 @@ namespace game
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.magics[state.paths[i].magic];
 
-		renderInfo.center.x += CARD_WIDTH * 2;
+		renderInfo.position.x += CARD_WIDTH * 2;
 		choice = RenderMagicCards(info.frameArena, renderInfo);
 		selected = choice != -1 ? choice : selected;
 
@@ -291,7 +305,6 @@ namespace game
 			discoverOption = selected == discoverOption ? -1 : selected;
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "select the road to take.";
 		textTask.lineLength = 20;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -323,6 +336,7 @@ namespace game
 		boardState = {};
 		allySelected = -1;
 		newTurn = true;
+		recruitableMonster = -1;
 
 		boardState.AddParty(info);
 
@@ -331,9 +345,79 @@ namespace game
 			boardState.TryAddEnemy(info, state.GetMonster(info, boardState));
 	}
 
-	bool MainLevel::CombatState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::CombatState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
+		if(recruitableMonster != -1)
+		{
+			if(boardState.partySize < PARTY_ACTIVE_CAPACITY && info.playerState.partySize < PARTY_CAPACITY)
+			{
+				TextTask textTask{};\
+				textTask.text = "you may recruit the last monster defeated.";
+				textTask.lineLength = 20;
+				textTask.position = TEXT_CENTER_TOP_POSITION;
+				textTask.scale = TEXT_BIG_SCALE;
+				info.textTasks.Push(textTask);
+
+				Card* card = &info.monsters[recruitableMonster];
+				RenderMonsterCardInfo renderInfo{};
+				renderInfo.levelUpdateInfo = &info;
+				renderInfo.cards = &card;
+				renderInfo.length = 1;
+				renderInfo.position.y -= .25f;
+				RenderMonsterCards(info.frameArena, renderInfo);
+
+				RenderTask buttonRenderTask{};
+				buttonRenderTask.position.y = .5f;
+				buttonRenderTask.scale.y *= .12f;
+				buttonRenderTask.scale.x = .4f;
+				buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
+				info.renderTasks.Push(buttonRenderTask);
+
+				TextTask buttonTextTask{};
+				buttonTextTask.position = buttonRenderTask.position;
+				buttonTextTask.text = "recruit";
+				buttonTextTask.scale = .06f;
+				info.textTasks.Push(buttonTextTask);
+
+				bool decided = false;
+				bool joins = false;
+
+				if (info.inputState.lMouse == InputState::pressed)
+					if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+					{
+						joins = true;
+						decided = true;
+					}
+
+				buttonRenderTask.position.y -= BUTTON_Y_SCALE * 2 + BUTTON_Y_OFFSET;
+				info.renderTasks.Push(buttonRenderTask);
+
+				buttonTextTask.position.y -= BUTTON_Y_SCALE * 2 + BUTTON_Y_OFFSET;
+				buttonTextTask.text = "pass";
+				info.textTasks.Push(buttonTextTask);
+
+				auto& gameState = info.gameState;
+
+				if (info.inputState.lMouse == InputState::pressed)
+					if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
+						decided = true;
+
+				if(!decided)
+					return true;
+
+				if(joins)
+				{
+					info.playerState.AddMonster(recruitableMonster);
+					gameState.healths[gameState.partySize] = info.monsters[recruitableMonster].health;
+					gameState.partyIds[gameState.partySize++] = info.playerState.partySize - 1;
+				}
+			}
+
+			stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+			return true;
+		}
+
 		if(newTurn)
 		{
 			for (auto& b : tapped)
@@ -342,26 +426,47 @@ namespace game
 			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 				boardState.RerollEnemyTarget(i);
 			eventCard = state.GetEvent(info);
+
+			state.hand.Clear();
+			for (uint32_t i = 0; i < HAND_DRAW_COUNT; ++i)
+				state.hand.Add() = state.Draw(info);
 		}
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "combat phase.";
 		textTask.lineLength = 20;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
 		textTask.scale = TEXT_BIG_SCALE;
 		info.textTasks.Push(textTask);
 
-		Card* cards[BOARD_CAPACITY_PER_SIDE]{};
+		Card* cards[BOARD_CAPACITY_PER_SIDE > HAND_MAX_SIZE ? BOARD_CAPACITY_PER_SIDE : HAND_MAX_SIZE]{};
 
-		cards[0] = &info.rooms[state.paths[state.chosenPath].room];
-		cards[1] = &info.events[eventCard];
+		for (uint32_t i = 0; i < state.hand.count; ++i)
+			cards[i] = &info.magics[state.hand[i]];
+
+		RenderCardInfo handRenderInfo{};
+		handRenderInfo.levelUpdateInfo = &info;
+		handRenderInfo.cards = cards;
+		handRenderInfo.length = state.hand.count;
+		handRenderInfo.position = glm::vec2(0, 1);
+		handRenderInfo.additionalSpacing = -CARD_SPACING / 2;
+		handRenderInfo.state = RenderCardInfo::State::summary;
+		handRenderInfo.cardHeightPctIncreaseOnHovered = 1;
+		handRenderInfo.priority = true;
+		RenderCards(handRenderInfo);
+
 		RenderCardInfo roomRenderInfo{};
 		roomRenderInfo.levelUpdateInfo = &info;
 		roomRenderInfo.cards = cards;
-		roomRenderInfo.length = 2;
-		roomRenderInfo.center = glm::vec2(.8f, -.5f);
+		roomRenderInfo.length = 1;
+		roomRenderInfo.position = glm::vec2(.8f, -.75);
 		roomRenderInfo.additionalSpacing = -CARD_SPACING;
+		roomRenderInfo.state = RenderCardInfo::State::field;
+		cards[0] = &info.rooms[state.paths[state.chosenPath].room];
+		RenderCards(roomRenderInfo);
+
+		cards[0] = &info.events[eventCard];
+		roomRenderInfo.position.x *= -1;
 		RenderCards(roomRenderInfo);
 
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
@@ -375,14 +480,14 @@ namespace game
 		enemyRenderInfo.levelUpdateInfo = &info;
 		enemyRenderInfo.cards = cards;
 		enemyRenderInfo.length = boardState.enemyMonsterCount;
-		enemyRenderInfo.center.y = -CARD_HEIGHT_OFFSET;
+		enemyRenderInfo.position.y = -CARD_HEIGHT_OFFSET;
 		enemyRenderInfo.currentHealthArr = currentHealths;
+		enemyRenderInfo.state = RenderCardInfo::State::field;
 		const auto enemyChoice = RenderMonsterCards(info.frameArena, enemyRenderInfo).selectedMonster;
 
 		for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 		{
 			TextTask textTask{};
-			textTask.center = true;
 			textTask.text = TextInterpreter::IntToConstCharPtr(boardState.enemyTargets[i] + 1, info.frameArena);
 			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * (boardState.enemyMonsterCount - 1) / 2 + CARD_WIDTH_OFFSET * i, -CARD_HEIGHT_OFFSET);
 			textTask.scale = TEXT_MEDIUM_SCALE;
@@ -406,9 +511,12 @@ namespace game
 		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
 
 		const auto& playerState = info.playerState;
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		const auto& gameState = info.gameState;
+
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+			const uint32_t partyId = gameState.partyIds[i];
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[partyId];
 			if (count == 0)
 				continue;
 			const auto arr = artifacts[i] = static_cast<ArtifactCard**>(info.frameArena.Alloc(sizeof(void*) * count));
@@ -420,9 +528,9 @@ namespace game
 		}
 
 		FlawCard* flaws[PARTY_ACTIVE_CAPACITY]{};
-		for (uint32_t i = 0; i < boardState.partyCount; ++i)
+		for (uint32_t i = 0; i < boardState.partySize; ++i)
 		{
-			const uint32_t index = info.gameState.flaws[boardState.partyIds[i]];
+			const uint32_t index = info.gameState.flaws[i];
 			flaws[i] = index == -1 ? nullptr : &info.flaws[index];
 		}
 
@@ -430,12 +538,13 @@ namespace game
 		alliedRenderInfo.levelUpdateInfo = &info;
 		alliedRenderInfo.cards = cards;
 		alliedRenderInfo.length = boardState.alliedMonsterCount;
-		alliedRenderInfo.center.y = CARD_HEIGHT_OFFSET;
+		alliedRenderInfo.position.y = CARD_HEIGHT_OFFSET * 2;
 		alliedRenderInfo.selectedArr = selected;
 		alliedRenderInfo.currentHealthArr = currentHealths;
 		alliedRenderInfo.artifactArr = artifacts;
 		alliedRenderInfo.artifactCounts = artifactCounts;
 		alliedRenderInfo.flawArr = flaws;
+		alliedRenderInfo.state = RenderCardInfo::State::field;
 		const uint32_t allyChoice = RenderMonsterCards(info.frameArena, alliedRenderInfo).selectedMonster;
 		
 		if(info.inputState.lMouse == InputState::pressed && allyChoice != -1 && !tapped[allyChoice])
@@ -447,19 +556,22 @@ namespace game
 			{
 				const uint32_t allyMonsterId = boardState.allyIds[allySelected];
 				const auto& allyMonster = info.monsters[allyMonsterId];
+				const uint32_t monsterId = boardState.enemyIds[enemyChoice];
+
 				boardState.DealDamage(BOARD_CAPACITY_PER_SIDE + enemyChoice, allyMonster.attack);
+
 				if (boardState.enemyMonsterCount == 0)
 				{
 					auto& gameState = info.gameState;
-					for (uint32_t i = 0; i < boardState.partyCount; ++i)
+					for (uint32_t i = 0; i < boardState.partySize; ++i)
 					{
 						gameState.partyIds[i] = boardState.partyIds[i];
 						gameState.healths[i] = boardState.allyHealths[i];
 					}
-					gameState.partySize = boardState.partyCount;
-
-					stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+					gameState.partySize = boardState.partySize;
+					recruitableMonster = monsterId;
 				}
+					
 				tapped[allySelected] = true;
 			}
 			allySelected = -1;
@@ -474,7 +586,7 @@ namespace game
 				break;
 			}
 		}
-		if (allTapped)
+		if (allTapped || info.inputState.enter == InputState::pressed)
 		{
 			for (uint32_t i = 0; i < boardState.enemyMonsterCount; ++i)
 			{
@@ -499,12 +611,12 @@ namespace game
 		discoverOption = -1;
 	}
 
-	bool MainLevel::RewardMagicCardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::RewardMagicCardState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		Card* cards[MAGIC_CAPACITY]{};
+		Card* cards[MAGIC_DECK_SIZE]{};
 
-		for (uint32_t i = 0; i < MAGIC_CAPACITY; ++i)
+		for (uint32_t i = 0; i < MAGIC_DECK_SIZE; ++i)
 			cards[i] = &info.magics[info.gameState.magics[i]];
 
 		scroll += info.inputState.scroll * .1f;
@@ -512,13 +624,13 @@ namespace game
 
 		RenderCardInfo renderInfo{};
 		renderInfo.levelUpdateInfo = &info;
-		renderInfo.length = MAGIC_CAPACITY;
+		renderInfo.length = MAGIC_DECK_SIZE;
 		renderInfo.highlight = discoverOption;
 		renderInfo.cards = cards;
-		renderInfo.center.x = scroll;
-		renderInfo.center.y = CARD_HEIGHT;
+		renderInfo.position.x = scroll;
+		renderInfo.position.y = CARD_HEIGHT;
 		renderInfo.additionalSpacing = -CARD_SPACING;
-		renderInfo.lineLength = MAGIC_CAPACITY / 2;
+		renderInfo.lineLength = MAGIC_DECK_SIZE / 2;
 		const uint32_t choice = RenderMagicCards(info.frameArena, renderInfo);
 
 		const auto& path = state.paths[state.chosenPath];
@@ -526,15 +638,14 @@ namespace game
 		cards[0] = &info.magics[path.magic];
 		renderInfo.length = 1;
 		renderInfo.highlight = -1;
-		renderInfo.center.y *= -1;
-		renderInfo.center.x = 0;
+		renderInfo.position.y *= -1;
+		renderInfo.position.x = 0;
 		RenderMagicCards(info.frameArena, renderInfo);
 
 		if (info.inputState.lMouse == InputState::pressed)
 			discoverOption = choice == discoverOption ? -1 : choice;
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.lineLength = 20;
 		textTask.scale = TEXT_BIG_SCALE;
 		textTask.position = TEXT_CENTER_BOT_POSITION;
@@ -566,10 +677,10 @@ namespace game
 		discoverOption = -1;
 	}
 
-	bool MainLevel::RewardFlawCardState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::RewardFlawCardState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		Card* cards[MAGIC_CAPACITY]{};
+		Card* cards[MAGIC_DECK_SIZE]{};
 
 		const auto& playerState = info.playerState;
 		const auto& gameState = info.gameState;
@@ -587,7 +698,6 @@ namespace game
 		if (flawSlotAvailable)
 		{
 			TextTask textTask{};
-			textTask.center = true;
 			textTask.lineLength = 20;
 			textTask.scale = TEXT_BIG_SCALE;
 			textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -603,14 +713,14 @@ namespace game
 			renderInfo.cards = cards;
 			renderInfo.selectedArr = selected;
 			renderInfo.highlight = discoverOption;
-			renderInfo.center.y = CARD_HEIGHT;
+			renderInfo.position.y = CARD_HEIGHT;
 			renderInfo.additionalSpacing = -CARD_SPACING;
 			const uint32_t choice = RenderMonsterCards(info.frameArena, renderInfo).selectedMonster;
 
 			const auto& path = state.paths[state.chosenPath];
 
 			cards[0] = &info.flaws[path.flaw];
-			renderInfo.center.y *= -1;
+			renderInfo.position.y *= -1;
 			renderInfo.length = 1;
 			renderInfo.selectedArr = nullptr;
 			renderInfo.highlight = -1;
@@ -645,7 +755,7 @@ namespace game
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
 	}
 
-	bool MainLevel::RewardArtifactState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::RewardArtifactState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		Card* cards[PARTY_ACTIVE_CAPACITY]{};
@@ -654,7 +764,6 @@ namespace game
 		const auto& gameState = info.gameState;
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.lineLength = 20;
 		textTask.scale = .06f;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -690,7 +799,7 @@ namespace game
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.length = gameState.partySize;
 		renderInfo.cards = cards;
-		renderInfo.center.y = CARD_HEIGHT_OFFSET;
+		renderInfo.position.y = CARD_HEIGHT_OFFSET;
 		renderInfo.artifactArr = artifacts;
 		renderInfo.artifactCounts = artifactCounts;
 		const auto choice = RenderMonsterCards(info.frameArena, renderInfo);
@@ -700,7 +809,7 @@ namespace game
 		auto& path = state.paths[state.chosenPath];
 		
 		cards[0] = path.artifact == -1 ? nullptr : &info.artifacts[path.artifact];
-		renderInfo.center.y *= -1;
+		renderInfo.position.y *= -1;
 		renderInfo.length = 1;
 		RenderCards(renderInfo);
 
@@ -717,11 +826,10 @@ namespace game
 		return true;
 	}
 
-	bool MainLevel::ExitFoundState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.lineLength = 20;
 		textTask.scale = TEXT_BIG_SCALE;
 		textTask.position = TEXT_CENTER_TOP_POSITION;
@@ -731,7 +839,7 @@ namespace game
 		RenderTask buttonRenderTask{};
 		buttonRenderTask.position.y = -.18;
 		buttonRenderTask.scale.y *= .12f;
-		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
+		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
 		info.renderTasks.Push(buttonRenderTask);
 
 		if (info.inputState.lMouse == InputState::pressed)
@@ -742,7 +850,6 @@ namespace game
 			}
 
 		TextTask buttonTextTask{};
-		buttonTextTask.center = true;
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.text = "continue forward";
 		buttonTextTask.scale = TEXT_BIG_SCALE;
@@ -766,6 +873,8 @@ namespace game
 
 	void MainLevel::Create(const LevelCreateInfo& info)
 	{
+		Level::Create(info);
+
 		if (info.playerState.ironManMode)
 			ClearSaveData();
 
@@ -778,11 +887,12 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 4;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
-		return stateMachine.Update(info, loadLevelIndex);
+		if (!Level::Update(info, loadLevelIndex))
+			return false;
+		return stateMachine.Update(info, this, loadLevelIndex);
 	}
 }

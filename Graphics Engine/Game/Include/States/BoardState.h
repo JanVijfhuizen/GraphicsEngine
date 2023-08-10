@@ -7,7 +7,7 @@ namespace game
 	struct BoardState final
 	{
 		uint32_t partyIds[PARTY_ACTIVE_CAPACITY]{};
-		uint32_t partyCount = 0;
+		uint32_t partySize = 0;
 
 		union
 		{

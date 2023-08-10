@@ -1,5 +1,7 @@
 ﻿#include "pch_game.h"
 #include "CardGame.h"
+
+#include <chrono>
 #include <fstream>
 #include <stb_image.h>
 #include <Engine/Engine.h>
@@ -12,7 +14,7 @@
 #include "GE/GraphicsEngine.h"
 #include "Interpreters/DynamicRenderInterpreter.h"
 #include "Interpreters/InstancedRenderInterpreter.h"
-#include "Interpreters/MouseInterpreter.h"
+#include "Interpreters/PixelPerfectRenderInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
 #include "Levels/Level.h"
@@ -23,13 +25,14 @@
 #include "States/GameState.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
-#include "Tasks/MouseTask.h"
 
 namespace game 
 {
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
+
+	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 2;
 
 	struct KeyCallback final
 	{
@@ -46,19 +49,18 @@ namespace game
 		jv::ge::Resource levelScene;
 		jv::ge::Resource atlas;
 		InputState inputState{};
-		jv::Array<jv::ge::SubTexture> subTextures;
+		jv::Array<jv::ge::AtlasTexture> atlasTextures;
+		jv::Array<glm::ivec2> subTextureResolutions;
 		TaskSystem<RenderTask>* renderTasks;
 		TaskSystem<DynamicRenderTask>* dynamicRenderTasks;
 		TaskSystem<RenderTask>* priorityRenderTasks;
 		TaskSystem<TextTask>* textTasks;
-		TaskSystem<TextTask>* priorityTextTasks;
-		TaskSystem<MouseTask>* mouseTasks;
+		TaskSystem<PixelPerfectRenderTask>* pixelPerfectRenderTasks;
 		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
 		InstancedRenderInterpreter<RenderTask>* priorityRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
 		TextInterpreter* textInterpreter;
-		TextInterpreter* priorityTextInterpreter;
-		MouseInterpreter* mouseInterpreter;
+		PixelPerfectRenderInterpreter* pixelPerfectRenderInterpreter;
 
 		GameState gameState{};
 		PlayerState playerState{};
@@ -80,6 +82,9 @@ namespace game
 		jv::Array<MagicCard> magic;
 		jv::Array<FlawCard> flaws;
 		jv::Array<EventCard> events;
+
+		std::chrono::high_resolution_clock timer{};
+		std::chrono::time_point<std::chrono::steady_clock> time{};
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -121,6 +126,7 @@ namespace game
 				engine.GetMemory().tempArena,
 				engine.GetMemory().frameArena,
 				levelScene,
+				atlasTextures,
 				gameState,
 				playerState,
 				monsters,
@@ -136,12 +142,16 @@ namespace game
 			levelLoading = false;
 		}
 
+		const auto currentTime = timer.now();
+		const auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - time).count();
+		
 		const LevelUpdateInfo info
 		{
 			levelArena,
 			engine.GetMemory().tempArena,
 			engine.GetMemory().frameArena,
 			levelScene,
+			atlasTextures,
 			gameState,
 			playerState,
 			monsters,
@@ -151,20 +161,24 @@ namespace game
 			magic,
 			flaws,
 			events,
-			{800, 600}, // temp.
+			RESOLUTION,
 			inputState,
 			*renderTasks,
 			*dynamicRenderTasks,
 			*priorityRenderTasks,
 			*textTasks,
-			*priorityTextTasks,
-			subTextures
+			*pixelPerfectRenderTasks,
+			static_cast<float>(deltaTime) / 1e3f
 		};
 
+		time = currentTime;
 		auto loadLevelIndex = levelIndex;
-		auto result = levels[static_cast<uint32_t>(levelIndex)]->Update(info, loadLevelIndex);
+		const auto level = levels[static_cast<uint32_t>(levelIndex)];
+
+		auto result = level->Update(info, loadLevelIndex);
 		if (!result)
 			return result;
+		level->PostUpdate(info);
 
 		if(loadLevelIndex != levelIndex)
 		{
@@ -184,6 +198,7 @@ namespace game
 			engineCreateInfo.onKeyCallback = OnKeyCallback;
 			engineCreateInfo.onMouseCallback = OnMouseCallback;
 			engineCreateInfo.onScrollCallback = OnScrollCallback;
+			engineCreateInfo.resolution = RESOLUTION;
 			outCardGame->engine = Engine::Create(engineCreateInfo);
 		}
 
@@ -216,7 +231,7 @@ namespace game
 			outCardGame->atlas = AddImage(imageCreateInfo);
 			jv::ge::FillImage(outCardGame->atlas, pixels);
 			stbi_image_free(pixels);
-			outCardGame->subTextures = jv::ge::LoadAtlasMetaData(outCardGame->arena, ATLAS_META_DATA_PATH);
+			outCardGame->atlasTextures = jv::ge::LoadAtlasMetaData(outCardGame->arena, ATLAS_META_DATA_PATH);
 		}
 
 		{
@@ -225,13 +240,11 @@ namespace game
 			outCardGame->dynamicRenderTasks = &outCardGame->engine.AddTaskSystem<DynamicRenderTask>();
 			outCardGame->dynamicRenderTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->priorityRenderTasks = &outCardGame->engine.AddTaskSystem<RenderTask>();
-			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 64);
-			outCardGame->mouseTasks = &outCardGame->engine.AddTaskSystem<MouseTask>();
-			outCardGame->mouseTasks->Allocate(outCardGame->arena, 1);
+			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 512);
 			outCardGame->textTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
-			outCardGame->textTasks->Allocate(outCardGame->arena, 16);
-			outCardGame->priorityTextTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
-			outCardGame->priorityTextTasks->Allocate(outCardGame->arena, 8);
+			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
+			outCardGame->pixelPerfectRenderTasks = &outCardGame->engine.AddTaskSystem<PixelPerfectRenderTask>();
+			outCardGame->pixelPerfectRenderTasks->Allocate(outCardGame->arena, 128);
 		}
 
 		{
@@ -264,24 +277,25 @@ namespace game
 				*outCardGame->dynamicRenderTasks, dynamicCreateInfo);
 			outCardGame->dynamicRenderInterpreter->Enable(dynamicEnableInfo);
 
+			PixelPerfectRenderInterpreterCreateInfo pixelPerfectRenderInterpreterCreateInfo{};
+			pixelPerfectRenderInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
+			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = SIMULATED_RESOLUTION;
+			pixelPerfectRenderInterpreterCreateInfo.background = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
+
+			outCardGame->pixelPerfectRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<PixelPerfectRenderTask, PixelPerfectRenderInterpreter>(
+				*outCardGame->pixelPerfectRenderTasks, pixelPerfectRenderInterpreterCreateInfo);
+
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
-			textInterpreterCreateInfo.alphabetSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::alphabet)];
-			textInterpreterCreateInfo.symbolSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::symbols)];
-			textInterpreterCreateInfo.numberSubTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::numbers)];
+			textInterpreterCreateInfo.alphabetAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::alphabet)];
+			textInterpreterCreateInfo.symbolAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)];
+			textInterpreterCreateInfo.numberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
 
-			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->priorityRenderTasks;
-			outCardGame->priorityTextInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
-				*outCardGame->priorityTextTasks, textInterpreterCreateInfo);
-			textInterpreterCreateInfo.instancedRenderTasks = outCardGame->renderTasks;
+			textInterpreterCreateInfo.renderTasks = outCardGame->pixelPerfectRenderTasks;
 			outCardGame->textInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
 				*outCardGame->textTasks, textInterpreterCreateInfo);
-			
-			MouseInterpreterCreateInfo mouseInterpreterCreateInfo{};
-			mouseInterpreterCreateInfo.renderTasks = outCardGame->priorityRenderTasks;
-			outCardGame->mouseInterpreter = &outCardGame->engine.AddTaskInterpreter<MouseTask, MouseInterpreter>(
-				*outCardGame->mouseTasks, mouseInterpreterCreateInfo);
-			outCardGame->mouseInterpreter->subTexture = outCardGame->subTextures[static_cast<uint32_t>(TextureId::mouse)];
 		}
 
 		{
@@ -301,6 +315,8 @@ namespace game
 			outCardGame->levels[2] = outCardGame->arena.New<PartySelectLevel>();
 			outCardGame->levels[3] = outCardGame->arena.New<MainLevel>();
 		}
+
+		outCardGame->time = outCardGame->timer.now();
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)
@@ -316,13 +332,20 @@ namespace game
 		arr[1] = "Art/numbers.png";
 		arr[2] = "Art/symbols.png";
 		arr[3] = "Art/mouse.png";
-		arr[4] = "Art/fallback.png";
+		arr[4] = "Art/card.png";
+		arr[5] = "Art/card-field.png";
+		arr[6] = "Art/card-mod.png";
+		arr[7] = "Art/button.png";
+		arr[8] = "Art/stats.png";
+		arr[9] = "Art/fallback.png";
+		arr[10] = "Art/empty.png";
+		arr[11] = "Art/button-small.png";
 		return arr;
 	}
 
 	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<MonsterCard>(arena, 10);
+		const auto arr = jv::CreateArray<MonsterCard>(arena, 30);
 		for (auto& card : arr)
 			card.name = "monster";
 		// Starting pet.
@@ -387,14 +410,11 @@ namespace game
 	void CardGame::UpdateInput()
 	{
 		const auto mousePos = jv::ge::GetMousePosition();
-		const auto resolution = jv::ge::GetResolution();
-		auto cPos = glm::vec2(mousePos.x, mousePos.y) / glm::vec2(resolution.x, resolution.y);
-		cPos *= 2;
-		cPos -= glm::vec2(1, 1);
-		cPos.x *= static_cast<float>(resolution.x) / static_cast<float>(resolution.y);
 
 		inputState = {};
-		inputState.mousePos = cPos;
+		inputState.fullScreenMousePos = mousePos;
+		inputState.mousePos = PixelPerfectRenderTask::ToPixelPosition(
+			jv::ge::GetResolution(), SIMULATED_RESOLUTION, mousePos);
 		inputState.scroll = scrollCallback;
 		
 		for (const auto& callback : mouseCallbacks)
@@ -404,14 +424,7 @@ namespace game
 		}
 		for (const auto& callback : keyCallbacks)
 			SetInputState(inputState.enter, GLFW_KEY_ENTER, callback);
-
-		MouseTask mouseTask{};
-		mouseTask.position = inputState.mousePos;
-		mouseTask.lButton = inputState.lMouse;
-		mouseTask.rButton = inputState.rMouse;
-		mouseTask.scroll = inputState.scroll;
-		mouseTasks->Push(mouseTask);
-
+		
 		// Reset callbacks.
 		keyCallbacks = {};
 		mouseCallbacks = {};

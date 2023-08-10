@@ -59,6 +59,7 @@ namespace game
 		createInfo.onKeyCallback = info.onKeyCallback;
 		createInfo.onMouseCallback = info.onMouseCallback;
 		createInfo.onScrollCallback = info.onScrollCallback;
+		createInfo.resolution = info.resolution;
 		Initialize(createInfo);
 
 		Engine engine{};

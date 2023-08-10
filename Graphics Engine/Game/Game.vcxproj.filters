@@ -36,9 +36,6 @@
     <ClCompile Include="Src\CardGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Interpreters\MouseInterpreter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Utils\SubTextureUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -67,6 +64,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Src\States\BoardState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Interpreters\PixelPerfectRenderInterpreter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Tasks\PixelPerfectRenderTask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Levels\Level.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -134,12 +140,6 @@
     <ClInclude Include="Include\Cards\MagicCard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Tasks\MouseTask.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Interpreters\MouseInterpreter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Include\Utils\SubTextureUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -180,6 +180,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Interpreters\PriorityInterpreter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Interpreters\PixelPerfectRenderInterpreter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Tasks\PixelPerfectRenderTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

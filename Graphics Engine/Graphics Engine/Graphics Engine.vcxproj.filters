@@ -72,6 +72,9 @@
     <ClCompile Include="Src\GE\AtlasGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\JLib\Curve.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\JLib\Arena.h">
@@ -192,6 +195,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\GE\AtlasGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\JLib\Curve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

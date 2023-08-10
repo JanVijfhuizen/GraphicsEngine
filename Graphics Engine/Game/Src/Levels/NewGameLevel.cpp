@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/NewGameLevel.h"
 #include "CardGame.h"
+#include "GE/AtlasGenerator.h"
 #include "Levels/LevelUtils.h"
 #include "LevelStates/LevelStateMachine.h"
 #include "States/InputState.h"
@@ -12,6 +13,7 @@ namespace game
 {
 	void NewGameLevel::Create(const LevelCreateInfo& info)
 	{
+		Level::Create(info);
 		ClearSaveData();
 
 		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 3);
@@ -23,53 +25,32 @@ namespace game
 
 	bool NewGameLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
-		return stateMachine.Update(info, loadLevelIndex);
+		if (!Level::Update(info, loadLevelIndex))
+			return false;
+		return stateMachine.Update(info, this, loadLevelIndex);
 	}
 
-	bool NewGameLevel::ModeSelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
+	bool NewGameLevel::ModeSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
-		TextTask textTask{};
-		textTask.center = true;
-		textTask.text = "choose a mode.";
-		textTask.position = TEXT_CENTER_TOP_POSITION;
-		textTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(textTask);
+		constexpr glm::ivec2 headerPos{ SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 90 };
+		level->DrawHeader(info, headerPos, "choose a mode", true, true);
 
-		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = -BUTTON_Y_SCALE - BUTTON_Y_OFFSET;
-		buttonRenderTask.scale.y *= BUTTON_Y_SCALE;
-		buttonRenderTask.scale.x = BUTTON_X_DEFAULT_SCALE;
-		buttonRenderTask.subTexture = info.subTextures[static_cast<uint32_t>(TextureId::fallback)];
-		info.renderTasks.Push(buttonRenderTask);
+		const bool standardPressed = level->DrawButton(info, { SIMULATED_RESOLUTION.x / 2, headerPos.y - 36 }, "standard", true);
+		const bool ironManPressed = level->DrawButton(info, { SIMULATED_RESOLUTION.x / 2, headerPos.y - 60 }, "iron man", true);
 
-		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
-			{
-				info.playerState.ironManMode = false;
-				stateIndex = 1;
-				return true;
-			}
+		if(standardPressed)
+		{
+			info.playerState.ironManMode = false;
+			stateIndex = 1;
+			return true;
+		}
+		if(ironManPressed)
+		{
+			info.playerState.ironManMode = true;
+			stateIndex = 1;
+			return true;
+		}
 
-		TextTask buttonTextTask{};
-		buttonTextTask.center = true;
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "standard";
-		buttonTextTask.scale = TEXT_MEDIUM_SCALE;
-		info.textTasks.Push(buttonTextTask);
-
-		buttonRenderTask.position.y *= -1;
-		info.renderTasks.Push(buttonRenderTask);
-		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
-			{
-				info.playerState.ironManMode = true;
-				stateIndex = 1;
-				return true;
-			}
-
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "iron man";
-		info.textTasks.Push(buttonTextTask);
 		return true;
 	}
 
@@ -97,7 +78,7 @@ namespace game
 		return true;
 	}
 
-	bool NewGameLevel::PartySelectState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
+	bool NewGameLevel::PartySelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
 		Card* cards[DISCOVER_LENGTH]{};
 
@@ -105,7 +86,7 @@ namespace game
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.cards = cards;
 		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.center = glm::vec2(0, -CARD_HEIGHT_OFFSET);
+		renderInfo.position = glm::vec2(0, -CARD_HEIGHT_OFFSET);
 		renderInfo.highlight = monsterChoice;
 
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
@@ -116,14 +97,13 @@ namespace game
 
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
-		renderInfo.center.y *= -1;
+		renderInfo.position.y *= -1;
 		renderInfo.highlight = artifactChoice;
 		choice = RenderCards(renderInfo);
 		if (info.inputState.lMouse == InputState::pressed && choice != -1)
 			artifactChoice = choice == artifactChoice ? -1 : choice;
 
 		TextTask buttonTextTask{};
-		buttonTextTask.center = true;
 		buttonTextTask.text = "choose your starting cards.";
 		buttonTextTask.position = TEXT_CENTER_TOP_POSITION;
 		buttonTextTask.scale = TEXT_BIG_SCALE;
@@ -132,7 +112,6 @@ namespace game
 		if (monsterChoice != -1 && artifactChoice != -1)
 		{
 			TextTask textTask{};
-			textTask.center = true;
 			textTask.text = "press enter to confirm your choice.";
 			textTask.position = TEXT_CENTER_BOT_POSITION;
 			textTask.scale = TEXT_BIG_SCALE;
@@ -148,11 +127,10 @@ namespace game
 		return true;
 	}
 
-	bool NewGameLevel::JoinState::Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+	bool NewGameLevel::JoinState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
 		TextTask joinTextTask{};
-		joinTextTask.center = true;
 		joinTextTask.text = "daisy joins you on your adventure.";
 		joinTextTask.position = TEXT_CENTER_TOP_POSITION;
 		joinTextTask.scale = TEXT_BIG_SCALE;
@@ -167,7 +145,6 @@ namespace game
 		RenderCards(renderInfo);
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "press enter to continue.";
 		textTask.scale = TEXT_BIG_SCALE;
 		textTask.position = TEXT_CENTER_BOT_POSITION;

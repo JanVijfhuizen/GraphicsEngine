@@ -139,6 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Interpreters\PixelPerfectRenderInterpreter.cpp" />
+    <ClCompile Include="Src\Levels\Level.cpp" />
     <ClCompile Include="Src\Levels\PartySelectLevel.cpp" />
     <ClCompile Include="Src\Levels\LevelUtils.cpp" />
     <ClCompile Include="Src\Levels\MainLevel.cpp" />
@@ -147,9 +149,9 @@
     <ClCompile Include="Src\States\BoardState.cpp" />
     <ClCompile Include="Src\States\GameState.cpp" />
     <ClCompile Include="Src\States\PlayerState.cpp" />
+    <ClCompile Include="Src\Tasks\PixelPerfectRenderTask.cpp" />
     <ClCompile Include="Src\Utils\BoxCollision.cpp" />
     <ClCompile Include="Src\Utils\SubTextureUtils.cpp" />
-    <ClCompile Include="Src\Interpreters\MouseInterpreter.cpp" />
     <ClCompile Include="Src\CardGame.cpp" />
     <ClCompile Include="Src\Interpreters\DynamicRenderInterpreter.cpp" />
     <ClCompile Include="Src\Engine\TexturePool.cpp" />
@@ -172,7 +174,6 @@
     <ClInclude Include="Include\Cards\MagicCard.h" />
     <ClInclude Include="Include\Cards\MonsterCard.h" />
     <ClInclude Include="Include\Cards\RoomCard.h" />
-    <ClInclude Include="Include\Interpreters\MouseInterpreter.h" />
     <ClInclude Include="Include\Interpreters\PriorityInterpreter.h" />
     <ClInclude Include="Include\LevelStates\LevelStateMachine.h" />
     <ClInclude Include="Include\Levels\Level.h" />
@@ -193,13 +194,14 @@
     <ClInclude Include="Include\States\InputState.h" />
     <ClInclude Include="Include\States\PlayerState.h" />
     <ClInclude Include="Include\Tasks\DynamicRenderTask.h" />
-    <ClInclude Include="Include\Tasks\MouseTask.h" />
+    <ClInclude Include="Include\Tasks\PixelPerfectRenderTask.h" />
     <ClInclude Include="Include\Tasks\RenderTask.h" />
     <ClInclude Include="Include\Tasks\TextTask.h" />
     <ClInclude Include="Include\Utils\BoxCollision.h" />
     <ClInclude Include="Include\Utils\Shuffle.h" />
     <ClInclude Include="Include\Engine\TaskSystem.h" />
     <ClInclude Include="Include\Utils\SubTextureUtils.h" />
+    <ClInclude Include="Include\Interpreters\PixelPerfectRenderInterpreter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

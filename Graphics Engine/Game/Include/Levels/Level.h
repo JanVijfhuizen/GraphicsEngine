@@ -10,6 +10,12 @@
 #include "JLib/Array.h"
 #include "Tasks/DynamicRenderTask.h"
 #include "Tasks/TextTask.h"
+#include "Tasks/PixelPerfectRenderTask.h"
+
+namespace jv::ge
+{
+	struct AtlasTexture;
+}
 
 namespace game
 {
@@ -24,6 +30,7 @@ namespace game
 		jv::Arena& tempArena;
 		jv::Arena& frameArena;
 		const jv::ge::Resource scene;
+		const jv::Array<jv::ge::AtlasTexture>& atlasTextures;
 
 		GameState& gameState;
 		PlayerState& playerState;
@@ -50,13 +57,29 @@ namespace game
 		TaskSystem<DynamicRenderTask>& dynamicRenderTasks;
 		TaskSystem<RenderTask>& priorityRenderTasks;
 		TaskSystem<TextTask>& textTasks;
-		TaskSystem<TextTask>& priorityTextTasks;
-		const jv::Array<jv::ge::SubTexture>& subTextures;
+		TaskSystem<PixelPerfectRenderTask>& pixelPerfectRenderTasks;
+		float deltaTime;
 	};
 
 	struct Level
 	{
-		virtual void Create(const LevelCreateInfo& info) = 0;
-		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) = 0;
+		virtual void Create(const LevelCreateInfo& info);
+		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
+		virtual void PostUpdate(const LevelUpdateInfo& info);
+
+		[[nodiscard]] void DrawHeader(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text, bool center = false, bool overflow = false) const;
+		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, glm::ivec2 origin, const char* text, bool center = false) const;
+
+		[[nodiscard]] float GetTime() const;
+		[[nodiscard]] bool GetIsLoading() const;
+		void Load(LevelIndex index);
+
+	private:
+		const float _LOAD_DURATION = 1;
+		bool _loading;
+		float _timeSinceLoading;
+		LevelIndex _loadingLevelIndex;
+		bool _lMousePressed = false;
+		float _timeSinceOpened;
 	};
 }

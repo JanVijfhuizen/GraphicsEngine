@@ -14,7 +14,7 @@ namespace game
 
 		struct ModeSelectState final : LevelState<State>
 		{
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 		};
 
 		struct PartySelectState final : LevelState<State>
@@ -27,12 +27,12 @@ namespace game
 			uint32_t artifactChoice = -1;
 
 			bool Create(State& state, const LevelCreateInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 		};
 
 		struct JoinState final : LevelState<State>
 		{
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 		};
 
 		LevelStateMachine<State> stateMachine;

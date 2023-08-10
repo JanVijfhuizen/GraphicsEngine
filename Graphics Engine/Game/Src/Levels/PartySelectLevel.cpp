@@ -10,6 +10,7 @@ namespace game
 {
 	void PartySelectLevel::Create(const LevelCreateInfo& info)
 	{
+		Level::Create(info);
 		info.gameState = GameState::Create();
 		for (auto& b : selected)
 			b = false;
@@ -18,6 +19,8 @@ namespace game
 
 	bool PartySelectLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
+		if (!Level::Update(info, loadLevelIndex))
+			return false;
 		const auto& playerState = info.playerState;
 
 		Card* cards[PARTY_CAPACITY]{};
@@ -60,7 +63,6 @@ namespace game
 			selected[choice] = !selected[choice];
 
 		TextTask textTask{};
-		textTask.center = true;
 		textTask.text = "select up to 4 party members.";
 		textTask.position = TEXT_CENTER_TOP_POSITION;
 		textTask.scale = TEXT_BIG_SCALE;
@@ -70,7 +72,7 @@ namespace game
 		for (const auto& b : selected)
 			selectedAmount += 1 * b;
 
-		if(selectedAmount > 0 && selectedAmount < PARTY_ACTIVE_CAPACITY)
+		if(selectedAmount > 0 && selectedAmount <= PARTY_ACTIVE_CAPACITY)
 		{
 			textTask.position = TEXT_CENTER_BOT_POSITION;
 			textTask.text = "press enter to continue.";

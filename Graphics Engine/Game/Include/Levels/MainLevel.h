@@ -47,6 +47,9 @@ namespace game
 			jv::Array<Path> paths;
 			uint32_t chosenPath;
 
+			jv::Vector<uint32_t> magicDeck;
+			jv::Vector<uint32_t> hand;
+
 			void RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const;
 			[[nodiscard]] uint32_t GetMonster(const LevelInfo& info, const BoardState& boardState);
 			[[nodiscard]] uint32_t GetBoss(const LevelInfo& info);
@@ -55,6 +58,7 @@ namespace game
 			[[nodiscard]] uint32_t GetArtifact(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetFlaw(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetEvent(const LevelInfo& info);
+			[[nodiscard]] uint32_t Draw(const LevelInfo& info);
 
 			[[nodiscard]] static State Create(const LevelCreateInfo& info);
 		};
@@ -62,7 +66,7 @@ namespace game
 		struct BossRevealState final : LevelState<State>
 		{
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
@@ -71,7 +75,7 @@ namespace game
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
@@ -82,9 +86,10 @@ namespace game
 			uint32_t allySelected;
 			uint32_t eventCard;
 			bool newTurn;
+			uint32_t recruitableMonster = -1;
 			
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
@@ -94,7 +99,7 @@ namespace game
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
@@ -103,20 +108,20 @@ namespace game
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
 		struct RewardArtifactState final : LevelState<State>
 		{
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 
 		struct ExitFoundState final : LevelState<State>
 		{
-			bool Update(State& state, const LevelUpdateInfo& info, uint32_t& stateIndex,
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 		};
 

@@ -11,7 +11,8 @@ namespace game
 			released
 		};
 
-		glm::vec2 mousePos{};
+		glm::ivec2 mousePos{};
+		glm::ivec2 fullScreenMousePos{};
 		State lMouse{};
 		State rMouse{};
 		float scroll = 0;

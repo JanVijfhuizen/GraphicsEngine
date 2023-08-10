@@ -8,9 +8,9 @@ namespace game
 {
 	void BoardState::AddParty(const LevelInfo& info)
 	{
-		partyCount = info.gameState.partySize;
+		partySize = info.gameState.partySize;
 		alliedMonsterCount = info.gameState.partySize;
-		for (uint32_t i = 0; i < partyCount; ++i)
+		for (uint32_t i = 0; i < partySize; ++i)
 		{
 			partyIds[i] = info.gameState.partyIds[i];
 			allyIds[i] = info.playerState.monsterIds[partyIds[i]];
@@ -34,13 +34,13 @@ namespace game
 			allyIds[j] = allyIds[j + 1];
 			allyHealths[j] = allyHealths[j + 1];
 
-			if (j + 1 < partyCount)
+			if (j + 1 < partySize)
 				partyIds[j] = partyIds[j + 1];
 		}
 
 		--alliedMonsterCount;
-		if (i < partyCount)
-			--partyCount;
+		if (i < partySize)
+			--partySize;
 	}
 
 	bool BoardState::TryAddEnemy(const LevelInfo& info, const uint32_t id)
@@ -68,7 +68,7 @@ namespace game
 		if (healths[i] > damage)
 		{
 			healths[i] -= damage;
-			if(i > BOARD_CAPACITY_PER_SIDE)
+			if(i >= BOARD_CAPACITY_PER_SIDE)
 				RerollEnemyTarget(i - BOARD_CAPACITY_PER_SIDE);
 		}
 		else

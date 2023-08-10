@@ -77,12 +77,15 @@ namespace jv::ge
 
 			outfile << rBot.x << std::endl;
 			outfile << rBot.y << std::endl;
+
+			outfile << shape.x << std::endl;
+			outfile << shape.y << std::endl;
 		}
 
 		outfile.close();
 	}
 
-	Array<SubTexture> LoadAtlasMetaData(Arena& arena, const char* metaFilePath)
+	Array<AtlasTexture> LoadAtlasMetaData(Arena& arena, const char* metaFilePath)
 	{
 		std::ifstream inFile;
 		inFile.open(metaFilePath);
@@ -91,16 +94,18 @@ namespace jv::ge
 			std::istreambuf_iterator(inFile), std::istreambuf_iterator<char>(), '\n');
 		inFile.seekg(0, std::ios::beg);
 
-		const auto metaData = CreateArray<SubTexture>(arena, lineCount / 4);
+		const auto metaData = CreateArray<AtlasTexture>(arena, lineCount / 4);
 
 		glm::vec2 lTop;
 		glm::vec2 rBot;
+		glm::vec2 shape;
 		size_t i = 0;
-		while (inFile >> lTop.x >> lTop.y >> rBot.x >> rBot.y)
+		while (inFile >> lTop.x >> lTop.y >> rBot.x >> rBot.y >> shape.x >> shape.y)
 		{
 			auto& instance = metaData[i++];
-			instance.lTop = lTop;
-			instance.rBot = rBot;
+			instance.subTexture.lTop = lTop;
+			instance.subTexture.rBot = rBot;
+			instance.resolution = shape;
 		}
 
 		return metaData;
