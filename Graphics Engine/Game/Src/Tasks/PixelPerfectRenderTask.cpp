@@ -54,7 +54,7 @@ namespace game
 		if (task.xCenter)
 			renderTask.position.x -= renderTask.scale.x;
 		if (task.yCenter)
-			renderTask.position.y -= renderTask.scale.y;
+			renderTask.position.y += renderTask.scale.y;
 		return renderTask;
 	}
 }

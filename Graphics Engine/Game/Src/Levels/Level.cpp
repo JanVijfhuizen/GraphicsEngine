@@ -163,6 +163,7 @@ namespace game
 		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
 		bgRenderTask.subTexture = cardFrames[0];
 		bgRenderTask.xCenter = drawInfo.center;
+		bgRenderTask.yCenter = drawInfo.center;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 		return -1;
 	}

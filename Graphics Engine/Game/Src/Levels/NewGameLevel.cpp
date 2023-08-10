@@ -91,16 +91,34 @@ namespace game
 	bool NewGameLevel::PartySelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
 		HeaderDrawInfo headerDrawInfo{};
-		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 90 };
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 64 };
 		headerDrawInfo.text = "choose your starting cards.";
 		headerDrawInfo.center = true;
 		headerDrawInfo.scale = 1;
 		headerDrawInfo.overflow = true;
 		level->DrawHeader(info, headerDrawInfo);
 
-		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 180 };
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, 64 };
 		headerDrawInfo.text = "press enter to confirm your choice.";
 		level->DrawHeader(info, headerDrawInfo);
+
+		CardDrawInfo cardDrawInfo{};
+		cardDrawInfo.length = 1;
+		cardDrawInfo.center = true;
+		cardDrawInfo.origin.x = SIMULATED_RESOLUTION.x / 2 - 32;
+
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+		{
+			cardDrawInfo.origin.y = SIMULATED_RESOLUTION.y / 2 - 24;
+			cardDrawInfo.cards = &info.monsters[monsterDiscoverOptions[i]];
+			const uint32_t t = level->DrawCards(info, cardDrawInfo);
+
+			cardDrawInfo.origin.y += 48;
+			const uint32_t u = level->DrawCards(info, cardDrawInfo);
+			cardDrawInfo.cards = &info.artifacts[artifactDiscoverOptions[i]];
+
+			cardDrawInfo.origin.x += 32;
+		}
 		
 		return true;
 
