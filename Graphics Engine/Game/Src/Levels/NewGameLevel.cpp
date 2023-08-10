@@ -102,28 +102,27 @@ namespace game
 		headerDrawInfo.text = "press enter to confirm your choice.";
 		level->DrawHeader(info, headerDrawInfo);
 
-		CardDrawInfo cardDrawInfo{};
-		cardDrawInfo.length = 1;
-		cardDrawInfo.center = true;
-		cardDrawInfo.origin.x = SIMULATED_RESOLUTION.x / 2 - 32;
-
+		DiscoveredCardDrawInfo discoveredCardDrawInfo{};
+		discoveredCardDrawInfo.highlighted = monsterChoice;
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			cardDrawInfo.origin.y = SIMULATED_RESOLUTION.y / 2 - 24;
-			cardDrawInfo.cards = &info.monsters[monsterDiscoverOptions[i]];
-			const uint32_t t = level->DrawCards(info, cardDrawInfo);
+			discoveredCardDrawInfo.cards[i] = &info.monsters[monsterDiscoverOptions[i]];
+		discoveredCardDrawInfo.height = SIMULATED_RESOLUTION.y / 2 + 18;
+		const uint32_t discoveredMonster = DrawDiscoveredCards(info, discoveredCardDrawInfo);
 
-			cardDrawInfo.origin.y += 48;
-			const uint32_t u = level->DrawCards(info, cardDrawInfo);
-			cardDrawInfo.cards = &info.artifacts[artifactDiscoverOptions[i]];
+		discoveredCardDrawInfo.highlighted = artifactChoice;
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+			discoveredCardDrawInfo.cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
+		discoveredCardDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - 18;
+		const uint32_t discoveredArtifact = DrawDiscoveredCards(info, discoveredCardDrawInfo);
 
-			cardDrawInfo.origin.x += 32;
-		}
+		if (discoveredMonster != -1)
+			monsterChoice = discoveredMonster;
+		if (discoveredArtifact != -1)
+			artifactChoice = discoveredArtifact;
 		
 		return true;
 
 		Card* cards[DISCOVER_LENGTH]{};
-
 		RenderMonsterCardInfo renderInfo{};
 		renderInfo.levelUpdateInfo = &info;
 		renderInfo.cards = cards;

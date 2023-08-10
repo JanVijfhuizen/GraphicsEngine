@@ -82,9 +82,17 @@ namespace game
 		struct CardDrawInfo final
 		{
 			glm::ivec2 origin;
-			Card* cards;
+			Card* card;
 			uint32_t length;
 			bool center = false;
+			glm::ivec4 borderColor{1};
+		};
+
+		struct DiscoveredCardDrawInfo final
+		{
+			Card* cards[DISCOVER_LENGTH]{};
+			uint32_t height;
+			uint32_t highlighted = -1;
 		};
 
 		virtual void Create(const LevelCreateInfo& info);
@@ -93,7 +101,8 @@ namespace game
 
 		[[nodiscard]] void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
 		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
-		[[nodiscard]] uint32_t DrawCards(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo) const;
+		[[nodiscard]] static uint32_t DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo);
+		[[nodiscard]] static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;

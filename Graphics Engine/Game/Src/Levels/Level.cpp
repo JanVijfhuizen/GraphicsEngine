@@ -150,7 +150,32 @@ namespace game
 		return pressed;
 	}
 
-	uint32_t Level::DrawCards(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo) const
+	uint32_t Level::DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo)
+	{
+		CardDrawInfo cardDrawInfo{};
+		cardDrawInfo.length = 1;
+		cardDrawInfo.center = true;
+		cardDrawInfo.origin.x = SIMULATED_RESOLUTION.x / 2 - 32;
+		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
+		
+		const bool released = info.inputState.lMouse == InputState::released;
+
+		uint32_t choice = -1;
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+		{
+			cardDrawInfo.borderColor = drawInfo.highlighted == i ? glm::ivec4(0, 1, 0, 1) : glm::ivec4(1);
+			cardDrawInfo.card = drawInfo.cards[i];
+			const bool b = DrawCard(info, cardDrawInfo);
+			cardDrawInfo.origin.x += 32;
+
+			if (b && released)
+				choice = i;
+		}
+
+		return choice;
+	}
+
+	bool Level::DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo)
 	{
 		constexpr uint32_t CARD_FRAME_COUNT = 3;
 
@@ -164,8 +189,14 @@ namespace game
 		bgRenderTask.subTexture = cardFrames[0];
 		bgRenderTask.xCenter = drawInfo.center;
 		bgRenderTask.yCenter = drawInfo.center;
+		bgRenderTask.color = drawInfo.borderColor;
+
+		const bool collided = CollidesShapeInt(drawInfo.origin - 
+			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
+		bgRenderTask.color = collided ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
-		return -1;
+
+		return collided;
 	}
 
 	float Level::GetTime() const
