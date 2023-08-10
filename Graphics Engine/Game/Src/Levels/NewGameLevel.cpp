@@ -6,7 +6,6 @@
 #include "LevelStates/LevelStateMachine.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
-#include "Utils/BoxCollision.h"
 #include "Utils/Shuffle.h"
 
 namespace game
@@ -96,6 +95,7 @@ namespace game
 		headerDrawInfo.text = "choose your starting cards.";
 		headerDrawInfo.center = true;
 		headerDrawInfo.scale = 1;
+		headerDrawInfo.overflow = true;
 		level->DrawHeader(info, headerDrawInfo);
 
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 180 };

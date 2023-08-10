@@ -14,7 +14,7 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
-		
+
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = { 9, SIMULATED_RESOLUTION.y - 36 };
 		headerDrawInfo.text = "untitled card game";
