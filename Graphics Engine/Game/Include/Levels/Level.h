@@ -87,11 +87,14 @@ namespace game
 			uint32_t length;
 			bool center = false;
 			glm::ivec4 borderColor{1};
+			bool drawBigCardIfPossible = true;
 		};
 
 		struct CardSelectionDrawInfo final
 		{
 			Card** cards;
+			Card*** stacks = nullptr;
+			uint32_t* stackCounts = nullptr;
 			uint32_t length = 1;
 			uint32_t height;
 			uint32_t highlighted = -1;
@@ -111,7 +114,7 @@ namespace game
 		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
 		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
 		[[nodiscard]] static uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
-		[[nodiscard]] static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
+		static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
 		static void DrawFullCard(const LevelUpdateInfo& info, Card* card);
 		void DrawTopCenterHeader(const LevelUpdateInfo& info, HeaderSpacing spacing, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
 		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;

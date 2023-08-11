@@ -10,6 +10,7 @@ namespace game
 {
 	constexpr uint32_t CARD_FRAME_COUNT = 3;
 	constexpr uint32_t CARD_SPACING = 2;
+	constexpr uint32_t CARD_STACKED_SPACING = 6;
 
 	void Level::Create(const LevelCreateInfo& info)
 	{
@@ -144,8 +145,9 @@ namespace game
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.length = 1;
 		cardDrawInfo.center = true;
-		cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - (width + CARD_SPACING) * (drawInfo.length - 1) / 2);
+		cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - (width + CARD_SPACING / 2) * (drawInfo.length - 1) / 2);
 		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
+		cardDrawInfo.drawBigCardIfPossible = false;
 		
 		const bool released = info.inputState.lMouse.pressed;
 
@@ -156,8 +158,35 @@ namespace game
 			cardDrawInfo.borderColor = selected ? glm::ivec4(0, 1, 0, 1) : glm::ivec4(1);
 			cardDrawInfo.card = drawInfo.cards[i];
 			const bool b = DrawCard(info, cardDrawInfo);
-			cardDrawInfo.origin.x += width + CARD_SPACING;
+			
+			if (drawInfo.stacks)
+			{
+				uint32_t stackedSelected = -1;
+				const uint32_t stackedCount = drawInfo.stackCounts[i];
+				for (uint32_t j = 0; j < stackedCount; ++j)
+				{
+					auto stackedDrawInfo = cardDrawInfo;
+					stackedDrawInfo.card = drawInfo.stacks[i][j];
+					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
+					stackedDrawInfo.drawBigCardIfPossible = !b;
+					if (DrawCard(info, stackedDrawInfo) && !b)
+						stackedSelected = i;
+				}
 
+				cardDrawInfo.drawBigCardIfPossible = stackedSelected == -1;
+				DrawCard(info, cardDrawInfo);
+
+				if(stackedSelected != -1)
+				{
+					auto stackedDrawInfo = cardDrawInfo;
+					stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
+					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
+					stackedDrawInfo.drawBigCardIfPossible = true;
+					DrawCard(info, stackedDrawInfo);
+				}
+			}
+
+			cardDrawInfo.origin.x += static_cast<int32_t>(width + CARD_SPACING / 2);
 			if (b && released)
 				choice = i;
 		}
@@ -184,7 +213,7 @@ namespace game
 		bgRenderTask.color = collided ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
-		if (collided && info.inputState.rMouse.pressed)
+		if (drawInfo.drawBigCardIfPossible && collided && info.inputState.rMouse.pressed)
 			DrawFullCard(info, drawInfo.card);
 		return collided;
 	}
