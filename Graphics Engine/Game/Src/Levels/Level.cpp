@@ -2,6 +2,7 @@
 #include "Levels/Level.h"
 
 #include "GE/AtlasGenerator.h"
+#include "JLib/Math.h"
 #include "States/InputState.h"
 #include "Utils/BoxCollision.h"
 #include "Utils/SubTextureUtils.h"
@@ -144,17 +145,27 @@ namespace game
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.length = 1;
 		cardDrawInfo.center = true;
-		cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - width * (drawInfo.length - 1) / 2);
 		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
 		
 		const bool released = info.inputState.lMouse.pressed;
-
 		uint32_t choice = -1;
 
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
+			if((i + drawInfo.rowCutoff) % drawInfo.rowCutoff == 0)
+			{
+				const uint32_t m = jv::Min(drawInfo.length, drawInfo.rowCutoff);
+				cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - width * (m - 1) / 2);
+				if (i != 0)
+					cardDrawInfo.origin.y -= cardTexture.resolution.y + 4;
+			}
+
+			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
-			cardDrawInfo.borderColor = selected ? glm::ivec4(0, 1, 0, 1) : glm::ivec4(1);
+
+			cardDrawInfo.borderColor = glm::vec4(1);
+			cardDrawInfo.borderColor = greyedOut ? glm::vec4(.1, .1, .1, 1) : cardDrawInfo.borderColor;
+			cardDrawInfo.borderColor = selected ? glm::vec4(0, 1, 0, 1) : cardDrawInfo.borderColor;
 			cardDrawInfo.card = drawInfo.cards[i];
 			cardDrawInfo.selectable = true;
 			const bool collides = CollidesCard(info, cardDrawInfo);
@@ -186,8 +197,9 @@ namespace game
 					DrawCard(info, stackedDrawInfo);
 				}
 			}
-
+			
 			DrawCard(info, cardDrawInfo);
+
 			if (stackedSelected != -1)
 			{
 				auto stackedDrawInfo = cardDrawInfo;
@@ -209,7 +221,7 @@ namespace game
 				info.textTasks.Push(textTask);
 			}
 
-			if (collides && released)
+			if (collides && released && !greyedOut)
 				choice = i;
 			cardDrawInfo.origin.x += static_cast<int32_t>(width);
 		}

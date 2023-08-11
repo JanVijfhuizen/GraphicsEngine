@@ -83,13 +83,6 @@ namespace game
 
 		struct CombatState final : LevelState<State>
 		{
-			BoardState boardState;
-			bool tapped[BOARD_CAPACITY_PER_SIDE];
-			uint32_t allySelected;
-			uint32_t eventCard;
-			bool newTurn;
-			uint32_t recruitableMonster = -1;
-			
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
@@ -97,7 +90,6 @@ namespace game
 
 		struct RewardMagicCardState final : LevelState<State>
 		{
-			float scroll;
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;
@@ -108,6 +100,7 @@ namespace game
 		struct RewardFlawCardState final : LevelState<State>
 		{
 			uint32_t discoverOption;
+			float timeSinceDiscovered;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,

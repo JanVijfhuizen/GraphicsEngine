@@ -115,16 +115,18 @@ namespace game
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
 
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+
 		cardSelectionDrawInfo.highlighted = monsterChoice;
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.monsters[monsterDiscoverOptions[i]];
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 + 18;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 2;
 		const uint32_t discoveredMonster = DrawCardSelection(info, cardSelectionDrawInfo);
 
 		cardSelectionDrawInfo.highlighted = artifactChoice;
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - 18;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2 - 2;
 		const uint32_t discoveredArtifact = DrawCardSelection(info, cardSelectionDrawInfo);
 
 		if (discoveredMonster != -1)

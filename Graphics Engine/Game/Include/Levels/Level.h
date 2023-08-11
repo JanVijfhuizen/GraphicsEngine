@@ -86,7 +86,7 @@ namespace game
 			Card* card;
 			uint32_t length;
 			bool center = false;
-			glm::ivec4 borderColor{1};
+			glm::vec4 borderColor{1};
 			bool selectable = true;
 		};
 
@@ -100,7 +100,9 @@ namespace game
 			uint32_t height;
 			uint32_t highlighted = -1;
 			bool* selectedArr = nullptr;
+			bool* greyedOutArr = nullptr;
 			float lifeTime = -1;
+			uint32_t rowCutoff = 8;
 		};
 
 		enum class HeaderSpacing
