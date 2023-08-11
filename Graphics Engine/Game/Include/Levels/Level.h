@@ -87,7 +87,7 @@ namespace game
 			uint32_t length;
 			bool center = false;
 			glm::ivec4 borderColor{1};
-			bool drawBigCardIfPossible = true;
+			bool selectable = true;
 		};
 
 		struct CardSelectionDrawInfo final

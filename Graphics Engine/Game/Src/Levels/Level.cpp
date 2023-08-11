@@ -147,7 +147,7 @@ namespace game
 		cardDrawInfo.center = true;
 		cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - (width + CARD_SPACING / 2) * (drawInfo.length - 1) / 2);
 		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
-		cardDrawInfo.drawBigCardIfPossible = false;
+		cardDrawInfo.selectable = false;
 		
 		const bool released = info.inputState.lMouse.pressed;
 
@@ -168,12 +168,12 @@ namespace game
 					auto stackedDrawInfo = cardDrawInfo;
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
-					stackedDrawInfo.drawBigCardIfPossible = !b;
+					stackedDrawInfo.selectable = !b;
 					if (DrawCard(info, stackedDrawInfo) && !b)
 						stackedSelected = i;
 				}
 
-				cardDrawInfo.drawBigCardIfPossible = stackedSelected == -1;
+				cardDrawInfo.selectable = stackedSelected == -1;
 				DrawCard(info, cardDrawInfo);
 
 				if(stackedSelected != -1)
@@ -181,7 +181,7 @@ namespace game
 					auto stackedDrawInfo = cardDrawInfo;
 					stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
-					stackedDrawInfo.drawBigCardIfPossible = true;
+					stackedDrawInfo.selectable = true;
 					DrawCard(info, stackedDrawInfo);
 				}
 			}
@@ -213,7 +213,7 @@ namespace game
 		bgRenderTask.color = collided ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
-		if (drawInfo.drawBigCardIfPossible && collided && info.inputState.rMouse.pressed)
+		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
 			DrawFullCard(info, drawInfo.card);
 		return collided;
 	}
