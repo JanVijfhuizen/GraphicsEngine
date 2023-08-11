@@ -89,11 +89,19 @@ namespace game
 			glm::ivec4 borderColor{1};
 		};
 
-		struct DiscoveredCardDrawInfo final
+		struct CardSelectionDrawInfo final
 		{
-			Card* cards[DISCOVER_LENGTH]{};
+			Card** cards;
+			uint32_t length = 1;
 			uint32_t height;
 			uint32_t highlighted = -1;
+			bool* selectedArr = nullptr;
+		};
+
+		enum class HeaderSpacing
+		{
+			normal,
+			close
 		};
 
 		virtual void Create(const LevelCreateInfo& info);
@@ -102,18 +110,19 @@ namespace game
 
 		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
 		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
-		[[nodiscard]] static uint32_t DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo);
+		[[nodiscard]] static uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
 		[[nodiscard]] static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
 		static void DrawFullCard(const LevelUpdateInfo& info, Card* card);
-		void DrawTopCenterHeader(const LevelUpdateInfo& info, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
-		void DrawPressEnterToContinue(const LevelUpdateInfo& info, float overrideLifeTime = -1) const;
+		void DrawTopCenterHeader(const LevelUpdateInfo& info, HeaderSpacing spacing, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
+		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;
+		[[nodiscard]] static uint32_t GetSpacing(HeaderSpacing spacing);
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;
 		void Load(LevelIndex index);
 
 	private:
-		const float _LOAD_DURATION = 1;
+		const float _LOAD_DURATION = 0;
 		bool _loading;
 		float _timeSinceLoading;
 		LevelIndex _loadingLevelIndex;

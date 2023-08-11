@@ -8,6 +8,9 @@
 
 namespace game
 {
+	constexpr uint32_t CARD_FRAME_COUNT = 3;
+	constexpr uint32_t CARD_SPACING = 2;
+
 	void Level::Create(const LevelCreateInfo& info)
 	{
 		_timeSinceOpened = 0;
@@ -133,23 +136,27 @@ namespace game
 		return pressed;
 	}
 
-	uint32_t Level::DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo)
+	uint32_t Level::DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
 	{
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT;
+
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.length = 1;
 		cardDrawInfo.center = true;
-		cardDrawInfo.origin.x = SIMULATED_RESOLUTION.x / 2 - 32;
+		cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - (width + CARD_SPACING) * (drawInfo.length - 1) / 2);
 		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
 		
 		const bool released = info.inputState.lMouse.pressed;
 
 		uint32_t choice = -1;
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
-			cardDrawInfo.borderColor = drawInfo.highlighted == i ? glm::ivec4(0, 1, 0, 1) : glm::ivec4(1);
+			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
+			cardDrawInfo.borderColor = selected ? glm::ivec4(0, 1, 0, 1) : glm::ivec4(1);
 			cardDrawInfo.card = drawInfo.cards[i];
 			const bool b = DrawCard(info, cardDrawInfo);
-			cardDrawInfo.origin.x += 32;
+			cardDrawInfo.origin.x += width + CARD_SPACING;
 
 			if (b && released)
 				choice = i;
@@ -160,8 +167,6 @@ namespace game
 
 	bool Level::DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo)
 	{
-		constexpr uint32_t CARD_FRAME_COUNT = 3;
-
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
 		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
 		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
@@ -228,10 +233,11 @@ namespace game
 		info.textTasks.Push(ruleTextTask);
 	}
 
-	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const char* text, const uint32_t scale, const float overrideLifeTime) const
+	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const HeaderSpacing spacing, 
+		const char* text, const uint32_t scale, const float overrideLifeTime) const
 	{
 		HeaderDrawInfo headerDrawInfo{};
-		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - 32 };
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - GetSpacing(spacing)};
 		headerDrawInfo.text = text;
 		headerDrawInfo.center = true;
 		headerDrawInfo.overflow = true;
@@ -240,16 +246,33 @@ namespace game
 		DrawHeader(info, headerDrawInfo);
 	}
 
-	void Level::DrawPressEnterToContinue(const LevelUpdateInfo& info, float overrideLifeTime) const
+	void Level::DrawPressEnterToContinue(const LevelUpdateInfo& info, const HeaderSpacing spacing, const float overrideLifeTime) const
 	{
 		HeaderDrawInfo headerDrawInfo{};
-		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, 32 };
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, GetSpacing(spacing) };
 		headerDrawInfo.text = "press enter to continue...";
 		headerDrawInfo.center = true;
 		headerDrawInfo.overflow = true;
 		headerDrawInfo.overrideLifeTime = overrideLifeTime;
 		headerDrawInfo.scale = 1;
 		DrawHeader(info, headerDrawInfo);
+	}
+
+	uint32_t Level::GetSpacing(const HeaderSpacing spacing)
+	{
+		int32_t yOffset = 0;
+		switch (spacing)
+		{
+		case HeaderSpacing::normal:
+			yOffset = 32;
+			break;
+		case HeaderSpacing::close:
+			yOffset = 64;
+			break;
+		default:
+			break;
+		}
+		return yOffset;
 	}
 
 	float Level::GetTime() const

@@ -10,11 +10,11 @@ namespace game
 {
 	void PartySelectLevel::Create(const LevelCreateInfo& info)
 	{
+		timeSincePartySelected = -1;
 		Level::Create(info);
 		info.gameState = GameState::Create();
 		for (auto& b : selected)
 			b = false;
-		lastHovered = -1;
 	}
 
 	bool PartySelectLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -45,38 +45,30 @@ namespace game
 			}
 		}
 
-		RenderMonsterCardInfo monsterRenderInfo{};
-		monsterRenderInfo.levelUpdateInfo = &info;
-		monsterRenderInfo.cards = cards;
-		monsterRenderInfo.length = playerState.partySize;
-		monsterRenderInfo.selectedArr = selected;
-		monsterRenderInfo.artifactArr = artifacts;
-		monsterRenderInfo.artifactCounts = artifactCounts;
-		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo).selectedMonster;
-
 		info.tempArena.DestroyScope(tempScope);
 
-		if (choice != -1)
-			lastHovered = choice;
+		CardSelectionDrawInfo cardSelectionDrawInfo{};
+		cardSelectionDrawInfo.cards = cards;
+		cardSelectionDrawInfo.length = playerState.partySize;
+		cardSelectionDrawInfo.selectedArr = selected;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+		const uint32_t choice = DrawCardSelection(info, cardSelectionDrawInfo);
+		
+		if (info.inputState.lMouse.PressEvent() && choice != -1)
+			selected[choice] = !selected[choice];
 
-		//if (info.inputState.lMouse == InputState::pressed && choice != -1)
-			//selected[choice] = !selected[choice];
-
-		TextTask textTask{};
-		textTask.text = "select up to 4 party members.";
-		textTask.position = TEXT_CENTER_TOP_POSITION;
-		textTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(textTask);
-
+		DrawTopCenterHeader(info, HeaderSpacing::close, "select up to 4 party members.");
+		
 		uint32_t selectedAmount = 0;
 		for (const auto& b : selected)
 			selectedAmount += 1 * b;
 
-		if(selectedAmount > 0 && selectedAmount <= PARTY_ACTIVE_CAPACITY)
+		if (!GetIsLoading() && selectedAmount > 0 && selectedAmount <= PARTY_ACTIVE_CAPACITY)
 		{
-			textTask.position = TEXT_CENTER_BOT_POSITION;
-			textTask.text = "press enter to continue.";
-			info.textTasks.Push(textTask);
+			if (timeSincePartySelected < 0)
+				timeSincePartySelected = GetTime();
+
+			DrawPressEnterToContinue(info, HeaderSpacing::close, GetTime() - timeSincePartySelected);
 
 			auto& gameState = info.gameState;
 			gameState.partySize = selectedAmount;
@@ -92,9 +84,11 @@ namespace game
 				gameState.healths[j++] = monster.health;
 			}
 
-			//if (info.inputState.enter == InputState::pressed)
-				//loadLevelIndex = LevelIndex::main;
+			if (info.inputState.enter.PressEvent())
+				Load(LevelIndex::main);
 		}
+		else
+			timeSincePartySelected = -1;
 
 		return true;
 	}
