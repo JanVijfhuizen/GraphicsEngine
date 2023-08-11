@@ -59,6 +59,7 @@ namespace game
 			[[nodiscard]] uint32_t GetFlaw(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetEvent(const LevelInfo& info);
 			[[nodiscard]] uint32_t Draw(const LevelInfo& info);
+			[[nodiscard]] uint32_t GetPrimaryPath() const;
 
 			[[nodiscard]] static State Create(const LevelCreateInfo& info);
 		};
@@ -73,6 +74,7 @@ namespace game
 		struct PathSelectState final : LevelState<State>
 		{
 			uint32_t discoverOption;
+			float timeSinceDiscovered;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,

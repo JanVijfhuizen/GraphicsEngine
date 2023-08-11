@@ -9,7 +9,6 @@
 namespace game
 {
 	constexpr uint32_t CARD_FRAME_COUNT = 3;
-	constexpr uint32_t CARD_SPACING = 2;
 	constexpr uint32_t CARD_STACKED_SPACING = 6;
 
 	void Level::Create(const LevelCreateInfo& info)
@@ -145,50 +144,74 @@ namespace game
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.length = 1;
 		cardDrawInfo.center = true;
-		cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - (width + CARD_SPACING / 2) * (drawInfo.length - 1) / 2);
+		cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - width * (drawInfo.length - 1) / 2);
 		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
-		cardDrawInfo.selectable = false;
 		
 		const bool released = info.inputState.lMouse.pressed;
 
 		uint32_t choice = -1;
+
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
 			cardDrawInfo.borderColor = selected ? glm::ivec4(0, 1, 0, 1) : glm::ivec4(1);
 			cardDrawInfo.card = drawInfo.cards[i];
-			const bool b = DrawCard(info, cardDrawInfo);
+			cardDrawInfo.selectable = true;
+			const bool collides = CollidesCard(info, cardDrawInfo);
+			uint32_t stackedSelected = -1;
+			uint32_t stackedCount = -1;
 			
 			if (drawInfo.stacks)
 			{
-				uint32_t stackedSelected = -1;
-				const uint32_t stackedCount = drawInfo.stackCounts[i];
+				stackedCount = drawInfo.stackCounts[i];
+
+				if(!collides)
+					for (uint32_t j = 0; j < stackedCount; ++j)
+					{
+						auto stackedDrawInfo = cardDrawInfo;
+						stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (j + 1));
+						if(CollidesCard(info, stackedDrawInfo))
+						{
+							stackedSelected = stackedCount - j - 1;
+							break;
+						}
+					}
+				
 				for (uint32_t j = 0; j < stackedCount; ++j)
 				{
 					auto stackedDrawInfo = cardDrawInfo;
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
-					stackedDrawInfo.selectable = !b;
-					if (DrawCard(info, stackedDrawInfo) && !b)
-						stackedSelected = i;
-				}
-
-				cardDrawInfo.selectable = stackedSelected == -1;
-				DrawCard(info, cardDrawInfo);
-
-				if(stackedSelected != -1)
-				{
-					auto stackedDrawInfo = cardDrawInfo;
-					stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
-					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
-					stackedDrawInfo.selectable = true;
+					stackedDrawInfo.selectable = !collides && stackedSelected == j;
 					DrawCard(info, stackedDrawInfo);
 				}
 			}
 
-			cardDrawInfo.origin.x += static_cast<int32_t>(width + CARD_SPACING / 2);
-			if (b && released)
+			DrawCard(info, cardDrawInfo);
+			if (stackedSelected != -1)
+			{
+				auto stackedDrawInfo = cardDrawInfo;
+				stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
+				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
+				stackedDrawInfo.selectable = true;
+				DrawCard(info, stackedDrawInfo);
+				cardDrawInfo.selectable = false;
+			}
+
+			if(drawInfo.texts && drawInfo.texts[i])
+			{
+				TextTask textTask{};
+				textTask.position = cardDrawInfo.origin;
+				textTask.position.y += static_cast<int32_t>(CARD_STACKED_SPACING * stackedCount) + cardTexture.resolution.y / 2 + 4;
+				textTask.text = drawInfo.texts[i];
+				textTask.lifetime = drawInfo.lifeTime;
+				textTask.center = true;
+				info.textTasks.Push(textTask);
+			}
+
+			if (collides && released)
 				choice = i;
+			cardDrawInfo.origin.x += static_cast<int32_t>(width);
 		}
 
 		return choice;
@@ -210,11 +233,23 @@ namespace game
 
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
-		bgRenderTask.color = collided ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
+		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
 		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
 			DrawFullCard(info, drawInfo.card);
+		return collided;
+	}
+
+	bool Level::CollidesCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo)
+	{
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
+		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
+		
+		const auto scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
+		const bool collided = CollidesShapeInt(drawInfo.origin -
+			(drawInfo.center ? scale / 2 : glm::ivec2(0)), scale, info.inputState.mousePos);
 		return collided;
 	}
 

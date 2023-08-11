@@ -169,6 +169,24 @@ namespace game
 		return magicDeck.Pop();
 	}
 
+	uint32_t MainLevel::State::GetPrimaryPath() const
+	{
+		uint32_t counters = 0;
+		uint32_t index = 0;
+
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+		{
+			const auto path = paths[i];
+			if(path.counters > counters)
+			{
+				counters = path.counters;
+				index = i;
+			}
+		}
+
+		return index;
+	}
+
 	MainLevel::State MainLevel::State::Create(const LevelCreateInfo& info)
 	{
 		State state{};
@@ -195,23 +213,18 @@ namespace game
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.bosses[state.paths[i].boss];
 
-		RenderCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.cards = cards;
-		renderInfo.length = DISCOVER_LENGTH;
-		RenderCards(renderInfo);
+		CardSelectionDrawInfo cardSelectionDrawInfo{};
+		cardSelectionDrawInfo.cards = cards;
+		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+		DrawCardSelection(info, cardSelectionDrawInfo);
 
-		TextTask textTask{};
-		textTask.text = "the bosses for this stage have been revealed.";
-		textTask.lineLength = 20;
-		textTask.position = TEXT_CENTER_TOP_POSITION;
-		textTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(textTask);
-
-		textTask.position = TEXT_CENTER_BOT_POSITION;
-		textTask.text = "press enter to continue.";
-		info.textTasks.Push(textTask);
-
+		const char* text = "the stage bosses have been revealed.";
+		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
+		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
+		if(f >= 0)
+			level->DrawPressEnterToContinue(info, HeaderSpacing::close, f);
+		
 		if (info.inputState.enter.PressEvent())
 			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		return true;
@@ -238,86 +251,75 @@ namespace game
 	bool MainLevel::PathSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
+		const bool flawPresent = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW - 1;
+		const bool bossPresent = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1;
+
 		// Render bosses.
-		Card* cards[DISCOVER_LENGTH]{};
+		Card* cards[DISCOVER_LENGTH + 1];
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.bosses[state.paths[i].boss];
+		{
+			const auto& path = state.paths[i];
+			if(!bossPresent)
+				cards[i] = &info.bosses[path.boss];
+			else
+				cards[i] = &info.artifacts[path.artifact];
+		}
+		if (bossPresent)
+			cards[DISCOVER_LENGTH] = &info.bosses[state.paths[state.GetPrimaryPath()].boss];
 
-		RenderCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.cards = cards;
-		renderInfo.length = DISCOVER_LENGTH;
-		renderInfo.position = glm::vec2(0, -CARD_HEIGHT);
-		renderInfo.highlight = discoverOption;
-		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
+		Card** stacks[DISCOVER_LENGTH]{};
+		for (auto& stack : stacks)
+			stack = jv::CreateArray<Card*>(info.frameArena, 3).ptr;
 
-		uint32_t selected = RenderCards(renderInfo);
+		uint32_t stacksCounts[DISCOVER_LENGTH + 1]{};
+		for (auto& c : stacksCounts)
+			c = 2 + flawPresent;
+		stacksCounts[DISCOVER_LENGTH] = 0;
 
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+		{
+			const auto& stack = stacks[i];
+			const auto& path = state.paths[i];
+
+			stack[0] = &info.rooms[path.room];
+			stack[1] = &info.magics[path.magic];
+			if (flawPresent)
+				stack[2] = &info.flaws[path.flaw];
+		}
+
+		const char* texts[DISCOVER_LENGTH]{};
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
 			uint32_t counters = state.paths[i].counters;
 			counters += i == discoverOption;
-
-			TextTask textTask{};
-			textTask.text = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
-			textTask.position = glm::vec2(-CARD_WIDTH_OFFSET * DISCOVER_LENGTH / 2 + CARD_WIDTH_OFFSET * 2 * i - CARD_WIDTH_OFFSET, -CARD_HEIGHT);
-			textTask.scale = TEXT_BIG_SCALE;
-			info.textTasks.Push(textTask);
+			texts[i] = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
 		}
+		
+		CardSelectionDrawInfo cardSelectionDrawInfo{};
+		cardSelectionDrawInfo.cards = cards;
+		cardSelectionDrawInfo.length = DISCOVER_LENGTH + bossPresent;
+		cardSelectionDrawInfo.stacks = stacks;
+		cardSelectionDrawInfo.stackCounts = stacksCounts;
+		cardSelectionDrawInfo.texts = texts;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+		cardSelectionDrawInfo.highlighted = discoverOption;
+		const uint32_t selected = DrawCardSelection(info, cardSelectionDrawInfo);
 
-		// Render flaws.
-		if (state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW - 1)
+		if (info.inputState.lMouse.PressEvent())
 		{
-			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-				cards[i] = &info.flaws[state.paths[i].flaw];
-			renderInfo.position.x += CARD_WIDTH * 2;
-			const auto choice = RenderCards(renderInfo);
-			selected = choice != -1 ? choice : selected;
-		}
-		// Render artifacts.
-		else if (state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1)
-		{
-			for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-				cards[i] = &info.artifacts[state.paths[i].artifact];
-			renderInfo.position.x += CARD_WIDTH * 2;
-			const auto choice = RenderCards(renderInfo);
-			selected = choice != -1 ? choice : selected;
+			discoverOption = selected == discoverOption ? -1 : selected;
+			if (selected != -1)
+				timeSinceDiscovered = level->GetTime();
 		}
 
-		// Render rooms.
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.rooms[state.paths[i].room];
-
-		renderInfo.position = glm::vec2(0, CARD_HEIGHT);
-		renderInfo.additionalSpacing = CARD_WIDTH_OFFSET;
-		auto choice = RenderCards(renderInfo);
-		selected = choice != -1 ? choice : selected;
-
-		// Render magics.
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.magics[state.paths[i].magic];
-
-		renderInfo.position.x += CARD_WIDTH * 2;
-		choice = RenderMagicCards(info.frameArena, renderInfo);
-		selected = choice != -1 ? choice : selected;
-
-		//if (info.inputState.lMouse == InputState::pressed)
-			//discoverOption = selected == discoverOption ? -1 : selected;
-
-		TextTask textTask{};
-		textTask.text = "select the road to take.";
-		textTask.lineLength = 20;
-		textTask.position = TEXT_CENTER_TOP_POSITION;
-		textTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(textTask);
-
+		const char* text = "select which road to take.";
+		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
+		
 		if (discoverOption != -1)
 		{
-			textTask.position = TEXT_CENTER_BOT_POSITION;
-			textTask.text = "press enter to continue.";
-			info.textTasks.Push(textTask);
-			/*
-			if (info.inputState.enter == InputState::pressed)
+			level->DrawPressEnterToContinue(info, HeaderSpacing::close, level->GetTime() - timeSinceDiscovered);
+			
+			if (info.inputState.enter.PressEvent())
 			{
 				state.chosenPath = discoverOption;
 				auto& path = state.paths[discoverOption];
@@ -326,7 +328,6 @@ namespace game
 
 				stateIndex = static_cast<uint32_t>(StateNames::combat);
 			}
-			*/
 		}
 
 		return true;

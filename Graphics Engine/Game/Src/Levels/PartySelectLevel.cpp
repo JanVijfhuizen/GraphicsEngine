@@ -26,9 +26,7 @@ namespace game
 		Card* cards[PARTY_CAPACITY]{};
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[i]];
-
-		const auto tempScope = info.tempArena.CreateScope();
-
+		
 		Card** artifacts[PARTY_CAPACITY]{};
 		uint32_t artifactCounts[PARTY_CAPACITY]{};
 
@@ -37,7 +35,7 @@ namespace game
 			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
 			if (count == 0)
 				continue;
-			const auto arr = jv::CreateArray<Card*>(info.tempArena, count);
+			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
 			artifacts[i] = arr.ptr;
 			for (uint32_t j = 0; j < count; ++j)
 			{
@@ -54,8 +52,6 @@ namespace game
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		const uint32_t choice = DrawCardSelection(info, cardSelectionDrawInfo);
-
-		info.tempArena.DestroyScope(tempScope);
 		
 		if (info.inputState.lMouse.PressEvent() && choice != -1)
 			selected[choice] = !selected[choice];

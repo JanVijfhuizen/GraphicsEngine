@@ -292,6 +292,7 @@ namespace game
 			textInterpreterCreateInfo.symbolAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)];
 			textInterpreterCreateInfo.numberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
+			textInterpreterCreateInfo.fadeInSpeed = TEXT_DRAW_SPEED;
 
 			textInterpreterCreateInfo.renderTasks = outCardGame->pixelPerfectRenderTasks;
 			outCardGame->textInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(

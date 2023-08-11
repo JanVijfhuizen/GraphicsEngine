@@ -141,7 +141,7 @@ namespace game
 		const char* text = "daisy joins you on your adventure.";
 		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text);
 		DrawFullCard(info, &info.monsters[0]);
-		const float f = level->GetTime() - static_cast<float>(strlen(text)) / 20.f;
+		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if(f >= 0)
 			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
 
