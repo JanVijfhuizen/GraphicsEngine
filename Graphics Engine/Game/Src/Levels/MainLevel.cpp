@@ -303,7 +303,9 @@ namespace game
 		cardSelectionDrawInfo.texts = texts;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.highlighted = discoverOption;
-		const uint32_t selected = DrawCardSelection(info, cardSelectionDrawInfo);
+		uint32_t selected = DrawCardSelection(info, cardSelectionDrawInfo);
+		if (selected == DISCOVER_LENGTH)
+			selected = -1;
 
 		if (info.inputState.lMouse.PressEvent())
 		{
