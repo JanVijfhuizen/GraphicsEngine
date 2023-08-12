@@ -77,7 +77,7 @@ namespace game
 						
 						lineLength = 0;
 						if(job.center)
-							xStart = (nextLineStart - i) * (_createInfo.symbolSize + _createInfo.spacing)* job.scale / 2;
+							xStart = (nextLineStart - i) * (_createInfo.symbolSize + _createInfo.spacing) * job.scale / 2;
 						task.position.x = static_cast<int32_t>(job.position.x - xStart);
 
 						if(i != 0)

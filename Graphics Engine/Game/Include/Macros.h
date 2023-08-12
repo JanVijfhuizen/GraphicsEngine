@@ -6,6 +6,7 @@
 }
 
 constexpr glm::ivec2 SIMULATED_RESOLUTION(320, 240);
+constexpr float TEXT_DRAW_SPEED = 20;
 
 constexpr uint32_t PARTY_ACTIVE_CAPACITY = 4;
 constexpr uint32_t PARTY_INACTIVE_CAPACITY = 2;
@@ -78,8 +79,7 @@ enum class TextureId
 	symbols,
 	mouse,
 	card,
-	cardField,
-	cardMod,
+	cardLarge,
 	button,
 	stats,
 	fallback,

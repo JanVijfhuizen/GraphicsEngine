@@ -10,11 +10,11 @@ namespace game
 {
 	void PartySelectLevel::Create(const LevelCreateInfo& info)
 	{
+		timeSincePartySelected = -1;
 		Level::Create(info);
 		info.gameState = GameState::Create();
 		for (auto& b : selected)
 			b = false;
-		lastHovered = -1;
 	}
 
 	bool PartySelectLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -26,10 +26,8 @@ namespace game
 		Card* cards[PARTY_CAPACITY]{};
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[i]];
-
-		const auto tempScope = info.tempArena.CreateScope();
-
-		ArtifactCard** artifacts[PARTY_CAPACITY]{};
+		
+		Card** artifacts[PARTY_CAPACITY]{};
 		uint32_t artifactCounts[PARTY_CAPACITY]{};
 
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
@@ -37,7 +35,8 @@ namespace game
 			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
 			if (count == 0)
 				continue;
-			const auto arr = artifacts[i] = static_cast<ArtifactCard**>(info.tempArena.Alloc(sizeof(void*) * count));
+			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
+			artifacts[i] = arr.ptr;
 			for (uint32_t j = 0; j < count; ++j)
 			{
 				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
@@ -45,38 +44,30 @@ namespace game
 			}
 		}
 
-		RenderMonsterCardInfo monsterRenderInfo{};
-		monsterRenderInfo.levelUpdateInfo = &info;
-		monsterRenderInfo.cards = cards;
-		monsterRenderInfo.length = playerState.partySize;
-		monsterRenderInfo.selectedArr = selected;
-		monsterRenderInfo.artifactArr = artifacts;
-		monsterRenderInfo.artifactCounts = artifactCounts;
-		const uint32_t choice = RenderMonsterCards(info.frameArena, monsterRenderInfo).selectedMonster;
+		CardSelectionDrawInfo cardSelectionDrawInfo{};
+		cardSelectionDrawInfo.cards = cards;
+		cardSelectionDrawInfo.length = playerState.partySize;
+		cardSelectionDrawInfo.selectedArr = selected;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+		cardSelectionDrawInfo.stacks = artifacts;
+		cardSelectionDrawInfo.stackCounts = artifactCounts;
+		const uint32_t choice = DrawCardSelection(info, cardSelectionDrawInfo);
+		
+		if (info.inputState.lMouse.PressEvent() && choice != -1)
+			selected[choice] = !selected[choice];
 
-		info.tempArena.DestroyScope(tempScope);
-
-		if (choice != -1)
-			lastHovered = choice;
-
-		//if (info.inputState.lMouse == InputState::pressed && choice != -1)
-			//selected[choice] = !selected[choice];
-
-		TextTask textTask{};
-		textTask.text = "select up to 4 party members.";
-		textTask.position = TEXT_CENTER_TOP_POSITION;
-		textTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(textTask);
-
+		DrawTopCenterHeader(info, HeaderSpacing::close, "select up to 4 party members.");
+		
 		uint32_t selectedAmount = 0;
 		for (const auto& b : selected)
 			selectedAmount += 1 * b;
 
-		if(selectedAmount > 0 && selectedAmount <= PARTY_ACTIVE_CAPACITY)
+		if (!GetIsLoading() && selectedAmount > 0 && selectedAmount <= PARTY_ACTIVE_CAPACITY)
 		{
-			textTask.position = TEXT_CENTER_BOT_POSITION;
-			textTask.text = "press enter to continue.";
-			info.textTasks.Push(textTask);
+			if (timeSincePartySelected < 0)
+				timeSincePartySelected = GetTime();
+
+			DrawPressEnterToContinue(info, HeaderSpacing::close, GetTime() - timeSincePartySelected);
 
 			auto& gameState = info.gameState;
 			gameState.partySize = selectedAmount;
@@ -92,9 +83,11 @@ namespace game
 				gameState.healths[j++] = monster.health;
 			}
 
-			//if (info.inputState.enter == InputState::pressed)
-				//loadLevelIndex = LevelIndex::main;
+			if (info.inputState.enter.PressEvent())
+				Load(LevelIndex::main);
 		}
+		else
+			timeSincePartySelected = -1;
 
 		return true;
 	}

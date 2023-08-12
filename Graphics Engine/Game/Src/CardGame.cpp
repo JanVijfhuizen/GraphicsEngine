@@ -292,6 +292,7 @@ namespace game
 			textInterpreterCreateInfo.symbolAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)];
 			textInterpreterCreateInfo.numberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
+			textInterpreterCreateInfo.fadeInSpeed = TEXT_DRAW_SPEED;
 
 			textInterpreterCreateInfo.renderTasks = outCardGame->pixelPerfectRenderTasks;
 			outCardGame->textInterpreter = &outCardGame->engine.AddTaskInterpreter<TextTask, TextInterpreter>(
@@ -333,13 +334,12 @@ namespace game
 		arr[2] = "Art/symbols.png";
 		arr[3] = "Art/mouse.png";
 		arr[4] = "Art/card.png";
-		arr[5] = "Art/card-field.png";
-		arr[6] = "Art/card-mod.png";
-		arr[7] = "Art/button.png";
-		arr[8] = "Art/stats.png";
-		arr[9] = "Art/fallback.png";
-		arr[10] = "Art/empty.png";
-		arr[11] = "Art/button-small.png";
+		arr[5] = "Art/card-large.png";
+		arr[6] = "Art/button.png";
+		arr[7] = "Art/stats.png";
+		arr[8] = "Art/fallback.png";
+		arr[9] = "Art/empty.png";
+		arr[10] = "Art/button-small.png";
 		return arr;
 	}
 

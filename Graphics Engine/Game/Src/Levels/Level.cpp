@@ -2,12 +2,16 @@
 #include "Levels/Level.h"
 
 #include "GE/AtlasGenerator.h"
+#include "JLib/Math.h"
 #include "States/InputState.h"
 #include "Utils/BoxCollision.h"
 #include "Utils/SubTextureUtils.h"
 
 namespace game
 {
+	constexpr uint32_t CARD_FRAME_COUNT = 3;
+	constexpr uint32_t CARD_STACKED_SPACING = 6;
+
 	void Level::Create(const LevelCreateInfo& info)
 	{
 		_timeSinceOpened = 0;
@@ -49,7 +53,7 @@ namespace game
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = atlasTexture.resolution / glm::ivec2(2, 1);
 		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
-		renderTask.priority = true;
+		//renderTask.priority = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
 		info.pixelPerfectRenderTasks.Push(renderTask);
 	}
@@ -67,7 +71,7 @@ namespace game
 		}
 
 		TextTask titleTextTask{};
-		titleTextTask.lineLength = drawInfo.overflow ? -1 : 10;
+		titleTextTask.lineLength = drawInfo.lineLength;
 		titleTextTask.position = drawInfo.origin;
 		titleTextTask.text = drawInfo.text;
 		titleTextTask.scale = drawInfo.scale;
@@ -79,24 +83,17 @@ namespace game
 
 	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const
 	{
-		constexpr uint32_t BUTTON_ANIM_LENGTH = 6;
 		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
 
-		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)];
-		jv::ge::SubTexture buttonAnim[BUTTON_ANIM_LENGTH];
-		Divide(buttonTexture.subTexture, buttonAnim, BUTTON_ANIM_LENGTH);
-
-		uint32_t buttonAnimIndex = _loading ? 0 : BUTTON_ANIM_LENGTH - 1;
+		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)];
 		uint32_t textMaxLen = -1;
 
 		const float lifeTime = _loading ? _timeSinceLoading : GetTime();
 		if (lifeTime <= BUTTON_SPAWN_ANIM_DURATION)
 		{
 			const float lerp = lifeTime / BUTTON_SPAWN_ANIM_DURATION;
-			buttonAnimIndex = static_cast<uint32_t>(lerp * BUTTON_ANIM_LENGTH);
 			if (_loading)
 			{
-				buttonAnimIndex = BUTTON_ANIM_LENGTH - buttonAnimIndex - 1;
 				const auto len = static_cast<uint32_t>(strlen(drawInfo.text));
 				textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
 			}
@@ -106,20 +103,23 @@ namespace game
 
 		PixelPerfectRenderTask buttonRenderTask{};
 		buttonRenderTask.position = drawInfo.origin;
-		buttonRenderTask.scale = buttonTexture.resolution / glm::ivec2(BUTTON_ANIM_LENGTH, 1);
-		buttonRenderTask.subTexture = buttonAnim[buttonAnimIndex];
+		buttonRenderTask.scale = glm::ivec2(64, 3);
+		buttonRenderTask.subTexture = buttonTexture.subTexture;
 		buttonRenderTask.xCenter = drawInfo.center;
 
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.position.x += drawInfo.center ? 0 : buttonRenderTask.scale.x / 2;
+		buttonTextTask.position.y += 3;
 		buttonTextTask.text = drawInfo.text;
 		buttonTextTask.lifetime = _loading ? 1e2f : lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
 		buttonTextTask.center = true;
 		
 		bool pressed = false;
-		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin, buttonRenderTask.scale, info.inputState.mousePos);
+		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin - 
+			glm::ivec2(buttonRenderTask.scale.x / 2, 0) * static_cast<int32_t>(drawInfo.center),
+			buttonRenderTask.scale + glm::ivec2(0, 9), info.inputState.mousePos);
 		if (collided)
 		{
 			buttonTextTask.loop = true;
@@ -133,26 +133,96 @@ namespace game
 		return pressed;
 	}
 
-	uint32_t Level::DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo)
+	uint32_t Level::DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
 	{
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT;
+
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.length = 1;
 		cardDrawInfo.center = true;
-		cardDrawInfo.origin.x = SIMULATED_RESOLUTION.x / 2 - 32;
 		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
 		
 		const bool released = info.inputState.lMouse.pressed;
-
 		uint32_t choice = -1;
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			cardDrawInfo.borderColor = drawInfo.highlighted == i ? glm::ivec4(0, 1, 0, 1) : glm::ivec4(1);
-			cardDrawInfo.card = drawInfo.cards[i];
-			const bool b = DrawCard(info, cardDrawInfo);
-			cardDrawInfo.origin.x += 32;
 
-			if (b && released)
+		for (uint32_t i = 0; i < drawInfo.length; ++i)
+		{
+			if((i + drawInfo.rowCutoff) % drawInfo.rowCutoff == 0)
+			{
+				const uint32_t m = jv::Min(drawInfo.length, drawInfo.rowCutoff);
+				cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - width * (m - 1) / 2);
+				if (i != 0)
+					cardDrawInfo.origin.y -= cardTexture.resolution.y + 4;
+			}
+
+			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
+			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
+
+			cardDrawInfo.borderColor = glm::vec4(1);
+			cardDrawInfo.borderColor = greyedOut ? glm::vec4(.1, .1, .1, 1) : cardDrawInfo.borderColor;
+			cardDrawInfo.borderColor = selected ? glm::vec4(0, 1, 0, 1) : cardDrawInfo.borderColor;
+			cardDrawInfo.card = drawInfo.cards[i];
+			cardDrawInfo.selectable = true;
+			const bool collides = CollidesCard(info, cardDrawInfo);
+			uint32_t stackedSelected = -1;
+			uint32_t stackedCount = -1;
+			
+			if (drawInfo.stacks)
+			{
+				stackedCount = drawInfo.stackCounts[i];
+
+				if(!collides)
+					for (uint32_t j = 0; j < stackedCount; ++j)
+					{
+						auto stackedDrawInfo = cardDrawInfo;
+						stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (j + 1));
+						if(CollidesCard(info, stackedDrawInfo))
+						{
+							stackedSelected = stackedCount - j - 1;
+							break;
+						}
+					}
+				
+				for (uint32_t j = 0; j < stackedCount; ++j)
+				{
+					auto stackedDrawInfo = cardDrawInfo;
+					stackedDrawInfo.card = drawInfo.stacks[i][j];
+					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
+					stackedDrawInfo.selectable = !collides && stackedSelected == j;
+					DrawCard(info, stackedDrawInfo);
+				}
+			}
+			
+			DrawCard(info, cardDrawInfo);
+
+			if (stackedSelected != -1)
+			{
+				auto stackedDrawInfo = cardDrawInfo;
+				stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
+				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
+				stackedDrawInfo.selectable = true;
+				DrawCard(info, stackedDrawInfo);
+				cardDrawInfo.selectable = false;
+			}
+
+			if (drawInfo.outStackSelected)
+				*drawInfo.outStackSelected = stackedSelected;
+
+			if(drawInfo.texts && drawInfo.texts[i])
+			{
+				TextTask textTask{};
+				textTask.position = cardDrawInfo.origin;
+				textTask.position.y += static_cast<int32_t>(CARD_STACKED_SPACING * stackedCount) + cardTexture.resolution.y / 2 + 4;
+				textTask.text = drawInfo.texts[i];
+				textTask.lifetime = drawInfo.lifeTime;
+				textTask.center = true;
+				info.textTasks.Push(textTask);
+			}
+
+			if (collides && released && !greyedOut)
 				choice = i;
+			cardDrawInfo.origin.x += static_cast<int32_t>(width);
 		}
 
 		return choice;
@@ -160,8 +230,6 @@ namespace game
 
 	bool Level::DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo)
 	{
-		constexpr uint32_t CARD_FRAME_COUNT = 3;
-
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
 		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
 		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
@@ -176,56 +244,99 @@ namespace game
 
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
-		bgRenderTask.color = collided ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
+		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
-		if (collided && info.inputState.rMouse.pressed)
+		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
 			DrawFullCard(info, drawInfo.card);
+		return collided;
+	}
+
+	bool Level::CollidesCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo)
+	{
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
+		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
+		
+		const auto scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
+		const bool collided = CollidesShapeInt(drawInfo.origin -
+			(drawInfo.center ? scale / 2 : glm::ivec2(0)), scale, info.inputState.mousePos);
 		return collided;
 	}
 
 	void Level::DrawFullCard(const LevelUpdateInfo& info, Card* card)
 	{
-		constexpr uint32_t CARD_FRAME_COUNT = 3;
-		constexpr int32_t SCALE_MULTIPLIER = 6;
-
-		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
-		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
-		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::cardLarge)];
 
 		PixelPerfectRenderTask bgRenderTask{};
 		bgRenderTask.position = SIMULATED_RESOLUTION / 2;
-		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1) * SCALE_MULTIPLIER;
-		bgRenderTask.subTexture = cardFrames[0];
+		bgRenderTask.scale = cardTexture.resolution;
+		bgRenderTask.subTexture = cardTexture.subTexture;
 		bgRenderTask.xCenter = true;
 		bgRenderTask.yCenter = true;
 		bgRenderTask.priority = true;
-
-		auto titleBoxRenderTask = bgRenderTask;
-		titleBoxRenderTask.subTexture = cardFrames[1];
-
-		auto textBoxRenderTask = bgRenderTask;
-		textBoxRenderTask.subTexture = cardFrames[2];
-
+		
 		bgRenderTask.color = glm::ivec4(1, 0, 0, 1);
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
-		info.pixelPerfectRenderTasks.Push(titleBoxRenderTask);
-		info.pixelPerfectRenderTasks.Push(textBoxRenderTask);
 
 		TextTask titleTextTask{};
 		titleTextTask.position = bgRenderTask.position;
-		titleTextTask.position.y += bgRenderTask.scale.y / 2 - 5 * SCALE_MULTIPLIER;
+		titleTextTask.position.y += bgRenderTask.scale.y / 2 - 28;
 		titleTextTask.text = card->name;
 		titleTextTask.lifetime = 1e2f;
 		titleTextTask.center = true;
 		titleTextTask.priority = true;
+		titleTextTask.lineLength = 18;
 		info.textTasks.Push(titleTextTask);
 
 		auto ruleTextTask = titleTextTask;
-		ruleTextTask.text = card->ruleText;
 		ruleTextTask.position = bgRenderTask.position;
-		ruleTextTask.position.y -= 7 * SCALE_MULTIPLIER;
+		ruleTextTask.position.y -= 36;
+		ruleTextTask.text = card->ruleText;
 		info.textTasks.Push(ruleTextTask);
+	}
+
+	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const HeaderSpacing spacing, 
+		const char* text, const uint32_t scale, const float overrideLifeTime) const
+	{
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - GetSpacing(spacing)};
+		headerDrawInfo.text = text;
+		headerDrawInfo.center = true;
+		headerDrawInfo.overrideLifeTime = overrideLifeTime;
+		headerDrawInfo.scale = scale;
+		DrawHeader(info, headerDrawInfo);
+	}
+
+	void Level::DrawPressEnterToContinue(const LevelUpdateInfo& info, const HeaderSpacing spacing, const float overrideLifeTime) const
+	{
+		HeaderDrawInfo headerDrawInfo{};
+		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, GetSpacing(spacing) };
+		headerDrawInfo.text = "press enter to continue...";
+		headerDrawInfo.center = true;
+		headerDrawInfo.overrideLifeTime = overrideLifeTime;
+		headerDrawInfo.scale = 1;
+		DrawHeader(info, headerDrawInfo);
+	}
+
+	uint32_t Level::GetSpacing(const HeaderSpacing spacing)
+	{
+		int32_t yOffset = 0;
+		switch (spacing)
+		{
+		case HeaderSpacing::normal:
+			yOffset = 32;
+			break;
+		case HeaderSpacing::close:
+			yOffset = 64;
+			break;
+		case HeaderSpacing::far:
+			yOffset = 12;
+			break;
+		default:
+			break;
+		}
+		return yOffset;
 	}
 
 	float Level::GetTime() const

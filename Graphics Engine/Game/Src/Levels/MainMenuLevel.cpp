@@ -18,6 +18,7 @@ namespace game
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = { 9, SIMULATED_RESOLUTION.y - 36 };
 		headerDrawInfo.text = "untitled card game";
+		headerDrawInfo.lineLength = 10;
 		DrawHeader(info, headerDrawInfo);
 
 		ButtonDrawInfo buttonDrawInfo{};

@@ -68,7 +68,7 @@ namespace game
 			glm::ivec2 origin;
 			const char* text;
 			bool center = false;
-			bool overflow = false;
+			uint32_t lineLength = 32;
 			uint32_t scale = 2;
 			float overrideLifeTime = -1;
 		};
@@ -86,14 +86,31 @@ namespace game
 			Card* card;
 			uint32_t length;
 			bool center = false;
-			glm::ivec4 borderColor{1};
+			glm::vec4 borderColor{1};
+			bool selectable = true;
 		};
 
-		struct DiscoveredCardDrawInfo final
+		struct CardSelectionDrawInfo final
 		{
-			Card* cards[DISCOVER_LENGTH]{};
+			Card** cards;
+			Card*** stacks = nullptr;
+			uint32_t* stackCounts = nullptr;
+			uint32_t* outStackSelected = nullptr;
+			const char** texts = nullptr;
+			uint32_t length = 1;
 			uint32_t height;
 			uint32_t highlighted = -1;
+			bool* selectedArr = nullptr;
+			bool* greyedOutArr = nullptr;
+			float lifeTime = -1;
+			uint32_t rowCutoff = 8;
+		};
+
+		enum class HeaderSpacing
+		{
+			normal,
+			close,
+			far
 		};
 
 		virtual void Create(const LevelCreateInfo& info);
@@ -102,16 +119,20 @@ namespace game
 
 		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
 		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
-		[[nodiscard]] static uint32_t DrawDiscoveredCards(const LevelUpdateInfo& info, const DiscoveredCardDrawInfo& drawInfo);
-		[[nodiscard]] static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
+		static uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
+		static bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
+		static bool CollidesCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
 		static void DrawFullCard(const LevelUpdateInfo& info, Card* card);
+		void DrawTopCenterHeader(const LevelUpdateInfo& info, HeaderSpacing spacing, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
+		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;
+		[[nodiscard]] static uint32_t GetSpacing(HeaderSpacing spacing);
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;
 		void Load(LevelIndex index);
 
 	private:
-		const float _LOAD_DURATION = 1;
+		const float _LOAD_DURATION = 0;
 		bool _loading;
 		float _timeSinceLoading;
 		LevelIndex _loadingLevelIndex;
