@@ -504,72 +504,72 @@ namespace game
 	bool MainLevel::RewardArtifactState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
 		Card* cards[PARTY_ACTIVE_CAPACITY]{};
 		
 		auto& playerState = info.playerState;
 		const auto& gameState = info.gameState;
 
-		TextTask textTask{};
-		textTask.lineLength = 20;
-		textTask.scale = .06f;
-		textTask.position = TEXT_CENTER_TOP_POSITION;
-		textTask.text = "you can switch your artifacts around.";
-		info.textTasks.Push(textTask);
-
-		textTask.position = TEXT_CENTER_BOT_POSITION;
-		textTask.text = " press enter to continue.";
-		info.textTasks.Push(textTask);
+		const char* text = "you have the chance to equip this new artifact, and swap your artifacts around.";
+		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text);
+		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
+		if (f >= 0)
+			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
 
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[gameState.partyIds[i]]];
-
-		const auto tempScope = info.tempArena.CreateScope();
-
-		ArtifactCard** artifacts[PARTY_ACTIVE_CAPACITY]{};
+		
+		Card** artifacts[PARTY_ACTIVE_CAPACITY]{};
 		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
 
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+			const uint32_t id = gameState.partyIds[i];
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[id];
 			if (count == 0)
 				continue;
-			const auto arr = artifacts[i] = static_cast<ArtifactCard**>(info.tempArena.Alloc(sizeof(void*) * count));
+			const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
 			for (uint32_t j = 0; j < count; ++j)
 			{
-				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
+				const uint32_t index = playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY + j];
 				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 			}
 		}
 
-		RenderMonsterCardInfo renderInfo{};
-		renderInfo.levelUpdateInfo = &info;
-		renderInfo.length = gameState.partySize;
-		renderInfo.cards = cards;
-		renderInfo.position.y = CARD_HEIGHT_OFFSET;
-		renderInfo.artifactArr = artifacts;
-		renderInfo.artifactCounts = artifactCounts;
-		const auto choice = RenderMonsterCards(info.frameArena, renderInfo);
-
-		info.tempArena.DestroyScope(tempScope);
-
+		uint32_t outStackSelected;
+		CardSelectionDrawInfo cardSelectionDrawInfo{};
+		cardSelectionDrawInfo.cards = cards;
+		cardSelectionDrawInfo.length = gameState.partySize;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
+		cardSelectionDrawInfo.stacks = artifacts;
+		cardSelectionDrawInfo.stackCounts = artifactCounts;
+		cardSelectionDrawInfo.outStackSelected = &outStackSelected;
+		const auto choice = DrawCardSelection(info, cardSelectionDrawInfo);
+		
 		auto& path = state.paths[state.chosenPath];
 		
-		cards[0] = path.artifact == -1 ? nullptr : &info.artifacts[path.artifact];
-		renderInfo.position.y *= -1;
-		renderInfo.length = 1;
-		RenderCards(renderInfo);
-		/*
-		if (info.inputState.lMouse == InputState::pressed && choice.selectedArtifact != -1 && 
-			choice.selectedArtifact < playerState.artifactSlotCounts[choice.selectedMonster])
+		CardDrawInfo cardDrawInfo{};
+		cardDrawInfo.card = path.artifact == -1 ? nullptr : &info.artifacts[path.artifact];
+		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
+		cardDrawInfo.center = true;
+		DrawCard(info, cardDrawInfo);
+
+		if(choice != -1)
 		{
-			const uint32_t swappable = path.artifact;
-			path.artifact = playerState.artifacts[choice.selectedMonster * MONSTER_ARTIFACT_CAPACITY + choice.selectedArtifact];
-			playerState.artifacts[choice.selectedMonster * MONSTER_ARTIFACT_CAPACITY + choice.selectedArtifact] = swappable;
+			const uint32_t id = gameState.partyIds[choice];
+
+			if (info.inputState.lMouse.PressEvent() && outStackSelected != -1 &&
+				outStackSelected < playerState.artifactSlotCounts[id])
+			{
+				const uint32_t swappable = path.artifact;
+				path.artifact = playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY + outStackSelected];
+				playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY + outStackSelected] = swappable;
+			}
 		}
 
-		if (info.inputState.enter == InputState::pressed)
+		if (info.inputState.enter.PressEvent())
 			stateIndex = static_cast<uint32_t>(StateNames::exitFound);
-			*/
+
 		return true;
 	}
 
@@ -623,6 +623,8 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+		// temp
+		stateMachine.state.depth = 9;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

@@ -35,7 +35,6 @@ namespace game
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 27 };
 		headerDrawInfo.text = "choose a mode.";
 		headerDrawInfo.center = true;
-		headerDrawInfo.overflow = true;
 		level->DrawHeader(info, headerDrawInfo);
 
 		ButtonDrawInfo buttonDrawInfo{};
@@ -141,11 +140,11 @@ namespace game
 		LevelIndex& loadLevelIndex)
 	{
 		const char* text = "daisy joins you on your adventure.";
-		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text);
+		level->DrawTopCenterHeader(info, HeaderSpacing::far, text);
 		DrawFullCard(info, &info.monsters[0]);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if(f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
+			level->DrawPressEnterToContinue(info, HeaderSpacing::far, f);
 
 		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 		{

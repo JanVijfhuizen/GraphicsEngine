@@ -68,7 +68,7 @@ namespace game
 			glm::ivec2 origin;
 			const char* text;
 			bool center = false;
-			bool overflow = false;
+			uint32_t lineLength = 32;
 			uint32_t scale = 2;
 			float overrideLifeTime = -1;
 		};
@@ -95,6 +95,7 @@ namespace game
 			Card** cards;
 			Card*** stacks = nullptr;
 			uint32_t* stackCounts = nullptr;
+			uint32_t* outStackSelected = nullptr;
 			const char** texts = nullptr;
 			uint32_t length = 1;
 			uint32_t height;
@@ -108,7 +109,8 @@ namespace game
 		enum class HeaderSpacing
 		{
 			normal,
-			close
+			close,
+			far
 		};
 
 		virtual void Create(const LevelCreateInfo& info);

@@ -71,7 +71,7 @@ namespace game
 		}
 
 		TextTask titleTextTask{};
-		titleTextTask.lineLength = drawInfo.overflow ? -1 : 10;
+		titleTextTask.lineLength = drawInfo.lineLength;
 		titleTextTask.position = drawInfo.origin;
 		titleTextTask.text = drawInfo.text;
 		titleTextTask.scale = drawInfo.scale;
@@ -83,24 +83,17 @@ namespace game
 
 	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const
 	{
-		constexpr uint32_t BUTTON_ANIM_LENGTH = 6;
 		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
 
-		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::button)];
-		jv::ge::SubTexture buttonAnim[BUTTON_ANIM_LENGTH];
-		Divide(buttonTexture.subTexture, buttonAnim, BUTTON_ANIM_LENGTH);
-
-		uint32_t buttonAnimIndex = _loading ? 0 : BUTTON_ANIM_LENGTH - 1;
+		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)];
 		uint32_t textMaxLen = -1;
 
 		const float lifeTime = _loading ? _timeSinceLoading : GetTime();
 		if (lifeTime <= BUTTON_SPAWN_ANIM_DURATION)
 		{
 			const float lerp = lifeTime / BUTTON_SPAWN_ANIM_DURATION;
-			buttonAnimIndex = static_cast<uint32_t>(lerp * BUTTON_ANIM_LENGTH);
 			if (_loading)
 			{
-				buttonAnimIndex = BUTTON_ANIM_LENGTH - buttonAnimIndex - 1;
 				const auto len = static_cast<uint32_t>(strlen(drawInfo.text));
 				textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
 			}
@@ -110,20 +103,23 @@ namespace game
 
 		PixelPerfectRenderTask buttonRenderTask{};
 		buttonRenderTask.position = drawInfo.origin;
-		buttonRenderTask.scale = buttonTexture.resolution / glm::ivec2(BUTTON_ANIM_LENGTH, 1);
-		buttonRenderTask.subTexture = buttonAnim[buttonAnimIndex];
+		buttonRenderTask.scale = glm::ivec2(64, 3);
+		buttonRenderTask.subTexture = buttonTexture.subTexture;
 		buttonRenderTask.xCenter = drawInfo.center;
 
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.position.x += drawInfo.center ? 0 : buttonRenderTask.scale.x / 2;
+		buttonTextTask.position.y += 3;
 		buttonTextTask.text = drawInfo.text;
 		buttonTextTask.lifetime = _loading ? 1e2f : lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
 		buttonTextTask.center = true;
 		
 		bool pressed = false;
-		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin, buttonRenderTask.scale, info.inputState.mousePos);
+		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin - 
+			glm::ivec2(buttonRenderTask.scale.x / 2, 0) * static_cast<int32_t>(drawInfo.center),
+			buttonRenderTask.scale + glm::ivec2(0, 9), info.inputState.mousePos);
 		if (collided)
 		{
 			buttonTextTask.loop = true;
@@ -209,6 +205,9 @@ namespace game
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
+
+			if (drawInfo.outStackSelected)
+				*drawInfo.outStackSelected = stackedSelected;
 
 			if(drawInfo.texts && drawInfo.texts[i])
 			{
@@ -304,7 +303,6 @@ namespace game
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - GetSpacing(spacing)};
 		headerDrawInfo.text = text;
 		headerDrawInfo.center = true;
-		headerDrawInfo.overflow = true;
 		headerDrawInfo.overrideLifeTime = overrideLifeTime;
 		headerDrawInfo.scale = scale;
 		DrawHeader(info, headerDrawInfo);
@@ -316,7 +314,6 @@ namespace game
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, GetSpacing(spacing) };
 		headerDrawInfo.text = "press enter to continue...";
 		headerDrawInfo.center = true;
-		headerDrawInfo.overflow = true;
 		headerDrawInfo.overrideLifeTime = overrideLifeTime;
 		headerDrawInfo.scale = 1;
 		DrawHeader(info, headerDrawInfo);
@@ -332,6 +329,9 @@ namespace game
 			break;
 		case HeaderSpacing::close:
 			yOffset = 64;
+			break;
+		case HeaderSpacing::far:
+			yOffset = 12;
 			break;
 		default:
 			break;
