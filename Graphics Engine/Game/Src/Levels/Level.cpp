@@ -103,7 +103,7 @@ namespace game
 
 		PixelPerfectRenderTask buttonRenderTask{};
 		buttonRenderTask.position = drawInfo.origin;
-		buttonRenderTask.scale = glm::ivec2(64, 3);
+		buttonRenderTask.scale = glm::ivec2(64, 2);
 		buttonRenderTask.subTexture = buttonTexture.subTexture;
 		buttonRenderTask.xCenter = drawInfo.center;
 

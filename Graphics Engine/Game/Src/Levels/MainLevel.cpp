@@ -504,7 +504,7 @@ namespace game
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const uint32_t id = gameState.partyIds[i];
-				auto& slotCount = info.playerState.artifactSlotCounts[id];
+				auto& slotCount = playerState.artifactSlotCounts[id];
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
 			}
 		}
@@ -593,7 +593,7 @@ namespace game
 
 		if (level->DrawButton(info, buttonDrawInfo))
 		{
-			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
+			stateIndex = static_cast<uint32_t>(state.depth % ROOM_COUNT_BEFORE_BOSS == 0 ? StateNames::bossReveal : StateNames::pathSelect);
 			return true;
 		}
 
