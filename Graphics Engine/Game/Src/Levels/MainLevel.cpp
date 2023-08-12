@@ -623,8 +623,6 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		// temp
-		stateMachine.state.depth = 9;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
