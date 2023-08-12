@@ -53,7 +53,7 @@ namespace game
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = atlasTexture.resolution / glm::ivec2(2, 1);
 		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
-		renderTask.priority = true;
+		//renderTask.priority = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
 		info.pixelPerfectRenderTasks.Push(renderTask);
 	}
@@ -267,45 +267,33 @@ namespace game
 
 	void Level::DrawFullCard(const LevelUpdateInfo& info, Card* card)
 	{
-		constexpr uint32_t CARD_FRAME_COUNT = 3;
-		constexpr int32_t SCALE_MULTIPLIER = 4;
-
-		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
-		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
-		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::cardLarge)];
 
 		PixelPerfectRenderTask bgRenderTask{};
 		bgRenderTask.position = SIMULATED_RESOLUTION / 2;
-		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1) * SCALE_MULTIPLIER;
-		bgRenderTask.subTexture = cardFrames[0];
+		bgRenderTask.scale = cardTexture.resolution;
+		bgRenderTask.subTexture = cardTexture.subTexture;
 		bgRenderTask.xCenter = true;
 		bgRenderTask.yCenter = true;
 		bgRenderTask.priority = true;
-
-		auto titleBoxRenderTask = bgRenderTask;
-		titleBoxRenderTask.subTexture = cardFrames[1];
-
-		auto textBoxRenderTask = bgRenderTask;
-		textBoxRenderTask.subTexture = cardFrames[2];
-
+		
 		bgRenderTask.color = glm::ivec4(1, 0, 0, 1);
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
-		info.pixelPerfectRenderTasks.Push(titleBoxRenderTask);
-		info.pixelPerfectRenderTasks.Push(textBoxRenderTask);
 
 		TextTask titleTextTask{};
 		titleTextTask.position = bgRenderTask.position;
-		titleTextTask.position.y += bgRenderTask.scale.y / 2 - 5 * SCALE_MULTIPLIER;
+		titleTextTask.position.y += bgRenderTask.scale.y / 2 - 28;
 		titleTextTask.text = card->name;
 		titleTextTask.lifetime = 1e2f;
 		titleTextTask.center = true;
 		titleTextTask.priority = true;
+		titleTextTask.lineLength = 18;
 		info.textTasks.Push(titleTextTask);
 
 		auto ruleTextTask = titleTextTask;
-		ruleTextTask.text = card->ruleText;
 		ruleTextTask.position = bgRenderTask.position;
-		ruleTextTask.position.y -= 7 * SCALE_MULTIPLIER;
+		ruleTextTask.position.y -= 36;
+		ruleTextTask.text = card->ruleText;
 		info.textTasks.Push(ruleTextTask);
 	}
 

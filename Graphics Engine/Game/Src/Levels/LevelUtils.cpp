@@ -83,7 +83,7 @@ namespace game
 				RenderTask stackedRenderTask{};
 				stackedRenderTask.scale = glm::vec2(CARD_HEIGHT);
 				stackedRenderTask.position = flawPos;
-				stackedRenderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(TextureId::cardMod)].subTexture;
+				//stackedRenderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(TextureId::cardMod)].subTexture;
 				stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
 				info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
 
@@ -128,7 +128,7 @@ namespace game
 					RenderTask stackedRenderTask{};
 					stackedRenderTask.scale = glm::vec2(CARD_HEIGHT);
 					stackedRenderTask.position = artifactPos;
-					stackedRenderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(TextureId::cardMod)].subTexture;
+					//stackedRenderTask.subTexture = info.levelUpdateInfo->atlasTextures[static_cast<uint32_t>(TextureId::cardMod)].subTexture;
 					stackedRenderTask.color *= collided ? 1 : CARD_DARKENED_COLOR_MUL;
 					info.levelUpdateInfo->renderTasks.Push(stackedRenderTask);
 
@@ -175,8 +175,8 @@ namespace game
 		const auto mousePos = info.levelUpdateInfo->inputState.mousePos;
 
 		TextureId id = TextureId::card;
-		if (info.state == RenderCardInfo::State::field)
-			id = TextureId::cardField;
+		//if (info.state == RenderCardInfo::State::field)
+			//id = TextureId::cardField;
 
 		RenderTask renderTask{};
 		renderTask.scale *= info.scale;

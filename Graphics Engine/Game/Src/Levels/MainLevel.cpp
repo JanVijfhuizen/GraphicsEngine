@@ -434,7 +434,7 @@ namespace game
 			Card** stacks[PARTY_CAPACITY]{};
 			uint32_t stackCounts[PARTY_CAPACITY]{};
 
-			for (uint32_t i = 0; i < playerState.partySize; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const uint32_t count = stackCounts[i] = playerState.artifactSlotCounts[i];
 				if (count == 0)
@@ -457,7 +457,7 @@ namespace game
 
 			CardSelectionDrawInfo cardSelectionDrawInfo{};
 			cardSelectionDrawInfo.cards = cards;
-			cardSelectionDrawInfo.length = playerState.partySize;
+			cardSelectionDrawInfo.length = gameState.partySize;
 			cardSelectionDrawInfo.greyedOutArr = greyedOut;
 			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 			cardSelectionDrawInfo.stacks = stacks;
@@ -576,46 +576,34 @@ namespace game
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		TextTask textTask{};
-		textTask.lineLength = 20;
-		textTask.scale = TEXT_BIG_SCALE;
-		textTask.position = TEXT_CENTER_TOP_POSITION;
-		textTask.text = "an exit leading outside has been found.";
-		info.textTasks.Push(textTask);
+		level->DrawTopCenterHeader(info, HeaderSpacing::close, "press onwards, or flee.");
+
+		ButtonDrawInfo buttonDrawInfo{};
+		buttonDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 9 };
+		buttonDrawInfo.text = "continue";
+		buttonDrawInfo.center = true;
+
+		if (level->DrawButton(info, buttonDrawInfo))
+		{
+			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
+			return true;
+		}
+
+		buttonDrawInfo.origin.y -= 18;
+		buttonDrawInfo.text = "quit";
+		if (level->DrawButton(info, buttonDrawInfo))
+		{
+			SaveData(info.playerState);
+			loadLevelIndex = LevelIndex::mainMenu;
+			return true;
+		}
 
 		RenderTask buttonRenderTask{};
 		buttonRenderTask.position.y = -.18;
 		buttonRenderTask.scale.y *= .12f;
 		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
 		info.renderTasks.Push(buttonRenderTask);
-		/*
-		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
-			{
-				stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
-				return true;
-			}
 
-		TextTask buttonTextTask{};
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "continue forward";
-		buttonTextTask.scale = TEXT_BIG_SCALE;
-		info.textTasks.Push(buttonTextTask);
-
-		buttonRenderTask.position.y *= -1;
-		info.renderTasks.Push(buttonRenderTask);
-
-		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.text = "save and escape dungeon";
-		info.textTasks.Push(buttonTextTask);
-
-		if (info.inputState.lMouse == InputState::pressed)
-			if (CollidesShape(buttonRenderTask.position, buttonRenderTask.scale, info.inputState.mousePos))
-			{
-				SaveData(info.playerState);
-				loadLevelIndex = LevelIndex::mainMenu;
-			}
-			*/
 		return true;
 	}
 
