@@ -497,8 +497,17 @@ namespace game
 	void MainLevel::RewardArtifactState::Reset(State& state, const LevelInfo& info)
 	{
 		if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
-			for (auto& slotCount : info.playerState.artifactSlotCounts)
+		{
+			auto& playerState = info.playerState;
+			const auto& gameState = info.gameState;
+
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
+			{
+				const uint32_t id = gameState.partyIds[i];
+				auto& slotCount = info.playerState.artifactSlotCounts[id];
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
+			}
+		}
 	}
 
 	bool MainLevel::RewardArtifactState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -554,12 +563,11 @@ namespace game
 		cardDrawInfo.center = true;
 		DrawCard(info, cardDrawInfo);
 
-		if(choice != -1)
+		if(choice != -1 && outStackSelected != -1)
 		{
 			const uint32_t id = gameState.partyIds[choice];
 
-			if (info.inputState.lMouse.PressEvent() && outStackSelected != -1 &&
-				outStackSelected < playerState.artifactSlotCounts[id])
+			if (info.inputState.lMouse.PressEvent())
 			{
 				const uint32_t swappable = path.artifact;
 				path.artifact = playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY + outStackSelected];

@@ -220,7 +220,7 @@ namespace game
 				info.textTasks.Push(textTask);
 			}
 
-			if (collides && released && !greyedOut)
+			if ((collides || stackedSelected != -1) && released && !greyedOut)
 				choice = i;
 			cardDrawInfo.origin.x += static_cast<int32_t>(width);
 		}
@@ -282,7 +282,7 @@ namespace game
 		TextTask titleTextTask{};
 		titleTextTask.position = bgRenderTask.position;
 		titleTextTask.position.y += bgRenderTask.scale.y / 2 - 28;
-		titleTextTask.text = card->name;
+		titleTextTask.text = card ? card->name : "empty slot";
 		titleTextTask.lifetime = 1e2f;
 		titleTextTask.center = true;
 		titleTextTask.priority = true;
@@ -292,7 +292,7 @@ namespace game
 		auto ruleTextTask = titleTextTask;
 		ruleTextTask.position = bgRenderTask.position;
 		ruleTextTask.position.y -= 36;
-		ruleTextTask.text = card->ruleText;
+		ruleTextTask.text = card ? card->ruleText : "...";
 		info.textTasks.Push(ruleTextTask);
 	}
 
