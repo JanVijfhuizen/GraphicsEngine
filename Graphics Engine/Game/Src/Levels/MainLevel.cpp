@@ -1,7 +1,6 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainLevel.h"
 #include <Levels/LevelUtils.h>
-
 #include "CardGame.h"
 #include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
@@ -10,7 +9,6 @@
 #include "States/GameState.h"
 #include "States/BoardState.h"
 #include "States/PlayerState.h"
-#include "Utils/BoxCollision.h"
 #include "Utils/Shuffle.h"
 
 namespace game
@@ -60,8 +58,8 @@ namespace game
 			{
 				bool removed = false;
 
-				for (uint32_t j = 0; j < boardState.alliedMonsterCount; ++j)
-					if (monsters[i] == boardState.monsterIds[j])
+				for (uint32_t j = 0; j < boardState.allyCount; ++j)
+					if (monsters[i] == boardState.ids[j])
 					{
 						monsters.RemoveAt(i);
 						removed = true;
@@ -70,8 +68,8 @@ namespace game
 				if (removed)
 					continue;
 
-				for (uint32_t j = 0; j < boardState.enemyMonsterCount; ++j)
-					if (monsters[i] == boardState.monsterIds[BOARD_CAPACITY_PER_SIDE + j])
+				for (uint32_t j = 0; j < boardState.enemyCount; ++j)
+					if (monsters[i] == boardState.ids[BOARD_CAPACITY_PER_SIDE + j])
 					{
 						monsters.RemoveAt(i);
 						removed = true;

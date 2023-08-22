@@ -141,12 +141,11 @@
   <ItemGroup>
     <ClCompile Include="Src\Interpreters\PixelPerfectRenderInterpreter.cpp" />
     <ClCompile Include="Src\Levels\Level.cpp" />
-    <ClCompile Include="Src\Levels\PartySelectLevel.cpp" />
     <ClCompile Include="Src\Levels\LevelUtils.cpp" />
+    <ClCompile Include="Src\Levels\PartySelectLevel.cpp" />
     <ClCompile Include="Src\Levels\MainLevel.cpp" />
     <ClCompile Include="Src\Levels\MainMenuLevel.cpp" />
     <ClCompile Include="Src\Levels\NewGameLevel.cpp" />
-    <ClCompile Include="Src\States\BoardState.cpp" />
     <ClCompile Include="Src\States\GameState.cpp" />
     <ClCompile Include="Src\States\PlayerState.cpp" />
     <ClCompile Include="Src\Tasks\PixelPerfectRenderTask.cpp" />

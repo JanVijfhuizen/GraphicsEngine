@@ -1,58 +1,12 @@
 ﻿#pragma once
-#include "Cards/ArtifactCard.h"
 #include "JLib/Vector.h"
 #include "JLib/Array.h"
 
 namespace game
 {
-	struct FlawCard;
-	struct LevelInfo;
 	struct PlayerState;
 	struct GameState;
-	struct Card;
-	struct LevelUpdateInfo;
 
-	struct RenderCardInfo
-	{
-		enum class State
-		{
-			summary,
-			field,
-			full
-		} state = State::summary;
-
-		LevelUpdateInfo const* levelUpdateInfo;
-		Card** cards;
-		uint32_t length = 1;
-		glm::vec2 position{};
-		float scale = CARD_HEIGHT;
-		uint32_t highlight = -1;
-		bool* selectedArr = nullptr;
-		float additionalSpacing = 0;
-		uint32_t lineLength = -1;
-		bool interactable = true;
-		bool priority = false;
-		float cardHeightPctIncreaseOnHovered = .1f;
-	};
-
-	struct RenderMonsterCardInfo final : RenderCardInfo
-	{
-		uint32_t* currentHealthArr = nullptr;
-		ArtifactCard*** artifactArr = nullptr;
-		uint32_t* artifactCounts = nullptr;
-		FlawCard** flawArr = nullptr;
-	};
-
-	struct RenderMonsterCardReturnInfo final
-	{
-		uint32_t selectedMonster = -1;
-		uint32_t selectedArtifact = -1;
-		uint32_t selectedFlaw = -1;
-	};
-	
-	RenderMonsterCardReturnInfo RenderMonsterCards(jv::Arena& frameArena, const RenderMonsterCardInfo& info);
-	uint32_t RenderMagicCards(jv::Arena& frameArena, const RenderCardInfo& info);
-	uint32_t RenderCards(const RenderCardInfo& info);
 	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
 	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
 	void RemoveFlawsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState);
