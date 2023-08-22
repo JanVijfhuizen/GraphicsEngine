@@ -335,13 +335,70 @@ namespace game
 
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
 	{
-		
+		const auto& playerState = info.playerState;
+		const auto& gameState = info.gameState;
+
+		turnState = TurnState::startOfTurn;
+		time = 0;
+		boardState = {};
+		boardState.allyCount = gameState.partySize;
+		for (uint32_t i = 0; i < boardState.allyCount; ++i)
+			boardState.ids[i] = playerState.monsterIds[gameState.partyIds[i]];
+
+		const uint32_t layerIndex = jv::Min(state.depth / ROOM_COUNT_BEFORE_BOSS, TOTAL_BOSS_COUNT - 1);
+		const uint32_t enemyCount = MONSTER_CAPACITIES[layerIndex];
+
+		boardState.enemyCount = enemyCount;
+		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+			boardState.ids[BOARD_CAPACITY_PER_SIDE + i] = state.GetMonster(info, boardState);
 	}
 
 	bool MainLevel::CombatState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+		time += info.deltaTime;
+
+		if (boardState.allyCount == 0)
+		{
+			loadLevelIndex = LevelIndex::mainMenu;
+			return true;
+		}
+
+		const auto& path = state.paths[state.chosenPath];
+
+		if(turnState == TurnState::startOfTurn)
+		{
+			eventCard = state.GetEvent(info);
+			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+				targets[i] = rand() % boardState.allyCount;
+
+			turnState = TurnState::playerTurn;
+		}
+
+		CardDrawInfo cardDrawInfo{};
+		cardDrawInfo.card = &info.rooms[path.room];
+		cardDrawInfo.origin = SIMULATED_RESOLUTION - glm::ivec2(32, 38);
+		DrawCard(info, cardDrawInfo);
+
+		Card* cards[BOARD_CAPACITY_PER_SIDE]{};
+		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+			cards[i] = &info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]];
+
+		const char* texts[BOARD_CAPACITY_PER_SIDE];
+		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+			texts[i] = TextInterpreter::IntToConstCharPtr(targets[i], info.frameArena);
+
+		CardSelectionDrawInfo cardSelectionDrawInfo{};
+		cardSelectionDrawInfo.lifeTime = level->GetTime();
+		cardSelectionDrawInfo.cards = cards;
+		cardSelectionDrawInfo.length = boardState.enemyCount;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 3 * 2;
+		cardSelectionDrawInfo.texts = texts;
+		DrawCardSelection(info, cardSelectionDrawInfo);
+
+		level->DrawParty(info, SIMULATED_RESOLUTION.y / 3);
+
+		//stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 		return true;
 	}
 
@@ -372,6 +429,7 @@ namespace game
 		cardDrawInfo.card = &info.magics[path.magic];
 		cardDrawInfo.center = true;
 		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 44 };
+		cardDrawInfo.lifeTime = level->GetTime();
 		DrawCard(info, cardDrawInfo);
 
 		if (info.inputState.lMouse.PressEvent())
@@ -469,6 +527,7 @@ namespace game
 			cardDrawInfo.card = &info.flaws[path.flaw];
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
+			cardDrawInfo.lifeTime = level->GetTime();
 			DrawCard(info, cardDrawInfo);
 
 			if (info.inputState.lMouse.PressEvent())
@@ -559,6 +618,7 @@ namespace game
 		cardDrawInfo.card = path.artifact == -1 ? nullptr : &info.artifacts[path.artifact];
 		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
 		cardDrawInfo.center = true;
+		cardDrawInfo.lifeTime = level->GetTime();
 		DrawCard(info, cardDrawInfo);
 
 		if(choice != -1 && outStackSelected != -1)

@@ -84,10 +84,10 @@ namespace game
 		{
 			glm::ivec2 origin;
 			Card* card;
-			uint32_t length;
 			bool center = false;
 			glm::vec4 borderColor{1};
 			bool selectable = true;
+			float lifeTime = 0;
 		};
 
 		struct CardSelectionDrawInfo final
@@ -125,6 +125,7 @@ namespace game
 		static void DrawFullCard(const LevelUpdateInfo& info, Card* card);
 		void DrawTopCenterHeader(const LevelUpdateInfo& info, HeaderSpacing spacing, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
 		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;
+		uint32_t DrawParty(const LevelUpdateInfo& info, uint32_t height, bool* selectedArr = nullptr) const;
 		[[nodiscard]] static uint32_t GetSpacing(HeaderSpacing spacing);
 
 		[[nodiscard]] float GetTime() const;

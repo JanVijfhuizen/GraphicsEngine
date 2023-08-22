@@ -21,37 +21,8 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
-		const auto& playerState = info.playerState;
 
-		Card* cards[PARTY_CAPACITY]{};
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			cards[i] = &info.monsters[playerState.monsterIds[i]];
-		
-		Card** artifacts[PARTY_CAPACITY]{};
-		uint32_t artifactCounts[PARTY_CAPACITY]{};
-
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-		{
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
-			if (count == 0)
-				continue;
-			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
-			artifacts[i] = arr.ptr;
-			for (uint32_t j = 0; j < count; ++j)
-			{
-				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
-				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
-			}
-		}
-
-		CardSelectionDrawInfo cardSelectionDrawInfo{};
-		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = playerState.partySize;
-		cardSelectionDrawInfo.selectedArr = selected;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
-		cardSelectionDrawInfo.stacks = artifacts;
-		cardSelectionDrawInfo.stackCounts = artifactCounts;
-		const uint32_t choice = DrawCardSelection(info, cardSelectionDrawInfo);
+		const uint32_t choice = DrawParty(info, SIMULATED_RESOLUTION.y / 2, selected);
 		
 		if (info.inputState.lMouse.PressEvent() && choice != -1)
 			selected[choice] = !selected[choice];
@@ -79,7 +50,7 @@ namespace game
 					continue;
 				gameState.partyIds[j] = i;
 
-				const auto& monster = info.monsters[playerState.monsterIds[i]];
+				const auto& monster = info.monsters[info.playerState.monsterIds[i]];
 				gameState.healths[j++] = monster.health;
 			}
 

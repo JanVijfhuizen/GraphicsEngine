@@ -9,6 +9,5 @@ namespace game
 		uint32_t ids[BOARD_CAPACITY]{};
 		uint32_t allyCount;
 		uint32_t enemyCount;
-		uint32_t targets[BOARD_CAPACITY_PER_SIDE];
 	};
 }

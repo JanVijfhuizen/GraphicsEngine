@@ -4,6 +4,7 @@
 #include "GE/AtlasGenerator.h"
 #include "JLib/Math.h"
 #include "States/InputState.h"
+#include "States/PlayerState.h"
 #include "Utils/BoxCollision.h"
 #include "Utils/SubTextureUtils.h"
 
@@ -139,9 +140,9 @@ namespace game
 		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT;
 
 		CardDrawInfo cardDrawInfo{};
-		cardDrawInfo.length = 1;
 		cardDrawInfo.center = true;
 		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
+		cardDrawInfo.lifeTime = drawInfo.lifeTime;
 		
 		const bool released = info.inputState.lMouse.pressed;
 		uint32_t choice = -1;
@@ -213,7 +214,9 @@ namespace game
 			{
 				TextTask textTask{};
 				textTask.position = cardDrawInfo.origin;
-				textTask.position.y += static_cast<int32_t>(CARD_STACKED_SPACING * stackedCount) + cardTexture.resolution.y / 2 + 4;
+				textTask.position.y += cardTexture.resolution.y / 2 + 4;
+				if (stackedCount != -1)
+					textTask.position.y += static_cast<int32_t>(CARD_STACKED_SPACING * stackedCount);
 				textTask.text = drawInfo.texts[i];
 				textTask.lifetime = drawInfo.lifeTime;
 				textTask.center = true;
@@ -317,6 +320,41 @@ namespace game
 		headerDrawInfo.overrideLifeTime = overrideLifeTime;
 		headerDrawInfo.scale = 1;
 		DrawHeader(info, headerDrawInfo);
+	}
+	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const uint32_t height, bool* selectedArr) const
+	{
+		const auto& playerState = info.playerState;
+
+		Card* cards[PARTY_CAPACITY]{};
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+			cards[i] = &info.monsters[playerState.monsterIds[i]];
+
+		Card** artifacts[PARTY_CAPACITY]{};
+		uint32_t artifactCounts[PARTY_CAPACITY]{};
+
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		{
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+			if (count == 0)
+				continue;
+			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
+			artifacts[i] = arr.ptr;
+			for (uint32_t j = 0; j < count; ++j)
+			{
+				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
+				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
+			}
+		}
+
+		CardSelectionDrawInfo cardSelectionDrawInfo{};
+		cardSelectionDrawInfo.cards = cards;
+		cardSelectionDrawInfo.length = playerState.partySize;
+		cardSelectionDrawInfo.selectedArr = selectedArr;
+		cardSelectionDrawInfo.height = height;
+		cardSelectionDrawInfo.stacks = artifacts;
+		cardSelectionDrawInfo.stackCounts = artifactCounts;
+		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
+		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}
 
 	uint32_t Level::GetSpacing(const HeaderSpacing spacing)
