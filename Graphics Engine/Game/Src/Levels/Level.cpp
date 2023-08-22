@@ -15,6 +15,7 @@ namespace game
 
 	void Level::Create(const LevelCreateInfo& info)
 	{
+		_fullCard = nullptr;
 		_timeSinceOpened = 0;
 		_timeSinceLoading = 0;
 		_loading = false;
@@ -50,11 +51,46 @@ namespace game
 
 		jv::ge::SubTexture subTextures[2];
 		Divide(atlasTexture.subTexture, subTextures, (sizeof subTextures) / sizeof(jv::ge::SubTexture));
-		
+
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::cardLarge)];
+
+		if(_fullCard)
+		{
+			PixelPerfectRenderTask bgRenderTask{};
+			bgRenderTask.position = SIMULATED_RESOLUTION / 2;
+			bgRenderTask.scale = cardTexture.resolution;
+			bgRenderTask.subTexture = cardTexture.subTexture;
+			bgRenderTask.xCenter = true;
+			bgRenderTask.yCenter = true;
+			bgRenderTask.priority = true;
+
+			bgRenderTask.color = glm::ivec4(1, 0, 0, 1);
+			info.pixelPerfectRenderTasks.Push(bgRenderTask);
+
+			TextTask titleTextTask{};
+			titleTextTask.position = bgRenderTask.position;
+			titleTextTask.position.y += bgRenderTask.scale.y / 2 - 28;
+			titleTextTask.text = _fullCard ? _fullCard->name : "empty slot";
+			titleTextTask.lifetime = 1e2f;
+			titleTextTask.center = true;
+			titleTextTask.priority = true;
+			titleTextTask.lineLength = 18;
+			info.textTasks.Push(titleTextTask);
+
+			auto ruleTextTask = titleTextTask;
+			ruleTextTask.position = bgRenderTask.position;
+			ruleTextTask.position.y -= 36;
+			ruleTextTask.text = _fullCard ? _fullCard->ruleText : "...";
+			info.textTasks.Push(ruleTextTask);
+
+			if (!info.inputState.rMouse.pressed)
+				_fullCard = nullptr;
+		}
+
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = atlasTexture.resolution / glm::ivec2(2, 1);
 		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
-		//renderTask.priority = true;
+		renderTask.priority = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
 		info.pixelPerfectRenderTasks.Push(renderTask);
 	}
@@ -137,7 +173,7 @@ namespace game
 	uint32_t Level::DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
 	{
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
-		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT;
+		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT + drawInfo.offsetMod;
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
@@ -251,7 +287,7 @@ namespace game
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
 		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
-			DrawFullCard(info, drawInfo.card);
+			DrawFullCard(drawInfo.card);
 		return collided;
 	}
 
@@ -267,36 +303,11 @@ namespace game
 		return collided;
 	}
 
-	void Level::DrawFullCard(const LevelUpdateInfo& info, Card* card)
+	void Level::DrawFullCard(Card* card)
 	{
-		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::cardLarge)];
-
-		PixelPerfectRenderTask bgRenderTask{};
-		bgRenderTask.position = SIMULATED_RESOLUTION / 2;
-		bgRenderTask.scale = cardTexture.resolution;
-		bgRenderTask.subTexture = cardTexture.subTexture;
-		bgRenderTask.xCenter = true;
-		bgRenderTask.yCenter = true;
-		bgRenderTask.priority = true;
-		
-		bgRenderTask.color = glm::ivec4(1, 0, 0, 1);
-		info.pixelPerfectRenderTasks.Push(bgRenderTask);
-
-		TextTask titleTextTask{};
-		titleTextTask.position = bgRenderTask.position;
-		titleTextTask.position.y += bgRenderTask.scale.y / 2 - 28;
-		titleTextTask.text = card ? card->name : "empty slot";
-		titleTextTask.lifetime = 1e2f;
-		titleTextTask.center = true;
-		titleTextTask.priority = true;
-		titleTextTask.lineLength = 18;
-		info.textTasks.Push(titleTextTask);
-
-		auto ruleTextTask = titleTextTask;
-		ruleTextTask.position = bgRenderTask.position;
-		ruleTextTask.position.y -= 36;
-		ruleTextTask.text = card ? card->ruleText : "...";
-		info.textTasks.Push(ruleTextTask);
+		if (_fullCard)
+			return;
+		_fullCard = card;
 	}
 
 	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const HeaderSpacing spacing, 
@@ -321,7 +332,7 @@ namespace game
 		headerDrawInfo.scale = 1;
 		DrawHeader(info, headerDrawInfo);
 	}
-	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const uint32_t height, bool* selectedArr) const
+	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const uint32_t height, bool* selectedArr)
 	{
 		const auto& playerState = info.playerState;
 

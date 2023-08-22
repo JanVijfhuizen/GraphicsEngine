@@ -120,13 +120,13 @@ namespace game
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.monsters[monsterDiscoverOptions[i]];
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 2;
-		const uint32_t discoveredMonster = DrawCardSelection(info, cardSelectionDrawInfo);
+		const uint32_t discoveredMonster = level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		cardSelectionDrawInfo.highlighted = artifactChoice;
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2 - 2;
-		const uint32_t discoveredArtifact = DrawCardSelection(info, cardSelectionDrawInfo);
+		const uint32_t discoveredArtifact = level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		if (discoveredMonster != -1)
 			monsterChoice = discoveredMonster;
@@ -141,7 +141,7 @@ namespace game
 	{
 		const char* text = "daisy joins you on your adventure.";
 		level->DrawTopCenterHeader(info, HeaderSpacing::far, text);
-		DrawFullCard(info, &info.monsters[0]);
+		level->DrawFullCard(&info.monsters[0]);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if(f >= 0)
 			level->DrawPressEnterToContinue(info, HeaderSpacing::far, f);

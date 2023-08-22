@@ -93,6 +93,8 @@ namespace game
 			BoardState boardState;
 			uint32_t eventCard;
 			uint32_t targets[BOARD_CAPACITY_PER_SIDE];
+			uint32_t hand[HAND_MAX_SIZE];
+			uint32_t handSize;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,

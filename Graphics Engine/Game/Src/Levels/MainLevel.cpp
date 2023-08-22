@@ -215,7 +215,7 @@ namespace game
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
-		DrawCardSelection(info, cardSelectionDrawInfo);
+		level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		const char* text = "the stage bosses have been revealed.";
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
@@ -301,7 +301,7 @@ namespace game
 		cardSelectionDrawInfo.texts = bossPresent ? nullptr : texts;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.highlighted = discoverOption;
-		uint32_t selected = DrawCardSelection(info, cardSelectionDrawInfo);
+		uint32_t selected = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		if (selected == DISCOVER_LENGTH)
 			selected = -1;
 
@@ -340,6 +340,7 @@ namespace game
 
 		turnState = TurnState::startOfTurn;
 		time = 0;
+		handSize = 0;
 		boardState = {};
 		boardState.allyCount = gameState.partySize;
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
@@ -372,15 +373,21 @@ namespace game
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				targets[i] = rand() % boardState.allyCount;
 
+			handSize = HAND_DRAW_COUNT;
+			for (uint32_t i = 0; i < HAND_DRAW_COUNT; ++i)
+				hand[i] = state.Draw(info);
 			turnState = TurnState::playerTurn;
 		}
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = &info.rooms[path.room];
-		cardDrawInfo.origin = SIMULATED_RESOLUTION - glm::ivec2(32, 38);
-		DrawCard(info, cardDrawInfo);
+		cardDrawInfo.origin = glm::ivec2(8);
+		level->DrawCard(info, cardDrawInfo);
+		cardDrawInfo.card = &info.events[eventCard];
+		cardDrawInfo.origin.x += 28;
+		level->DrawCard(info, cardDrawInfo);
 
-		Card* cards[BOARD_CAPACITY_PER_SIDE]{};
+		Card* cards[HAND_MAX_SIZE > BOARD_CAPACITY_PER_SIDE ? HAND_MAX_SIZE : BOARD_CAPACITY_PER_SIDE]{};
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			cards[i] = &info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]];
 
@@ -394,7 +401,15 @@ namespace game
 		cardSelectionDrawInfo.length = boardState.enemyCount;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 3 * 2;
 		cardSelectionDrawInfo.texts = texts;
-		DrawCardSelection(info, cardSelectionDrawInfo);
+		level->DrawCardSelection(info, cardSelectionDrawInfo);
+
+		for (uint32_t i = 0; i < handSize; ++i)
+			cards[i] = &info.magics[hand[i]];
+		cardSelectionDrawInfo.length = handSize;
+		cardSelectionDrawInfo.height = 8;
+		cardSelectionDrawInfo.texts = nullptr;
+		cardSelectionDrawInfo.offsetMod = -4;
+		level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		level->DrawParty(info, SIMULATED_RESOLUTION.y / 3);
 
@@ -421,7 +436,7 @@ namespace game
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2 + 40;
 		cardSelectionDrawInfo.highlighted = discoverOption;
 		cardSelectionDrawInfo.length = MAGIC_DECK_SIZE;
-		const uint32_t choice = DrawCardSelection(info, cardSelectionDrawInfo);
+		const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		const auto& path = state.paths[state.chosenPath];
 
@@ -430,7 +445,7 @@ namespace game
 		cardDrawInfo.center = true;
 		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 44 };
 		cardDrawInfo.lifeTime = level->GetTime();
-		DrawCard(info, cardDrawInfo);
+		level->DrawCard(info, cardDrawInfo);
 
 		if (info.inputState.lMouse.PressEvent())
 			discoverOption = choice == discoverOption ? -1 : choice;
@@ -519,7 +534,7 @@ namespace game
 			cardSelectionDrawInfo.stacks = stacks;
 			cardSelectionDrawInfo.stackCounts = stackCounts;
 			cardSelectionDrawInfo.highlighted = discoverOption;
-			const uint32_t choice = DrawCardSelection(info, cardSelectionDrawInfo);
+			const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 			
 			const auto& path = state.paths[state.chosenPath];
 
@@ -528,7 +543,7 @@ namespace game
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
 			cardDrawInfo.lifeTime = level->GetTime();
-			DrawCard(info, cardDrawInfo);
+			level->DrawCard(info, cardDrawInfo);
 
 			if (info.inputState.lMouse.PressEvent())
 			{
@@ -610,7 +625,7 @@ namespace game
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		cardSelectionDrawInfo.outStackSelected = &outStackSelected;
-		const auto choice = DrawCardSelection(info, cardSelectionDrawInfo);
+		const auto choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		auto& path = state.paths[state.chosenPath];
 		
@@ -619,7 +634,7 @@ namespace game
 		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
 		cardDrawInfo.center = true;
 		cardDrawInfo.lifeTime = level->GetTime();
-		DrawCard(info, cardDrawInfo);
+		level->DrawCard(info, cardDrawInfo);
 
 		if(choice != -1 && outStackSelected != -1)
 		{
