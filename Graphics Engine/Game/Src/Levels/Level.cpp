@@ -180,7 +180,6 @@ namespace game
 		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
 		cardDrawInfo.lifeTime = drawInfo.lifeTime;
 		
-		const bool released = info.inputState.lMouse.pressed;
 		uint32_t choice = -1;
 
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
@@ -259,7 +258,7 @@ namespace game
 				info.textTasks.Push(textTask);
 			}
 
-			if ((collides || stackedSelected != -1) && released && !greyedOut)
+			if ((collides || stackedSelected != -1) && !greyedOut)
 				choice = i;
 			cardDrawInfo.origin.x += static_cast<int32_t>(width);
 		}

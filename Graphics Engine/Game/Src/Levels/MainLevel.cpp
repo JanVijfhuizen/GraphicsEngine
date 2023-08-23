@@ -369,9 +369,15 @@ namespace game
 
 		const auto& path = state.paths[state.chosenPath];
 
-		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
-			
+			bool newTurn = true;
+			for (uint32_t i = 0; i < boardState.allyCount; ++i)
+			{
+				if (!tapped[i])
+					newTurn = false;
+			}
+			if (newTurn)
+				turnState = TurnState::startOfTurn;
 		}
 
 		if(turnState == TurnState::startOfTurn)
@@ -446,7 +452,7 @@ namespace game
 		}
 
 		// Draw hand.
-		for (uint32_t i = 0; i < HAND_MAX_SIZE; ++i)
+		for (uint32_t i = 0; i < state.hand.count; ++i)
 			cards[i] = &info.magics[state.hand[i]];
 		cardSelectionDrawInfo.length = state.hand.count;
 		cardSelectionDrawInfo.height = 8;

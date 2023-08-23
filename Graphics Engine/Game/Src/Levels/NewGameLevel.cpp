@@ -128,10 +128,13 @@ namespace game
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2 - 2;
 		const uint32_t discoveredArtifact = level->DrawCardSelection(info, cardSelectionDrawInfo);
 
-		if (discoveredMonster != -1)
-			monsterChoice = discoveredMonster;
-		if (discoveredArtifact != -1)
-			artifactChoice = discoveredArtifact;
+		if(info.inputState.lMouse.ReleaseEvent())
+		{
+			if (discoveredMonster != -1)
+				monsterChoice = discoveredMonster;
+			if (discoveredArtifact != -1)
+				artifactChoice = discoveredArtifact;
+		}
 
 		return true;
 	}
