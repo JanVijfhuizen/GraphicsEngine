@@ -495,6 +495,7 @@ namespace game
 			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 4);
 			manaTextTask.text = TextInterpreter::IntToConstCharPtr(mana, info.frameArena);
 			manaTextTask.lifetime = level->GetTime();
+			manaTextTask.center = true;
 			info.textTasks.Push(manaTextTask);
 		}
 
