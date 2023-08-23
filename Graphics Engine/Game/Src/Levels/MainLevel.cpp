@@ -391,6 +391,8 @@ namespace game
 			for (auto& i : tapped)
 				i = false;
 
+			mana = MAX_MANA;
+
 			// Draw new hand.
 			state.hand.Clear();
 			for (uint32_t i = 0; i < HAND_MAX_SIZE; ++i)
@@ -451,14 +453,19 @@ namespace game
 			selectedArr[selectedId] = true;
 		}
 
+		bool greyedOutArr[HAND_MAX_SIZE];
+		for (uint32_t i = 0; i < state.hand.count; ++i)
+			greyedOutArr[i] = info.magics[state.hand[i]].cost > mana;
+
 		// Draw hand.
 		for (uint32_t i = 0; i < state.hand.count; ++i)
 			cards[i] = &info.magics[state.hand[i]];
 		cardSelectionDrawInfo.length = state.hand.count;
-		cardSelectionDrawInfo.height = 8;
+		cardSelectionDrawInfo.height = 32;
 		cardSelectionDrawInfo.texts = nullptr;
 		cardSelectionDrawInfo.offsetMod = -4;
 		cardSelectionDrawInfo.selectedArr = selectedArr;
+		cardSelectionDrawInfo.greyedOutArr = greyedOutArr;
 		const auto handResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -480,6 +487,15 @@ namespace game
 		{
 			selectionState = SelectionState::ally;
 			selectedId = allyResult;
+		}
+
+		// Draw mana.
+		{
+			TextTask manaTextTask{};
+			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 4);
+			manaTextTask.text = TextInterpreter::IntToConstCharPtr(mana, info.frameArena);
+			manaTextTask.lifetime = level->GetTime();
+			info.textTasks.Push(manaTextTask);
 		}
 
 		if (lMouseReleased)
@@ -505,6 +521,11 @@ namespace game
 				if(validPlay)
 				{
 					// Play card.
+					if (card.cost > mana)
+						mana = 0;
+					else
+						mana -= card.cost;
+
 					state.hand.RemoveAtOrdered(selectedId);
 				}
 			}

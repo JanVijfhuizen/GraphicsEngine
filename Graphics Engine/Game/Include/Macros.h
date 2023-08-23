@@ -23,6 +23,7 @@ constexpr uint32_t SUB_BOSS_COUNT = 4;
 constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
 
 constexpr uint32_t HAND_MAX_SIZE = 5;
+constexpr uint32_t MAX_MANA = 3;
 
 constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
 
