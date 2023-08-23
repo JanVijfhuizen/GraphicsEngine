@@ -418,7 +418,7 @@ namespace game
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			cards[i] = &info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]];
 
-		const char* texts[BOARD_CAPACITY_PER_SIDE];
+		const char* texts[l];
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			texts[i] = TextInterpreter::IntToConstCharPtr(targets[i], info.frameArena);
 
@@ -435,7 +435,7 @@ namespace game
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = boardState.enemyCount;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 3 * 2;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 4;
 		cardSelectionDrawInfo.texts = texts;
 		cardSelectionDrawInfo.selectedArr = selectedArr;
 		const auto enemyResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
@@ -459,13 +459,19 @@ namespace game
 
 		// Draw hand.
 		for (uint32_t i = 0; i < state.hand.count; ++i)
-			cards[i] = &info.magics[state.hand[i]];
+		{
+			const auto magic = &info.magics[state.hand[i]];
+			cards[i] = magic;
+			texts[i] = TextInterpreter::IntToConstCharPtr(magic->cost, info.frameArena);
+		}
+
 		cardSelectionDrawInfo.length = state.hand.count;
 		cardSelectionDrawInfo.height = 32;
 		cardSelectionDrawInfo.texts = nullptr;
 		cardSelectionDrawInfo.offsetMod = -4;
 		cardSelectionDrawInfo.selectedArr = selectedArr;
 		cardSelectionDrawInfo.greyedOutArr = greyedOutArr;
+		cardSelectionDrawInfo.texts = texts;
 		const auto handResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -482,7 +488,7 @@ namespace game
 		}
 
 		// Draw allies.
-		const auto allyResult = level->DrawParty(info, SIMULATED_RESOLUTION.y / 3, selectedArr, tapped);
+		const auto allyResult = level->DrawParty(info, SIMULATED_RESOLUTION.y / 5 * 2, selectedArr, tapped);
 		if (lMousePressed && allyResult != -1)
 		{
 			selectionState = SelectionState::ally;
