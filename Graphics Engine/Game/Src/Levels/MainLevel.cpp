@@ -191,7 +191,7 @@ namespace game
 		state.decks = Decks::Create(info);
 		state.paths = jv::CreateArray<Path>(info.arena, DISCOVER_LENGTH);
 		state.magicDeck = jv::CreateVector<uint32_t>(info.arena, MAGIC_DECK_SIZE);
-		state.hand = jv::CreateVector<uint32_t>(info.arena, HAND_DRAW_COUNT);
+		state.hand = jv::CreateVector<uint32_t>(info.arena, HAND_MAX_SIZE);
 		return state;
 	}
 
@@ -339,12 +339,13 @@ namespace game
 		const auto& gameState = info.gameState;
 
 		turnState = TurnState::startOfTurn;
+		selectionState = SelectionState::none;
 		time = 0;
-		handSize = 0;
 		boardState = {};
 		boardState.allyCount = gameState.partySize;
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 			boardState.ids[i] = playerState.monsterIds[gameState.partyIds[i]];
+		selectedId = -1;
 
 		const uint32_t layerIndex = jv::Min(state.depth / ROOM_COUNT_BEFORE_BOSS, TOTAL_BOSS_COUNT - 1);
 		const uint32_t enemyCount = MONSTER_CAPACITIES[layerIndex];
@@ -373,11 +374,18 @@ namespace game
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				targets[i] = rand() % boardState.allyCount;
 
-			handSize = HAND_DRAW_COUNT;
-			for (uint32_t i = 0; i < HAND_DRAW_COUNT; ++i)
-				hand[i] = state.Draw(info);
+			state.hand.Clear();
+			for (uint32_t i = 0; i < HAND_MAX_SIZE; ++i)
+				state.hand.Add() = state.Draw(info);
 			turnState = TurnState::playerTurn;
 		}
+
+		const auto& lMouse = info.inputState.lMouse;
+		const bool lMousePressed = lMouse.PressEvent();
+		const bool lMouseReleased = lMouse.ReleaseEvent();
+
+		if (lMouseReleased)
+			selectionState = SelectionState::none;
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = &info.rooms[path.room];
@@ -387,7 +395,9 @@ namespace game
 		cardDrawInfo.origin.x += 28;
 		level->DrawCard(info, cardDrawInfo);
 
-		Card* cards[HAND_MAX_SIZE > BOARD_CAPACITY_PER_SIDE ? HAND_MAX_SIZE : BOARD_CAPACITY_PER_SIDE]{};
+		constexpr uint32_t l = HAND_MAX_SIZE > BOARD_CAPACITY_PER_SIDE ? HAND_MAX_SIZE : BOARD_CAPACITY_PER_SIDE;
+
+		Card* cards[l]{};
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			cards[i] = &info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]];
 
@@ -395,23 +405,67 @@ namespace game
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			texts[i] = TextInterpreter::IntToConstCharPtr(targets[i], info.frameArena);
 
+		bool* selectedArr = nullptr;
+
+		if(selectionState == SelectionState::enemy)
+		{
+			selectedArr = jv::CreateArray<bool>(info.frameArena, l).ptr;
+			selectedArr[selectedId] = true;
+		}
+
+		// Draw enemies.
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = boardState.enemyCount;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 3 * 2;
 		cardSelectionDrawInfo.texts = texts;
-		level->DrawCardSelection(info, cardSelectionDrawInfo);
+		cardSelectionDrawInfo.selectedArr = selectedArr;
+		auto result = level->DrawCardSelection(info, cardSelectionDrawInfo);
+		selectedArr = nullptr;
 
-		for (uint32_t i = 0; i < handSize; ++i)
-			cards[i] = &info.magics[hand[i]];
-		cardSelectionDrawInfo.length = handSize;
+		if (lMousePressed && result != -1)
+		{
+			selectionState = SelectionState::enemy;
+			selectedId = result;
+		}
+
+		if (selectionState == SelectionState::hand)
+		{
+			selectedArr = jv::CreateArray<bool>(info.frameArena, l).ptr;
+			selectedArr[selectedId] = true;
+		}
+
+		// Draw hand.
+		for (uint32_t i = 0; i < HAND_MAX_SIZE; ++i)
+			cards[i] = &info.magics[state.hand[i]];
+		cardSelectionDrawInfo.length = state.hand.count;
 		cardSelectionDrawInfo.height = 8;
 		cardSelectionDrawInfo.texts = nullptr;
 		cardSelectionDrawInfo.offsetMod = -4;
-		level->DrawCardSelection(info, cardSelectionDrawInfo);
+		cardSelectionDrawInfo.selectedArr = selectedArr;
+		result = level->DrawCardSelection(info, cardSelectionDrawInfo);
+		selectedArr = nullptr;
 
-		level->DrawParty(info, SIMULATED_RESOLUTION.y / 3);
+		if(lMousePressed && result != -1)
+		{
+			selectionState = SelectionState::hand;
+			selectedId = result;
+		}
+
+		if (selectionState == SelectionState::ally)
+		{
+			selectedArr = jv::CreateArray<bool>(info.frameArena, l).ptr;
+			selectedArr[selectedId] = true;
+		}
+
+		// Draw allies.
+		result = level->DrawParty(info, SIMULATED_RESOLUTION.y / 3, selectedArr);
+		if (lMousePressed && result != -1)
+		{
+			selectionState = SelectionState::ally;
+			selectedId = result;
+		}
 
 		//stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 		return true;
