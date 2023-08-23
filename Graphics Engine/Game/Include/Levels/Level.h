@@ -126,7 +126,7 @@ namespace game
 		void DrawFullCard(Card* card);
 		void DrawTopCenterHeader(const LevelUpdateInfo& info, HeaderSpacing spacing, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
 		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;
-		uint32_t DrawParty(const LevelUpdateInfo& info, uint32_t height, bool* selectedArr = nullptr);
+		uint32_t DrawParty(const LevelUpdateInfo& info, uint32_t height, bool* selectedArr = nullptr, bool* greyedOutArr = nullptr);
 		[[nodiscard]] static uint32_t GetSpacing(HeaderSpacing spacing);
 
 		[[nodiscard]] float GetTime() const;

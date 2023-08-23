@@ -47,7 +47,7 @@ namespace game
 				}
 	}
 
-	uint32_t MainLevel::State::GetMonster(const LevelInfo& info, const BoardState& boardState)
+	uint32_t MainLevel::State::GetMonster(const LevelInfo& info)
 	{
 		auto& monsters = decks.monsters;
 		if (monsters.count == 0)
@@ -341,7 +341,7 @@ namespace game
 		turnState = TurnState::startOfTurn;
 		selectionState = SelectionState::none;
 		time = 0;
-		boardState = {};
+		auto& boardState = state.boardState = {};
 		boardState.allyCount = gameState.partySize;
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 			boardState.ids[i] = playerState.monsterIds[gameState.partyIds[i]];
@@ -352,7 +352,7 @@ namespace game
 
 		boardState.enemyCount = enemyCount;
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-			boardState.ids[BOARD_CAPACITY_PER_SIDE + i] = state.GetMonster(info, boardState);
+			boardState.ids[BOARD_CAPACITY_PER_SIDE + i] = state.GetMonster(info);
 	}
 
 	bool MainLevel::CombatState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -360,6 +360,7 @@ namespace game
 	{
 		time += info.deltaTime;
 
+		auto& boardState = state.boardState;
 		if (boardState.allyCount == 0)
 		{
 			loadLevelIndex = LevelIndex::mainMenu;
@@ -368,12 +369,23 @@ namespace game
 
 		const auto& path = state.paths[state.chosenPath];
 
+		for (uint32_t i = 0; i < boardState.allyCount; ++i)
+		{
+			
+		}
+
 		if(turnState == TurnState::startOfTurn)
 		{
+			// Set new random enemy targets.
 			eventCard = state.GetEvent(info);
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				targets[i] = rand() % boardState.allyCount;
 
+			// Untap.
+			for (auto& i : tapped)
+				i = false;
+
+			// Draw new hand.
 			state.hand.Clear();
 			for (uint32_t i = 0; i < HAND_MAX_SIZE; ++i)
 				state.hand.Add() = state.Draw(info);
@@ -383,9 +395,6 @@ namespace game
 		const auto& lMouse = info.inputState.lMouse;
 		const bool lMousePressed = lMouse.PressEvent();
 		const bool lMouseReleased = lMouse.ReleaseEvent();
-
-		if (lMouseReleased)
-			selectionState = SelectionState::none;
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = &info.rooms[path.room];
@@ -421,13 +430,13 @@ namespace game
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 3 * 2;
 		cardSelectionDrawInfo.texts = texts;
 		cardSelectionDrawInfo.selectedArr = selectedArr;
-		auto result = level->DrawCardSelection(info, cardSelectionDrawInfo);
+		const auto enemyResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		selectedArr = nullptr;
 
-		if (lMousePressed && result != -1)
+		if (lMousePressed && enemyResult != -1)
 		{
 			selectionState = SelectionState::enemy;
-			selectedId = result;
+			selectedId = enemyResult;
 		}
 
 		if (selectionState == SelectionState::hand)
@@ -444,13 +453,13 @@ namespace game
 		cardSelectionDrawInfo.texts = nullptr;
 		cardSelectionDrawInfo.offsetMod = -4;
 		cardSelectionDrawInfo.selectedArr = selectedArr;
-		result = level->DrawCardSelection(info, cardSelectionDrawInfo);
+		const auto handResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		selectedArr = nullptr;
 
-		if(lMousePressed && result != -1)
+		if(lMousePressed && handResult != -1)
 		{
 			selectionState = SelectionState::hand;
-			selectedId = result;
+			selectedId = handResult;
 		}
 
 		if (selectionState == SelectionState::ally)
@@ -460,14 +469,43 @@ namespace game
 		}
 
 		// Draw allies.
-		result = level->DrawParty(info, SIMULATED_RESOLUTION.y / 3, selectedArr);
-		if (lMousePressed && result != -1)
+		const auto allyResult = level->DrawParty(info, SIMULATED_RESOLUTION.y / 3, selectedArr, tapped);
+		if (lMousePressed && allyResult != -1)
 		{
 			selectionState = SelectionState::ally;
-			selectedId = result;
+			selectedId = allyResult;
 		}
 
-		//stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+		if (lMouseReleased)
+		{
+			// If player tried to attack an enemy.
+			if (selectionState == SelectionState::ally)
+			{
+				auto& isTapped = tapped[selectedId];
+				if (!isTapped && enemyResult != -1)
+				{
+					// Do the attack.
+					isTapped = true;
+				}
+			}
+			else if(selectionState == SelectionState::hand)
+			{
+				// Do something with the target.
+				const auto& card = info.magics[selectedId];
+				const bool validAll = card.type == MagicCard::Type::all && info.inputState.mousePos.y > SIMULATED_RESOLUTION.y / 4;
+				const bool validTarget = card.type == MagicCard::Type::target && (enemyResult != -1 || allyResult != -1);
+				const bool validPlay = validAll || validTarget;
+
+				if(validPlay)
+				{
+					// Play card.
+					state.hand.RemoveAtOrdered(selectedId);
+				}
+			}
+
+			selectionState = SelectionState::none;
+		}
+			
 		return true;
 	}
 

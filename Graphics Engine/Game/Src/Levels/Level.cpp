@@ -332,7 +332,7 @@ namespace game
 		headerDrawInfo.scale = 1;
 		DrawHeader(info, headerDrawInfo);
 	}
-	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const uint32_t height, bool* selectedArr)
+	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const uint32_t height, bool* selectedArr, bool* greyedOutArr)
 	{
 		const auto& playerState = info.playerState;
 
@@ -365,6 +365,7 @@ namespace game
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
+		cardSelectionDrawInfo.greyedOutArr = greyedOutArr;
 		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}
 

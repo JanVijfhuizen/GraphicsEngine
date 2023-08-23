@@ -49,9 +49,10 @@ namespace game
 
 			jv::Vector<uint32_t> magicDeck;
 			jv::Vector<uint32_t> hand;
+			BoardState boardState;
 
 			void RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const;
-			[[nodiscard]] uint32_t GetMonster(const LevelInfo& info, const BoardState& boardState);
+			[[nodiscard]] uint32_t GetMonster(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetBoss(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetRoom(const LevelInfo& info);
 			[[nodiscard]] uint32_t GetMagic(const LevelInfo& info);
@@ -98,9 +99,9 @@ namespace game
 			} selectionState;
 
 			float time;
-			BoardState boardState;
 			uint32_t eventCard;
 			uint32_t targets[BOARD_CAPACITY_PER_SIDE];
+			bool tapped[BOARD_CAPACITY_PER_SIDE];
 			uint32_t selectedId;
 
 			void Reset(State& state, const LevelInfo& info) override;
