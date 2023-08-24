@@ -2,6 +2,7 @@
 #include "Levels/Level.h"
 
 #include "GE/AtlasGenerator.h"
+#include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
@@ -229,8 +230,11 @@ namespace game
 					DrawCard(info, stackedDrawInfo);
 				}
 			}
-			
+
+			if(drawInfo.combatStats)
+				cardDrawInfo.combatStats = &drawInfo.combatStats[i];
 			DrawCard(info, cardDrawInfo);
+			cardDrawInfo.combatStats = nullptr;
 
 			if (stackedSelected != -1)
 			{
@@ -284,6 +288,42 @@ namespace game
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
+
+		if (drawInfo.combatStats)
+		{
+			const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
+			jv::ge::SubTexture statFrames[4];
+			Divide(statsTexture.subTexture, statFrames, 4);
+
+			PixelPerfectRenderTask statsRenderTask{};
+			statsRenderTask.position = drawInfo.origin + bgRenderTask.scale / 2;
+			statsRenderTask.position.x -= 6;
+			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(4, 1);
+			statsRenderTask.xCenter = drawInfo.center;
+			statsRenderTask.yCenter = drawInfo.center;
+			statsRenderTask.color = drawInfo.borderColor;
+
+			uint32_t values[3]
+			{
+				drawInfo.combatStats->armorClass,
+				drawInfo.combatStats->health,
+				drawInfo.combatStats->attack
+			};
+
+			for (uint32_t i = 0; i < 3; ++i)
+			{
+				statsRenderTask.subTexture = statFrames[i + 1];
+				statsRenderTask.position.y -= statsRenderTask.scale.y;
+				info.pixelPerfectRenderTasks.Push(statsRenderTask);
+
+				TextTask textTask{};
+				textTask.position = statsRenderTask.position + glm::ivec2(2, -statsRenderTask.scale.y / 2);
+				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
+				textTask.lifetime = drawInfo.lifeTime;
+				//textTask.center = true;
+				info.textTasks.Push(textTask);
+			}
+		}
 
 		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
 			DrawFullCard(drawInfo.card);
@@ -386,6 +426,15 @@ namespace game
 			break;
 		}
 		return yOffset;
+	}
+
+	Level::CardDrawCombatStatsInfo Level::GetCombatStatInfo(const MonsterCard& card)
+	{
+		CardDrawCombatStatsInfo info{};
+		info.attack = card.attack;
+		info.health = card.health;
+		info.armorClass = card.armorClass;
+		return info;
 	}
 
 	float Level::GetTime() const
