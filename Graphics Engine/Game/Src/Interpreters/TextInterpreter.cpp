@@ -33,7 +33,8 @@ namespace game
 			for (const auto& job : batch)
 			{
 				assert(job.text);
-				
+
+				task.color = job.color;
 				const auto len = static_cast<uint32_t>(strlen(job.text));
 				auto maxLen = job.maxLength == -1 ? len : job.maxLength;
 

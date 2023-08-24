@@ -417,11 +417,7 @@ namespace game
 		Card* cards[l]{};
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			cards[i] = &info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]];
-
-		const char* texts[l];
-		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-			texts[i] = TextInterpreter::IntToConstCharPtr(targets[i], info.frameArena);
-
+		
 		bool* selectedArr = nullptr;
 
 		if(selectionState == SelectionState::enemy)
@@ -436,7 +432,7 @@ namespace game
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = boardState.enemyCount;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 4;
-		cardSelectionDrawInfo.texts = texts;
+		cardSelectionDrawInfo.costs = targets;
 		cardSelectionDrawInfo.selectedArr = selectedArr;
 		const auto enemyResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		selectedArr = nullptr;
@@ -458,11 +454,12 @@ namespace game
 			greyedOutArr[i] = info.magics[state.hand[i]].cost > mana;
 
 		// Draw hand.
+		uint32_t costs[HAND_MAX_SIZE];
 		for (uint32_t i = 0; i < state.hand.count; ++i)
 		{
 			const auto magic = &info.magics[state.hand[i]];
 			cards[i] = magic;
-			texts[i] = TextInterpreter::IntToConstCharPtr(magic->cost, info.frameArena);
+			costs[i] = magic->cost;
 		}
 
 		cardSelectionDrawInfo.length = state.hand.count;
@@ -471,7 +468,7 @@ namespace game
 		cardSelectionDrawInfo.offsetMod = -4;
 		cardSelectionDrawInfo.selectedArr = selectedArr;
 		cardSelectionDrawInfo.greyedOutArr = greyedOutArr;
-		cardSelectionDrawInfo.texts = texts;
+		cardSelectionDrawInfo.costs = costs;
 		const auto handResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		selectedArr = nullptr;
 

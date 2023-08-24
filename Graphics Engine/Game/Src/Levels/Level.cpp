@@ -315,19 +315,42 @@ namespace game
 			info.pixelPerfectRenderTasks.Push(imageRenderTask);
 		}
 
+		const bool priority = !info.inputState.rMouse.pressed;
+		const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
+		jv::ge::SubTexture statFrames[5];
+		Divide(statsTexture.subTexture, statFrames, 5);
+
+		if(drawInfo.cost != -1)
+		{
+			PixelPerfectRenderTask costRenderTask{};
+			costRenderTask.position = drawInfo.origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
+			costRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
+			costRenderTask.xCenter = drawInfo.center;
+			costRenderTask.yCenter = drawInfo.center;
+			costRenderTask.color = drawInfo.borderColor;
+			costRenderTask.subTexture = statFrames[4];
+			costRenderTask.priority = priority;
+			info.pixelPerfectRenderTasks.Push(costRenderTask);
+
+			TextTask textTask{};
+			textTask.position = costRenderTask.position;
+			textTask.center = drawInfo.center;
+			textTask.position.y -= 4;
+			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
+			textTask.priority = priority;
+			info.textTasks.Push(textTask);
+		}
+
 		if (drawInfo.combatStats)
 		{
-			const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
-			jv::ge::SubTexture statFrames[4];
-			Divide(statsTexture.subTexture, statFrames, 4);
-
 			PixelPerfectRenderTask statsRenderTask{};
 			statsRenderTask.position = drawInfo.origin + bgRenderTask.scale / 2;
 			statsRenderTask.position.x -= 6;
-			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(4, 1);
+			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
 			statsRenderTask.xCenter = drawInfo.center;
 			statsRenderTask.yCenter = drawInfo.center;
 			statsRenderTask.color = drawInfo.borderColor;
+			statsRenderTask.priority = priority;
 
 			uint32_t values[3]
 			{
@@ -346,6 +369,7 @@ namespace game
 				textTask.position = statsRenderTask.position + glm::ivec2(2, -statsRenderTask.scale.y / 2);
 				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
 				textTask.lifetime = drawInfo.lifeTime;
+				textTask.priority = priority;
 				info.textTasks.Push(textTask);
 			}
 		}
