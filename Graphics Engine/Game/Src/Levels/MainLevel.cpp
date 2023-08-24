@@ -366,6 +366,8 @@ namespace game
 			id = state.GetMonster(info);
 			boardState.combatStats[ind] = GetCombatStat(info.monsters[id]);
 		}
+		for (auto& b : tapped)
+			b = false;
 	}
 
 	bool MainLevel::CombatState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
