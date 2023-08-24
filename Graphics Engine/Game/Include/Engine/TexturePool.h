@@ -10,7 +10,7 @@ namespace game
 	{
 	public:
 		[[nodiscard]] jv::ge::Resource Get(uint32_t i);
-		[[nodiscard]] uint32_t DefineTexturePath(const char* path);
+		uint32_t DefineTexturePath(const char* path);
 		void Update() const;
 
 		static TexturePool Create(jv::Arena& arena, uint32_t poolChunkSize, uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo);

@@ -289,6 +289,17 @@ namespace game
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
+		// Draw image.
+		{
+			/*
+			PixelPerfectRenderTask imageRenderTask{};
+			imageRenderTask.position = drawInfo.origin + bgRenderTask.scale / 2;
+			bgRenderTask.subTexture = info.texturePool.Get(0);
+			bgRenderTask.xCenter = drawInfo.center;
+			bgRenderTask.yCenter = drawInfo.center;
+			*/
+		}
+
 		if (drawInfo.combatStats)
 		{
 			const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
@@ -320,7 +331,6 @@ namespace game
 				textTask.position = statsRenderTask.position + glm::ivec2(2, -statsRenderTask.scale.y / 2);
 				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
 				textTask.lifetime = drawInfo.lifeTime;
-				//textTask.center = true;
 				info.textTasks.Push(textTask);
 			}
 		}

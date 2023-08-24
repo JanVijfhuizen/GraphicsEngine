@@ -10,6 +10,7 @@
 #include "Cards/MagicCard.h"
 #include "Cards/MonsterCard.h"
 #include "Cards/RoomCard.h"
+#include "Engine/TexturePool.h"
 #include "GE/AtlasGenerator.h"
 #include "GE/GraphicsEngine.h"
 #include "Interpreters/DynamicRenderInterpreter.h"
@@ -86,11 +87,14 @@ namespace game
 		std::chrono::high_resolution_clock timer{};
 		std::chrono::time_point<std::chrono::steady_clock> time{};
 
+		TexturePool texturePool;
+
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
 
 		[[nodiscard]] static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<const char*> GetDynamicTexturePaths(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<BossCard> GetBossCards(jv::Arena& arena);
@@ -111,6 +115,7 @@ namespace game
 	bool CardGame::Update()
 	{
 		UpdateInput();
+		texturePool.Update();
 
 		if(levelLoading)
 		{
@@ -168,7 +173,8 @@ namespace game
 			*priorityRenderTasks,
 			*textTasks,
 			*pixelPerfectRenderTasks,
-			static_cast<float>(deltaTime) / 1e3f
+			static_cast<float>(deltaTime) / 1e3f,
+			texturePool
 		};
 
 		time = currentTime;
@@ -318,6 +324,13 @@ namespace game
 		}
 
 		outCardGame->time = outCardGame->timer.now();
+
+		jv::ge::ImageCreateInfo imageCreateInfo{};
+
+		outCardGame->texturePool = TexturePool::Create(outCardGame->arena, 32, 256, imageCreateInfo);
+		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().frameArena);
+		for (const auto& dynText : dynTexts)
+			outCardGame->texturePool.DefineTexturePath(dynText);
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)
@@ -340,6 +353,14 @@ namespace game
 		arr[8] = "Art/fallback.png";
 		arr[9] = "Art/empty.png";
 		arr[10] = "Art/button-small.png";
+		return arr;
+	}
+
+	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<const char*>(arena, static_cast<uint32_t>(DynTextureId::length));
+		arr[0] = "Art/monster.png";
+		arr[1] = "Art/monster-mage.png";
 		return arr;
 	}
 

@@ -60,3 +60,10 @@ enum class TextureId
 	buttonSmall,
 	length
 };
+
+enum class DynTextureId
+{
+	monster,
+	mage,
+	length
+};
