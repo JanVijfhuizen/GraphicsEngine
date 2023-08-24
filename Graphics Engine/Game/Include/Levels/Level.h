@@ -95,6 +95,7 @@ namespace game
 			bool selectable = true;
 			float lifeTime = 0;
 			CardDrawCombatStatsInfo* combatStats = nullptr;
+			uint32_t cost = -1;
 			bool ignoreAnim = false;
 		};
 
@@ -114,6 +115,14 @@ namespace game
 			uint32_t rowCutoff = 8;
 			int32_t offsetMod = 0;
 			CardDrawCombatStatsInfo* combatStats = nullptr;
+			uint32_t* costs = nullptr;
+		};
+
+		struct PartyDrawInfo final
+		{
+			uint32_t height = 0;
+			bool* selectedArr = nullptr;
+			bool* greyedOutArr = nullptr;
 		};
 
 		enum class HeaderSpacing
@@ -135,7 +144,7 @@ namespace game
 		void DrawFullCard(Card* card);
 		void DrawTopCenterHeader(const LevelUpdateInfo& info, HeaderSpacing spacing, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
 		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;
-		uint32_t DrawParty(const LevelUpdateInfo& info, uint32_t height, bool* selectedArr = nullptr, bool* greyedOutArr = nullptr);
+		uint32_t DrawParty(const LevelUpdateInfo& info, const PartyDrawInfo& drawInfo);
 		[[nodiscard]] static uint32_t GetSpacing(HeaderSpacing spacing);
 		[[nodiscard]] static CardDrawCombatStatsInfo GetCombatStatInfo(const MonsterCard& card);
 

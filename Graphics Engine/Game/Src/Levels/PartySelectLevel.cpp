@@ -22,7 +22,10 @@ namespace game
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
 
-		const uint32_t choice = DrawParty(info, SIMULATED_RESOLUTION.y / 2, selected);
+		PartyDrawInfo partyDrawInfo{};
+		partyDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+		partyDrawInfo.selectedArr = selected;
+		const uint32_t choice = DrawParty(info, partyDrawInfo);
 		
 		if (info.inputState.lMouse.PressEvent() && choice != -1)
 			selected[choice] = !selected[choice];

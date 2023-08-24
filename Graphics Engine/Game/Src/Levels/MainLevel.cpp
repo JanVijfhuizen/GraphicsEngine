@@ -488,7 +488,45 @@ namespace game
 		}
 
 		// Draw allies.
-		const auto allyResult = level->DrawParty(info, SIMULATED_RESOLUTION.y / 5 * 2, selectedArr, tapped);
+		const auto& playerState = info.playerState;
+
+		Card* playerCards[PARTY_CAPACITY]{};
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+			playerCards[i] = &info.monsters[playerState.monsterIds[i]];
+
+		Card** artifacts[PARTY_CAPACITY]{};
+		uint32_t artifactCounts[PARTY_CAPACITY]{};
+
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		{
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+			if (count == 0)
+				continue;
+			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
+			artifacts[i] = arr.ptr;
+			for (uint32_t j = 0; j < count; ++j)
+			{
+				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
+				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
+			}
+		}
+
+		CardDrawCombatStatsInfo combatInfos[PARTY_CAPACITY];
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+			combatInfos[i] = GetCombatStatInfo(info.monsters[playerState.monsterIds[i]]);
+
+		CardSelectionDrawInfo playerCardSelectionDrawInfo{};
+		playerCardSelectionDrawInfo.cards = playerCards;
+		playerCardSelectionDrawInfo.length = playerState.partySize;
+		playerCardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 2;
+		playerCardSelectionDrawInfo.stacks = artifacts;
+		playerCardSelectionDrawInfo.stackCounts = artifactCounts;
+		playerCardSelectionDrawInfo.lifeTime = level->GetTime();
+		playerCardSelectionDrawInfo.greyedOutArr = tapped;
+		playerCardSelectionDrawInfo.combatStats = combatInfos;
+		playerCardSelectionDrawInfo.selectedArr = selectedArr;
+		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
+		
 		if (lMousePressed && allyResult != -1)
 		{
 			selectionState = SelectionState::ally;

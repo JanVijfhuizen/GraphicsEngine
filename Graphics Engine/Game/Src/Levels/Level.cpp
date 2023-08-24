@@ -237,8 +237,11 @@ namespace game
 			if(drawInfo.combatStats)
 				cardDrawInfo.combatStats = &drawInfo.combatStats[i];
 			cardDrawInfo.ignoreAnim = stackedSelected != -1;
+			if (drawInfo.costs)
+				cardDrawInfo.cost = drawInfo.costs[i];
 			DrawCard(info, cardDrawInfo);
 			cardDrawInfo.combatStats = nullptr;
+			cardDrawInfo.cost = -1;
 
 			if (stackedSelected != -1)
 			{
@@ -393,7 +396,7 @@ namespace game
 		headerDrawInfo.scale = 1;
 		DrawHeader(info, headerDrawInfo);
 	}
-	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const uint32_t height, bool* selectedArr, bool* greyedOutArr)
+	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const PartyDrawInfo& drawInfo)
 	{
 		const auto& playerState = info.playerState;
 
@@ -418,15 +421,21 @@ namespace game
 			}
 		}
 
+		CardDrawCombatStatsInfo combatInfos[PARTY_CAPACITY];
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+			combatInfos[i] = GetCombatStatInfo(info.monsters[playerState.monsterIds[i]]);
+
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = playerState.partySize;
-		cardSelectionDrawInfo.selectedArr = selectedArr;
-		cardSelectionDrawInfo.height = height;
+		cardSelectionDrawInfo.selectedArr = drawInfo.selectedArr;
+		cardSelectionDrawInfo.height = drawInfo.height;
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
-		cardSelectionDrawInfo.greyedOutArr = greyedOutArr;
+		cardSelectionDrawInfo.greyedOutArr = drawInfo.greyedOutArr;
+		cardSelectionDrawInfo.combatStats = combatInfos;
+
 		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}
 
