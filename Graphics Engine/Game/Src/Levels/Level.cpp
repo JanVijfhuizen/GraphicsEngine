@@ -13,6 +13,7 @@ namespace game
 {
 	constexpr uint32_t CARD_FRAME_COUNT = 3;
 	constexpr uint32_t CARD_STACKED_SPACING = 6;
+	constexpr float CARD_MONSTER_ANIM_SPEED = .5f;
 
 	void Level::Create(const LevelCreateInfo& info)
 	{
@@ -204,6 +205,8 @@ namespace game
 			const bool collides = CollidesCard(info, cardDrawInfo);
 			uint32_t stackedSelected = -1;
 			uint32_t stackedCount = -1;
+
+			cardDrawInfo.ignoreAnim = true;
 			
 			if (drawInfo.stacks)
 			{
@@ -233,6 +236,7 @@ namespace game
 
 			if(drawInfo.combatStats)
 				cardDrawInfo.combatStats = &drawInfo.combatStats[i];
+			cardDrawInfo.ignoreAnim = stackedSelected != -1;
 			DrawCard(info, cardDrawInfo);
 			cardDrawInfo.combatStats = nullptr;
 
@@ -242,6 +246,7 @@ namespace game
 				stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
 				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
 				stackedDrawInfo.selectable = true;
+				stackedDrawInfo.ignoreAnim = false;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -290,14 +295,21 @@ namespace game
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
 		// Draw image.
+		if(!drawInfo.ignoreAnim)
 		{
-			/*
+			jv::ge::SubTexture animFrames[CARD_MONSTER_ANIM_LENGTH];
+			Divide({}, animFrames, CARD_MONSTER_ANIM_LENGTH);
+
+			auto i = static_cast<uint32_t>(GetTime() / CARD_MONSTER_ANIM_SPEED);
+			i %= CARD_MONSTER_ANIM_LENGTH;
+
 			PixelPerfectRenderTask imageRenderTask{};
-			imageRenderTask.position = drawInfo.origin + bgRenderTask.scale / 2;
-			bgRenderTask.subTexture = info.texturePool.Get(0);
-			bgRenderTask.xCenter = drawInfo.center;
-			bgRenderTask.yCenter = drawInfo.center;
-			*/
+			imageRenderTask.position = drawInfo.origin;
+			imageRenderTask.image = info.texturePool.Get(drawInfo.card->animIndex);
+			imageRenderTask.xCenter = drawInfo.center;
+			imageRenderTask.yCenter = drawInfo.center;
+			imageRenderTask.subTexture = animFrames[i];
+			info.pixelPerfectRenderTasks.Push(imageRenderTask);
 		}
 
 		if (drawInfo.combatStats)

@@ -8,5 +8,6 @@ namespace game
 		const char* name = "unnamed";
 		const char* ruleText = "no rule text yet";
 		uint32_t count = 1;
+		uint32_t animIndex = 0;
 	};
 }

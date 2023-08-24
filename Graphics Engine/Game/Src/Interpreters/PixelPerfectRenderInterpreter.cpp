@@ -23,10 +23,24 @@ namespace game
 			for (const auto& task : batch)
 			{
 				auto normalTask = PixelPerfectRenderTask::ToNormalTask(task, _createInfo.resolution, _createInfo.simulatedResolution);
-				if (!task.priority)
-					_createInfo.renderTasks->Push(normalTask);
+
+				if(task.image)
+				{
+					DynamicRenderTask dynTask{};
+					dynTask.renderTask = normalTask;
+					dynTask.image = task.image;
+					if (!task.priority)
+						_createInfo.dynRenderTasks->Push(dynTask);
+					else
+						_createInfo.dynPriorityRenderTasks->Push(dynTask);
+				}
 				else
-					_createInfo.priorityRenderTasks->Push(normalTask); 
+				{
+					if (!task.priority)
+						_createInfo.renderTasks->Push(normalTask);
+					else
+						_createInfo.priorityRenderTasks->Push(normalTask);
+				}
 			}
 	}
 

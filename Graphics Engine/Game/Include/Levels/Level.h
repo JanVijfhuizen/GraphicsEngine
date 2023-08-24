@@ -95,6 +95,7 @@ namespace game
 			bool selectable = true;
 			float lifeTime = 0;
 			CardDrawCombatStatsInfo* combatStats = nullptr;
+			bool ignoreAnim = false;
 		};
 
 		struct CardSelectionDrawInfo final

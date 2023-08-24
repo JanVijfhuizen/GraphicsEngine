@@ -61,6 +61,7 @@ namespace game
 		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
 		InstancedRenderInterpreter<RenderTask>* priorityRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
+		DynamicRenderInterpreter* dynamicPriorityRenderInterpreter;
 		TextInterpreter* textInterpreter;
 		PixelPerfectRenderInterpreter* pixelPerfectRenderInterpreter;
 
@@ -261,15 +262,6 @@ namespace game
 			enableInfo.scene = outCardGame->scene;
 			enableInfo.capacity = 1024;
 
-			outCardGame->priorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
-				*outCardGame->priorityRenderTasks, createInfo);
-			outCardGame->priorityRenderInterpreter->Enable(enableInfo);
-			outCardGame->priorityRenderInterpreter->image = outCardGame->atlas;
-			outCardGame->renderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
-				*outCardGame->renderTasks, createInfo);
-			outCardGame->renderInterpreter->Enable(enableInfo);
-			outCardGame->renderInterpreter->image = outCardGame->atlas;
-
 			DynamicRenderInterpreterCreateInfo dynamicCreateInfo{};
 			dynamicCreateInfo.resolution = jv::ge::GetResolution();
 			dynamicCreateInfo.frameArena = &mem.frameArena;
@@ -278,10 +270,24 @@ namespace game
 			dynamicEnableInfo.arena = &outCardGame->arena;
 			dynamicEnableInfo.scene = outCardGame->scene;
 			dynamicEnableInfo.capacity = 32;
-			
+
+			outCardGame->dynamicPriorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
+				*outCardGame->dynamicPriorityRenderTasks, dynamicCreateInfo);
+			outCardGame->dynamicPriorityRenderInterpreter->Enable(dynamicEnableInfo);
+
+			outCardGame->priorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
+				*outCardGame->priorityRenderTasks, createInfo);
+			outCardGame->priorityRenderInterpreter->Enable(enableInfo);
+			outCardGame->priorityRenderInterpreter->image = outCardGame->atlas;
+
 			outCardGame->dynamicRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
 				*outCardGame->dynamicRenderTasks, dynamicCreateInfo);
 			outCardGame->dynamicRenderInterpreter->Enable(dynamicEnableInfo);
+
+			outCardGame->renderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
+				*outCardGame->renderTasks, createInfo);
+			outCardGame->renderInterpreter->Enable(enableInfo);
+			outCardGame->renderInterpreter->image = outCardGame->atlas;
 
 			PixelPerfectRenderInterpreterCreateInfo pixelPerfectRenderInterpreterCreateInfo{};
 			pixelPerfectRenderInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
@@ -329,6 +335,9 @@ namespace game
 		outCardGame->time = outCardGame->timer.now();
 
 		jv::ge::ImageCreateInfo imageCreateInfo{};
+		imageCreateInfo.resolution = glm::ivec2(128, 32);
+		imageCreateInfo.usage = jv::ge::ImageCreateInfo::Usage::read;
+		imageCreateInfo.scene = outCardGame->scene;
 
 		outCardGame->texturePool = TexturePool::Create(outCardGame->arena, 32, 256, imageCreateInfo);
 		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().frameArena);
@@ -377,6 +386,7 @@ namespace game
 		arr[0].name = "daisy, loyal protector";
 		arr[0].ruleText = "follows you around.";
 		arr[0].health = 999;
+		arr[0].animIndex = 1;
 		return arr;
 	}
 

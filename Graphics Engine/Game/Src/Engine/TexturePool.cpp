@@ -14,8 +14,12 @@ namespace game
 		auto& id = _ids[i];
 		assert(id.path);
 		if (id.resource)
+		{
+			id.inactiveCount = 0;
 			return id.resource->resource;
+		}
 
+		// Find a new resource to link it to.
 		for (auto& pool : _pools)
 		{
 			bool found = false;
@@ -32,6 +36,7 @@ namespace game
 				break;
 		}
 
+		// Make new resource if no available one exists.
 		if(!id.resource)
 		{
 			Resource* resource = nullptr;
@@ -54,14 +59,13 @@ namespace game
 			id.resource = resource;
 		}
 
-		id.resource->active = true;
-
 		int texWidth, texHeight, texChannels2;
 		stbi_uc* pixels = stbi_load(id.path, &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
 		jv::ge::FillImage(id.resource->resource, pixels);
 		stbi_image_free(pixels);
-
+		id.resource->active = true;
 		id.inactiveCount = 0;
+
 		return id.resource->resource;
 	}
 
