@@ -54,9 +54,6 @@ namespace game
 	{
 		glm::ivec2 resolution;
 		const InputState& inputState;
-		TaskSystem<RenderTask>& renderTasks;
-		TaskSystem<DynamicRenderTask>& dynamicRenderTasks;
-		TaskSystem<RenderTask>& priorityRenderTasks;
 		TaskSystem<TextTask>& textTasks;
 		TaskSystem<PixelPerfectRenderTask>& pixelPerfectRenderTasks;
 		float deltaTime;

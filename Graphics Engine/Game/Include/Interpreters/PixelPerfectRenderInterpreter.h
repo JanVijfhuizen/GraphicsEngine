@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Engine/Engine.h"
+#include "Tasks/DynamicRenderTask.h"
 #include "Tasks/PixelPerfectRenderTask.h"
 #include "Tasks/RenderTask.h"
 
@@ -11,6 +12,8 @@ namespace game
 		glm::ivec2 simulatedResolution;
 		TaskSystem<RenderTask>* renderTasks;
 		TaskSystem<RenderTask>* priorityRenderTasks;
+		TaskSystem<DynamicRenderTask>* dynRenderTasks;
+		TaskSystem<DynamicRenderTask>* dynPriorityRenderTasks;
 		jv::ge::SubTexture background;
 	};
 

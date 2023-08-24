@@ -804,13 +804,7 @@ namespace game
 			loadLevelIndex = LevelIndex::mainMenu;
 			return true;
 		}
-
-		RenderTask buttonRenderTask{};
-		buttonRenderTask.position.y = -.18;
-		buttonRenderTask.scale.y *= .12f;
-		buttonRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::fallback)].subTexture;
-		info.renderTasks.Push(buttonRenderTask);
-
+		
 		return true;
 	}
 

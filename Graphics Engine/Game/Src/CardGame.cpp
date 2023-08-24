@@ -55,6 +55,7 @@ namespace game
 		TaskSystem<RenderTask>* renderTasks;
 		TaskSystem<DynamicRenderTask>* dynamicRenderTasks;
 		TaskSystem<RenderTask>* priorityRenderTasks;
+		TaskSystem<DynamicRenderTask>* dynamicPriorityRenderTasks;
 		TaskSystem<TextTask>* textTasks;
 		TaskSystem<PixelPerfectRenderTask>* pixelPerfectRenderTasks;
 		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
@@ -168,9 +169,6 @@ namespace game
 			events,
 			RESOLUTION,
 			inputState,
-			*renderTasks,
-			*dynamicRenderTasks,
-			*priorityRenderTasks,
 			*textTasks,
 			*pixelPerfectRenderTasks,
 			static_cast<float>(deltaTime) / 1e3f,
@@ -247,6 +245,8 @@ namespace game
 			outCardGame->dynamicRenderTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->priorityRenderTasks = &outCardGame->engine.AddTaskSystem<RenderTask>();
 			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 512);
+			outCardGame->dynamicPriorityRenderTasks = &outCardGame->engine.AddTaskSystem<DynamicRenderTask>();
+			outCardGame->dynamicPriorityRenderTasks->Allocate(outCardGame->arena, 16);
 			outCardGame->textTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
 			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->pixelPerfectRenderTasks = &outCardGame->engine.AddTaskSystem<PixelPerfectRenderTask>();
@@ -286,6 +286,9 @@ namespace game
 			PixelPerfectRenderInterpreterCreateInfo pixelPerfectRenderInterpreterCreateInfo{};
 			pixelPerfectRenderInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.dynRenderTasks = outCardGame->dynamicRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.dynPriorityRenderTasks = outCardGame->dynamicRenderTasks;
+
 			pixelPerfectRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
 			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = SIMULATED_RESOLUTION;
 			pixelPerfectRenderInterpreterCreateInfo.background = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
