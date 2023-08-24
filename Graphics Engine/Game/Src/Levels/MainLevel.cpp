@@ -342,9 +342,16 @@ namespace game
 		selectionState = SelectionState::none;
 		time = 0;
 		auto& boardState = state.boardState = {};
-		boardState.allyCount = gameState.partySize;
+		boardState.allyCount = boardState.partyCount = gameState.partySize;
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
-			boardState.ids[i] = playerState.monsterIds[gameState.partyIds[i]];
+		{
+			const auto partyId = gameState.partyIds[i];
+			const auto monsterId = playerState.monsterIds[partyId];
+			boardState.ids[i] = monsterId;
+			boardState.partyIds[i] = partyId;
+			boardState.combatStats[i] = GetCombatStat(info.monsters[monsterId]);
+		}
+			
 		selectedId = -1;
 
 		const uint32_t layerIndex = jv::Min(state.depth / ROOM_COUNT_BEFORE_BOSS, TOTAL_BOSS_COUNT - 1);
@@ -352,7 +359,12 @@ namespace game
 
 		boardState.enemyCount = enemyCount;
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-			boardState.ids[BOARD_CAPACITY_PER_SIDE + i] = state.GetMonster(info);
+		{
+			const auto ind = BOARD_CAPACITY_PER_SIDE + i;
+			auto& id = boardState.ids[ind];
+			id = state.GetMonster(info);
+			boardState.combatStats[ind] = GetCombatStat(info.monsters[id]);
+		}
 	}
 
 	bool MainLevel::CombatState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -434,6 +446,7 @@ namespace game
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 4;
 		cardSelectionDrawInfo.costs = targets;
 		cardSelectionDrawInfo.selectedArr = selectedArr;
+		cardSelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		const auto enemyResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -469,6 +482,7 @@ namespace game
 		cardSelectionDrawInfo.selectedArr = selectedArr;
 		cardSelectionDrawInfo.greyedOutArr = greyedOutArr;
 		cardSelectionDrawInfo.costs = costs;
+		cardSelectionDrawInfo.combatStats = nullptr;
 		const auto handResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -488,30 +502,34 @@ namespace game
 		const auto& playerState = info.playerState;
 
 		Card* playerCards[PARTY_CAPACITY]{};
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			playerCards[i] = &info.monsters[playerState.monsterIds[i]];
+		for (uint32_t i = 0; i < boardState.allyCount; ++i)
+			playerCards[i] = &info.monsters[boardState.ids[i]];
 
 		Card** artifacts[PARTY_CAPACITY]{};
 		uint32_t artifactCounts[PARTY_CAPACITY]{};
 
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
+		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+			const auto partyId = boardState.partyIds[i];
+
+			if(boardState.partyCount <= i)
+			{
+				artifactCounts[i] = 0;
+				continue;
+			}
+
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[partyId];
 			if (count == 0)
 				continue;
 			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
 			artifacts[i] = arr.ptr;
 			for (uint32_t j = 0; j < count; ++j)
 			{
-				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
+				const uint32_t index = playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY + j];
 				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 			}
 		}
-
-		CardDrawCombatStatsInfo combatInfos[PARTY_CAPACITY];
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			combatInfos[i] = GetCombatStatInfo(info.monsters[playerState.monsterIds[i]]);
-
+		
 		CardSelectionDrawInfo playerCardSelectionDrawInfo{};
 		playerCardSelectionDrawInfo.cards = playerCards;
 		playerCardSelectionDrawInfo.length = playerState.partySize;
@@ -520,7 +538,7 @@ namespace game
 		playerCardSelectionDrawInfo.stackCounts = artifactCounts;
 		playerCardSelectionDrawInfo.lifeTime = level->GetTime();
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
-		playerCardSelectionDrawInfo.combatStats = combatInfos;
+		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
 		

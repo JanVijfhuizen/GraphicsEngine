@@ -4,6 +4,7 @@
 #include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
+#include "States/BoardState.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
 #include "Utils/BoxCollision.h"
@@ -445,9 +446,9 @@ namespace game
 			}
 		}
 
-		CardDrawCombatStatsInfo combatInfos[PARTY_CAPACITY];
+		CombatStats combatInfos[PARTY_CAPACITY];
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			combatInfos[i] = GetCombatStatInfo(info.monsters[playerState.monsterIds[i]]);
+			combatInfos[i] = GetCombatStat(info.monsters[playerState.monsterIds[i]]);
 
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
@@ -483,9 +484,9 @@ namespace game
 		return yOffset;
 	}
 
-	Level::CardDrawCombatStatsInfo Level::GetCombatStatInfo(const MonsterCard& card)
+	CombatStats Level::GetCombatStat(const MonsterCard& card)
 	{
-		CardDrawCombatStatsInfo info{};
+		CombatStats info{};
 		info.attack = card.attack;
 		info.health = card.health;
 		info.armorClass = card.armorClass;

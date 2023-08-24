@@ -109,7 +109,7 @@ namespace game
 		}
 
 		Card* cards[DISCOVER_LENGTH]{};
-		CardDrawCombatStatsInfo combatStats[DISCOVER_LENGTH]{};
+		CombatStats combatStats[DISCOVER_LENGTH]{};
 
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
@@ -123,7 +123,7 @@ namespace game
 		{
 			const auto monster = &info.monsters[monsterDiscoverOptions[i]];
 			cards[i] = monster;
-			combatStats[i] = GetCombatStatInfo(*monster);
+			combatStats[i] = GetCombatStat(*monster);
 		}
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 2;
 		const uint32_t discoveredMonster = level->DrawCardSelection(info, cardSelectionDrawInfo);

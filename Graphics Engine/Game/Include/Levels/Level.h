@@ -9,6 +9,7 @@
 #include "Engine/TaskSystem.h"
 #include "Engine/TexturePool.h"
 #include "JLib/Array.h"
+#include "States/BoardState.h"
 #include "Tasks/DynamicRenderTask.h"
 #include "Tasks/TextTask.h"
 #include "Tasks/PixelPerfectRenderTask.h"
@@ -79,13 +80,6 @@ namespace game
 			bool center = false;
 		};
 
-		struct CardDrawCombatStatsInfo final
-		{
-			uint32_t attack;
-			uint32_t health;
-			uint32_t armorClass;
-		};
-
 		struct CardDrawInfo final
 		{
 			glm::ivec2 origin;
@@ -94,7 +88,7 @@ namespace game
 			glm::vec4 borderColor{1};
 			bool selectable = true;
 			float lifeTime = 0;
-			CardDrawCombatStatsInfo* combatStats = nullptr;
+			CombatStats* combatStats = nullptr;
 			uint32_t cost = -1;
 			bool ignoreAnim = false;
 		};
@@ -114,7 +108,7 @@ namespace game
 			float lifeTime = -1;
 			uint32_t rowCutoff = 8;
 			int32_t offsetMod = 0;
-			CardDrawCombatStatsInfo* combatStats = nullptr;
+			CombatStats* combatStats = nullptr;
 			uint32_t* costs = nullptr;
 		};
 
@@ -146,7 +140,7 @@ namespace game
 		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;
 		uint32_t DrawParty(const LevelUpdateInfo& info, const PartyDrawInfo& drawInfo);
 		[[nodiscard]] static uint32_t GetSpacing(HeaderSpacing spacing);
-		[[nodiscard]] static CardDrawCombatStatsInfo GetCombatStatInfo(const MonsterCard& card);
+		[[nodiscard]] static CombatStats GetCombatStat(const MonsterCard& card);
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;
