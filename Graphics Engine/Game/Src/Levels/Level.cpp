@@ -255,7 +255,7 @@ namespace game
 				cardDrawInfo.selectable = false;
 			}
 
-			if (drawInfo.outStackSelected)
+			if (drawInfo.outStackSelected && stackedSelected != -1)
 				*drawInfo.outStackSelected = stackedSelected;
 
 			if(drawInfo.texts && drawInfo.texts[i])
@@ -299,7 +299,7 @@ namespace game
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
 		// Draw image.
-		if(!drawInfo.ignoreAnim)
+		if(!drawInfo.ignoreAnim && drawInfo.card)
 		{
 			jv::ge::SubTexture animFrames[CARD_MONSTER_ANIM_LENGTH];
 			Divide({}, animFrames, CARD_MONSTER_ANIM_LENGTH);

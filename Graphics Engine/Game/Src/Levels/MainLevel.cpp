@@ -350,6 +350,7 @@ namespace game
 			boardState.ids[i] = monsterId;
 			boardState.partyIds[i] = partyId;
 			boardState.combatStats[i] = GetCombatStat(info.monsters[monsterId]);
+			boardState.combatStats[i].health = gameState.healths[i];
 		}
 			
 		selectedId = -1;
@@ -372,6 +373,7 @@ namespace game
 	{
 		time += info.deltaTime;
 
+		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
 
 		// Check health.
@@ -380,6 +382,15 @@ namespace game
 			if (boardState.combatStats[i].health == 0)
 			{
 				// Remove.
+				for (uint32_t j = i; j < boardState.allyCount; ++j)
+				{
+					boardState.ids[j] = boardState.ids[j + 1];
+					boardState.partyIds[j] = boardState.partyIds[j + 1];
+					boardState.combatStats[j] = boardState.combatStats[j + 1];
+				}
+				--boardState.allyCount;
+				if(boardState.partyCount >= i + 1)
+					--boardState.partyCount;
 			}
 		}
 
@@ -387,6 +398,7 @@ namespace game
 		{
 			if (boardState.combatStats[BOARD_CAPACITY_PER_SIDE + i].health == 0)
 			{
+				// Remove.
 				for (uint32_t j = i; j < boardState.enemyCount; ++j)
 				{
 					boardState.ids[BOARD_CAPACITY_PER_SIDE + j] = boardState.ids[BOARD_CAPACITY_PER_SIDE + j + 1];
@@ -406,6 +418,13 @@ namespace game
 		// Check for room victory.
 		if(boardState.enemyCount == 0)
 		{
+			gameState.partySize = boardState.partyCount;
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
+			{
+				gameState.partyIds[i] = boardState.partyIds[i];
+				gameState.healths[i] = boardState.combatStats[i].health;
+			}
+
 			stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 			return true;
 		}
@@ -558,7 +577,7 @@ namespace game
 				continue;
 			}
 
-			const uint32_t flaw = info.gameState.flaws[i];
+			const uint32_t flaw = gameState.flaws[i];
 			const uint32_t artifactCount = playerState.artifactSlotCounts[partyId];
 			const uint32_t count = stacksCount[i] = (flaw != -1) + artifactCount;
 
@@ -577,7 +596,7 @@ namespace game
 		
 		CardSelectionDrawInfo playerCardSelectionDrawInfo{};
 		playerCardSelectionDrawInfo.cards = playerCards;
-		playerCardSelectionDrawInfo.length = playerState.partySize;
+		playerCardSelectionDrawInfo.length = boardState.allyCount;
 		playerCardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 2;
 		playerCardSelectionDrawInfo.stacks = stacks;
 		playerCardSelectionDrawInfo.stackCounts = stacksCount;
@@ -857,6 +876,7 @@ namespace game
 			const auto monster = &info.monsters[playerState.monsterIds[id]];
 			cards[i] = monster;
 			combatStats[i] = GetCombatStat(*monster);
+			combatStats[i].health = gameState.healths[i];
 
 			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[id];
 			if (count == 0)
@@ -877,6 +897,7 @@ namespace game
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		cardSelectionDrawInfo.outStackSelected = &outStackSelected;
+		cardSelectionDrawInfo.combatStats = combatStats;
 		const auto choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		auto& path = state.paths[state.chosenPath];
@@ -887,7 +908,7 @@ namespace game
 		cardDrawInfo.center = true;
 		cardDrawInfo.lifeTime = level->GetTime();
 		level->DrawCard(info, cardDrawInfo);
-
+		
 		if(choice != -1 && outStackSelected != -1)
 		{
 			const uint32_t id = gameState.partyIds[choice];
@@ -950,7 +971,6 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 4;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
