@@ -2,7 +2,9 @@
 #include "Levels/Level.h"
 
 #include "GE/AtlasGenerator.h"
+#include "Interpreters/TextInterpreter.h"
 #include "JLib/Math.h"
+#include "States/BoardState.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
 #include "Utils/BoxCollision.h"
@@ -12,6 +14,7 @@ namespace game
 {
 	constexpr uint32_t CARD_FRAME_COUNT = 3;
 	constexpr uint32_t CARD_STACKED_SPACING = 6;
+	constexpr float CARD_MONSTER_ANIM_SPEED = .5f;
 
 	void Level::Create(const LevelCreateInfo& info)
 	{
@@ -203,6 +206,8 @@ namespace game
 			const bool collides = CollidesCard(info, cardDrawInfo);
 			uint32_t stackedSelected = -1;
 			uint32_t stackedCount = -1;
+
+			cardDrawInfo.ignoreAnim = true;
 			
 			if (drawInfo.stacks)
 			{
@@ -229,8 +234,15 @@ namespace game
 					DrawCard(info, stackedDrawInfo);
 				}
 			}
-			
+
+			if(drawInfo.combatStats)
+				cardDrawInfo.combatStats = &drawInfo.combatStats[i];
+			cardDrawInfo.ignoreAnim = stackedSelected != -1;
+			if (drawInfo.costs)
+				cardDrawInfo.cost = drawInfo.costs[i];
 			DrawCard(info, cardDrawInfo);
+			cardDrawInfo.combatStats = nullptr;
+			cardDrawInfo.cost = -1;
 
 			if (stackedSelected != -1)
 			{
@@ -238,11 +250,12 @@ namespace game
 				stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
 				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
 				stackedDrawInfo.selectable = true;
+				stackedDrawInfo.ignoreAnim = false;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
 
-			if (drawInfo.outStackSelected)
+			if (drawInfo.outStackSelected && stackedSelected != -1)
 				*drawInfo.outStackSelected = stackedSelected;
 
 			if(drawInfo.texts && drawInfo.texts[i])
@@ -284,6 +297,83 @@ namespace game
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
+
+		// Draw image.
+		if(!drawInfo.ignoreAnim && drawInfo.card)
+		{
+			jv::ge::SubTexture animFrames[CARD_MONSTER_ANIM_LENGTH];
+			Divide({}, animFrames, CARD_MONSTER_ANIM_LENGTH);
+
+			auto i = static_cast<uint32_t>(GetTime() / CARD_MONSTER_ANIM_SPEED);
+			i %= CARD_MONSTER_ANIM_LENGTH;
+
+			PixelPerfectRenderTask imageRenderTask{};
+			imageRenderTask.position = drawInfo.origin;
+			imageRenderTask.image = info.texturePool.Get(drawInfo.card->animIndex);
+			imageRenderTask.xCenter = drawInfo.center;
+			imageRenderTask.yCenter = drawInfo.center;
+			imageRenderTask.subTexture = animFrames[i];
+			info.pixelPerfectRenderTasks.Push(imageRenderTask);
+		}
+
+		const bool priority = !info.inputState.rMouse.pressed;
+		const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
+		jv::ge::SubTexture statFrames[5];
+		Divide(statsTexture.subTexture, statFrames, 5);
+
+		if(drawInfo.cost != -1)
+		{
+			PixelPerfectRenderTask costRenderTask{};
+			costRenderTask.position = drawInfo.origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
+			costRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
+			costRenderTask.xCenter = drawInfo.center;
+			costRenderTask.yCenter = drawInfo.center;
+			costRenderTask.color = drawInfo.borderColor;
+			costRenderTask.subTexture = statFrames[4];
+			costRenderTask.priority = priority;
+			info.pixelPerfectRenderTasks.Push(costRenderTask);
+
+			TextTask textTask{};
+			textTask.position = costRenderTask.position;
+			textTask.center = drawInfo.center;
+			textTask.position.y -= 4;
+			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
+			textTask.priority = priority;
+			info.textTasks.Push(textTask);
+		}
+
+		if (drawInfo.combatStats)
+		{
+			PixelPerfectRenderTask statsRenderTask{};
+			statsRenderTask.position = drawInfo.origin + bgRenderTask.scale / 2;
+			statsRenderTask.position.x -= 6;
+			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
+			statsRenderTask.xCenter = drawInfo.center;
+			statsRenderTask.yCenter = drawInfo.center;
+			statsRenderTask.color = drawInfo.borderColor;
+			statsRenderTask.priority = priority;
+
+			uint32_t values[3]
+			{
+				drawInfo.combatStats->armorClass,
+				drawInfo.combatStats->health,
+				drawInfo.combatStats->attack
+			};
+
+			for (uint32_t i = 0; i < 3; ++i)
+			{
+				statsRenderTask.subTexture = statFrames[i + 1];
+				statsRenderTask.position.y -= statsRenderTask.scale.y;
+				info.pixelPerfectRenderTasks.Push(statsRenderTask);
+
+				TextTask textTask{};
+				textTask.position = statsRenderTask.position + glm::ivec2(2, -statsRenderTask.scale.y / 2);
+				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
+				textTask.lifetime = drawInfo.lifeTime;
+				textTask.priority = priority;
+				info.textTasks.Push(textTask);
+			}
+		}
 
 		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
 			DrawFullCard(drawInfo.card);
@@ -331,7 +421,7 @@ namespace game
 		headerDrawInfo.scale = 1;
 		DrawHeader(info, headerDrawInfo);
 	}
-	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const uint32_t height, bool* selectedArr, bool* greyedOutArr)
+	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const PartyDrawInfo& drawInfo)
 	{
 		const auto& playerState = info.playerState;
 
@@ -356,15 +446,21 @@ namespace game
 			}
 		}
 
+		CombatStats combatInfos[PARTY_CAPACITY];
+		for (uint32_t i = 0; i < playerState.partySize; ++i)
+			combatInfos[i] = GetCombatStat(info.monsters[playerState.monsterIds[i]]);
+
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = playerState.partySize;
-		cardSelectionDrawInfo.selectedArr = selectedArr;
-		cardSelectionDrawInfo.height = height;
+		cardSelectionDrawInfo.selectedArr = drawInfo.selectedArr;
+		cardSelectionDrawInfo.height = drawInfo.height;
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
-		cardSelectionDrawInfo.greyedOutArr = greyedOutArr;
+		cardSelectionDrawInfo.greyedOutArr = drawInfo.greyedOutArr;
+		cardSelectionDrawInfo.combatStats = combatInfos;
+
 		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}
 
@@ -386,6 +482,15 @@ namespace game
 			break;
 		}
 		return yOffset;
+	}
+
+	CombatStats Level::GetCombatStat(const MonsterCard& card)
+	{
+		CombatStats info{};
+		info.attack = card.attack;
+		info.health = card.health;
+		info.armorClass = card.armorClass;
+		return info;
 	}
 
 	float Level::GetTime() const

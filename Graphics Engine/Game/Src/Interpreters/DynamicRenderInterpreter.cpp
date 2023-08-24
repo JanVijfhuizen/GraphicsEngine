@@ -40,9 +40,9 @@ namespace game
 		_fallbackMesh = AddMesh(meshCreateInfo);
 
 		const uint32_t frameCount = jv::ge::GetFrameCount();
-		const uint32_t descriptorSetCount = frameCount * info.capacity;
+		const uint32_t resourceCount = frameCount * info.capacity;
 
-		_samplers = jv::CreateArray<jv::ge::Resource>(*info.arena, descriptorSetCount);
+		_samplers = jv::CreateArray<jv::ge::Resource>(*info.arena, resourceCount);
 		jv::ge::SamplerCreateInfo samplerCreateInfo{};
 		samplerCreateInfo.scene = info.scene;
 		for (auto& sampler : _samplers)
@@ -50,9 +50,10 @@ namespace game
 
 		jv::ge::DescriptorPoolCreateInfo poolCreateInfo{};
 		poolCreateInfo.layout = _layout;
-		poolCreateInfo.capacity = descriptorSetCount;
+		poolCreateInfo.capacity = resourceCount;
 		poolCreateInfo.scene = info.scene;
 		_pool = AddDescriptorPool(poolCreateInfo);
+		_frameCapacity = info.capacity;
 	}
 
 	void DynamicRenderInterpreter::OnStart(const DynamicRenderInterpreterCreateInfo& createInfo,
@@ -117,7 +118,7 @@ namespace game
 				writeBindingInfo.index = 0;
 
 				jv::ge::WriteInfo writeInfo{};
-				writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, frameIndex);
+				writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, i);
 				writeInfo.bindings = &writeBindingInfo;
 				writeInfo.bindingCount = 1;
 				Write(writeInfo);
@@ -130,7 +131,7 @@ namespace game
 				jv::ge::DrawInfo drawInfo{};
 				drawInfo.pipeline = _pipeline;
 				drawInfo.mesh = task.mesh ? task.mesh : _fallbackMesh;
-				drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(_pool, frameIndex);
+				drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(_pool, i);
 				drawInfo.descriptorSetCount = 1;
 				drawInfo.pushConstant = &pushConstant;
 				drawInfo.pushConstantSize = sizeof(PushConstant);

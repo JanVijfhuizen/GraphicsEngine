@@ -10,6 +10,7 @@
 #include "Cards/MagicCard.h"
 #include "Cards/MonsterCard.h"
 #include "Cards/RoomCard.h"
+#include "Engine/TexturePool.h"
 #include "GE/AtlasGenerator.h"
 #include "GE/GraphicsEngine.h"
 #include "Interpreters/DynamicRenderInterpreter.h"
@@ -54,11 +55,13 @@ namespace game
 		TaskSystem<RenderTask>* renderTasks;
 		TaskSystem<DynamicRenderTask>* dynamicRenderTasks;
 		TaskSystem<RenderTask>* priorityRenderTasks;
+		TaskSystem<DynamicRenderTask>* dynamicPriorityRenderTasks;
 		TaskSystem<TextTask>* textTasks;
 		TaskSystem<PixelPerfectRenderTask>* pixelPerfectRenderTasks;
 		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
 		InstancedRenderInterpreter<RenderTask>* priorityRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
+		DynamicRenderInterpreter* dynamicPriorityRenderInterpreter;
 		TextInterpreter* textInterpreter;
 		PixelPerfectRenderInterpreter* pixelPerfectRenderInterpreter;
 
@@ -86,11 +89,14 @@ namespace game
 		std::chrono::high_resolution_clock timer{};
 		std::chrono::time_point<std::chrono::steady_clock> time{};
 
+		TexturePool texturePool;
+
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
 
 		[[nodiscard]] static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<const char*> GetDynamicTexturePaths(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<BossCard> GetBossCards(jv::Arena& arena);
@@ -111,6 +117,7 @@ namespace game
 	bool CardGame::Update()
 	{
 		UpdateInput();
+		texturePool.Update();
 
 		if(levelLoading)
 		{
@@ -163,12 +170,10 @@ namespace game
 			events,
 			RESOLUTION,
 			inputState,
-			*renderTasks,
-			*dynamicRenderTasks,
-			*priorityRenderTasks,
 			*textTasks,
 			*pixelPerfectRenderTasks,
-			static_cast<float>(deltaTime) / 1e3f
+			static_cast<float>(deltaTime) / 1e3f,
+			texturePool
 		};
 
 		time = currentTime;
@@ -241,6 +246,8 @@ namespace game
 			outCardGame->dynamicRenderTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->priorityRenderTasks = &outCardGame->engine.AddTaskSystem<RenderTask>();
 			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 512);
+			outCardGame->dynamicPriorityRenderTasks = &outCardGame->engine.AddTaskSystem<DynamicRenderTask>();
+			outCardGame->dynamicPriorityRenderTasks->Allocate(outCardGame->arena, 16);
 			outCardGame->textTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
 			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->pixelPerfectRenderTasks = &outCardGame->engine.AddTaskSystem<PixelPerfectRenderTask>();
@@ -255,15 +262,6 @@ namespace game
 			enableInfo.scene = outCardGame->scene;
 			enableInfo.capacity = 1024;
 
-			outCardGame->priorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
-				*outCardGame->priorityRenderTasks, createInfo);
-			outCardGame->priorityRenderInterpreter->Enable(enableInfo);
-			outCardGame->priorityRenderInterpreter->image = outCardGame->atlas;
-			outCardGame->renderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
-				*outCardGame->renderTasks, createInfo);
-			outCardGame->renderInterpreter->Enable(enableInfo);
-			outCardGame->renderInterpreter->image = outCardGame->atlas;
-
 			DynamicRenderInterpreterCreateInfo dynamicCreateInfo{};
 			dynamicCreateInfo.resolution = jv::ge::GetResolution();
 			dynamicCreateInfo.frameArena = &mem.frameArena;
@@ -272,14 +270,31 @@ namespace game
 			dynamicEnableInfo.arena = &outCardGame->arena;
 			dynamicEnableInfo.scene = outCardGame->scene;
 			dynamicEnableInfo.capacity = 32;
-			
+
+			outCardGame->dynamicPriorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
+				*outCardGame->dynamicPriorityRenderTasks, dynamicCreateInfo);
+			outCardGame->dynamicPriorityRenderInterpreter->Enable(dynamicEnableInfo);
+
+			outCardGame->priorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
+				*outCardGame->priorityRenderTasks, createInfo);
+			outCardGame->priorityRenderInterpreter->Enable(enableInfo);
+			outCardGame->priorityRenderInterpreter->image = outCardGame->atlas;
+
 			outCardGame->dynamicRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
 				*outCardGame->dynamicRenderTasks, dynamicCreateInfo);
 			outCardGame->dynamicRenderInterpreter->Enable(dynamicEnableInfo);
 
+			outCardGame->renderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
+				*outCardGame->renderTasks, createInfo);
+			outCardGame->renderInterpreter->Enable(enableInfo);
+			outCardGame->renderInterpreter->image = outCardGame->atlas;
+
 			PixelPerfectRenderInterpreterCreateInfo pixelPerfectRenderInterpreterCreateInfo{};
 			pixelPerfectRenderInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.dynRenderTasks = outCardGame->dynamicRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.dynPriorityRenderTasks = outCardGame->dynamicRenderTasks;
+
 			pixelPerfectRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
 			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = SIMULATED_RESOLUTION;
 			pixelPerfectRenderInterpreterCreateInfo.background = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
@@ -318,6 +333,16 @@ namespace game
 		}
 
 		outCardGame->time = outCardGame->timer.now();
+
+		jv::ge::ImageCreateInfo imageCreateInfo{};
+		imageCreateInfo.resolution = glm::ivec2(128, 32);
+		imageCreateInfo.usage = jv::ge::ImageCreateInfo::Usage::read;
+		imageCreateInfo.scene = outCardGame->scene;
+
+		outCardGame->texturePool = TexturePool::Create(outCardGame->arena, 32, 256, imageCreateInfo);
+		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().frameArena);
+		for (const auto& dynText : dynTexts)
+			outCardGame->texturePool.DefineTexturePath(dynText);
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)
@@ -343,6 +368,14 @@ namespace game
 		return arr;
 	}
 
+	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena)
+	{
+		const auto arr = jv::CreateArray<const char*>(arena, static_cast<uint32_t>(DynTextureId::length));
+		arr[0] = "Art/monster.png";
+		arr[1] = "Art/monster-mage.png";
+		return arr;
+	}
+
 	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MonsterCard>(arena, 30);
@@ -353,6 +386,7 @@ namespace game
 		arr[0].name = "daisy, loyal protector";
 		arr[0].ruleText = "follows you around.";
 		arr[0].health = 999;
+		arr[0].animIndex = 1;
 		return arr;
 	}
 

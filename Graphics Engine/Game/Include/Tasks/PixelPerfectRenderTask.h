@@ -13,6 +13,7 @@ namespace game
 		bool xCenter = false;
 		bool yCenter = false;
 		bool priority = false;
+		jv::ge::Resource image = nullptr;
 
 		[[nodiscard]] static uint32_t GetUpscaleMultiplier(glm::ivec2 resolution, glm::ivec2 simulatedResolution);
 		[[nodiscard]] static glm::vec2 GetPixelSize(glm::vec2 resolution, uint32_t upscaleMul);

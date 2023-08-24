@@ -56,6 +56,7 @@ namespace game
 		jv::ge::Resource _fallbackMesh;
 		jv::Array<jv::ge::Resource> _samplers;
 		jv::ge::Resource _pool;
+		uint32_t _frameCapacity;
 
 		void OnStart(const DynamicRenderInterpreterCreateInfo& createInfo, const EngineMemory& memory) override;
 		void OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<DynamicRenderTask>>& tasks) override;

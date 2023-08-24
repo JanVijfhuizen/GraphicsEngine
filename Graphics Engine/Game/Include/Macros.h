@@ -25,6 +25,9 @@ constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
 constexpr uint32_t HAND_MAX_SIZE = 5;
 constexpr uint32_t MAX_MANA = 3;
 
+constexpr uint32_t CARD_MONSTER_ANIM_LENGTH = 4;
+constexpr glm::ivec2 CARD_MONSTER_FRAME_SIZE(32);
+
 constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
 
 constexpr uint32_t MONSTER_CAPACITIES[TOTAL_BOSS_COUNT]
@@ -58,5 +61,12 @@ enum class TextureId
 	fallback,
 	empty,
 	buttonSmall,
+	length
+};
+
+enum class DynTextureId
+{
+	monster,
+	mage,
 	length
 };
