@@ -702,12 +702,18 @@ namespace game
 		return true;
 	}
 
-	void MainLevel::CombatState::Attack(State& state, const uint32_t src, const uint32_t dst)
+	bool MainLevel::CombatState::Attack(State& state, const uint32_t src, const uint32_t dst)
 	{
 		auto& boardState = state.boardState;
-		auto& health = boardState.combatStats[dst].health;
-		const auto& attack = boardState.combatStats[src].attack;;
+		auto& combatStats = boardState.combatStats[dst];
+		auto& health = combatStats.health;
+		const auto& attack = boardState.combatStats[src].attack;
+
+		if (rand() % 6 < combatStats.armorClass)
+			return false;
+
 		health = health < attack ? 0 : health - attack;
+		return true;
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
