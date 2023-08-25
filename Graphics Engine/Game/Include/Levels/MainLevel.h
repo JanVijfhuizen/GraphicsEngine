@@ -104,6 +104,7 @@ namespace game
 			bool tapped[BOARD_CAPACITY_PER_SIDE];
 			uint32_t selectedId;
 			uint32_t mana;
+			uint32_t lastEnemyDefeatedId;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,

@@ -102,8 +102,8 @@ namespace game
 
 			if (info.inputState.enter.PressEvent())
 			{
-				state.monsterId = monsterChoice;
-				state.artifactId = artifactChoice;
+				state.monsterId = monsterDiscoverOptions[monsterChoice];
+				state.artifactId = artifactDiscoverOptions[artifactChoice];
 				stateIndex = 2;
 			}
 		}

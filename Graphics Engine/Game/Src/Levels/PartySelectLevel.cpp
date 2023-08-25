@@ -44,7 +44,7 @@ namespace game
 			DrawPressEnterToContinue(info, HeaderSpacing::close, GetTime() - timeSincePartySelected);
 
 			auto& gameState = info.gameState;
-			gameState.partySize = selectedAmount;
+			gameState.partyCount = selectedAmount;
 
 			uint32_t j = 0;
 			for (uint32_t i = 0; i < PARTY_CAPACITY; ++i)
@@ -52,6 +52,7 @@ namespace game
 				if (!selected[i])
 					continue;
 				gameState.partyIds[j] = i;
+				gameState.monsterIds[j] = info.playerState.monsterIds[i];
 
 				const auto& monster = info.monsters[info.playerState.monsterIds[i]];
 				gameState.healths[j++] = monster.health;

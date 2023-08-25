@@ -335,18 +335,17 @@ namespace game
 
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
 	{
-		const auto& playerState = info.playerState;
 		const auto& gameState = info.gameState;
 
 		turnState = TurnState::startOfTurn;
 		selectionState = SelectionState::none;
 		time = 0;
 		auto& boardState = state.boardState = {};
-		boardState.allyCount = boardState.partyCount = gameState.partySize;
+		boardState.allyCount = boardState.partyCount = gameState.partyCount;
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
 			const auto partyId = gameState.partyIds[i];
-			const auto monsterId = playerState.monsterIds[partyId];
+			const auto monsterId = gameState.monsterIds[i];
 			boardState.ids[i] = monsterId;
 			boardState.partyIds[i] = partyId;
 			boardState.combatStats[i] = GetCombatStat(info.monsters[monsterId]);
@@ -400,6 +399,8 @@ namespace game
 		{
 			if (boardState.combatStats[BOARD_CAPACITY_PER_SIDE + i].health == 0)
 			{
+				lastEnemyDefeatedId = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
+
 				// Remove.
 				for (uint32_t j = i; j < boardState.enemyCount; ++j)
 				{
@@ -420,10 +421,38 @@ namespace game
 		// Check for room victory.
 		if(boardState.enemyCount == 0)
 		{
-			gameState.partySize = boardState.partyCount;
-			for (uint32_t i = 0; i < gameState.partySize; ++i)
+			if(gameState.partyCount < PARTY_ACTIVE_CAPACITY)
+			{
+				// Recruitment.
+				level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.");
+				bool recruitScreenActive = true;
+
+				ButtonDrawInfo buttonAcceptDrawInfo{};
+				buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 36);
+				buttonAcceptDrawInfo.text = "accept";
+				if (level->DrawButton(info, buttonAcceptDrawInfo))
+				{
+					// Add to party.
+					boardState.ids[boardState.partyCount] = lastEnemyDefeatedId;
+					boardState.combatStats[boardState.partyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
+					boardState.partyIds[boardState.partyCount++] = -1;
+					recruitScreenActive = false;
+				}
+				ButtonDrawInfo buttonDeclineDrawInfo{};
+				buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
+				buttonDeclineDrawInfo.text = "decline";
+				if (level->DrawButton(info, buttonDeclineDrawInfo))
+					recruitScreenActive = false;
+
+				if (recruitScreenActive)
+					return true;
+			}
+
+			gameState.partyCount = boardState.partyCount;
+			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
 				gameState.partyIds[i] = boardState.partyIds[i];
+				gameState.monsterIds[i] = boardState.ids[i];
 				gameState.healths[i] = boardState.combatStats[i].health;
 			}
 
@@ -573,7 +602,7 @@ namespace game
 		{
 			const auto partyId = boardState.partyIds[i];
 
-			if(boardState.partyCount <= i)
+			if(boardState.partyCount <= i || boardState.partyIds[i] == -1)
 			{
 				stacksCount[i] = 0;
 				continue;
@@ -749,10 +778,10 @@ namespace game
 		bool greyedOut[PARTY_ACTIVE_CAPACITY];
 		bool flawSlotAvailable = false;
 
-		for (uint32_t i = 0; i < gameState.partySize; ++i)
+		for (uint32_t i = 0; i < gameState.partyCount; ++i)
 		{
 			const auto& flaw = info.gameState.flaws[i];
-			greyedOut[i] = flaw != -1;
+			greyedOut[i] = flaw != -1 || gameState.partyIds[i] == -1;
 			flawSlotAvailable = flawSlotAvailable ? true : flaw == -1;
 		}
 
@@ -762,9 +791,9 @@ namespace game
 
 			Card* cards[PARTY_ACTIVE_CAPACITY];
 			CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
-			for (uint32_t i = 0; i < gameState.partySize; ++i)
+			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
-				const auto monster = &info.monsters[playerState.monsterIds[gameState.partyIds[i]]];
+				const auto monster = &info.monsters[gameState.monsterIds[i]];
 				cards[i] = monster;
 				combatStats[i] = GetCombatStat(*monster);
 			}
@@ -772,11 +801,17 @@ namespace game
 			Card** stacks[PARTY_CAPACITY]{};
 			uint32_t stackCounts[PARTY_CAPACITY]{};
 
-			for (uint32_t i = 0; i < gameState.partySize; ++i)
+			uint32_t ogPartyCount = 0;
+			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
+				if (gameState.partyIds[i] == -1)
+					break;
+				++ogPartyCount;
+
 				const uint32_t count = stackCounts[i] = playerState.artifactSlotCounts[i];
 				if (count == 0)
 					continue;
+
 				const auto arr = jv::CreateArray<Card*>(info.frameArena, count + 1);
 				stacks[i] = arr.ptr;
 				for (uint32_t j = 0; j < count; ++j)
@@ -795,7 +830,7 @@ namespace game
 
 			CardSelectionDrawInfo cardSelectionDrawInfo{};
 			cardSelectionDrawInfo.cards = cards;
-			cardSelectionDrawInfo.length = gameState.partySize;
+			cardSelectionDrawInfo.length = ogPartyCount;
 			cardSelectionDrawInfo.greyedOutArr = greyedOut;
 			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 			cardSelectionDrawInfo.stacks = stacks;
@@ -841,8 +876,11 @@ namespace game
 			auto& playerState = info.playerState;
 			const auto& gameState = info.gameState;
 
-			for (uint32_t i = 0; i < gameState.partySize; ++i)
+			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
+				if (gameState.partyIds[i] == -1)
+					break;
+
 				const uint32_t id = gameState.partyIds[i];
 				auto& slotCount = playerState.artifactSlotCounts[id];
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
@@ -865,15 +903,24 @@ namespace game
 		if (f >= 0)
 			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
 
-		for (uint32_t i = 0; i < gameState.partySize; ++i)
+		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		{
+			if (gameState.partyIds[i] == -1)
+				break;
 			cards[i] = &info.monsters[playerState.monsterIds[gameState.partyIds[i]]];
+		}
 		
 		Card** artifacts[PARTY_ACTIVE_CAPACITY]{};
 		CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
 		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
 
-		for (uint32_t i = 0; i < gameState.partySize; ++i)
+		uint32_t ogPartyCount = 0;
+		for (uint32_t i = 0; i < gameState.partyCount; ++i)
 		{
+			if (gameState.partyIds[i] == -1)
+				break;
+			++ogPartyCount;
+
 			const uint32_t id = gameState.partyIds[i];
 			const auto monster = &info.monsters[playerState.monsterIds[id]];
 			cards[i] = monster;
@@ -894,7 +941,7 @@ namespace game
 		uint32_t outStackSelected;
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = gameState.partySize;
+		cardSelectionDrawInfo.length = ogPartyCount;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
@@ -973,6 +1020,7 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+		stateMachine.state.depth = 9;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

@@ -27,7 +27,7 @@ namespace game
 
 	void RemoveFlawsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState)
 	{
-		for (uint32_t i = 0; i < gameState.partySize; ++i)
+		for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
 				if (gameState.flaws[k] == deck[k])
 				{

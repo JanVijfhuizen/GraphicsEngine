@@ -184,6 +184,8 @@ namespace game
 		cardDrawInfo.lifeTime = drawInfo.lifeTime;
 		
 		uint32_t choice = -1;
+		if(drawInfo.outStackSelected)
+			*drawInfo.outStackSelected = -1;
 
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
