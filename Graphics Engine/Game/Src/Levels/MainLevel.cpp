@@ -472,6 +472,13 @@ namespace game
 		const auto& path = state.paths[state.chosenPath];
 
 		{
+			// Manually end turn.
+			if (info.inputState.enter.PressEvent())
+			{
+				for (auto& b : tapped)
+					b = true;
+			}
+
 			bool newTurn = true;
 			for (uint32_t i = 0; i < boardState.allyCount; ++i)
 			{
