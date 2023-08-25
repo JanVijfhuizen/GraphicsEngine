@@ -64,7 +64,7 @@ namespace game
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
 
-			static bool Attack(State& state, uint32_t src, uint32_t dst);
+			static bool Attack(State& state, const LevelUpdateInfo& info, uint32_t src, uint32_t dst);
 		};
 
 		struct RewardMagicCardState final : LevelState<State>
