@@ -716,7 +716,8 @@ namespace game
 		auto& health = combatStats.health;
 		const auto& attack = boardState.combatStats[src].attack;
 
-		if (rand() % 6 < combatStats.armorClass)
+		const auto roll = rand() % 6;
+		if (roll != 6 && roll < combatStats.armorClass)
 			return false;
 
 		health = health < attack ? 0 : health - attack;
