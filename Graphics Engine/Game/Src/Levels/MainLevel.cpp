@@ -976,9 +976,110 @@ namespace game
 		return true;
 	}
 
+	void MainLevel::ExitFoundState::Reset(State& state, const LevelInfo& info)
+	{
+		LevelState<State>::Reset(state, info);
+		managingParty = false;
+		for (auto& b : selected)
+			b = false;
+		timeSincePartySelected = -1;
+	}
+
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
+		const auto& gameState = info.gameState;
+		auto& playerState = info.playerState;
+
+		if(managingParty)
+		{
+			level->DrawTopCenterHeader(info, HeaderSpacing::close, "your party is too large. choose some to let go.");
+
+			Card* cards[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
+			Card** artifacts[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY]{};
+			CombatStats combatStats[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
+			uint32_t artifactCounts[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY]{};
+			
+			for (uint32_t i = 0; i < playerState.partySize; ++i)
+			{
+				const auto monster = &info.monsters[playerState.monsterIds[i]];
+				cards[i] = monster;
+				combatStats[i] = GetCombatStat(*monster);
+
+				const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
+				if (count == 0)
+					continue;
+
+				const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
+				for (uint32_t j = 0; j < count; ++j)
+				{
+					const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
+					arr[j] = index == -1 ? nullptr : &info.artifacts[index];
+				}
+			}
+
+			uint32_t c = playerState.partySize;
+			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			{
+				if (gameState.partyIds[i] != -1)
+					continue;
+				const auto monster = &info.monsters[gameState.monsterIds[i]];
+				combatStats[c] = GetCombatStat(*monster);
+				cards[c++] = monster;
+			}
+
+			uint32_t outStackSelected;
+			CardSelectionDrawInfo cardSelectionDrawInfo{};
+			cardSelectionDrawInfo.cards = cards;
+			cardSelectionDrawInfo.length = c;
+			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+			cardSelectionDrawInfo.stacks = artifacts;
+			cardSelectionDrawInfo.stackCounts = artifactCounts;
+			cardSelectionDrawInfo.outStackSelected = &outStackSelected;
+			cardSelectionDrawInfo.combatStats = combatStats;
+			cardSelectionDrawInfo.selectedArr = selected;
+			const auto choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
+
+			if (info.inputState.lMouse.PressEvent() && choice != -1)
+				selected[choice] = !selected[choice];
+
+			uint32_t remaining = c;
+			for (uint32_t i = 0; i < c; ++i)
+				remaining -= selected[i];
+
+			if (remaining > 0 && remaining <= PARTY_CAPACITY)
+			{
+				if (timeSincePartySelected < 0)
+					timeSincePartySelected = level->GetTime();
+
+				level->DrawPressEnterToContinue(info, HeaderSpacing::normal, level->GetTime() - timeSincePartySelected);
+				if (info.inputState.enter.PressEvent())
+				{
+					uint32_t d = 0;
+					for (uint32_t i = 0; i < playerState.partySize; ++i)
+					{
+						if (!selected[i])
+							playerState.monsterIds[d++] = playerState.monsterIds[i];
+					}
+					
+					for (uint32_t i = 0; i < gameState.partyCount; ++i)
+					{
+						if (gameState.partyIds[i] == -1 && !selected[playerState.partySize + i])
+							playerState.monsterIds[d++] = gameState.monsterIds[i];
+					}
+
+					playerState.partySize = remaining;
+
+					SaveData(playerState);
+					loadLevelIndex = LevelIndex::mainMenu;
+				}
+			}
+			else
+				timeSincePartySelected = -1;
+			
+			return true;
+		}
+
 		level->DrawTopCenterHeader(info, HeaderSpacing::close, "press onwards, or flee.");
 
 		ButtonDrawInfo buttonDrawInfo{};
@@ -996,7 +1097,22 @@ namespace game
 		buttonDrawInfo.text = "quit";
 		if (level->DrawButton(info, buttonDrawInfo))
 		{
-			SaveData(info.playerState);
+			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			{
+				const auto partyId = gameState.partyIds[i];
+				if (partyId == -1)
+				{
+					if(playerState.partySize < PARTY_CAPACITY)
+						playerState.monsterIds[playerState.partySize++] = gameState.monsterIds[i];
+					else
+					{
+						managingParty = true;
+						return true;
+					}
+				}
+			}
+
+			SaveData(playerState);
 			loadLevelIndex = LevelIndex::mainMenu;
 			return true;
 		}
@@ -1020,7 +1136,6 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 9;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
