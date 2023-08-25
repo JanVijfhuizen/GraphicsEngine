@@ -150,11 +150,21 @@ namespace game
 		LevelIndex& loadLevelIndex)
 	{
 		const char* text = "daisy joins you on your adventure.";
-		level->DrawTopCenterHeader(info, HeaderSpacing::far, text);
-		level->DrawFullCard(&info.monsters[0]);
+		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
+
+		const auto monster = &info.monsters[0];
+		auto combatStats = GetCombatStat(*monster);
+
+		CardDrawInfo cardDrawInfo{};
+		cardDrawInfo.card = monster;
+		cardDrawInfo.center = true;
+		cardDrawInfo.combatStats = &combatStats;
+		cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
+		level->DrawCard(info, cardDrawInfo);
+		
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if(f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::far, f);
+			level->DrawPressEnterToContinue(info, HeaderSpacing::close, f);
 
 		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 		{

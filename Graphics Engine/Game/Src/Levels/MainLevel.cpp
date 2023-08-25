@@ -353,11 +353,8 @@ namespace game
 		}
 			
 		selectedId = -1;
-
-		const uint32_t layerIndex = jv::Min(state.depth / ROOM_COUNT_BEFORE_BOSS, TOTAL_BOSS_COUNT - 1);
-		const uint32_t enemyCount = MONSTER_CAPACITIES[layerIndex];
-
-		boardState.enemyCount = enemyCount;
+		
+		boardState.enemyCount = jv::Min<uint32_t>(4, state.depth + 1);
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 		{
 			const auto ind = BOARD_CAPACITY_PER_SIDE + i;
@@ -427,9 +424,20 @@ namespace game
 				level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.");
 				bool recruitScreenActive = true;
 
+				const auto monster = &info.monsters[lastEnemyDefeatedId];
+				auto combatStats = GetCombatStat(*monster);
+
+				CardDrawInfo cardDrawInfo{};
+				cardDrawInfo.card = monster;
+				cardDrawInfo.center = true;
+				cardDrawInfo.combatStats = &combatStats;
+				cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
+				level->DrawCard(info, cardDrawInfo);
+
 				ButtonDrawInfo buttonAcceptDrawInfo{};
-				buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 36);
+				buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 28);
 				buttonAcceptDrawInfo.text = "accept";
+				buttonAcceptDrawInfo.center = true;
 				if (level->DrawButton(info, buttonAcceptDrawInfo))
 				{
 					// Add to party.
@@ -441,6 +449,7 @@ namespace game
 				ButtonDrawInfo buttonDeclineDrawInfo{};
 				buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
 				buttonDeclineDrawInfo.text = "decline";
+				buttonDeclineDrawInfo.center = true;
 				if (level->DrawButton(info, buttonDeclineDrawInfo))
 					recruitScreenActive = false;
 
@@ -664,6 +673,7 @@ namespace game
 					// Do the attack.
 					isTapped = true;
 					Attack(state, selectedId, BOARD_CAPACITY_PER_SIDE + enemyResult);
+					targets[enemyResult] = rand() % boardState.allyCount;
 				}
 			}
 			else if(selectionState == SelectionState::hand)
