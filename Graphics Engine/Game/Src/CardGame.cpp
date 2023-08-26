@@ -387,11 +387,11 @@ namespace game
 		arr[0].ruleText = "follows you around.";
 		arr[0].health = 999;
 		arr[0].animIndex = 1;
-		arr[0].onAttack = [](State& state, uint32_t self, uint32_t src, uint32_t dst, uint32_t& roll, uint32_t& damage)
+		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
-			if (self == src)
+			if(actionState.trigger == ActionState::onAttack && self == actionState.src)
 				std::cout << "daisy attacking" << std::endl;
-			else if (self == dst)
+			else if (actionState.trigger == ActionState::onAttack && self == actionState.dst)
 				std::cout << "daisy attacked" << std::endl;
 		};
 		return arr;

@@ -4,6 +4,21 @@ namespace game
 {
 	struct State;
 
+	struct ActionState final
+	{
+		enum Trigger
+		{
+			onAttack,
+			onDeath,
+			onCardPlayed,
+			onStartOfTurn,
+			onStartOfRoom
+		} trigger;
+		uint32_t src;
+		uint32_t dst;
+		uint32_t value = -1;
+	};
+
 	struct Card
 	{
 		bool unique = false;
@@ -12,10 +27,6 @@ namespace game
 		uint32_t count = 1;
 		uint32_t animIndex = 0;
 
-		void(*startOfCombat)(State& state, uint32_t self) = nullptr;
-		void(*startOfTurn)(State& state, uint32_t self) = nullptr;
-		void(*onAttack)(State& state, uint32_t self, uint32_t src, uint32_t dst, uint32_t& roll, uint32_t& damage) = nullptr;
-		void(*onDeath)(State& state, uint32_t self, uint32_t src, uint32_t dst) = nullptr;
-		void(*onSpellPlayed)(State& state, uint32_t self, uint32_t src, uint32_t dst) = nullptr;
+		void(*onActionEvent)(State& state, ActionState& actionState, uint32_t self) = nullptr;
 	};
 }

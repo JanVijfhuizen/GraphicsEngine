@@ -183,6 +183,9 @@ namespace game
 		for (auto& b : tapped)
 			b = false;
 
+		ActionState startOfRoomActionState{};
+		startOfRoomActionState.trigger = ActionState::onStartOfRoom;
+
 		// Trigger all start of combat effects.
 		const auto& playerState = info.playerState;
 		for (uint32_t i = 0; i < boardState.partyCount; ++i)
@@ -195,23 +198,23 @@ namespace game
 			for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
 			{
 				const auto artifact = info.artifacts[info.playerState.artifacts[partyId]];
-				if (artifact.startOfCombat)
-					artifact.startOfCombat(state, i);
+				if (artifact.onActionEvent)
+					artifact.onActionEvent(state, startOfRoomActionState, i);
 			}
 		}
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
 			const auto id = boardState.ids[i];
 			const auto monster = info.monsters[id];
-			if (monster.startOfCombat)
-				monster.startOfCombat(state, i);
+			if (monster.onActionEvent)
+				monster.onActionEvent(state, startOfRoomActionState, i);
 		}
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 		{
 			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 			const auto monster = info.monsters[id];
-			if (monster.startOfCombat)
-				monster.startOfCombat(state, i);
+			if (monster.onActionEvent)
+				monster.onActionEvent(state, startOfRoomActionState, i);
 		}
 	}
 
@@ -343,6 +346,9 @@ namespace game
 						Attack(state, info, BOARD_CAPACITY_PER_SIDE + i, target);
 				}
 
+				ActionState startOfTurnActionState{};
+				startOfTurnActionState.trigger = ActionState::onStartOfTurn;
+
 				// Trigger all start of turn effects.
 				const auto& playerState = info.playerState;
 				for (uint32_t i = 0; i < boardState.partyCount; ++i)
@@ -355,23 +361,23 @@ namespace game
 					for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
 					{
 						const auto artifact = info.artifacts[info.playerState.artifacts[partyId]];
-						if (artifact.startOfTurn)
-							artifact.startOfTurn(state, i);
+						if (artifact.onActionEvent)
+							artifact.onActionEvent(state, startOfTurnActionState, i);
 					}
 				}
 				for (uint32_t i = 0; i < boardState.allyCount; ++i)
 				{
 					const auto id = boardState.ids[i];
 					const auto monster = info.monsters[id];
-					if (monster.startOfTurn)
-						monster.startOfTurn(state, i);
+					if (monster.onActionEvent)
+						monster.onActionEvent(state, startOfTurnActionState, i);
 				}
 				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				{
 					const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 					const auto monster = info.monsters[id];
-					if (monster.startOfTurn)
-						monster.startOfTurn(state, i);
+					if (monster.onActionEvent)
+						monster.onActionEvent(state, startOfTurnActionState, i);
 				}
 
 				turnState = TurnState::startOfTurn;
@@ -577,6 +583,11 @@ namespace game
 					mana -= card.cost;
 					const uint32_t target = enemyResult == -1 ? allyResult : enemyResult;
 
+					ActionState cardPlayActionState{};
+					cardPlayActionState.trigger = ActionState::onCardPlayed;
+					cardPlayActionState.src = selectedId;
+					cardPlayActionState.dst = target;
+
 					// Trigger all on death effects.
 					for (uint32_t i = 0; i < boardState.partyCount; ++i)
 					{
@@ -588,23 +599,23 @@ namespace game
 						for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
 						{
 							const auto artifact = info.artifacts[info.playerState.artifacts[partyId]];
-							if (artifact.onDeath)
-								artifact.onDeath(state, i, selectedId, target);
+							if (artifact.onActionEvent)
+								artifact.onActionEvent(state, cardPlayActionState, i);
 						}
 					}
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
 					{
 						const auto id = boardState.ids[i];
 						const auto monster = info.monsters[id];
-						if (monster.onSpellPlayed)
-							monster.onSpellPlayed(state, i, selectedId, target);
+						if (monster.onActionEvent)
+							monster.onActionEvent(state, cardPlayActionState, i);
 					}
 					for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 					{
 						const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 						const auto monster = info.monsters[id];
-						if (monster.onSpellPlayed)
-							monster.onSpellPlayed(state, i, selectedId, target);
+						if (monster.onActionEvent)
+							monster.onActionEvent(state, cardPlayActionState, i);
 					}
 
 					state.hand.RemoveAtOrdered(selectedId);
@@ -626,6 +637,11 @@ namespace game
 
 		uint32_t roll = rand() % 6;
 
+		ActionState attackActionState{};
+		attackActionState.trigger = ActionState::onAttack;
+		attackActionState.src = src;
+		attackActionState.dst = dst;
+
 		// Trigger all on attack effects.
 		const auto& playerState = info.playerState;
 		for (uint32_t i = 0; i < boardState.partyCount; ++i)
@@ -638,23 +654,23 @@ namespace game
 			for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
 			{
 				const auto artifact = info.artifacts[info.playerState.artifacts[partyId]];
-				if (artifact.onAttack)
-					artifact.onAttack(state, i, src, dst, roll, attack);
+				if (artifact.onActionEvent)
+					artifact.onActionEvent(state, attackActionState, i);
 			}
 		}
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
 			const auto id = boardState.ids[i];
 			const auto monster = info.monsters[id];
-			if (monster.onAttack)
-				monster.onAttack(state, i, src, dst, roll, attack);
+			if (monster.onActionEvent)
+				monster.onActionEvent(state, attackActionState, i);
 		}
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 		{
 			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 			const auto monster = info.monsters[id];
-			if (monster.onAttack)
-				monster.onAttack(state, i, src, dst, roll, attack);
+			if (monster.onActionEvent)
+				monster.onActionEvent(state, attackActionState, i);
 		}
 
 		if (roll != 6 && roll < combatStats.armorClass)
@@ -664,20 +680,25 @@ namespace game
 
 		if(health == 0)
 		{
+			ActionState deathActionState{};
+			deathActionState.trigger = ActionState::onDeath;
+			deathActionState.src = src;
+			deathActionState.dst = dst;
+
 			// Trigger all on death effects.
 			for (uint32_t i = 0; i < boardState.allyCount; ++i)
 			{
 				const auto id = boardState.ids[i];
 				const auto monster = info.monsters[id];
-				if (monster.onDeath)
-					monster.onDeath(state, i, src, dst);
+				if (monster.onActionEvent)
+					monster.onActionEvent(state, deathActionState, i);
 			}
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			{
 				const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 				const auto monster = info.monsters[id];
-				if (monster.onDeath)
-					monster.onDeath(state, i, src, dst);
+				if (monster.onActionEvent)
+					monster.onActionEvent(state, deathActionState, i);
 			}
 		}
 

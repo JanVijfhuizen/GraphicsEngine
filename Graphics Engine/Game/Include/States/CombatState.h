@@ -1,5 +1,7 @@
 #pragma once
 #include "BoardState.h"
+#include "CombatState.h"
+#include "Cards/Card.h"
 #include "JLib/Array.h"
 #include "JLib/Vector.h"
 
@@ -40,6 +42,7 @@ namespace game
 		jv::Vector<uint32_t> magicDeck;
 		jv::Vector<uint32_t> hand;
 		BoardState boardState;
+		jv::Vector<ActionState> stack;
 
 		void RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const;
 		[[nodiscard]] uint32_t GetMonster(const LevelInfo& info);
