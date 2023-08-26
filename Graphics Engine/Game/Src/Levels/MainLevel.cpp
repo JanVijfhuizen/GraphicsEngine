@@ -164,9 +164,7 @@ namespace game
 		ActionState startOfTurnActionState{};
 		startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
 		state.stack.Add() = startOfTurnActionState;
-
-		auto& boardState = state.boardState = {};
-
+		
 		const auto enemyCount = jv::Min<uint32_t>(4, state.depth + 1);
 		for (uint32_t i = 0; i < enemyCount; ++i)
 		{
@@ -476,18 +474,6 @@ namespace game
 		{
 			// Manually end turn.
 			if (info.inputState.enter.PressEvent())
-			{
-				for (auto& b : tapped)
-					b = true;
-			}
-
-			bool newTurn = true;
-			for (uint32_t i = 0; i < boardState.allyCount; ++i)
-			{
-				if (!tapped[i])
-					newTurn = false;
-			}
-			if (newTurn)
 			{
 				ActionState startOfTurnActionState{};
 				startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
