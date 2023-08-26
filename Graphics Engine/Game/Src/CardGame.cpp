@@ -33,7 +33,7 @@ namespace game
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
 
-	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 2;
+	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 3;
 
 	struct KeyCallback final
 	{
