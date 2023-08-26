@@ -312,10 +312,7 @@ namespace game
 
 			if(actionState.trigger == ActionState::onAttack)
 			{
-				auto& boardState = state.boardState;
 				auto& combatStats = boardState.combatStats[actionState.dst];
-				auto& health = combatStats.health;
-				auto attack = boardState.combatStats[actionState.src].attack;
 
 				if (actionState.src < BOARD_CAPACITY_PER_SIDE)
 				{
@@ -323,22 +320,13 @@ namespace game
 					targets[actionState.dst - BOARD_CAPACITY_PER_SIDE] = rand() % boardState.allyCount;
 				}
 
-				uint32_t roll = 6;// rand() % 6;
+				const uint32_t roll = 6;// rand() % 6;
 				
 				if (roll == 6 || roll >= combatStats.armorClass)
 				{
-					health = health < attack ? 0 : health - attack;
-
-					if (health == 0)
-					{
-						ActionState deathActionState{};
-						deathActionState.trigger = ActionState::onDeath;
-						deathActionState.src = actionState.src;
-						deathActionState.dst = actionState.dst;
-						deathActionState.srcUniqueId = actionState.srcUniqueId;
-						deathActionState.dstUniqueId = actionState.dstUniqueId;
-						state.stack.Add() = deathActionState;
-					}
+					ActionState damageState = actionState;
+					damageState.trigger = ActionState::onDamage;
+					state.stack.Add() = damageState;
 				}
 			}
 			else if(actionState.trigger == ActionState::onStartOfTurn)
@@ -358,6 +346,21 @@ namespace game
 				state.hand.Clear();
 				for (uint32_t i = 0; i < HAND_MAX_SIZE; ++i)
 					state.hand.Add() = state.Draw(info);
+			}
+			else if(actionState.trigger == ActionState::onDamage)
+			{
+				auto& combatStats = boardState.combatStats[actionState.dst];
+				auto& health = combatStats.health;
+				auto attack = boardState.combatStats[actionState.src].attack;
+
+				health = health < attack ? 0 : health - attack;
+
+				if (health == 0)
+				{
+					ActionState deathActionState = actionState;
+					deathActionState.trigger = ActionState::onDeath;
+					state.stack.Add() = deathActionState;
+				}
 			}
 			else if(actionState.trigger == ActionState::onDeath)
 			{
@@ -396,14 +399,14 @@ namespace game
 				{
 					if(isEnemy)
 					{
-						if (as.src != -1 && as.src > actionState.dst)
+						if (as.source == ActionState::board && as.src != -1 && as.src > actionState.dst)
 							--as.src;
 						if (as.dst != -1 && as.dst > actionState.dst)
 							--as.dst;
 					}
 					else
 					{
-						if (as.src != -1 && as.src > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
+						if (as.source == ActionState::board && as.src != -1 && as.src > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
 							--as.src;
 						if (as.dst != -1 && as.dst > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
 							--as.dst;
@@ -639,6 +642,7 @@ namespace game
 					cardPlayActionState.trigger = ActionState::onCardPlayed;
 					cardPlayActionState.src = selectedId;
 					cardPlayActionState.dst = target;
+					cardPlayActionState.source = ActionState::other;
 					state.stack.Add() = cardPlayActionState;
 					state.hand.RemoveAtOrdered(selectedId);
 				}
