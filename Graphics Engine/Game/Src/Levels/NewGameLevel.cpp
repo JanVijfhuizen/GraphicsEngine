@@ -160,6 +160,7 @@ namespace game
 		cardDrawInfo.center = true;
 		cardDrawInfo.combatStats = &combatStats;
 		cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
+		cardDrawInfo.lifeTime = level->GetTime();
 		level->DrawCard(info, cardDrawInfo);
 		
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
