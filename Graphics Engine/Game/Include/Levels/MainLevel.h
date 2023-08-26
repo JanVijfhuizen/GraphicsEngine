@@ -53,6 +53,7 @@ namespace game
 			uint32_t selectedId;
 			uint32_t mana;
 			uint32_t lastEnemyDefeatedId;
+			uint32_t uniqueId;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,

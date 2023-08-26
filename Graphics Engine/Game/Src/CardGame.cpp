@@ -389,9 +389,9 @@ namespace game
 		arr[0].animIndex = 1;
 		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
-			if(actionState.trigger == ActionState::onAttack && self == actionState.src)
+			if(actionState.trigger == ActionState::Trigger::onAttack && self == actionState.src)
 				std::cout << "daisy attacking" << std::endl;
-			else if (actionState.trigger == ActionState::onAttack && self == actionState.dst)
+			else if (actionState.trigger == ActionState::Trigger::onAttack && self == actionState.dst)
 				std::cout << "daisy attacked" << std::endl;
 		};
 		return arr;
@@ -427,8 +427,20 @@ namespace game
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
-		for (auto& card : arr)
-			card.name = "magic";
+		arr[0].count = 24;
+		arr[0].name = "lightning bolt";
+		arr[0].ruleText = "deals 2 damage";
+		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				ActionState damageState = actionState;
+				damageState.trigger = ActionState::Trigger::onDamage;
+				damageState.source = ActionState::Source::other;
+				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
+				state.stack.Add() = damageState;
+			}
+		};
 		return arr;
 	}
 
