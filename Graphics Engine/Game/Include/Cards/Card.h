@@ -21,6 +21,7 @@ namespace game
 
 		enum class Trigger
 		{
+			draw,
 			onSummon,
 			onAttack,
 			onDamage,
@@ -36,8 +37,8 @@ namespace game
 
 		uint32_t src = -1;
 		uint32_t dst = -1;
-		uint32_t srcUniqueId;
-		uint32_t dstUniqueId;
+		uint32_t srcUniqueId = -1;
+		uint32_t dstUniqueId = -1;
 		uint32_t values[4]
 		{
 			UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX

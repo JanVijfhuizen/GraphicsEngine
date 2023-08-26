@@ -22,9 +22,10 @@ constexpr uint32_t DISCOVER_LENGTH = 3;
 constexpr uint32_t SUB_BOSS_COUNT = 4;
 constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
 
+constexpr uint32_t HAND_INITIAL_SIZE = 3;
 constexpr uint32_t HAND_MAX_SIZE = 5;
-constexpr uint32_t MAX_MANA = 3;
-constexpr uint32_t STACK_MAX_SIZE = 32;
+constexpr uint32_t MAX_MANA = 7;
+constexpr uint32_t STACK_MAX_SIZE = 128;
 
 constexpr uint32_t CARD_MONSTER_ANIM_LENGTH = 4;
 constexpr glm::ivec2 CARD_MONSTER_FRAME_SIZE(32);

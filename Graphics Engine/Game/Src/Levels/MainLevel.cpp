@@ -159,16 +159,28 @@ namespace game
 		time = 0;
 		selectedId = -1;
 		uniqueId = 0;
+		mana = 0;
+		maxMana = 0;
+
+		state.hand.Clear();
 		state.stack.Clear();
 
 		ActionState startOfTurnActionState{};
 		startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
 		state.stack.Add() = startOfTurnActionState;
-		
+
+		for (uint32_t i = 0; i < HAND_INITIAL_SIZE; ++i)
+		{
+			ActionState drawState{};
+			drawState.trigger = ActionState::Trigger::draw;
+			state.stack.Add() = drawState;
+		}
+
 		const auto enemyCount = jv::Min<uint32_t>(4, state.depth + 1);
 		for (uint32_t i = 0; i < enemyCount; ++i)
 		{
 			ActionState summonState{};
+			summonState.trigger = ActionState::Trigger::onSummon;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.GetMonster(info);
 			state.stack.Add() = summonState;
@@ -180,6 +192,7 @@ namespace game
 			const auto monsterId = gameState.monsterIds[i];
 
 			ActionState summonState{};
+			summonState.trigger = ActionState::Trigger::onSummon;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 1;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = monsterId;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::partyId)] = partyId;
@@ -215,7 +228,10 @@ namespace game
 					validActionState = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] == 1 ? 
 						boardState.allyCount < BOARD_CAPACITY_PER_SIDE : boardState.enemyCount < BOARD_CAPACITY_PER_SIDE;
 					break;
-				default: 
+				case ActionState::Trigger::draw:
+					validActionState = state.hand.count < state.hand.length;
+					break;
+				default:
 					validActionState = true;
 			}
 
@@ -250,6 +266,8 @@ namespace game
 				else
 					++boardState.enemyCount;
 			}
+			else if(actionState.trigger == ActionState::Trigger::draw)
+				state.hand.Add() = state.Draw(info);
 
 			const auto& playerState = info.playerState;
 			for (uint32_t i = 0; i < boardState.partyCount; ++i)
@@ -298,12 +316,12 @@ namespace game
 				for (auto& b : tapped)
 					b = false;
 
-				mana = MAX_MANA;
+				maxMana = jv::Min(maxMana + 1, MAX_MANA);;
+				mana = maxMana;
 
-				// Draw new hand.
-				state.hand.Clear();
-				for (uint32_t i = 0; i < HAND_MAX_SIZE; ++i)
-					state.hand.Add() = state.Draw(info);
+				ActionState drawState{};
+				drawState.trigger = ActionState::Trigger::draw;
+				state.stack.Add() = drawState;
 			}
 			else if (actionState.trigger == ActionState::Trigger::onAttack)
 			{
