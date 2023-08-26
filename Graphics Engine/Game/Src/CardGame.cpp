@@ -427,8 +427,20 @@ namespace game
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
-		for (auto& card : arr)
-			card.name = "magic";
+		arr[0].count = 24;
+		arr[0].name = "lightning bolt";
+		arr[0].ruleText = "deals 2 damage";
+		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		{
+			if (actionState.trigger == ActionState::onCardPlayed && self == actionState.src)
+			{
+				ActionState damageState = actionState;
+				damageState.trigger = ActionState::onDamage;
+				damageState.source = ActionState::other;
+				damageState.value = 2;
+				state.stack.Add() = damageState;
+			}
+		};
 		return arr;
 	}
 

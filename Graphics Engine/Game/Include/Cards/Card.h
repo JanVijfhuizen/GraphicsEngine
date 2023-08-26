@@ -24,6 +24,7 @@ namespace game
 		uint32_t dst = -1;
 		uint32_t srcUniqueId;
 		uint32_t dstUniqueId;
+		uint32_t value = -1;
 	};
 
 	struct Card
