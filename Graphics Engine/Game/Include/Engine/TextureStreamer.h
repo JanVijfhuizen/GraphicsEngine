@@ -6,15 +6,15 @@
 
 namespace game
 {
-	class TexturePool final
+	class TextureStreamer final
 	{
 	public:
 		[[nodiscard]] jv::ge::Resource Get(uint32_t i);
 		uint32_t DefineTexturePath(const char* path);
 		void Update() const;
 
-		static TexturePool Create(jv::Arena& arena, uint32_t poolChunkSize, uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo);
-		static void Destroy(const TexturePool& pool);
+		static TextureStreamer Create(jv::Arena& arena, uint32_t poolChunkSize, uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo);
+		static void Destroy(const TextureStreamer& pool);
 
 	private:
 		struct Resource final

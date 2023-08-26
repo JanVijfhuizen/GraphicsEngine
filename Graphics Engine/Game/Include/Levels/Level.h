@@ -7,10 +7,9 @@
 #include "Cards/MonsterCard.h"
 #include "Cards/RoomCard.h"
 #include "Engine/TaskSystem.h"
-#include "Engine/TexturePool.h"
+#include "Engine/TextureStreamer.h"
 #include "JLib/Array.h"
 #include "States/BoardState.h"
-#include "Tasks/DynamicRenderTask.h"
 #include "Tasks/TextTask.h"
 #include "Tasks/PixelPerfectRenderTask.h"
 
@@ -58,7 +57,7 @@ namespace game
 		TaskSystem<TextTask>& textTasks;
 		TaskSystem<PixelPerfectRenderTask>& pixelPerfectRenderTasks;
 		float deltaTime;
-		TexturePool& texturePool;
+		TextureStreamer& texturePool;
 	};
 
 	struct Level

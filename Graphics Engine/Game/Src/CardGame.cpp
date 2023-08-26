@@ -10,7 +10,7 @@
 #include "Cards/MagicCard.h"
 #include "Cards/MonsterCard.h"
 #include "Cards/RoomCard.h"
-#include "Engine/TexturePool.h"
+#include "Engine/TextureStreamer.h"
 #include "GE/AtlasGenerator.h"
 #include "GE/GraphicsEngine.h"
 #include "Interpreters/DynamicRenderInterpreter.h"
@@ -33,7 +33,7 @@ namespace game
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
 
-	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 2;
+	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 3;
 
 	struct KeyCallback final
 	{
@@ -89,7 +89,7 @@ namespace game
 		std::chrono::high_resolution_clock timer{};
 		std::chrono::time_point<std::chrono::steady_clock> time{};
 
-		TexturePool texturePool;
+		TextureStreamer textureStreamer;
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -117,7 +117,7 @@ namespace game
 	bool CardGame::Update()
 	{
 		UpdateInput();
-		texturePool.Update();
+		textureStreamer.Update();
 
 		if(levelLoading)
 		{
@@ -173,7 +173,7 @@ namespace game
 			*textTasks,
 			*pixelPerfectRenderTasks,
 			static_cast<float>(deltaTime) / 1e3f,
-			texturePool
+			textureStreamer
 		};
 
 		time = currentTime;
@@ -339,10 +339,10 @@ namespace game
 		imageCreateInfo.usage = jv::ge::ImageCreateInfo::Usage::read;
 		imageCreateInfo.scene = outCardGame->scene;
 
-		outCardGame->texturePool = TexturePool::Create(outCardGame->arena, 32, 256, imageCreateInfo);
+		outCardGame->textureStreamer = TextureStreamer::Create(outCardGame->arena, 32, 256, imageCreateInfo);
 		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().frameArena);
 		for (const auto& dynText : dynTexts)
-			outCardGame->texturePool.DefineTexturePath(dynText);
+			outCardGame->textureStreamer.DefineTexturePath(dynText);
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)

@@ -14,8 +14,10 @@ namespace game
 			onStartOfTurn,
 			onStartOfRoom
 		} trigger;
-		uint32_t src;
-		uint32_t dst;
+		uint32_t src = -1;
+		uint32_t dst = -1;
+		uint32_t srcUniqueId;
+		uint32_t dstUniqueId;
 		uint32_t value = -1;
 	};
 
