@@ -38,12 +38,6 @@ namespace game
 
 		struct CombatState final : LevelState<State>
 		{
-			enum class TurnState
-			{
-				startOfTurn,
-				playerTurn,
-				combat
-			} turnState;
 			enum class SelectionState
 			{
 				none,
@@ -63,8 +57,6 @@ namespace game
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
-
-			static bool Attack(State& state, const LevelUpdateInfo& info, uint32_t src, uint32_t dst);
 		};
 
 		struct RewardMagicCardState final : LevelState<State>
