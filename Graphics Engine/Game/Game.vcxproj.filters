@@ -27,7 +27,7 @@
     <ClCompile Include="Src\Interpreters\TextInterpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Engine\TexturePool.cpp">
+    <ClCompile Include="Src\Engine\TextureStreamer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Src\Interpreters\DynamicRenderInterpreter.cpp">
@@ -101,7 +101,7 @@
     <ClInclude Include="Include\Interpreters\TextInterpreter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\TexturePool.h">
+    <ClInclude Include="Include\Engine\TextureStreamer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Interpreters\DynamicRenderInterpreter.h">

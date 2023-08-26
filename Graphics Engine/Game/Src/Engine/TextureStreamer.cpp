@@ -1,5 +1,5 @@
 ﻿#include "pch_game.h"
-#include "Engine/TexturePool.h"
+#include "Engine/TextureStreamer.h"
 
 #include <stb_image.h>
 
@@ -9,7 +9,7 @@
 
 namespace game
 {
-	jv::ge::Resource TexturePool::Get(const uint32_t i)
+	jv::ge::Resource TextureStreamer::Get(const uint32_t i)
 	{
 		auto& id = _ids[i];
 		assert(id.path);
@@ -69,7 +69,7 @@ namespace game
 		return id.resource->resource;
 	}
 
-	uint32_t TexturePool::DefineTexturePath(const char* path)
+	uint32_t TextureStreamer::DefineTexturePath(const char* path)
 	{
 		assert(_idCount < _ids.length);
 		auto& id = _ids[_idCount];
@@ -77,7 +77,7 @@ namespace game
 		return _idCount++;
 	}
 
-	void TexturePool::Update() const
+	void TextureStreamer::Update() const
 	{
 		const uint32_t frameCount = jv::ge::GetFrameCount();
 
@@ -96,9 +96,9 @@ namespace game
 		}
 	}
 
-	TexturePool TexturePool::Create(jv::Arena& arena, const uint32_t poolChunkSize, const uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo)
+	TextureStreamer TextureStreamer::Create(jv::Arena& arena, const uint32_t poolChunkSize, const uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo)
 	{
-		TexturePool texturePool{};
+		TextureStreamer texturePool{};
 		texturePool._arena = &arena;
 		texturePool._scope = arena.CreateScope();
 		texturePool._imageCreateInfo = imageCreateInfo;
@@ -109,7 +109,7 @@ namespace game
 		return texturePool;
 	}
 
-	void TexturePool::Destroy(const TexturePool& pool)
+	void TextureStreamer::Destroy(const TextureStreamer& pool)
 	{
 		pool._arena->DestroyScope(pool._scope);
 	}

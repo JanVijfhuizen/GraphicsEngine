@@ -16,6 +16,8 @@ namespace game
 		} trigger;
 		uint32_t src;
 		uint32_t dst;
+		uint32_t srcUniqueId;
+		uint32_t dstUniqueId;
 		uint32_t value = -1;
 	};
 

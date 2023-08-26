@@ -167,6 +167,7 @@ namespace game
 			boardState.partyIds[i] = partyId;
 			boardState.combatStats[i] = GetCombatStat(info.monsters[monsterId]);
 			boardState.combatStats[i].health = gameState.healths[i];
+			boardState.uniqueIds[i] = i;
 		}
 			
 		selectedId = -1;
@@ -178,6 +179,7 @@ namespace game
 			auto& id = boardState.ids[ind];
 			id = state.GetMonster(info);
 			boardState.combatStats[ind] = GetCombatStat(info.monsters[id]);
+			boardState.uniqueIds[ind] = i;
 		}
 
 		ActionState startOfTurnActionState{};
@@ -195,41 +197,7 @@ namespace game
 
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
-
-		// Check health.
-		for (int32_t i = static_cast<int32_t>(boardState.allyCount) - 1; i >= 0; --i)
-		{
-			if (boardState.combatStats[i].health == 0)
-			{
-				// Remove.
-				for (uint32_t j = i; j < boardState.allyCount; ++j)
-				{
-					boardState.ids[j] = boardState.ids[j + 1];
-					boardState.partyIds[j] = boardState.partyIds[j + 1];
-					boardState.combatStats[j] = boardState.combatStats[j + 1];
-				}
-				--boardState.allyCount;
-				if(boardState.partyCount >= i + 1)
-					--boardState.partyCount;
-			}
-		}
-
-		for (int32_t i = static_cast<int32_t>(boardState.enemyCount) - 1; i >= 0; --i)
-		{
-			if (boardState.combatStats[BOARD_CAPACITY_PER_SIDE + i].health == 0)
-			{
-				lastEnemyDefeatedId = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
-
-				// Remove.
-				for (uint32_t j = i; j < boardState.enemyCount; ++j)
-				{
-					boardState.ids[BOARD_CAPACITY_PER_SIDE + j] = boardState.ids[BOARD_CAPACITY_PER_SIDE + j + 1];
-					boardState.combatStats[BOARD_CAPACITY_PER_SIDE + j] = boardState.combatStats[BOARD_CAPACITY_PER_SIDE + j + 1];
-				}
-				--boardState.enemyCount;
-			}
-		}
-
+		
 		// Check for game over.
 		if (boardState.allyCount == 0)
 		{
@@ -292,9 +260,25 @@ namespace game
 		}
 
 		// Check for stack events.
-		if(state.stack.count > 0)
+		while(state.stack.count > 0)
 		{
 			auto actionState = state.stack.Pop();
+
+			bool validActionState;
+			switch (actionState.trigger)
+			{
+				case ActionState::onAttack:
+				case ActionState::onDeath:
+					validActionState =
+						state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId &&
+						state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
+					break;
+				default: 
+					validActionState = true;
+			}
+
+			if (!validActionState)
+				continue;
 
 			const auto& playerState = info.playerState;
 			for (uint32_t i = 0; i < boardState.partyCount; ++i)
@@ -339,7 +323,7 @@ namespace game
 					targets[actionState.dst - BOARD_CAPACITY_PER_SIDE] = rand() % boardState.allyCount;
 				}
 
-				uint32_t roll = rand() % 6;
+				uint32_t roll = 6;// rand() % 6;
 				
 				if (roll == 6 || roll >= combatStats.armorClass)
 				{
@@ -351,6 +335,8 @@ namespace game
 						deathActionState.trigger = ActionState::onDeath;
 						deathActionState.src = actionState.src;
 						deathActionState.dst = actionState.dst;
+						deathActionState.srcUniqueId = actionState.srcUniqueId;
+						deathActionState.dstUniqueId = actionState.dstUniqueId;
 						state.stack.Add() = deathActionState;
 					}
 				}
@@ -372,6 +358,38 @@ namespace game
 				state.hand.Clear();
 				for (uint32_t i = 0; i < HAND_MAX_SIZE; ++i)
 					state.hand.Add() = state.Draw(info);
+			}
+			else if(actionState.trigger == ActionState::onDeath)
+			{
+				uint32_t i = actionState.dst;
+				const bool isEnemy = i >= BOARD_CAPACITY_PER_SIDE;
+				const uint32_t mod = BOARD_CAPACITY_PER_SIDE * isEnemy;
+				i -= mod;
+				uint32_t c = isEnemy ? boardState.enemyCount : boardState.allyCount;
+
+				if(isEnemy)
+				{
+					for (uint32_t j = i; j < c; ++j)
+						targets[j] = targets[j + 1];
+					lastEnemyDefeatedId = boardState.ids[i + mod];
+					--boardState.enemyCount;
+				}
+				else
+				{
+					for (uint32_t j = i; j < c; ++j)
+						boardState.partyIds[j + mod] = boardState.partyIds[j + 1 + mod];
+					--boardState.allyCount;
+					if (boardState.partyCount >= i + 1)
+						--boardState.partyCount;
+				}
+
+				// Remove shared data.
+				for (uint32_t j = i; j < c; ++j)
+				{
+					boardState.ids[j + mod] = boardState.ids[j + 1 + mod];
+					boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
+					boardState.uniqueIds[j + mod] = boardState.uniqueIds[j + 1 + mod];
+				}
 			}
 		}
 
@@ -408,6 +426,8 @@ namespace game
 						attackActionState.trigger = ActionState::onAttack;
 						attackActionState.src = BOARD_CAPACITY_PER_SIDE + i;
 						attackActionState.dst = target;
+						attackActionState.srcUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+						attackActionState.dstUniqueId = boardState.uniqueIds[target];
 						state.stack.Add() = attackActionState;
 					}
 				}
@@ -577,6 +597,8 @@ namespace game
 					attackActionState.trigger = ActionState::onAttack;
 					attackActionState.src = selectedId;
 					attackActionState.dst = BOARD_CAPACITY_PER_SIDE + enemyResult;
+					attackActionState.srcUniqueId = boardState.uniqueIds[selectedId];
+					attackActionState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + enemyResult];
 					state.stack.Add() = attackActionState;
 				}
 			}

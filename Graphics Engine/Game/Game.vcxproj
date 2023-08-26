@@ -154,7 +154,7 @@
     <ClCompile Include="Src\Utils\SubTextureUtils.cpp" />
     <ClCompile Include="Src\CardGame.cpp" />
     <ClCompile Include="Src\Interpreters\DynamicRenderInterpreter.cpp" />
-    <ClCompile Include="Src\Engine\TexturePool.cpp" />
+    <ClCompile Include="Src\Engine\TextureStreamer.cpp" />
     <ClCompile Include="Src\Interpreters\TextInterpreter.cpp" />
     <ClCompile Include="Src\Engine\Engine.cpp" />
     <ClCompile Include="Src\Game.cpp" />
@@ -190,7 +190,7 @@
     <ClInclude Include="Include\Engine\Engine.h" />
     <ClInclude Include="Include\Interpreters\DynamicRenderInterpreter.h" />
     <ClInclude Include="Include\Interpreters\TextInterpreter.h" />
-    <ClInclude Include="Include\Engine\TexturePool.h" />
+    <ClInclude Include="Include\Engine\TextureStreamer.h" />
     <ClInclude Include="Include\pch_game.h" />
     <ClInclude Include="Include\States\InputState.h" />
     <ClInclude Include="Include\States\PlayerState.h" />
