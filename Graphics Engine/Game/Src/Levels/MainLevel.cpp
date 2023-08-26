@@ -161,7 +161,7 @@ namespace game
 		uniqueId = 0;
 		mana = 0;
 		maxMana = 0;
-
+		state.boardState = {};
 		state.hand.Clear();
 		state.stack.Clear();
 
