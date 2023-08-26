@@ -6,25 +6,42 @@ namespace game
 
 	struct ActionState final
 	{
-		enum Trigger
+		enum class VDamage
 		{
+			damage
+		};
+
+		enum class VSummon
+		{
+			isAlly,
+			id,
+			partyId,
+			health
+		};
+
+		enum class Trigger
+		{
+			onSummon,
 			onAttack,
 			onDamage,
 			onDeath,
 			onCardPlayed,
-			onStartOfTurn,
-			onStartOfRoom
+			onStartOfTurn
 		} trigger;
-		enum Source
+		enum class Source
 		{
 			board,
 			other
-		} source = board;
+		} source = Source::board;
+
 		uint32_t src = -1;
 		uint32_t dst = -1;
 		uint32_t srcUniqueId;
 		uint32_t dstUniqueId;
-		uint32_t value = -1;
+		uint32_t values[4]
+		{
+			UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX
+		};
 	};
 
 	struct Card
