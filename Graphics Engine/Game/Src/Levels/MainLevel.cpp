@@ -390,6 +390,25 @@ namespace game
 					boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
 					boardState.uniqueIds[j + mod] = boardState.uniqueIds[j + 1 + mod];
 				}
+
+				// Modify states as to ensure other events can go through.
+				for (auto& as : state.stack)
+				{
+					if(isEnemy)
+					{
+						if (as.src != -1 && as.src > actionState.dst)
+							--as.src;
+						if (as.dst != -1 && as.dst > actionState.dst)
+							--as.dst;
+					}
+					else
+					{
+						if (as.src != -1 && as.src > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
+							--as.src;
+						if (as.dst != -1 && as.dst > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
+							--as.dst;
+					}
+				}
 			}
 		}
 
