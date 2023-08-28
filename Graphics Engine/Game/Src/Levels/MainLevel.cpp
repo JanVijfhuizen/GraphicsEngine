@@ -224,6 +224,8 @@ namespace game
 				actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
 
 				const auto& actionState = state.stack.Peek();
+
+				// Temp.
 				switch (actionState.trigger)
 				{
 				case ActionState::Trigger::draw:
@@ -233,6 +235,7 @@ namespace game
 					actiontext = "summon";
 					break;
 				case ActionState::Trigger::onAttack:
+					actionStateDuration = ATTACK_ACTION_STATE_DURATION;
 					actiontext = "attack";
 					break;
 				case ActionState::Trigger::onMiss:
@@ -248,7 +251,7 @@ namespace game
 					actiontext = "play";
 					break;
 				case ActionState::Trigger::onStartOfTurn:
-					actionStateDuration = 1;
+					actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
 					actiontext = "new turn";
 					break;
 				default:;
@@ -261,7 +264,7 @@ namespace game
 				textTask.text = actiontext;
 				textTask.lifetime = level->GetTime() - timeSinceLastActionState;
 				textTask.center = true;
-				textTask.position = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 36);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 62);
 				info.textTasks.Push(textTask);
 			}
 			
@@ -269,7 +272,7 @@ namespace game
 			{
 				auto actionState = state.stack.Pop();
 				
-				const bool valid = HandleActionState(state, level, info, stateIndex, loadLevelIndex, actionState);
+				const bool valid = HandleActionState(state, info, actionState);
 				stateActionActive = false;
 			}
 		}
@@ -394,15 +397,30 @@ namespace game
 		}
 
 		// Draw enemies.
-		CardSelectionDrawInfo cardSelectionDrawInfo{};
-		cardSelectionDrawInfo.lifeTime = level->GetTime();
-		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = boardState.enemyCount;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 4;
-		cardSelectionDrawInfo.costs = targets;
-		cardSelectionDrawInfo.selectedArr = selectedArr;
-		cardSelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
-		const auto enemyResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
+		CardSelectionDrawInfo enemySelectionDrawInfo{};
+		enemySelectionDrawInfo.lifeTime = level->GetTime();
+		enemySelectionDrawInfo.cards = cards;
+		enemySelectionDrawInfo.length = boardState.enemyCount;
+		enemySelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 4;
+		enemySelectionDrawInfo.costs = targets;
+		enemySelectionDrawInfo.selectedArr = selectedArr;
+		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
+
+		// WIP.
+		if (state.stack.count > 0)
+		{
+			const auto& actionState = state.stack.Peek();
+			if (actionState.trigger == ActionState::Trigger::onAttack && actionState.src < BOARD_CAPACITY_PER_SIDE)
+			{
+				const float ind = static_cast<float>(actionState.dst - BOARD_CAPACITY_PER_SIDE);
+				const float offset = ind - static_cast<float>(boardState.enemyCount - 1) / 2;
+				const float tOff = jv::Min((level->GetTime() - timeSinceLastActionState) * 4, 1.f);
+				const float xS = GetCardShape(info, enemySelectionDrawInfo).x;
+				enemySelectionDrawInfo.centerOffset += -tOff * offset * xS;
+			}
+		}
+
+		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
 
 		if (state.stack.count == 0 && lMousePressed && enemyResult != -1)
@@ -430,15 +448,18 @@ namespace game
 			costs[i] = magic->cost;
 		}
 
-		cardSelectionDrawInfo.length = state.hand.count;
-		cardSelectionDrawInfo.height = 32;
-		cardSelectionDrawInfo.texts = nullptr;
-		cardSelectionDrawInfo.offsetMod = -4;
-		cardSelectionDrawInfo.selectedArr = selectedArr;
-		cardSelectionDrawInfo.greyedOutArr = greyedOutArr;
-		cardSelectionDrawInfo.costs = costs;
-		cardSelectionDrawInfo.combatStats = nullptr;
-		const auto handResult = level->DrawCardSelection(info, cardSelectionDrawInfo);
+		CardSelectionDrawInfo handSelectionDrawInfo{};
+		handSelectionDrawInfo.lifeTime = level->GetTime();
+		handSelectionDrawInfo.cards = cards;
+		handSelectionDrawInfo.length = state.hand.count;
+		handSelectionDrawInfo.height = 32;
+		handSelectionDrawInfo.texts = nullptr;
+		handSelectionDrawInfo.offsetMod = -4;
+		handSelectionDrawInfo.selectedArr = selectedArr;
+		handSelectionDrawInfo.greyedOutArr = greyedOutArr;
+		handSelectionDrawInfo.costs = costs;
+		handSelectionDrawInfo.combatStats = nullptr;
+		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
 		selectedArr = nullptr;
 
 		if(state.stack.count == 0 && lMousePressed && handResult != -1)
@@ -500,6 +521,27 @@ namespace game
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
+
+		// WIP.
+		if (state.stack.count > 0)
+		{
+			const auto& actionState = state.stack.Peek();
+			if (actionState.trigger == ActionState::Trigger::onAttack && actionState.src < BOARD_CAPACITY_PER_SIDE)
+			{
+				const float offset = static_cast<float>(actionState.src) - static_cast<float>(boardState.allyCount) / 4;
+				const float tOff = jv::Min((level->GetTime() - timeSinceLastActionState) * 4, 1.f);
+				const float xS = GetCardShape(info, enemySelectionDrawInfo).x;
+				playerCardSelectionDrawInfo.centerOffset += -tOff * offset * xS;
+
+				if(tOff > .5f)
+				{
+					playerCardSelectionDrawInfo.overridePosIndex = actionState.src;
+					playerCardSelectionDrawInfo.overridePos = GetCardPosition(info, playerCardSelectionDrawInfo, playerCardSelectionDrawInfo.overridePosIndex);
+					playerCardSelectionDrawInfo.overridePos.y += 128 * (tOff - .5f);
+				}
+			}
+		}
+
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
 		
 		if (state.stack.count == 0 && lMousePressed && allyResult != -1)
@@ -565,8 +607,8 @@ namespace game
 		return true;
 	}
 
-	bool MainLevel::CombatState::HandleActionState(State& state, Level* level, const LevelUpdateInfo& info,
-		uint32_t& stateIndex, LevelIndex& loadLevelIndex, ActionState& actionState)
+	bool MainLevel::CombatState::HandleActionState(State& state, const LevelUpdateInfo& info,
+		ActionState& actionState)
 	{
 		auto& boardState = state.boardState;
 

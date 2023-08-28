@@ -173,6 +173,13 @@ namespace game
 		return pressed;
 	}
 
+	glm::ivec2 Level::GetCardShape(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
+	{
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT + drawInfo.offsetMod;
+		return {width, cardTexture.resolution.y };
+	}
+
 	glm::ivec2 Level::GetCardPosition(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo,
 		const uint32_t i)
 	{
@@ -185,6 +192,7 @@ namespace game
 		origin.x += static_cast<int32_t>(width) * (i % drawInfo.rowCutoff);
 		if (i != 0)
 			origin.y -= (cardTexture.resolution.y + 4) * (i / drawInfo.rowCutoff);
+		origin.x += drawInfo.centerOffset;
 		return origin;
 	}
 
@@ -203,7 +211,7 @@ namespace game
 
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
-			cardDrawInfo.origin = GetCardPosition(info, drawInfo, i);
+			cardDrawInfo.origin = drawInfo.overridePosIndex == i ? drawInfo.overridePos : GetCardPosition(info, drawInfo, i);
 
 			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;

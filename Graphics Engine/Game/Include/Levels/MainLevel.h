@@ -63,8 +63,7 @@ namespace game
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
-			[[nodiscard]] bool HandleActionState(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
-				LevelIndex& loadLevelIndex, ActionState& actionState);
+			[[nodiscard]] bool HandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
 		};
 
 		struct RewardMagicCardState final : LevelState<State>

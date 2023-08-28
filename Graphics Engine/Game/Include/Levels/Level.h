@@ -109,6 +109,9 @@ namespace game
 			int32_t offsetMod = 0;
 			CombatStats* combatStats = nullptr;
 			uint32_t* costs = nullptr;
+			glm::ivec2 overridePos;
+			uint32_t overridePosIndex = -1;
+			uint32_t centerOffset = 0;
 		};
 
 		struct PartyDrawInfo final
@@ -131,6 +134,7 @@ namespace game
 
 		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
 		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
+		[[nodiscard]] static glm::ivec2 GetCardShape(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
 		[[nodiscard]] static glm::ivec2 GetCardPosition(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo, uint32_t i);
 		uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
 		bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
