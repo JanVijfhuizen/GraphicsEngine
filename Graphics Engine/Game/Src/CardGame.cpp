@@ -390,9 +390,16 @@ namespace game
 		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
 			if(actionState.trigger == ActionState::Trigger::onAttack && self == actionState.src)
+			{
 				std::cout << "daisy attacking" << std::endl;
-			else if (actionState.trigger == ActionState::Trigger::onAttack && self == actionState.dst)
+				return true;
+			}
+			if (actionState.trigger == ActionState::Trigger::onAttack && self == actionState.dst)
+			{
 				std::cout << "daisy attacked" << std::endl;
+				return true;
+			}
+			return false;
 		};
 		return arr;
 	}
@@ -439,7 +446,9 @@ namespace game
 				damageState.source = ActionState::Source::other;
 				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
 				state.stack.Add() = damageState;
+				return true;
 			}
+			return false;
 		};
 		return arr;
 	}

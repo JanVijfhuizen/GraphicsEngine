@@ -53,6 +53,6 @@ namespace game
 		uint32_t count = 1;
 		uint32_t animIndex = 0;
 
-		void(*onActionEvent)(State& state, ActionState& actionState, uint32_t self) = nullptr;
+		bool(*onActionEvent)(State& state, ActionState& actionState, uint32_t self) = nullptr;
 	};
 }

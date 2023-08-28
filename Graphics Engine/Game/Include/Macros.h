@@ -31,6 +31,7 @@ constexpr uint32_t CARD_MONSTER_ANIM_LENGTH = 4;
 constexpr glm::ivec2 CARD_MONSTER_FRAME_SIZE(32);
 
 constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
+constexpr float ACTION_STATE_DURATION = .2f;
 
 enum class LevelIndex
 {

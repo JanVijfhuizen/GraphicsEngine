@@ -161,9 +161,12 @@ namespace game
 		uniqueId = 0;
 		mana = 0;
 		maxMana = 0;
+		actionEventLifetime = 0;
 		state.boardState = {};
 		state.hand.Clear();
 		state.stack.Clear();
+		for (bool& b : tapped)
+			b = false;
 
 		ActionState startOfTurnActionState{};
 		startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
@@ -210,279 +213,80 @@ namespace game
 		auto& boardState = state.boardState;
 
 		// Check for stack events.
-		while(state.stack.count > 0)
+		if(state.stack.count > 0)
 		{
-			auto actionState = state.stack.Pop();
-
-			bool validActionState;
-			switch (actionState.trigger)
+			if (actionEventLifetime >= ACTION_STATE_DURATION)
 			{
-				case ActionState::Trigger::onDamage:
-				case ActionState::Trigger::onAttack:
-				case ActionState::Trigger::onDeath:
-					validActionState =
-						actionState.source == ActionState::Source::other || state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId &&
-						state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
-					break;
-				case ActionState::Trigger::onSummon:
-					validActionState = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] == 1 ? 
-						boardState.allyCount < BOARD_CAPACITY_PER_SIDE : boardState.enemyCount < BOARD_CAPACITY_PER_SIDE;
-					break;
-				case ActionState::Trigger::draw:
-					validActionState = state.hand.count < state.hand.length;
-					break;
-				default:
-					validActionState = true;
+				auto actionState = state.stack.Pop();
+				const bool valid = HandleActionState(state, level, info, stateIndex, loadLevelIndex, actionState);
+				actionEventLifetime = 0;
 			}
-
-			if (!validActionState)
-				continue;
-
-			if(actionState.trigger == ActionState::Trigger::onSummon)
-			{
-				constexpr auto vIsAlly = static_cast<uint32_t>(ActionState::VSummon::isAlly);
-				constexpr auto vId = static_cast<uint32_t>(ActionState::VSummon::id);
-				constexpr auto vPartyId = static_cast<uint32_t>(ActionState::VSummon::partyId);
-				constexpr auto vHealth = static_cast<uint32_t>(ActionState::VSummon::health);
-
-				const bool isAlly = actionState.values[vIsAlly] == 1;
-				const auto monsterId = actionState.values[vId];
-				const auto partyId = isAlly ? actionState.values[vPartyId] : -1;
-				const auto health = actionState.values[vHealth];
-
-				const uint32_t targetId = isAlly ? boardState.allyCount : BOARD_CAPACITY_PER_SIDE + boardState.enemyCount;
-				boardState.ids[targetId] = monsterId;
-				boardState.combatStats[targetId] = GetCombatStat(info.monsters[monsterId]);
-				boardState.uniqueIds[targetId] = uniqueId++;
-				if (health != -1)
-					boardState.combatStats[targetId].health = health;
-				if (partyId != -1)
-				{
-					boardState.partyIds[targetId] = partyId;
-					++boardState.partyCount;
-				}
-				if (isAlly)
-					++boardState.allyCount;
-				else
-					++boardState.enemyCount;
-			}
-			else if(actionState.trigger == ActionState::Trigger::draw)
-				state.hand.Add() = state.Draw(info);
-
-			const auto& playerState = info.playerState;
-			for (uint32_t i = 0; i < boardState.partyCount; ++i)
-			{
-				const auto partyId = boardState.partyIds[i];
-
-				if (partyId == -1)
-					break;
-
-				for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
-				{
-					const auto& artifact = info.artifacts[info.playerState.artifacts[partyId]];
-					if (artifact.onActionEvent)
-						artifact.onActionEvent(state, actionState, i);
-				}
-			}
-			for (uint32_t i = 0; i < boardState.allyCount; ++i)
-			{
-				const auto id = boardState.ids[i];
-				const auto& monster = info.monsters[id];
-				if (monster.onActionEvent)
-					monster.onActionEvent(state, actionState, i);
-			}
-			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-			{
-				const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
-				const auto& monster = info.monsters[id];
-				if (monster.onActionEvent)
-					monster.onActionEvent(state, actionState, i);
-			}
-			for (uint32_t i = 0; i < state.hand.count; ++i)
-			{
-				const auto& magic = &info.magics[state.hand[i]];
-				if (magic->onActionEvent)
-					magic->onActionEvent(state, actionState, i);
-			}
-
-			if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
-			{
-				// Set new random enemy targets.
-				eventCard = state.GetEvent(info);
-				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-					targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
-
-				// Untap.
-				for (auto& b : tapped)
-					b = false;
-
-				maxMana = jv::Min(maxMana + 1, MAX_MANA);;
-				mana = maxMana;
-
-				ActionState drawState{};
-				drawState.trigger = ActionState::Trigger::draw;
-				state.stack.Add() = drawState;
-			}
-			else if (actionState.trigger == ActionState::Trigger::onAttack)
-			{
-				auto& combatStats = boardState.combatStats[actionState.dst];
-				auto attack = boardState.combatStats[actionState.src].attack;
-
-				if (actionState.src < BOARD_CAPACITY_PER_SIDE)
-				{
-					tapped[actionState.src] = true;
-					auto& target = targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
-					const auto oldTarget = target;
-					if(boardState.allyCount > 1)
-					{
-						while(target == oldTarget)
-						 target = rand() % boardState.allyCount;
-					}
-				}
-
-				const uint32_t roll = 6;// rand() % 6;
-
-				if (roll == 6 || roll >= combatStats.armorClass)
-				{
-					ActionState damageState = actionState;
-					damageState.trigger = ActionState::Trigger::onDamage;
-					constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
-					damageState.values[vDamage] = attack;
-					state.stack.Add() = damageState;
-				}
-			}
-			else if(actionState.trigger == ActionState::Trigger::onDamage)
-			{
-				auto& combatStats = boardState.combatStats[actionState.dst];
-				auto& health = combatStats.health;
-
-				if(health > 0)
-				{
-					constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
-					health = health < actionState.values[vDamage] ? 0 : health - actionState.values[vDamage];
-
-					if (health == 0)
-					{
-						ActionState deathActionState = actionState;
-						deathActionState.trigger = ActionState::Trigger::onDeath;
-						state.stack.Add() = deathActionState;
-					}
-				}
-			}
-			else if(actionState.trigger == ActionState::Trigger::onDeath)
-			{
-				uint32_t i = actionState.dst;
-				const bool isEnemy = i >= BOARD_CAPACITY_PER_SIDE;
-				const uint32_t mod = BOARD_CAPACITY_PER_SIDE * isEnemy;
-				i -= mod;
-				uint32_t c = isEnemy ? boardState.enemyCount : boardState.allyCount;
-
-				if(isEnemy)
-				{
-					for (uint32_t j = i; j < c; ++j)
-						targets[j] = targets[j + 1];
-					lastEnemyDefeatedId = boardState.ids[i + mod];
-					--boardState.enemyCount;
-				}
-				else
-				{
-					for (uint32_t j = i; j < c; ++j)
-						boardState.partyIds[j + mod] = boardState.partyIds[j + 1 + mod];
-					--boardState.allyCount;
-					if (boardState.partyCount >= i + 1)
-						--boardState.partyCount;
-				}
-
-				// Remove shared data.
-				for (uint32_t j = i; j < c; ++j)
-				{
-					boardState.ids[j + mod] = boardState.ids[j + 1 + mod];
-					boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
-					boardState.uniqueIds[j + mod] = boardState.uniqueIds[j + 1 + mod];
-				}
-
-				// Modify states as to ensure other events can go through.
-				for (auto& as : state.stack)
-				{
-					if(isEnemy)
-					{
-						if (as.source == ActionState::Source::board && as.src != -1 && as.src > actionState.dst)
-							--as.src;
-						if (as.dst != -1 && as.dst > actionState.dst)
-							--as.dst;
-					}
-					else
-					{
-						if (as.source == ActionState::Source::board && as.src != -1 && as.src > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
-							--as.src;
-						if (as.dst != -1 && as.dst > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
-							--as.dst;
-					}
-				}
-			}
-			else if(actionState.trigger == ActionState::Trigger::onCardPlayed)
-				state.hand.RemoveAtOrdered(actionState.src);
+			else
+				actionEventLifetime += info.deltaTime;
 		}
 
-		// Check for game over.
-		if (boardState.allyCount == 0)
+		if(state.stack.count == 0)
 		{
-			loadLevelIndex = LevelIndex::mainMenu;
-			return true;
-		}
-
-		// Check for room victory.
-		if (boardState.enemyCount == 0)
-		{
-			if (gameState.partyCount < PARTY_ACTIVE_CAPACITY)
+			// Check for game over.
+			if (boardState.allyCount == 0)
 			{
-				// Recruitment.
-				level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.");
-				bool recruitScreenActive = true;
+				loadLevelIndex = LevelIndex::mainMenu;
+				return true;
+			}
 
-				const auto monster = &info.monsters[lastEnemyDefeatedId];
-				auto combatStats = GetCombatStat(*monster);
-
-				CardDrawInfo cardDrawInfo{};
-				cardDrawInfo.card = monster;
-				cardDrawInfo.center = true;
-				cardDrawInfo.combatStats = &combatStats;
-				cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
-				level->DrawCard(info, cardDrawInfo);
-
-				ButtonDrawInfo buttonAcceptDrawInfo{};
-				buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 28);
-				buttonAcceptDrawInfo.text = "accept";
-				buttonAcceptDrawInfo.center = true;
-				if (level->DrawButton(info, buttonAcceptDrawInfo))
+			// Check for room victory.
+			if (boardState.enemyCount == 0)
+			{
+				if (boardState.allyCount < PARTY_ACTIVE_CAPACITY)
 				{
-					// Add to party.
-					boardState.ids[boardState.partyCount] = lastEnemyDefeatedId;
-					boardState.combatStats[boardState.partyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
-					boardState.partyIds[boardState.partyCount++] = -1;
-					recruitScreenActive = false;
+					// Recruitment.
+					level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.");
+					bool recruitScreenActive = true;
+
+					const auto monster = &info.monsters[lastEnemyDefeatedId];
+					auto combatStats = GetCombatStat(*monster);
+
+					CardDrawInfo cardDrawInfo{};
+					cardDrawInfo.card = monster;
+					cardDrawInfo.center = true;
+					cardDrawInfo.combatStats = &combatStats;
+					cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
+					level->DrawCard(info, cardDrawInfo);
+
+					ButtonDrawInfo buttonAcceptDrawInfo{};
+					buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 28);
+					buttonAcceptDrawInfo.text = "accept";
+					buttonAcceptDrawInfo.center = true;
+					if (level->DrawButton(info, buttonAcceptDrawInfo))
+					{
+						// Add to party.
+						boardState.ids[boardState.allyCount] = lastEnemyDefeatedId;
+						boardState.combatStats[boardState.allyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
+						boardState.partyIds[boardState.allyCount++] = -1;
+						recruitScreenActive = false;
+					}
+					ButtonDrawInfo buttonDeclineDrawInfo{};
+					buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
+					buttonDeclineDrawInfo.text = "decline";
+					buttonDeclineDrawInfo.center = true;
+					if (level->DrawButton(info, buttonDeclineDrawInfo))
+						recruitScreenActive = false;
+
+					if (recruitScreenActive)
+						return true;
 				}
-				ButtonDrawInfo buttonDeclineDrawInfo{};
-				buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
-				buttonDeclineDrawInfo.text = "decline";
-				buttonDeclineDrawInfo.center = true;
-				if (level->DrawButton(info, buttonDeclineDrawInfo))
-					recruitScreenActive = false;
 
-				if (recruitScreenActive)
-					return true;
+				gameState.partyCount = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);
+				for (uint32_t i = 0; i < gameState.partyCount; ++i)
+				{
+					gameState.partyIds[i] = boardState.partyIds[i];
+					gameState.monsterIds[i] = boardState.ids[i];
+					gameState.healths[i] = boardState.combatStats[i].health;
+				}
+
+				stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+				return true;
 			}
-
-			gameState.partyCount = boardState.partyCount;
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
-			{
-				gameState.partyIds[i] = boardState.partyIds[i];
-				gameState.monsterIds[i] = boardState.ids[i];
-				gameState.healths[i] = boardState.combatStats[i].health;
-			}
-
-			stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
-			return true;
 		}
 
 		const auto& path = state.paths[state.chosenPath];
@@ -614,7 +418,7 @@ namespace game
 		{
 			const auto partyId = boardState.partyIds[i];
 
-			if(boardState.partyCount <= i || boardState.partyIds[i] == -1)
+			if(boardState.partyIds[i] == -1)
 			{
 				stacksCount[i] = 0;
 				continue;
@@ -709,6 +513,217 @@ namespace game
 			selectionState = SelectionState::none;
 		}
 			
+		return true;
+	}
+
+	bool MainLevel::CombatState::HandleActionState(State& state, Level* level, const LevelUpdateInfo& info,
+		uint32_t& stateIndex, LevelIndex& loadLevelIndex, ActionState& actionState)
+	{
+		auto& boardState = state.boardState;
+
+		bool validActionState;
+		switch (actionState.trigger)
+		{
+		case ActionState::Trigger::onDamage:
+		case ActionState::Trigger::onAttack:
+		case ActionState::Trigger::onDeath:
+			validActionState =
+				actionState.source == ActionState::Source::other || state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId &&
+				state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
+			break;
+		case ActionState::Trigger::onSummon:
+			validActionState = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] == 1 ?
+				boardState.allyCount < BOARD_CAPACITY_PER_SIDE : boardState.enemyCount < BOARD_CAPACITY_PER_SIDE;
+			break;
+		case ActionState::Trigger::draw:
+			validActionState = state.hand.count < state.hand.length;
+			break;
+		default:
+			validActionState = true;
+		}
+
+		if (!validActionState)
+			return false;
+
+		if (actionState.trigger == ActionState::Trigger::onSummon)
+		{
+			constexpr auto vIsAlly = static_cast<uint32_t>(ActionState::VSummon::isAlly);
+			constexpr auto vId = static_cast<uint32_t>(ActionState::VSummon::id);
+			constexpr auto vPartyId = static_cast<uint32_t>(ActionState::VSummon::partyId);
+			constexpr auto vHealth = static_cast<uint32_t>(ActionState::VSummon::health);
+
+			const bool isAlly = actionState.values[vIsAlly] == 1;
+			const auto monsterId = actionState.values[vId];
+			const auto partyId = isAlly ? actionState.values[vPartyId] : -1;
+			const auto health = actionState.values[vHealth];
+
+			const uint32_t targetId = isAlly ? boardState.allyCount : BOARD_CAPACITY_PER_SIDE + boardState.enemyCount;
+			boardState.ids[targetId] = monsterId;
+			boardState.combatStats[targetId] = GetCombatStat(info.monsters[monsterId]);
+			boardState.uniqueIds[targetId] = uniqueId++;
+			boardState.partyIds[targetId] = partyId;
+			if (health != -1)
+				boardState.combatStats[targetId].health = health;
+			if (isAlly)
+				++boardState.allyCount;
+			else
+				++boardState.enemyCount;
+		}
+		else if (actionState.trigger == ActionState::Trigger::draw)
+			state.hand.Add() = state.Draw(info);
+
+		const auto& playerState = info.playerState;
+		for (uint32_t i = 0; i < boardState.allyCount; ++i)
+		{
+			const auto partyId = boardState.partyIds[i];
+
+			if (partyId == -1)
+				break;
+
+			for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
+			{
+				const auto& artifact = info.artifacts[info.playerState.artifacts[partyId]];
+				if (artifact.onActionEvent)
+					artifact.onActionEvent(state, actionState, i);
+			}
+		}
+		for (uint32_t i = 0; i < boardState.allyCount; ++i)
+		{
+			const auto id = boardState.ids[i];
+			const auto& monster = info.monsters[id];
+			if (monster.onActionEvent)
+				monster.onActionEvent(state, actionState, i);
+		}
+		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+		{
+			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
+			const auto& monster = info.monsters[id];
+			if (monster.onActionEvent)
+				monster.onActionEvent(state, actionState, i);
+		}
+		for (uint32_t i = 0; i < state.hand.count; ++i)
+		{
+			const auto& magic = &info.magics[state.hand[i]];
+			if (magic->onActionEvent)
+				magic->onActionEvent(state, actionState, i);
+		}
+
+		if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+		{
+			// Set new random enemy targets.
+			eventCard = state.GetEvent(info);
+			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+				targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
+
+			// Untap.
+			for (auto& b : tapped)
+				b = false;
+
+			maxMana = jv::Min(maxMana + 1, MAX_MANA);;
+			mana = maxMana;
+
+			ActionState drawState{};
+			drawState.trigger = ActionState::Trigger::draw;
+			state.stack.Add() = drawState;
+		}
+		else if (actionState.trigger == ActionState::Trigger::onAttack)
+		{
+			auto& combatStats = boardState.combatStats[actionState.dst];
+			auto attack = boardState.combatStats[actionState.src].attack;
+
+			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
+			{
+				tapped[actionState.src] = true;
+				auto& target = targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
+				const auto oldTarget = target;
+				if (boardState.allyCount > 1)
+				{
+					while (target == oldTarget)
+						target = rand() % boardState.allyCount;
+				}
+			}
+
+			const uint32_t roll = 6;// rand() % 6;
+
+			if (roll == 6 || roll >= combatStats.armorClass)
+			{
+				ActionState damageState = actionState;
+				damageState.trigger = ActionState::Trigger::onDamage;
+				constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
+				damageState.values[vDamage] = attack;
+				state.stack.Add() = damageState;
+			}
+		}
+		else if (actionState.trigger == ActionState::Trigger::onDamage)
+		{
+			auto& combatStats = boardState.combatStats[actionState.dst];
+			auto& health = combatStats.health;
+
+			if (health > 0)
+			{
+				constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
+				health = health < actionState.values[vDamage] ? 0 : health - actionState.values[vDamage];
+
+				if (health == 0)
+				{
+					ActionState deathActionState = actionState;
+					deathActionState.trigger = ActionState::Trigger::onDeath;
+					state.stack.Add() = deathActionState;
+				}
+			}
+		}
+		else if (actionState.trigger == ActionState::Trigger::onDeath)
+		{
+			uint32_t i = actionState.dst;
+			const bool isEnemy = i >= BOARD_CAPACITY_PER_SIDE;
+			const uint32_t mod = BOARD_CAPACITY_PER_SIDE * isEnemy;
+			i -= mod;
+			uint32_t c = isEnemy ? boardState.enemyCount : boardState.allyCount;
+
+			if (isEnemy)
+			{
+				for (uint32_t j = i; j < c; ++j)
+					targets[j] = targets[j + 1];
+				lastEnemyDefeatedId = boardState.ids[i + mod];
+				--boardState.enemyCount;
+			}
+			else
+			{
+				for (uint32_t j = i; j < c; ++j)
+					boardState.partyIds[j + mod] = boardState.partyIds[j + 1 + mod];
+				--boardState.allyCount;
+			}
+
+			// Remove shared data.
+			for (uint32_t j = i; j < c; ++j)
+			{
+				boardState.ids[j + mod] = boardState.ids[j + 1 + mod];
+				boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
+				boardState.uniqueIds[j + mod] = boardState.uniqueIds[j + 1 + mod];
+			}
+
+			// Modify states as to ensure other events can go through.
+			for (auto& as : state.stack)
+			{
+				if (isEnemy)
+				{
+					if (as.source == ActionState::Source::board && as.src != -1 && as.src > actionState.dst)
+						--as.src;
+					if (as.dst != -1 && as.dst > actionState.dst)
+						--as.dst;
+				}
+				else
+				{
+					if (as.source == ActionState::Source::board && as.src != -1 && as.src > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
+						--as.src;
+					if (as.dst != -1 && as.dst > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
+						--as.dst;
+				}
+			}
+		}
+		else if (actionState.trigger == ActionState::Trigger::onCardPlayed)
+			state.hand.RemoveAtOrdered(actionState.src);
+
 		return true;
 	}
 

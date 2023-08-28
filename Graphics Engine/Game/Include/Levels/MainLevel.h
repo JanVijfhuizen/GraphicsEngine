@@ -55,10 +55,13 @@ namespace game
 			uint32_t maxMana;
 			uint32_t lastEnemyDefeatedId;
 			uint32_t uniqueId;
+			float actionEventLifetime;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
+			[[nodiscard]] bool HandleActionState(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
+				LevelIndex& loadLevelIndex, ActionState& actionState);
 		};
 
 		struct RewardMagicCardState final : LevelState<State>

@@ -18,7 +18,6 @@ namespace game
 		uint32_t uniqueIds[BOARD_CAPACITY];
 		CombatStats combatStats[BOARD_CAPACITY];
 		uint32_t allyCount;
-		uint32_t partyCount;
 		uint32_t enemyCount;
 	};
 }
