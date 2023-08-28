@@ -173,6 +173,21 @@ namespace game
 		return pressed;
 	}
 
+	glm::ivec2 Level::GetCardPosition(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo,
+		const uint32_t i)
+	{
+		auto origin = glm::ivec2(0, drawInfo.height);
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT + drawInfo.offsetMod;
+
+		const uint32_t m = jv::Min(drawInfo.length, drawInfo.rowCutoff);
+		origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - width * (m - 1) / 2);
+		origin.x += static_cast<int32_t>(width) * (i % drawInfo.rowCutoff);
+		if (i != 0)
+			origin.y -= (cardTexture.resolution.y + 4) * (i / drawInfo.rowCutoff);
+		return origin;
+	}
+
 	uint32_t Level::DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
 	{
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
@@ -180,7 +195,6 @@ namespace game
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
-		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
 		cardDrawInfo.lifeTime = drawInfo.lifeTime;
 		
 		uint32_t choice = -1;
@@ -189,13 +203,7 @@ namespace game
 
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
-			if((i + drawInfo.rowCutoff) % drawInfo.rowCutoff == 0)
-			{
-				const uint32_t m = jv::Min(drawInfo.length, drawInfo.rowCutoff);
-				cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - width * (m - 1) / 2);
-				if (i != 0)
-					cardDrawInfo.origin.y -= cardTexture.resolution.y + 4;
-			}
+			cardDrawInfo.origin = GetCardPosition(info, drawInfo, i);
 
 			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
@@ -275,7 +283,6 @@ namespace game
 
 			if ((collides || stackedSelected != -1) && !greyedOut)
 				choice = i;
-			cardDrawInfo.origin.x += static_cast<int32_t>(width);
 		}
 
 		return choice;

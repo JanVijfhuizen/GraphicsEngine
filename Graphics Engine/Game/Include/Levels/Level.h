@@ -131,6 +131,7 @@ namespace game
 
 		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
 		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
+		[[nodiscard]] static glm::ivec2 GetCardPosition(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo, uint32_t i);
 		uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
 		bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
 		static bool CollidesCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
