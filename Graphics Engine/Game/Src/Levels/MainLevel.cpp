@@ -161,7 +161,9 @@ namespace game
 		uniqueId = 0;
 		mana = 0;
 		maxMana = 0;
-		actionEventLifetime = 0;
+		timeSinceLastActionState = 0;
+		stateActionActive = false;
+		actiontext = nullptr;
 		state.boardState = {};
 		state.hand.Clear();
 		state.stack.Clear();
@@ -213,16 +215,63 @@ namespace game
 		auto& boardState = state.boardState;
 
 		// Check for stack events.
-		if(state.stack.count > 0)
+		if (state.stack.count > 0)
 		{
-			if (actionEventLifetime >= ACTION_STATE_DURATION)
+			if (!stateActionActive)
+			{
+				stateActionActive = true;
+				timeSinceLastActionState = level->GetTime();
+				actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
+
+				const auto& actionState = state.stack.Peek();
+				switch (actionState.trigger)
+				{
+				case ActionState::Trigger::draw:
+					actiontext = "draw";
+					break;
+				case ActionState::Trigger::onSummon:
+					actiontext = "summon";
+					break;
+				case ActionState::Trigger::onAttack:
+					actiontext = "attack";
+					break;
+				case ActionState::Trigger::onMiss:
+					actiontext = "miss";
+					break;
+				case ActionState::Trigger::onDamage:
+					actiontext = "damage";
+					break;
+				case ActionState::Trigger::onDeath:
+					actiontext = "death";
+					break;
+				case ActionState::Trigger::onCardPlayed:
+					actiontext = "play";
+					break;
+				case ActionState::Trigger::onStartOfTurn:
+					actionStateDuration = 1;
+					actiontext = "new turn";
+					break;
+				default:;
+				}
+			}
+
+			if (actiontext)
+			{
+				TextTask textTask{};
+				textTask.text = actiontext;
+				textTask.lifetime = level->GetTime() - timeSinceLastActionState;
+				textTask.center = true;
+				textTask.position = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 36);
+				info.textTasks.Push(textTask);
+			}
+			
+			if (timeSinceLastActionState + actionStateDuration < level->GetTime())
 			{
 				auto actionState = state.stack.Pop();
+				
 				const bool valid = HandleActionState(state, level, info, stateIndex, loadLevelIndex, actionState);
-				actionEventLifetime = 0;
+				stateActionActive = false;
 			}
-			else
-				actionEventLifetime += info.deltaTime;
 		}
 
 		if(state.stack.count == 0)
@@ -505,7 +554,7 @@ namespace game
 					cardPlayActionState.src = selectedId;
 					cardPlayActionState.dst = target + (enemyResult != -1) * BOARD_CAPACITY_PER_SIDE;
 					cardPlayActionState.dstUniqueId = boardState.uniqueIds[cardPlayActionState.dst];
-					cardPlayActionState.source = ActionState::Source::other;
+					cardPlayActionState.source = ActionState::Source::hand;
 					state.stack.Add() = cardPlayActionState;
 				}
 			}
@@ -526,9 +575,10 @@ namespace game
 		{
 		case ActionState::Trigger::onDamage:
 		case ActionState::Trigger::onAttack:
+		case ActionState::Trigger::onMiss:
 		case ActionState::Trigger::onDeath:
 			validActionState =
-				actionState.source == ActionState::Source::other || state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId &&
+				actionState.source == ActionState::Source::hand || state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId &&
 				state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
 			break;
 		case ActionState::Trigger::onSummon:
@@ -643,7 +693,7 @@ namespace game
 				}
 			}
 
-			const uint32_t roll = 6;// rand() % 6;
+			const uint32_t roll = rand() % 6;
 
 			if (roll == 6 || roll >= combatStats.armorClass)
 			{
@@ -652,6 +702,12 @@ namespace game
 				constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
 				damageState.values[vDamage] = attack;
 				state.stack.Add() = damageState;
+			}
+			else
+			{
+				ActionState missState = actionState;
+				missState.trigger = ActionState::Trigger::onMiss;
+				state.stack.Add() = missState;
 			}
 		}
 		else if (actionState.trigger == ActionState::Trigger::onDamage)

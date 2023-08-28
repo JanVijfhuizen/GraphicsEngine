@@ -11,7 +11,7 @@ constexpr float TEXT_DRAW_SPEED = 20;
 constexpr uint32_t PARTY_ACTIVE_CAPACITY = 4;
 constexpr uint32_t PARTY_INACTIVE_CAPACITY = 2;
 constexpr uint32_t PARTY_CAPACITY = PARTY_ACTIVE_CAPACITY + PARTY_INACTIVE_CAPACITY;
-constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 6;
+constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 7;
 constexpr uint32_t BOARD_CAPACITY = BOARD_CAPACITY_PER_SIDE * 2;
 constexpr uint32_t MONSTER_ARTIFACT_CAPACITY = 4;
 constexpr uint32_t MONSTER_FLAW_CAPACITY = 4;
@@ -31,7 +31,7 @@ constexpr uint32_t CARD_MONSTER_ANIM_LENGTH = 4;
 constexpr glm::ivec2 CARD_MONSTER_FRAME_SIZE(32);
 
 constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
-constexpr float ACTION_STATE_DURATION = .2f;
+constexpr float ACTION_STATE_DEFAULT_DURATION = .4f;
 
 enum class LevelIndex
 {

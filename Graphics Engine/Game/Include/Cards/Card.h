@@ -24,6 +24,7 @@ namespace game
 			draw,
 			onSummon,
 			onAttack,
+			onMiss,
 			onDamage,
 			onDeath,
 			onCardPlayed,
@@ -32,7 +33,7 @@ namespace game
 		enum class Source
 		{
 			board,
-			other
+			hand
 		} source = Source::board;
 
 		uint32_t src = -1;

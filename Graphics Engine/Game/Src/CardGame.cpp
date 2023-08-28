@@ -442,7 +442,7 @@ namespace game
 			{
 				ActionState damageState = actionState;
 				damageState.trigger = ActionState::Trigger::onDamage;
-				damageState.source = ActionState::Source::other;
+				damageState.source = ActionState::Source::hand;
 				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
 				state.stack.Add() = damageState;
 				return true;
