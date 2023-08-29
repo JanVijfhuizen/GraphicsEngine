@@ -4,6 +4,7 @@
 #include "CardGame.h"
 #include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
+#include "JLib/Curve.h"
 #include "JLib/Math.h"
 #include "States/InputState.h"
 #include "States/GameState.h"
@@ -254,7 +255,8 @@ namespace game
 					actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
 					actiontext = "new turn";
 					break;
-				default:;
+				default:
+					break;
 				}
 			}
 
@@ -271,7 +273,6 @@ namespace game
 			if (timeSinceLastActionState + actionStateDuration < level->GetTime())
 			{
 				auto actionState = state.stack.Pop();
-				
 				const bool valid = HandleActionState(state, info, actionState);
 				stateActionActive = false;
 			}
@@ -405,7 +406,7 @@ namespace game
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
-		if (state.stack.count > 0 && state.stack.Peek().trigger == ActionState::Trigger::onAttack)
+		if (stateActionActive && state.stack.count > 0 && state.stack.Peek().trigger == ActionState::Trigger::onAttack)
 			DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, state.stack.Peek(), false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
@@ -508,7 +509,7 @@ namespace game
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
-		if(state.stack.count > 0 && state.stack.Peek().trigger == ActionState::Trigger::onAttack)
+		if(stateActionActive && state.stack.count > 0 && state.stack.Peek().trigger == ActionState::Trigger::onAttack)
 			DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, state.stack.Peek(), true);
 
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
@@ -810,7 +811,7 @@ namespace game
 		
 		const uint32_t c = allied ? boardState.allyCount : boardState.enemyCount;
 		const uint32_t oC = allied ? boardState.enemyCount : boardState.allyCount;
-		const bool isSrc = allied ? src < BOARD_CAPACITY_PER_SIDE : src >= BOARD_CAPACITY_PER_SIDE;
+		const bool isSrc = allied ? actionState.src < BOARD_CAPACITY_PER_SIDE : actionState.src >= BOARD_CAPACITY_PER_SIDE;
 
 		const float ind = static_cast<float>(isSrc ? src : dst);
 		const float offset = ind - static_cast<float>(c - 1) / 2;
@@ -818,11 +819,38 @@ namespace game
 		const float oInd = static_cast<float>(isSrc ? dst : src);
 		const float oOffset = oInd - static_cast<float>(oC - 1) / 2;
 
-		const float delta = (offset - oOffset) / 2;
+		constexpr float moveDuration = ATTACK_ACTION_STATE_DURATION / 4;
+		const float t = level.GetTime();
+		float aTime = t - timeSinceLastActionState;
 
-		const float tOff = jv::Min((level.GetTime() - timeSinceLastActionState) * 4, 1.f);
+		const auto curve = je::CreateCurveOvershooting();
+		const auto curveDown = je::CreateCurveDecelerate();
+
+		const float l = (ATTACK_ACTION_STATE_DURATION - (static_cast<float>(ATTACK_ACTION_STATE_DURATION) - aTime)) / ATTACK_ACTION_STATE_DURATION;
+		const float hEval = DoubleCurveEvaluate(l, curve, curveDown);
+		// Move towards each other.
+		const float delta = (offset - oOffset) / 2;
+		const float tOff = jv::Min(hEval * (1.f / moveDuration), 1.f);
 		const float xS = GetCardShape(info, drawInfo).x;
 		drawInfo.centerOffset += -tOff * delta * xS;
+
+		// Move towards dst.
+		if(isSrc && l >= moveDuration)
+		{
+			const float vEval = DoubleCurveEvaluate(l, curve, curveDown);
+			const float tMOff = jv::Min((l - moveDuration) * (1.f / moveDuration) * vEval, 1.f);
+			drawInfo.overridePosIndex = src;
+			drawInfo.overridePos = GetCardPosition(info, drawInfo, src);
+			drawInfo.overridePos.y += tMOff * 64 * (2 * allied - 1);
+		}
+		else if(!isSrc && l >= moveDuration * 2)
+		{
+			const float vEval = DoubleCurveEvaluate(l, curveDown, curve);
+			const float tMOff = jv::Min((t - timeSinceLastActionState - ATTACK_ACTION_STATE_DURATION / 2) * 2 * vEval, 1.f);
+			drawInfo.overridePosIndex = dst;
+			drawInfo.overridePos = GetCardPosition(info, drawInfo, dst);
+			drawInfo.overridePos.y += tMOff * 32 * (2 * !allied - 1);
+		}
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
