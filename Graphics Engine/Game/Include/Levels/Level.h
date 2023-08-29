@@ -84,7 +84,8 @@ namespace game
 			glm::ivec2 origin;
 			Card* card;
 			bool center = false;
-			glm::vec4 borderColor{1};
+			glm::vec4 bgColor{0, 0, 0, 1};
+			glm::vec4 fgColor{ 1 };
 			bool selectable = true;
 			float lifeTime = 0;
 			CombatStats* combatStats = nullptr;
