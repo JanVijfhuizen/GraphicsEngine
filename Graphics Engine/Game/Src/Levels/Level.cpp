@@ -211,6 +211,12 @@ namespace game
 
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
+			if(drawInfo.damagedIndex == i)
+			{
+				if (fmodf(drawInfo.lifeTime, .2f) < .1f)
+					continue;
+			}
+
 			cardDrawInfo.origin = drawInfo.overridePosIndex == i ? drawInfo.overridePos : GetCardPosition(info, drawInfo, i);
 
 			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
