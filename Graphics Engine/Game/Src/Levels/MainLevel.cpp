@@ -269,6 +269,8 @@ namespace game
 				}
 
 				valid = PreHandleActionState(state, info, actionState);
+				if (!valid)
+					state.stack.Pop();
 			}
 
 			if (valid)
@@ -468,6 +470,9 @@ namespace game
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.hoverDurations = &hoverDurations[2 + BOARD_CAPACITY_PER_SIDE];
+		if(activeState && activeState->trigger == ActionState::Trigger::draw)
+			DrawDrawAnimation(state, info, *level, handSelectionDrawInfo);
+
 		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -757,7 +762,7 @@ namespace game
 			const bool isEnemy = i >= BOARD_CAPACITY_PER_SIDE;
 			const uint32_t mod = BOARD_CAPACITY_PER_SIDE * isEnemy;
 			i -= mod;
-			uint32_t c = isEnemy ? boardState.enemyCount : boardState.allyCount;
+			const uint32_t c = isEnemy ? boardState.enemyCount : boardState.allyCount;
 
 			if (isEnemy)
 			{
@@ -966,15 +971,19 @@ namespace game
 		if (allied != activeState->values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
 			return;
 
+		DrawDrawAnimation(state, info, level, drawInfo);
+	}
+
+	void MainLevel::CombatState::DrawDrawAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
+		CardSelectionDrawInfo& drawInfo) const
+	{
 		const auto w = GetCardShape(info, drawInfo).x;
 		const float t = level.GetTime();
 		const float aTime = t - timeSinceLastActionState;
 		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
 
-		const auto curve = je::CreateCurveOvershooting();
-		const float eval = curve.REvaluate(l);
-
-		drawInfo.centerOffset = (1.f - eval) * w / 2;
+		drawInfo.spawning = true;
+		drawInfo.spawnLerp = l;
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)

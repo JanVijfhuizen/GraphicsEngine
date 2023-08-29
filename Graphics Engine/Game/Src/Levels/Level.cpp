@@ -202,7 +202,6 @@ namespace game
 	uint32_t Level::DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
 	{
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
-		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT + drawInfo.offsetMod;
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
@@ -212,6 +211,16 @@ namespace game
 		if(drawInfo.outStackSelected)
 			*drawInfo.outStackSelected = -1;
 
+		uint32_t xOffset = 0;
+		if(drawInfo.spawning && drawInfo.length > 1)
+		{
+			const auto w = GetCardShape(info, drawInfo).x;
+			const auto curve = je::CreateCurveOvershooting();
+			const float eval = curve.REvaluate(drawInfo.spawnLerp);
+
+			xOffset = (1.f - eval) * w / 2;
+		}
+
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
 			if(drawInfo.damagedIndex == i)
@@ -220,7 +229,17 @@ namespace game
 					continue;
 			}
 
+			if(drawInfo.spawning && i == drawInfo.length - 1)
+			{
+				const auto w = GetCardShape(info, drawInfo).x;
+				const auto curve = je::CreateCurveOvershooting();
+				const float eval = curve.REvaluate(drawInfo.spawnLerp);
+
+				xOffset += (1.f - eval) * SIMULATED_RESOLUTION.x;
+			}
+
 			cardDrawInfo.origin = drawInfo.overridePosIndex == i ? drawInfo.overridePos : GetCardPosition(info, drawInfo, i);
+			cardDrawInfo.origin.x += xOffset;
 
 			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;

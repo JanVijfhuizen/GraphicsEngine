@@ -116,6 +116,8 @@ namespace game
 			uint32_t centerOffset = 0;
 			uint32_t damagedIndex = -1;
 			float* hoverDurations = nullptr;
+			bool spawning = false;
+			float spawnLerp = 0;
 		};
 
 		struct PartyDrawInfo final
