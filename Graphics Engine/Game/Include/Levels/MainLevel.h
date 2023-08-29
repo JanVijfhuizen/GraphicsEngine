@@ -58,14 +58,16 @@ namespace game
 			uint32_t lastEnemyDefeatedId;
 			uint32_t uniqueId;
 			float timeSinceLastActionState;
-			bool stateActionActive;
+			ActionState* activeState;
 			const char* actiontext;
 			float actionStateDuration;
 			float hoverDurations[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
-			[[nodiscard]] bool HandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
+			[[nodiscard]] bool PreHandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
+			[[nodiscard]] bool PostHandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
+			[[nodiscard]] static bool ValidateActionState(const State& state, ActionState& actionState);
 			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawSummonAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;

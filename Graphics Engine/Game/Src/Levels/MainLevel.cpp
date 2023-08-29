@@ -172,7 +172,7 @@ namespace game
 		mana = 0;
 		maxMana = 0;
 		timeSinceLastActionState = 0;
-		stateActionActive = false;
+		activeState = nullptr;
 		actiontext = nullptr;
 		state.boardState = {};
 		state.hand.Clear();
@@ -224,16 +224,16 @@ namespace game
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
 
-		// Check for stack events.
 		if (state.stack.count > 0)
 		{
-			if (!stateActionActive)
+			bool valid = true;
+			if (!activeState)
 			{
-				stateActionActive = true;
 				timeSinceLastActionState = level->GetTime();
 				actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
 
-				const auto& actionState = state.stack.Peek();
+				auto& actionState = state.stack.Peek();
+				activeState = &actionState;
 
 				// Temp.
 				switch (actionState.trigger)
@@ -267,24 +267,31 @@ namespace game
 				default:
 					break;
 				}
+
+				valid = PreHandleActionState(state, info, actionState);
 			}
 
-			if (actiontext)
+			if (valid)
 			{
-				TextTask textTask{};
-				textTask.text = actiontext;
-				textTask.lifetime = level->GetTime() - timeSinceLastActionState;
-				textTask.center = true;
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 62);
-				info.textTasks.Push(textTask);
+				if (actiontext)
+				{
+					TextTask textTask{};
+					textTask.text = actiontext;
+					textTask.lifetime = level->GetTime() - timeSinceLastActionState;
+					textTask.center = true;
+					textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 62);
+					info.textTasks.Push(textTask);
+				}
+
+				if (timeSinceLastActionState + actionStateDuration < level->GetTime())
+				{
+					auto actionState = state.stack.Pop();
+					valid = PostHandleActionState(state, info, actionState);
+					activeState = nullptr;
+				}
 			}
-			
-			if (timeSinceLastActionState + actionStateDuration < level->GetTime())
-			{
-				auto actionState = state.stack.Pop();
-				const bool valid = HandleActionState(state, info, actionState);
-				stateActionActive = false;
-			}
+			else
+				activeState = nullptr;
 		}
 
 		if(state.stack.count == 0)
@@ -593,40 +600,13 @@ namespace game
 		return true;
 	}
 
-	bool MainLevel::CombatState::HandleActionState(State& state, const LevelUpdateInfo& info,
+	bool MainLevel::CombatState::PreHandleActionState(State& state, const LevelUpdateInfo& info,
 		ActionState& actionState)
 	{
-		auto& boardState = state.boardState;
-
-		const bool handSrc = actionState.source == ActionState::Source::hand;
-		bool validActionState;
-		bool validSrc;
-		bool validDst;
-
-		switch (actionState.trigger)
-		{
-		case ActionState::Trigger::onDamage:
-		case ActionState::Trigger::onAttack:
-		case ActionState::Trigger::onMiss:
-		case ActionState::Trigger::onDeath:
-			validSrc = handSrc || actionState.src != -1 && state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId;
-			validDst = actionState.dst != -1 && state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
-			validActionState = validSrc && validDst;
-			break;
-		case ActionState::Trigger::onSummon:
-			validActionState = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] == 1 ?
-				boardState.allyCount < BOARD_CAPACITY_PER_SIDE : boardState.enemyCount < BOARD_CAPACITY_PER_SIDE;
-			break;
-		case ActionState::Trigger::draw:
-			validActionState = state.hand.count < state.hand.length;
-			break;
-		default:
-			validActionState = true;
-		}
-
-		if (!validActionState)
+		if (!ValidateActionState(state, actionState))
 			return false;
 
+		auto& boardState = state.boardState;
 		if (actionState.trigger == ActionState::Trigger::onSummon)
 		{
 			constexpr auto vIsAlly = static_cast<uint32_t>(ActionState::VSummon::isAlly);
@@ -654,7 +634,18 @@ namespace game
 		else if (actionState.trigger == ActionState::Trigger::draw)
 			state.hand.Add() = state.Draw(info);
 
+		return true;
+	}
+
+	bool MainLevel::CombatState::PostHandleActionState(State& state, const LevelUpdateInfo& info,
+		ActionState& actionState)
+	{
+		if (!ValidateActionState(state, actionState))
+			return false;
+
+		auto& boardState = state.boardState;
 		const auto& playerState = info.playerState;
+
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
 			const auto partyId = boardState.partyIds[i];
@@ -822,10 +813,43 @@ namespace game
 		return true;
 	}
 
+	bool MainLevel::CombatState::ValidateActionState(const State& state, ActionState& actionState)
+	{
+		const auto& boardState = state.boardState;
+
+		const bool handSrc = actionState.source == ActionState::Source::hand;
+		bool validActionState;
+		bool validSrc;
+		bool validDst;
+
+		switch (actionState.trigger)
+		{
+		case ActionState::Trigger::onDamage:
+		case ActionState::Trigger::onAttack:
+		case ActionState::Trigger::onMiss:
+		case ActionState::Trigger::onDeath:
+			validSrc = handSrc || actionState.src != -1 && state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId;
+			validDst = actionState.dst != -1 && state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
+			validActionState = validSrc && validDst;
+			break;
+		case ActionState::Trigger::onSummon:
+			validActionState = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] == 1 ?
+				boardState.allyCount < BOARD_CAPACITY_PER_SIDE : boardState.enemyCount < BOARD_CAPACITY_PER_SIDE;
+			break;
+		case ActionState::Trigger::draw:
+			validActionState = state.hand.count < state.hand.length;
+			break;
+		default:
+			validActionState = true;
+		}
+
+		return validActionState;
+	}
+
 	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
-		if (!stateActionActive)
+		if (!activeState)
 			return;
 		const auto& actionState = state.stack.Peek();
 		if (actionState.trigger != ActionState::Trigger::onAttack)
@@ -889,17 +913,16 @@ namespace game
 	void MainLevel::CombatState::DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
-		if (!stateActionActive)
+		if (!activeState)
 			return;
-		const auto& actionState = state.stack.Peek();
-		if (allied && actionState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && actionState.dst < BOARD_CAPACITY_PER_SIDE)
+		if (allied && activeState->dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState->dst < BOARD_CAPACITY_PER_SIDE)
 			return;
-		const auto damageTrigger = actionState.trigger == ActionState::Trigger::onDamage;
-		const auto missTrigger = actionState.trigger == ActionState::Trigger::onMiss;
+		const auto damageTrigger = activeState->trigger == ActionState::Trigger::onDamage;
+		const auto missTrigger = activeState->trigger == ActionState::Trigger::onMiss;
 		if (!damageTrigger && !missTrigger)
 			return;
 
-		const auto pos = GetCardPosition(info, drawInfo, actionState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
+		const auto pos = GetCardPosition(info, drawInfo, activeState->dst - !allied * BOARD_CAPACITY_PER_SIDE);
 
 		TextTask textTask{};
 		textTask.center = true;
@@ -909,7 +932,7 @@ namespace game
 
 		if(damageTrigger)
 		{
-			const uint32_t dmg = actionState.values[static_cast<uint32_t>(ActionState::VDamage::damage)];
+			const uint32_t dmg = activeState->values[static_cast<uint32_t>(ActionState::VDamage::damage)];
 			textTask.text = TextInterpreter::IntToConstCharPtr(dmg, info.frameArena);
 			textTask.color = glm::vec4(1, 0, 0, 1);
 			const uint32_t strLen = strlen(textTask.text);
@@ -918,7 +941,7 @@ namespace game
 			memcpy(&text[1], textTask.text, strLen + 1);
 			textTask.text = text;
 
-			drawInfo.damagedIndex = actionState.dst - !allied * BOARD_CAPACITY_PER_SIDE;
+			drawInfo.damagedIndex = activeState->dst - !allied * BOARD_CAPACITY_PER_SIDE;
 		}
 
 		const float t = level.GetTime();
@@ -936,12 +959,11 @@ namespace game
 	void MainLevel::CombatState::DrawSummonAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo, bool allied) const
 	{
-		if (!stateActionActive)
+		if (!activeState)
 			return;
-		const auto& actionState = state.stack.Peek();
-		if (actionState.trigger != ActionState::Trigger::onSummon)
+		if (activeState->trigger != ActionState::Trigger::onSummon)
 			return;
-		if (allied != actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
+		if (allied != activeState->values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
 			return;
 
 		const auto w = GetCardShape(info, drawInfo).x;
@@ -952,7 +974,7 @@ namespace game
 		const auto curve = je::CreateCurveOvershooting();
 		const float eval = curve.REvaluate(l);
 
-		drawInfo.centerOffset = -eval * w / 2;
+		drawInfo.centerOffset = (1.f - eval) * w / 2;
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
