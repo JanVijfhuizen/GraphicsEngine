@@ -471,6 +471,7 @@ namespace game
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.hoverDurations = &hoverDurations[2 + BOARD_CAPACITY_PER_SIDE];
+		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
 		if(activeState && activeState->trigger == ActionState::Trigger::draw)
 			DrawDrawAnimation(info, *level, handSelectionDrawInfo);
 
@@ -1007,6 +1008,21 @@ namespace game
 		drawInfo.dyingIndex = activeState->dst;
 		if (activeState->dst >= BOARD_CAPACITY_PER_SIDE)
 			drawInfo.dyingIndex -= BOARD_CAPACITY_PER_SIDE;
+		drawInfo.dyingLerp = l;
+	}
+
+	void MainLevel::CombatState::DrawCardPlayAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const
+	{
+		if (!activeState)
+			return;
+		if (activeState->trigger != ActionState::Trigger::onCardPlayed)
+			return;
+
+		const float t = level.GetTime();
+		const float aTime = t - timeSinceLastActionState;
+		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
+
+		drawInfo.dyingIndex = activeState->src;
 		drawInfo.dyingLerp = l;
 	}
 

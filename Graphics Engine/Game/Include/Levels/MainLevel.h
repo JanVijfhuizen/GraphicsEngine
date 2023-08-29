@@ -73,6 +73,7 @@ namespace game
 			void DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawDrawAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo) const;
 			void DrawDeathAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
+			void DrawCardPlayAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const;
 		};
 
 		struct RewardMagicCardState final : LevelState<State>
