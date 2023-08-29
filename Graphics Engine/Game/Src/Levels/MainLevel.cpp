@@ -1206,16 +1206,18 @@ namespace game
 		auto& gameState = info.gameState;
 
 		// Move flaws.
-		for (uint32_t i = 0; i < state.boardState.allyCount; ++i)
+		for (int32_t i = static_cast<int32_t>(state.boardState.allyCount) - 1; i >= 0; --i)
 		{
+			if (i >= PARTY_ACTIVE_CAPACITY)
+				continue;
 			const auto partyId = state.boardState.partyIds[i];
 			if (partyId == -1)
-				break;
-			if(partyId != gameState.partyIds[i])
+				gameState.flaws[i] = -1;
+			if (partyId != gameState.partyIds[i])
 			{
 				for (uint32_t j = i; j < state.boardState.allyCount - 1; ++j)
 					gameState.flaws[j] = gameState.flaws[j + 1];
-				--i;
+				++i;
 			}
 		}
 	}
