@@ -11,6 +11,7 @@ namespace je
 		glm::vec2 points[2]{};
 
 		// Evaluates the curve at the target point between 0 and 1.
+		[[nodiscard]] float REvaluate(float lerp) const;
 		[[nodiscard]] float Evaluate(float lerp) const;
 	};
 

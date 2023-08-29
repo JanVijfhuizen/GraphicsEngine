@@ -374,7 +374,7 @@ namespace game
 		const auto& lMouse = info.inputState.lMouse;
 		const bool lMousePressed = lMouse.PressEvent();
 		const bool lMouseReleased = lMouse.ReleaseEvent();
-
+		
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = &info.rooms[path.room];
 		cardDrawInfo.origin = glm::ivec2(8);

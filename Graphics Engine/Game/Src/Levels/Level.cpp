@@ -3,6 +3,7 @@
 
 #include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
+#include "JLib/Curve.h"
 #include "JLib/Math.h"
 #include "States/BoardState.h"
 #include "States/InputState.h"
@@ -309,8 +310,14 @@ namespace game
 		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
 		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
 
+		auto origin = drawInfo.origin;
+		if (drawInfo.hoverDuration)
+		{
+			const auto curve = je::CreateCurveOvershooting();
+			origin.y += curve.REvaluate(*drawInfo.hoverDuration) * 4;
+		}
+
 		PixelPerfectRenderTask bgRenderTask{};
-		bgRenderTask.position = drawInfo.origin;
 		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
 		bgRenderTask.subTexture = cardFrames[0];
 		bgRenderTask.xCenter = drawInfo.center;
@@ -319,6 +326,18 @@ namespace game
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : drawInfo.bgColor;
+		if(drawInfo.hoverDuration && *drawInfo.hoverDuration > 1e-5f)
+		{
+			bgRenderTask.color = glm::vec4(*drawInfo.hoverDuration, 0, 0, 1);
+		}
+
+		if (drawInfo.hoverDuration)
+		{
+			*drawInfo.hoverDuration += 5 * info.deltaTime * (collided * 2 - 1);
+			*drawInfo.hoverDuration = jv::Clamp(*drawInfo.hoverDuration, 0.f, 1.f);
+		}
+
+		bgRenderTask.position = origin;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
 		// Draw image.
@@ -331,7 +350,7 @@ namespace game
 			i %= CARD_MONSTER_ANIM_LENGTH;
 
 			PixelPerfectRenderTask imageRenderTask{};
-			imageRenderTask.position = drawInfo.origin;
+			imageRenderTask.position = origin;
 			imageRenderTask.image = info.texturePool.Get(drawInfo.card->animIndex);
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
@@ -352,7 +371,7 @@ namespace game
 		if(drawInfo.cost != -1)
 		{
 			PixelPerfectRenderTask costRenderTask{};
-			costRenderTask.position = drawInfo.origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
+			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
 			costRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
 			costRenderTask.xCenter = drawInfo.center;
 			costRenderTask.yCenter = drawInfo.center;
@@ -373,7 +392,7 @@ namespace game
 		if (drawInfo.combatStats)
 		{
 			PixelPerfectRenderTask statsRenderTask{};
-			statsRenderTask.position = drawInfo.origin + bgRenderTask.scale / 2;
+			statsRenderTask.position = origin + bgRenderTask.scale / 2;
 			statsRenderTask.position.x -= 6;
 			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
 			statsRenderTask.xCenter = drawInfo.center;

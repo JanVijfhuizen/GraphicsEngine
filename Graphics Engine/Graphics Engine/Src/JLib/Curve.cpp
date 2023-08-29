@@ -4,6 +4,11 @@
 
 namespace je
 {
+	float Curve::REvaluate(const float lerp) const
+	{
+		return 1.f - Evaluate(1.f - lerp);
+	}
+
 	float Curve::Evaluate(float lerp) const
 	{
 		lerp = jv::Clamp<float>(lerp, 0, 1);

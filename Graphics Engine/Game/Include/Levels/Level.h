@@ -91,6 +91,7 @@ namespace game
 			CombatStats* combatStats = nullptr;
 			uint32_t cost = -1;
 			bool ignoreAnim = false;
+			float* hoverDuration = nullptr;
 		};
 
 		struct CardSelectionDrawInfo final
