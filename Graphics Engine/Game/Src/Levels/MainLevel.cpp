@@ -21,6 +21,8 @@ namespace game
 			path = {};
 			path.boss = state.GetBoss(info);
 		}
+		for (auto& hoverDuration : hoverDurations)
+			hoverDuration = 0;
 	}
 
 	bool MainLevel::BossRevealState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -34,6 +36,7 @@ namespace game
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+		cardSelectionDrawInfo.hoverDurations = hoverDurations;
 		level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		const char* text = "the stage bosses have been revealed.";
@@ -63,6 +66,8 @@ namespace game
 			if (addArtifact)
 				path.artifact = state.GetArtifact(info);
 		}
+		for (auto& hoverDuration : hoverDurations)
+			hoverDuration = 0;
 	}
 
 	bool MainLevel::PathSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -120,6 +125,7 @@ namespace game
 		cardSelectionDrawInfo.texts = bossPresent ? nullptr : texts;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.highlighted = discoverOption;
+		cardSelectionDrawInfo.hoverDurations = hoverDurations;
 		uint32_t selected = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		if (selected == DISCOVER_LENGTH)
 			selected = -1;
@@ -155,6 +161,9 @@ namespace game
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
 	{
 		const auto& gameState = info.gameState;
+
+		for (auto& hoverDuration : hoverDurations)
+			hoverDuration = 0;
 		
 		selectionState = SelectionState::none;
 		time = 0;
@@ -378,9 +387,11 @@ namespace game
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = &info.rooms[path.room];
 		cardDrawInfo.origin = glm::ivec2(8);
+		cardDrawInfo.hoverDuration = hoverDurations;
 		level->DrawCard(info, cardDrawInfo);
 		cardDrawInfo.card = &info.events[eventCard];
 		cardDrawInfo.origin.x += 28;
+		cardDrawInfo.hoverDuration = &hoverDurations[1];
 		level->DrawCard(info, cardDrawInfo);
 
 		constexpr uint32_t l = HAND_MAX_SIZE > BOARD_CAPACITY_PER_SIDE ? HAND_MAX_SIZE : BOARD_CAPACITY_PER_SIDE;
@@ -406,6 +417,7 @@ namespace game
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
+		enemySelectionDrawInfo.hoverDurations = &hoverDurations[2];
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		DrawDamageAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
@@ -447,6 +459,7 @@ namespace game
 		handSelectionDrawInfo.greyedOutArr = greyedOutArr;
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
+		handSelectionDrawInfo.hoverDurations = &hoverDurations[2 + BOARD_CAPACITY_PER_SIDE];
 		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -509,6 +522,7 @@ namespace game
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
+		playerCardSelectionDrawInfo.hoverDurations = &hoverDurations[2 + BOARD_CAPACITY_PER_SIDE + HAND_MAX_SIZE];
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 
@@ -795,7 +809,7 @@ namespace game
 				{
 					if (as.src != -1 && as.source == ActionState::Source::board && as.src > actionState.src && as.src < BOARD_CAPACITY_PER_SIDE)
 						--as.src;
-					if (as.dst != -1 && as.dst > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
+					if (as.dst != -1 && as.dst > actionState.dst && as.dst < BOARD_CAPACITY_PER_SIDE)
 						--as.dst;
 				}
 			}
@@ -921,6 +935,8 @@ namespace game
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
 	{
 		discoverOption = -1;
+		for (auto& hoverDuration : hoverDurations)
+			hoverDuration = 0;
 	}
 
 	bool MainLevel::RewardMagicCardState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -943,6 +959,7 @@ namespace game
 		cardSelectionDrawInfo.highlighted = discoverOption;
 		cardSelectionDrawInfo.length = MAGIC_DECK_SIZE;
 		cardSelectionDrawInfo.costs = costs;
+		cardSelectionDrawInfo.hoverDurations = hoverDurations;
 		const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		const auto& path = state.paths[state.chosenPath];
@@ -954,6 +971,7 @@ namespace game
 		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 44 };
 		cardDrawInfo.lifeTime = level->GetTime();
 		cardDrawInfo.cost = rewardCard->cost;
+		cardDrawInfo.hoverDuration = &hoverDurations[MAGIC_DECK_SIZE];
 		level->DrawCard(info, cardDrawInfo);
 
 		if (info.inputState.lMouse.PressEvent())
@@ -984,6 +1002,8 @@ namespace game
 	void MainLevel::RewardFlawCardState::Reset(State& state, const LevelInfo& info)
 	{
 		discoverOption = -1;
+		for (auto& hoverDuration : hoverDurations)
+			hoverDuration = 0;
 	}
 
 	bool MainLevel::RewardFlawCardState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -1056,6 +1076,7 @@ namespace game
 			cardSelectionDrawInfo.stackCounts = stackCounts;
 			cardSelectionDrawInfo.highlighted = discoverOption;
 			cardSelectionDrawInfo.combatStats = combatStats;
+			cardSelectionDrawInfo.hoverDurations = hoverDurations;
 			const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 			
 			const auto& path = state.paths[state.chosenPath];
@@ -1065,6 +1086,7 @@ namespace game
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
 			cardDrawInfo.lifeTime = level->GetTime();
+			cardDrawInfo.hoverDuration = &hoverDurations[PARTY_ACTIVE_CAPACITY];
 			level->DrawCard(info, cardDrawInfo);
 
 			if (info.inputState.lMouse.PressEvent())
@@ -1090,6 +1112,8 @@ namespace game
 
 	void MainLevel::RewardArtifactState::Reset(State& state, const LevelInfo& info)
 	{
+		for (auto& hoverDuration : hoverDurations)
+			hoverDuration = 0;
 		if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
 		{
 			auto& playerState = info.playerState;
@@ -1166,6 +1190,7 @@ namespace game
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		cardSelectionDrawInfo.outStackSelected = &outStackSelected;
 		cardSelectionDrawInfo.combatStats = combatStats;
+		cardSelectionDrawInfo.hoverDurations = hoverDurations;
 		const auto choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		auto& path = state.paths[state.chosenPath];
@@ -1175,6 +1200,7 @@ namespace game
 		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
 		cardDrawInfo.center = true;
 		cardDrawInfo.lifeTime = level->GetTime();
+		cardDrawInfo.hoverDuration = &hoverDurations[PARTY_ACTIVE_CAPACITY];
 		level->DrawCard(info, cardDrawInfo);
 		
 		if(choice != -1 && outStackSelected != -1)

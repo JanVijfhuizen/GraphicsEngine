@@ -66,6 +66,8 @@ namespace game
 		monsterChoice = -1;
 		artifactChoice = -1;
 		timeSinceFirstChoicesMade = -1;
+		for (auto& hoverDuration : hoverDurations)
+			hoverDuration = 0;
 
 		uint32_t count;
 		GetDeck(nullptr, &count, info.monsters);
@@ -126,6 +128,7 @@ namespace game
 			combatStats[i] = GetCombatStat(*monster);
 		}
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 2;
+		cardSelectionDrawInfo.hoverDurations = hoverDurations;
 		const uint32_t discoveredMonster = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		cardSelectionDrawInfo.combatStats = nullptr;
 
@@ -133,6 +136,7 @@ namespace game
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 			cards[i] = &info.artifacts[artifactDiscoverOptions[i]];
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2 - 2;
+		cardSelectionDrawInfo.hoverDurations = &hoverDurations[DISCOVER_LENGTH];
 		const uint32_t discoveredArtifact = level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		if(info.inputState.lMouse.ReleaseEvent())
@@ -144,6 +148,12 @@ namespace game
 		}
 
 		return true;
+	}
+
+	void NewGameLevel::JoinState::Reset(State& state, const LevelInfo& info)
+	{
+		LevelState<State>::Reset(state, info);
+		hoverDuration = 0;
 	}
 
 	bool NewGameLevel::JoinState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -161,6 +171,7 @@ namespace game
 		cardDrawInfo.combatStats = &combatStats;
 		cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
 		cardDrawInfo.lifeTime = level->GetTime();
+		cardDrawInfo.hoverDuration = &hoverDuration;
 		level->DrawCard(info, cardDrawInfo);
 		
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;

@@ -23,6 +23,8 @@ namespace game
 		_timeSinceOpened = 0;
 		_timeSinceLoading = 0;
 		_loading = false;
+		for (auto& hoverDuration : _hoverDurations)
+			hoverDuration = 0;
 	}
 
 	bool Level::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -234,6 +236,7 @@ namespace game
 			uint32_t stackedCount = -1;
 
 			cardDrawInfo.ignoreAnim = true;
+			cardDrawInfo.hoverDuration = nullptr;
 			
 			if (drawInfo.stacks)
 			{
@@ -266,6 +269,8 @@ namespace game
 			cardDrawInfo.ignoreAnim = stackedSelected != -1;
 			if (drawInfo.costs)
 				cardDrawInfo.cost = drawInfo.costs[i];
+			if(drawInfo.hoverDurations && !stackedSelected != -1)
+				cardDrawInfo.hoverDuration = &drawInfo.hoverDurations[i];
 			DrawCard(info, cardDrawInfo);
 			cardDrawInfo.combatStats = nullptr;
 			cardDrawInfo.cost = -1;
@@ -277,6 +282,7 @@ namespace game
 				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
 				stackedDrawInfo.selectable = true;
 				stackedDrawInfo.ignoreAnim = false;
+				stackedDrawInfo.hoverDuration = nullptr;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -507,6 +513,7 @@ namespace game
 		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
 		cardSelectionDrawInfo.greyedOutArr = drawInfo.greyedOutArr;
 		cardSelectionDrawInfo.combatStats = combatInfos;
+		cardSelectionDrawInfo.hoverDurations = _hoverDurations;
 
 		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}
