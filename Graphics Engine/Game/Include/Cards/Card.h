@@ -24,6 +24,7 @@ namespace game
 			draw,
 			onSummon,
 			onAttack,
+			onMiss,
 			onDamage,
 			onDeath,
 			onCardPlayed,
@@ -32,7 +33,7 @@ namespace game
 		enum class Source
 		{
 			board,
-			other
+			hand
 		} source = Source::board;
 
 		uint32_t src = -1;
@@ -50,9 +51,8 @@ namespace game
 		bool unique = false;
 		const char* name = "unnamed";
 		const char* ruleText = "no rule text yet";
-		uint32_t count = 1;
 		uint32_t animIndex = 0;
 
-		void(*onActionEvent)(State& state, ActionState& actionState, uint32_t self) = nullptr;
+		bool(*onActionEvent)(State& state, ActionState& actionState, uint32_t self) = nullptr;
 	};
 }

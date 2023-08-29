@@ -12,7 +12,7 @@
 
 namespace game
 {
-	constexpr uint32_t CARD_FRAME_COUNT = 3;
+	constexpr uint32_t CARD_FRAME_COUNT = 4;
 	constexpr uint32_t CARD_STACKED_SPACING = 6;
 	constexpr float CARD_MONSTER_ANIM_SPEED = .5f;
 
@@ -173,6 +173,29 @@ namespace game
 		return pressed;
 	}
 
+	glm::ivec2 Level::GetCardShape(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
+	{
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT + drawInfo.offsetMod;
+		return {width, cardTexture.resolution.y };
+	}
+
+	glm::ivec2 Level::GetCardPosition(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo,
+		const uint32_t i)
+	{
+		auto origin = glm::ivec2(0, drawInfo.height);
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT + drawInfo.offsetMod;
+
+		const uint32_t m = jv::Min(drawInfo.length, drawInfo.rowCutoff);
+		origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - width * (m - 1) / 2);
+		origin.x += static_cast<int32_t>(width) * (i % drawInfo.rowCutoff);
+		if (i != 0)
+			origin.y -= (cardTexture.resolution.y + 4) * (i / drawInfo.rowCutoff);
+		origin.x += drawInfo.centerOffset;
+		return origin;
+	}
+
 	uint32_t Level::DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
 	{
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
@@ -180,7 +203,6 @@ namespace game
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
-		cardDrawInfo.origin.y = static_cast<int32_t>(drawInfo.height);
 		cardDrawInfo.lifeTime = drawInfo.lifeTime;
 		
 		uint32_t choice = -1;
@@ -189,20 +211,15 @@ namespace game
 
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
-			if((i + drawInfo.rowCutoff) % drawInfo.rowCutoff == 0)
-			{
-				const uint32_t m = jv::Min(drawInfo.length, drawInfo.rowCutoff);
-				cardDrawInfo.origin.x = static_cast<int32_t>(SIMULATED_RESOLUTION.x / 2 - width * (m - 1) / 2);
-				if (i != 0)
-					cardDrawInfo.origin.y -= cardTexture.resolution.y + 4;
-			}
+			cardDrawInfo.origin = drawInfo.overridePosIndex == i ? drawInfo.overridePos : GetCardPosition(info, drawInfo, i);
 
 			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
 
-			cardDrawInfo.borderColor = glm::vec4(1);
-			cardDrawInfo.borderColor = greyedOut ? glm::vec4(.1, .1, .1, 1) : cardDrawInfo.borderColor;
-			cardDrawInfo.borderColor = selected ? glm::vec4(0, 1, 0, 1) : cardDrawInfo.borderColor;
+			cardDrawInfo.fgColor = glm::vec4(1);
+			cardDrawInfo.bgColor = glm::vec4(0, 0, 0, 1);
+			cardDrawInfo.fgColor = greyedOut ? glm::vec4(.1, .1, .1, 1) : cardDrawInfo.fgColor;
+			cardDrawInfo.fgColor = selected ? glm::vec4(0, 1, 0, 1) : cardDrawInfo.fgColor;
 			cardDrawInfo.card = drawInfo.cards[i];
 			cardDrawInfo.selectable = true;
 			const bool collides = CollidesCard(info, cardDrawInfo);
@@ -275,7 +292,6 @@ namespace game
 
 			if ((collides || stackedSelected != -1) && !greyedOut)
 				choice = i;
-			cardDrawInfo.origin.x += static_cast<int32_t>(width);
 		}
 
 		return choice;
@@ -293,11 +309,10 @@ namespace game
 		bgRenderTask.subTexture = cardFrames[0];
 		bgRenderTask.xCenter = drawInfo.center;
 		bgRenderTask.yCenter = drawInfo.center;
-		bgRenderTask.color = drawInfo.borderColor;
 
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
-		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
+		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : drawInfo.bgColor;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
 		// Draw image.
@@ -318,6 +333,11 @@ namespace game
 			info.pixelPerfectRenderTasks.Push(imageRenderTask);
 		}
 
+		PixelPerfectRenderTask fgRenderTask = bgRenderTask;
+		fgRenderTask.subTexture = cardFrames[1];
+		fgRenderTask.color = drawInfo.fgColor;
+		info.pixelPerfectRenderTasks.Push(fgRenderTask);
+
 		const bool priority = !info.inputState.rMouse.pressed;
 		const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
 		jv::ge::SubTexture statFrames[5];
@@ -330,7 +350,7 @@ namespace game
 			costRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
 			costRenderTask.xCenter = drawInfo.center;
 			costRenderTask.yCenter = drawInfo.center;
-			costRenderTask.color = drawInfo.borderColor;
+			costRenderTask.color = drawInfo.fgColor;
 			costRenderTask.subTexture = statFrames[4];
 			costRenderTask.priority = priority;
 			info.pixelPerfectRenderTasks.Push(costRenderTask);
@@ -352,7 +372,7 @@ namespace game
 			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
 			statsRenderTask.xCenter = drawInfo.center;
 			statsRenderTask.yCenter = drawInfo.center;
-			statsRenderTask.color = drawInfo.borderColor;
+			statsRenderTask.color = drawInfo.fgColor;
 			statsRenderTask.priority = priority;
 
 			uint32_t values[3]

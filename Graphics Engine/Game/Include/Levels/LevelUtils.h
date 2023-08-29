@@ -28,11 +28,10 @@ namespace game
 			if (card.unique)
 				continue;
 
-			if(outCount)
-				*outCount += card.count;
+			if (outCount)
+				++*outCount;
 			if(outDeck)
-				for (uint32_t j = 0; j < card.count; ++j)
-					outDeck->Add() = i;
+				outDeck->Add() = i;
 		}
 	}
 }

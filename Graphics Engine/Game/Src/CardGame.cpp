@@ -390,9 +390,16 @@ namespace game
 		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
 			if(actionState.trigger == ActionState::Trigger::onAttack && self == actionState.src)
+			{
 				std::cout << "daisy attacking" << std::endl;
-			else if (actionState.trigger == ActionState::Trigger::onAttack && self == actionState.dst)
+				return true;
+			}
+			if (actionState.trigger == ActionState::Trigger::onAttack && self == actionState.dst)
+			{
 				std::cout << "daisy attacked" << std::endl;
+				return true;
+			}
+			return false;
 		};
 		return arr;
 	}
@@ -427,7 +434,6 @@ namespace game
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
-		arr[0].count = 24;
 		arr[0].name = "lightning bolt";
 		arr[0].ruleText = "deals 2 damage";
 		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
@@ -436,10 +442,12 @@ namespace game
 			{
 				ActionState damageState = actionState;
 				damageState.trigger = ActionState::Trigger::onDamage;
-				damageState.source = ActionState::Source::other;
+				damageState.source = ActionState::Source::hand;
 				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
 				state.stack.Add() = damageState;
+				return true;
 			}
+			return false;
 		};
 		return arr;
 	}

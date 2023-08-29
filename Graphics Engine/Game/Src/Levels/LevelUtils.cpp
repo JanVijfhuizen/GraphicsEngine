@@ -40,7 +40,7 @@ namespace game
 	{
 		for (auto& magic : gameState.magics)
 			for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
-				if(deck[k] == magic)
+				if (deck[k] == magic)
 				{
 					deck.RemoveAt(k);
 					break;

@@ -55,10 +55,17 @@ namespace game
 			uint32_t maxMana;
 			uint32_t lastEnemyDefeatedId;
 			uint32_t uniqueId;
+			float timeSinceLastActionState;
+			bool stateActionActive;
+			const char* actiontext;
+			float actionStateDuration;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
+			[[nodiscard]] bool HandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
+			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
+			void DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, Level& level, const CardSelectionDrawInfo& drawInfo, bool allied) const;
 		};
 
 		struct RewardMagicCardState final : LevelState<State>
