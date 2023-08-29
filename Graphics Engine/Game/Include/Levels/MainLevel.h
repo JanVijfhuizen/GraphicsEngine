@@ -64,11 +64,11 @@ namespace game
 			float hoverDurations[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
 
 			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
-				LevelIndex& loadLevelIndex) override;
+			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 			[[nodiscard]] bool HandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
 			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
+			void DrawSummonAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 		};
 
 		struct RewardMagicCardState final : LevelState<State>

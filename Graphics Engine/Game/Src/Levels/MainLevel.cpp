@@ -420,6 +420,7 @@ namespace game
 		enemySelectionDrawInfo.hoverDurations = &hoverDurations[2];
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		DrawDamageAnimation(state, info, *level, enemySelectionDrawInfo, false);
+		DrawSummonAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -525,6 +526,7 @@ namespace game
 		playerCardSelectionDrawInfo.hoverDurations = &hoverDurations[2 + BOARD_CAPACITY_PER_SIDE + HAND_MAX_SIZE];
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
+		DrawSummonAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
 		
@@ -897,8 +899,7 @@ namespace game
 		if (!damageTrigger && !missTrigger)
 			return;
 
-		auto pos = GetCardPosition(info, drawInfo, actionState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
-		//pos.y += GetCardShape(info, drawInfo).y / 2 + 8;
+		const auto pos = GetCardPosition(info, drawInfo, actionState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
 
 		TextTask textTask{};
 		textTask.center = true;
@@ -930,6 +931,28 @@ namespace game
 		textTask.position.y += eval * 24;
 
 		info.textTasks.Push(textTask);
+	}
+
+	void MainLevel::CombatState::DrawSummonAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
+		CardSelectionDrawInfo& drawInfo, bool allied) const
+	{
+		if (!stateActionActive)
+			return;
+		const auto& actionState = state.stack.Peek();
+		if (actionState.trigger != ActionState::Trigger::onSummon)
+			return;
+		if (allied != actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
+			return;
+
+		const auto w = GetCardShape(info, drawInfo).x;
+		const float t = level.GetTime();
+		const float aTime = t - timeSinceLastActionState;
+		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
+
+		const auto curve = je::CreateCurveOvershooting();
+		const float eval = curve.REvaluate(l);
+
+		drawInfo.centerOffset = -eval * w / 2;
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
