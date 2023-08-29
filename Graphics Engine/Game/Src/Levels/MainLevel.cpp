@@ -582,16 +582,20 @@ namespace game
 	{
 		auto& boardState = state.boardState;
 
+		const bool handSrc = actionState.source == ActionState::Source::hand;
 		bool validActionState;
+		bool validSrc;
+		bool validDst;
+
 		switch (actionState.trigger)
 		{
 		case ActionState::Trigger::onDamage:
 		case ActionState::Trigger::onAttack:
 		case ActionState::Trigger::onMiss:
 		case ActionState::Trigger::onDeath:
-			validActionState =
-				actionState.source == ActionState::Source::hand || state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId &&
-				state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
+			validSrc = handSrc || actionState.src != -1 && state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId;
+			validDst = actionState.dst != -1 && state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
+			validActionState = validSrc && validDst;
 			break;
 		case ActionState::Trigger::onSummon:
 			validActionState = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] == 1 ?
@@ -773,16 +777,23 @@ namespace game
 			// Modify states as to ensure other events can go through.
 			for (auto& as : state.stack)
 			{
+				// Invalidate everything that attacks this.
+				if (as.src == i || as.dst == i)
+				{
+					as.src = -1;
+					as.dst = -1;
+				}
+
 				if (isEnemy)
 				{
-					if (as.source == ActionState::Source::board && as.src != -1 && as.src > actionState.dst)
+					if (as.src != -1 && as.source == ActionState::Source::board && as.src > actionState.src)
 						--as.src;
 					if (as.dst != -1 && as.dst > actionState.dst)
 						--as.dst;
 				}
 				else
 				{
-					if (as.source == ActionState::Source::board && as.src != -1 && as.src > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
+					if (as.src != -1 && as.source == ActionState::Source::board && as.src > actionState.src && as.src < BOARD_CAPACITY_PER_SIDE)
 						--as.src;
 					if (as.dst != -1 && as.dst > actionState.dst && as.src < BOARD_CAPACITY_PER_SIDE)
 						--as.dst;
@@ -795,7 +806,7 @@ namespace game
 		return true;
 	}
 
-	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, Level& level,
+	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
 		if (!stateActionActive)
@@ -859,8 +870,8 @@ namespace game
 		}
 	}
 
-	void MainLevel::CombatState::DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, Level& level,
-		const CardSelectionDrawInfo& drawInfo, const bool allied) const
+	void MainLevel::CombatState::DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
+		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
 		if (!stateActionActive)
 			return;
@@ -890,8 +901,9 @@ namespace game
 			const auto text = static_cast<char*>(info.frameArena.Alloc(strLen + 1));
 			text[0] = '-';
 			memcpy(&text[1], textTask.text, strLen + 1);
-			std::cout << text << std::endl;
 			textTask.text = text;
+
+			drawInfo.damagedIndex = actionState.dst - !allied * BOARD_CAPACITY_PER_SIDE;
 		}
 
 		const float t = level.GetTime();
@@ -1011,7 +1023,7 @@ namespace game
 			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
 				const auto partyId = gameState.partyIds[i];
-				if (gameState.partyIds[i] == -1)
+				if (partyId == -1)
 					break;
 				++ogPartyCount;
 
@@ -1069,7 +1081,7 @@ namespace game
 			if (!info.inputState.enter.PressEvent())
 				return true;
 
-			info.gameState.flaws[gameState.partyIds[discoverOption]] = path.flaw;
+			info.gameState.flaws[discoverOption] = path.flaw;
 		}
 
 		stateIndex = static_cast<uint32_t>(StateNames::exitFound);
@@ -1190,6 +1202,24 @@ namespace game
 		for (auto& b : selected)
 			b = false;
 		timeSincePartySelected = -1;
+
+		auto& gameState = info.gameState;
+
+		// Move flaws.
+		for (int32_t i = static_cast<int32_t>(state.boardState.allyCount) - 1; i >= 0; --i)
+		{
+			if (i >= PARTY_ACTIVE_CAPACITY)
+				continue;
+			const auto partyId = state.boardState.partyIds[i];
+			if (partyId == -1)
+				gameState.flaws[i] = -1;
+			if (partyId != gameState.partyIds[i])
+			{
+				for (uint32_t j = i; j < state.boardState.allyCount - 1; ++j)
+					gameState.flaws[j] = gameState.flaws[j + 1];
+				++i;
+			}
+		}
 	}
 
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,

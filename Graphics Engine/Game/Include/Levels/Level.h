@@ -113,6 +113,7 @@ namespace game
 			glm::ivec2 overridePos;
 			uint32_t overridePosIndex = -1;
 			uint32_t centerOffset = 0;
+			uint32_t damagedIndex = -1;
 		};
 
 		struct PartyDrawInfo final
