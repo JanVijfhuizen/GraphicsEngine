@@ -1023,7 +1023,7 @@ namespace game
 			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
 				const auto partyId = gameState.partyIds[i];
-				if (gameState.partyIds[i] == -1)
+				if (partyId == -1)
 					break;
 				++ogPartyCount;
 
@@ -1081,7 +1081,7 @@ namespace game
 			if (!info.inputState.enter.PressEvent())
 				return true;
 
-			info.gameState.flaws[gameState.partyIds[discoverOption]] = path.flaw;
+			info.gameState.flaws[discoverOption] = path.flaw;
 		}
 
 		stateIndex = static_cast<uint32_t>(StateNames::exitFound);
@@ -1202,6 +1202,22 @@ namespace game
 		for (auto& b : selected)
 			b = false;
 		timeSincePartySelected = -1;
+
+		auto& gameState = info.gameState;
+
+		// Move flaws.
+		for (uint32_t i = 0; i < state.boardState.allyCount; ++i)
+		{
+			const auto partyId = state.boardState.partyIds[i];
+			if (partyId == -1)
+				break;
+			if(partyId != gameState.partyIds[i])
+			{
+				for (uint32_t j = i; j < state.boardState.allyCount - 1; ++j)
+					gameState.flaws[j] = gameState.flaws[j + 1];
+				--i;
+			}
+		}
 	}
 
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
