@@ -406,8 +406,8 @@ namespace game
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
-		if (stateActionActive && state.stack.count > 0 && state.stack.Peek().trigger == ActionState::Trigger::onAttack)
-			DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, state.stack.Peek(), false);
+		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
+		DrawDamageAnimation(state, info, enemySelectionDrawInfo, false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -509,8 +509,8 @@ namespace game
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
-		if(stateActionActive && state.stack.count > 0 && state.stack.Peek().trigger == ActionState::Trigger::onAttack)
-			DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, state.stack.Peek(), true);
+		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
+		DrawDamageAnimation(state, info, playerCardSelectionDrawInfo, true);
 
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
 		
@@ -796,8 +796,14 @@ namespace game
 	}
 
 	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, Level& level,
-		CardSelectionDrawInfo& drawInfo, const ActionState& actionState, const bool allied) const
+		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
+		if (!stateActionActive)
+			return;
+		const auto& actionState = state.stack.Peek();
+		if (actionState.trigger != ActionState::Trigger::onAttack)
+			return;
+
 		const auto& boardState = state.boardState;
 		assert(actionState.trigger == ActionState::Trigger::onAttack);
 
@@ -851,6 +857,42 @@ namespace game
 			drawInfo.overridePos = GetCardPosition(info, drawInfo, dst);
 			drawInfo.overridePos.y += tMOff * 32 * (2 * !allied - 1);
 		}
+	}
+
+	void MainLevel::CombatState::DrawDamageAnimation(const State& state, const LevelUpdateInfo& info,
+		const CardSelectionDrawInfo& drawInfo, const bool allied) const
+	{
+		if (!stateActionActive)
+			return;
+		const auto& actionState = state.stack.Peek();
+		if (allied && actionState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && actionState.dst < BOARD_CAPACITY_PER_SIDE)
+			return;
+		const auto damageTrigger = actionState.trigger == ActionState::Trigger::onDamage;
+		const auto missTrigger = actionState.trigger == ActionState::Trigger::onMiss;
+		if (!damageTrigger && !missTrigger)
+			return;
+
+		auto pos = GetCardPosition(info, drawInfo, actionState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
+		pos.y += GetCardShape(info, drawInfo).y / 2 + 8;
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.position = pos;
+		textTask.text = "miss";
+
+		if(damageTrigger)
+		{
+			const uint32_t dmg = actionState.values[static_cast<uint32_t>(ActionState::VDamage::damage)];
+			textTask.text = TextInterpreter::IntToConstCharPtr(dmg, info.frameArena);
+			textTask.color = glm::vec4(1, 0, 0, 1);
+			const uint32_t strLen = strlen(textTask.text);
+			const auto text = static_cast<char*>(info.frameArena.Alloc(strLen + 1));
+			text[0] = '-';
+			memcpy(&text[1], textTask.text, strLen);
+			textTask.text = text;
+		}
+		
+		info.textTasks.Push(textTask);
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
