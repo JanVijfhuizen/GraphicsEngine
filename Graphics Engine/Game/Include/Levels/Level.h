@@ -118,6 +118,8 @@ namespace game
 			float* hoverDurations = nullptr;
 			bool spawning = false;
 			float spawnLerp = 0;
+			uint32_t dyingIndex = -1;
+			float dyingLerp;
 		};
 
 		struct PartyDrawInfo final

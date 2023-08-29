@@ -212,6 +212,7 @@ namespace game
 			*drawInfo.outStackSelected = -1;
 
 		uint32_t xOffset = 0;
+
 		if(drawInfo.spawning && drawInfo.length > 1)
 		{
 			const auto w = GetCardShape(info, drawInfo).x;
@@ -223,6 +224,8 @@ namespace game
 
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
+			int32_t xAddOffset = 0;
+
 			if(drawInfo.damagedIndex == i)
 			{
 				if (fmodf(drawInfo.lifeTime, .2f) < .1f)
@@ -231,15 +234,33 @@ namespace game
 
 			if(drawInfo.spawning && i == drawInfo.length - 1)
 			{
-				const auto w = GetCardShape(info, drawInfo).x;
 				const auto curve = je::CreateCurveOvershooting();
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
-				xOffset += (1.f - eval) * SIMULATED_RESOLUTION.x;
+				xAddOffset = (1.f - eval) * SIMULATED_RESOLUTION.x;
+			}
+
+			if(drawInfo.dyingIndex != -1)
+			{
+				const bool fading = drawInfo.dyingLerp < .5f;
+				if (drawInfo.dyingIndex == i && !fading)
+					continue;
+				if (drawInfo.length > 1 && !fading)
+				{
+					const auto w = GetCardShape(info, drawInfo).x;
+					const auto curve = je::CreateCurveOvershooting();
+					const float eval = curve.REvaluate((drawInfo.dyingLerp - .5f) * 2);
+
+					float o = eval / 2.f * w;
+					if (drawInfo.dyingIndex < i)
+						o *= -1;
+					xAddOffset += o;
+				}
 			}
 
 			cardDrawInfo.origin = drawInfo.overridePosIndex == i ? drawInfo.overridePos : GetCardPosition(info, drawInfo, i);
 			cardDrawInfo.origin.x += xOffset;
+			cardDrawInfo.origin.x += xAddOffset;
 
 			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
@@ -248,6 +269,14 @@ namespace game
 			cardDrawInfo.bgColor = glm::vec4(0, 0, 0, 1);
 			cardDrawInfo.fgColor = greyedOut ? glm::vec4(.1, .1, .1, 1) : cardDrawInfo.fgColor;
 			cardDrawInfo.fgColor = selected ? glm::vec4(0, 1, 0, 1) : cardDrawInfo.fgColor;
+
+			if (drawInfo.dyingIndex == i)
+			{
+				const auto mul = glm::vec4(glm::vec3(1.f - drawInfo.dyingLerp * 2), 1);
+				cardDrawInfo.bgColor *= mul;
+				cardDrawInfo.fgColor *= mul;
+			}
+
 			cardDrawInfo.card = drawInfo.cards[i];
 			cardDrawInfo.selectable = true;
 			const bool collides = CollidesCard(info, cardDrawInfo);

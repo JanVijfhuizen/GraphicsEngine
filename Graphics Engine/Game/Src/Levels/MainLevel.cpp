@@ -428,8 +428,9 @@ namespace game
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.hoverDurations = &hoverDurations[2];
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
-		DrawDamageAnimation(state, info, *level, enemySelectionDrawInfo, false);
-		DrawSummonAnimation(state, info, *level, enemySelectionDrawInfo, false);
+		DrawDamageAnimation(info, *level, enemySelectionDrawInfo, false);
+		DrawSummonAnimation(info, *level, enemySelectionDrawInfo, false);
+		DrawDeathAnimation(info, *level, enemySelectionDrawInfo, false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -471,7 +472,7 @@ namespace game
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.hoverDurations = &hoverDurations[2 + BOARD_CAPACITY_PER_SIDE];
 		if(activeState && activeState->trigger == ActionState::Trigger::draw)
-			DrawDrawAnimation(state, info, *level, handSelectionDrawInfo);
+			DrawDrawAnimation(info, *level, handSelectionDrawInfo);
 
 		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
 		selectedArr = nullptr;
@@ -537,8 +538,9 @@ namespace game
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
 		playerCardSelectionDrawInfo.hoverDurations = &hoverDurations[2 + BOARD_CAPACITY_PER_SIDE + HAND_MAX_SIZE];
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
-		DrawDamageAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
-		DrawSummonAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
+		DrawDamageAnimation(info, *level, playerCardSelectionDrawInfo, true);
+		DrawSummonAnimation(info, *level, playerCardSelectionDrawInfo, true);
+		DrawDeathAnimation(info, *level, playerCardSelectionDrawInfo, true);
 
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
 		
@@ -915,7 +917,7 @@ namespace game
 		}
 	}
 
-	void MainLevel::CombatState::DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
+	void MainLevel::CombatState::DrawDamageAnimation(const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
 		if (!activeState)
@@ -961,8 +963,8 @@ namespace game
 		info.textTasks.Push(textTask);
 	}
 
-	void MainLevel::CombatState::DrawSummonAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
-		CardSelectionDrawInfo& drawInfo, bool allied) const
+	void MainLevel::CombatState::DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level,
+		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
 		if (!activeState)
 			return;
@@ -971,19 +973,41 @@ namespace game
 		if (allied != activeState->values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
 			return;
 
-		DrawDrawAnimation(state, info, level, drawInfo);
+		DrawDrawAnimation(info, level, drawInfo);
 	}
 
-	void MainLevel::CombatState::DrawDrawAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
+	void MainLevel::CombatState::DrawDrawAnimation(const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo) const
 	{
-		const auto w = GetCardShape(info, drawInfo).x;
+		if (!activeState)
+			return;
+
 		const float t = level.GetTime();
 		const float aTime = t - timeSinceLastActionState;
 		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
 
 		drawInfo.spawning = true;
 		drawInfo.spawnLerp = l;
+	}
+
+	void MainLevel::CombatState::DrawDeathAnimation(const LevelUpdateInfo& info, const Level& level,
+		CardSelectionDrawInfo& drawInfo, const bool allied) const
+	{
+		if (!activeState)
+			return;
+		if (activeState->trigger != ActionState::Trigger::onDeath)
+			return;
+		if (allied && activeState->dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState->dst < BOARD_CAPACITY_PER_SIDE)
+			return;
+
+		const float t = level.GetTime();
+		const float aTime = t - timeSinceLastActionState;
+		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
+
+		drawInfo.dyingIndex = activeState->dst;
+		if (activeState->dst >= BOARD_CAPACITY_PER_SIDE)
+			drawInfo.dyingIndex -= BOARD_CAPACITY_PER_SIDE;
+		drawInfo.dyingLerp = l;
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
