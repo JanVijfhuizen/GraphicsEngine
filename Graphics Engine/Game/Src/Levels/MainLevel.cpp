@@ -405,21 +405,8 @@ namespace game
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
-
-		// WIP.
-		if (state.stack.count > 0)
-		{
-			const auto& actionState = state.stack.Peek();
-			if (actionState.trigger == ActionState::Trigger::onAttack && actionState.src < BOARD_CAPACITY_PER_SIDE)
-			{
-				const float ind = static_cast<float>(actionState.dst - BOARD_CAPACITY_PER_SIDE);
-				const float offset = ind - static_cast<float>(boardState.enemyCount - 1) / 2;
-				const float tOff = jv::Min((level->GetTime() - timeSinceLastActionState) * 4, 1.f);
-				const float xS = GetCardShape(info, enemySelectionDrawInfo).x;
-				enemySelectionDrawInfo.centerOffset += -tOff * offset * xS;
-			}
-		}
-
+		if (state.stack.count > 0 && state.stack.Peek().trigger == ActionState::Trigger::onAttack)
+			DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, state.stack.Peek(), false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -521,26 +508,8 @@ namespace game
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
-
-		// WIP.
-		if (state.stack.count > 0)
-		{
-			const auto& actionState = state.stack.Peek();
-			if (actionState.trigger == ActionState::Trigger::onAttack && actionState.src < BOARD_CAPACITY_PER_SIDE)
-			{
-				const float offset = static_cast<float>(actionState.src) - static_cast<float>(boardState.allyCount) / 4;
-				const float tOff = jv::Min((level->GetTime() - timeSinceLastActionState) * 4, 1.f);
-				const float xS = GetCardShape(info, enemySelectionDrawInfo).x;
-				playerCardSelectionDrawInfo.centerOffset += -tOff * offset * xS;
-
-				if(tOff > .5f)
-				{
-					playerCardSelectionDrawInfo.overridePosIndex = actionState.src;
-					playerCardSelectionDrawInfo.overridePos = GetCardPosition(info, playerCardSelectionDrawInfo, playerCardSelectionDrawInfo.overridePosIndex);
-					playerCardSelectionDrawInfo.overridePos.y += 128 * (tOff - .5f);
-				}
-			}
-		}
+		if(state.stack.count > 0 && state.stack.Peek().trigger == ActionState::Trigger::onAttack)
+			DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, state.stack.Peek(), true);
 
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
 		
@@ -823,6 +792,37 @@ namespace game
 			state.hand.RemoveAtOrdered(actionState.src);
 
 		return true;
+	}
+
+	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, Level& level,
+		CardSelectionDrawInfo& drawInfo, const ActionState& actionState, const bool allied) const
+	{
+		const auto& boardState = state.boardState;
+		assert(actionState.trigger == ActionState::Trigger::onAttack);
+
+		uint32_t src = actionState.src;
+		uint32_t dst = actionState.dst;
+
+		if (src >= BOARD_CAPACITY_PER_SIDE)
+			src -= BOARD_CAPACITY_PER_SIDE;
+		else if (dst >= BOARD_CAPACITY_PER_SIDE)
+			dst -= BOARD_CAPACITY_PER_SIDE;
+		
+		const uint32_t c = allied ? boardState.allyCount : boardState.enemyCount;
+		const uint32_t oC = allied ? boardState.enemyCount : boardState.allyCount;
+		const bool isSrc = allied ? src < BOARD_CAPACITY_PER_SIDE : src >= BOARD_CAPACITY_PER_SIDE;
+
+		const float ind = static_cast<float>(isSrc ? src : dst);
+		const float offset = ind - static_cast<float>(c - 1) / 2;
+
+		const float oInd = static_cast<float>(isSrc ? dst : src);
+		const float oOffset = oInd - static_cast<float>(oC - 1) / 2;
+
+		const float delta = (offset - oOffset) / 2;
+
+		const float tOff = jv::Min((level.GetTime() - timeSinceLastActionState) * 4, 1.f);
+		const float xS = GetCardShape(info, drawInfo).x;
+		drawInfo.centerOffset += -tOff * delta * xS;
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
