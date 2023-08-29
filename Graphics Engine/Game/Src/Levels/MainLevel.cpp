@@ -407,7 +407,7 @@ namespace game
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
-		DrawDamageAnimation(state, info, enemySelectionDrawInfo, false);
+		DrawDamageAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -510,7 +510,7 @@ namespace game
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
-		DrawDamageAnimation(state, info, playerCardSelectionDrawInfo, true);
+		DrawDamageAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
 		
@@ -827,7 +827,7 @@ namespace game
 
 		constexpr float moveDuration = ATTACK_ACTION_STATE_DURATION / 4;
 		const float t = level.GetTime();
-		float aTime = t - timeSinceLastActionState;
+		const float aTime = t - timeSinceLastActionState;
 
 		const auto curve = je::CreateCurveOvershooting();
 		const auto curveDown = je::CreateCurveDecelerate();
@@ -859,7 +859,7 @@ namespace game
 		}
 	}
 
-	void MainLevel::CombatState::DrawDamageAnimation(const State& state, const LevelUpdateInfo& info,
+	void MainLevel::CombatState::DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, Level& level,
 		const CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
 		if (!stateActionActive)
@@ -873,12 +873,13 @@ namespace game
 			return;
 
 		auto pos = GetCardPosition(info, drawInfo, actionState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
-		pos.y += GetCardShape(info, drawInfo).y / 2 + 8;
+		//pos.y += GetCardShape(info, drawInfo).y / 2 + 8;
 
 		TextTask textTask{};
 		textTask.center = true;
 		textTask.position = pos;
 		textTask.text = "miss";
+		textTask.priority = true;
 
 		if(damageTrigger)
 		{
@@ -888,10 +889,20 @@ namespace game
 			const uint32_t strLen = strlen(textTask.text);
 			const auto text = static_cast<char*>(info.frameArena.Alloc(strLen + 1));
 			text[0] = '-';
-			memcpy(&text[1], textTask.text, strLen);
+			memcpy(&text[1], textTask.text, strLen + 1);
+			std::cout << text << std::endl;
 			textTask.text = text;
 		}
+
+		const float t = level.GetTime();
+		const float aTime = t - timeSinceLastActionState;
+		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
 		
+		const auto curve = je::CreateCurveOvershooting();
+		const float eval = curve.Evaluate(l);
+
+		textTask.position.y += eval * 24;
+
 		info.textTasks.Push(textTask);
 	}
 
@@ -999,11 +1010,12 @@ namespace game
 			uint32_t ogPartyCount = 0;
 			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
+				const auto partyId = gameState.partyIds[i];
 				if (gameState.partyIds[i] == -1)
 					break;
 				++ogPartyCount;
 
-				const uint32_t count = stackCounts[i] = playerState.artifactSlotCounts[i];
+				const uint32_t count = stackCounts[i] = playerState.artifactSlotCounts[partyId];
 				if (count == 0)
 					continue;
 
@@ -1011,7 +1023,7 @@ namespace game
 				stacks[i] = arr.ptr;
 				for (uint32_t j = 0; j < count; ++j)
 				{
-					const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
+					const uint32_t index = playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY + j];
 					arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 				}
 
@@ -1112,23 +1124,23 @@ namespace game
 		uint32_t ogPartyCount = 0;
 		for (uint32_t i = 0; i < gameState.partyCount; ++i)
 		{
-			if (gameState.partyIds[i] == -1)
+			const auto partyId = gameState.partyIds[i];
+			if (partyId == -1)
 				break;
 			++ogPartyCount;
-
-			const uint32_t id = gameState.partyIds[i];
-			const auto monster = &info.monsters[playerState.monsterIds[id]];
+			
+			const auto monster = &info.monsters[playerState.monsterIds[partyId]];
 			cards[i] = monster;
 			combatStats[i] = GetCombatStat(*monster);
 			combatStats[i].health = gameState.healths[i];
 
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[id];
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[partyId];
 			if (count == 0)
 				continue;
 			const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
 			for (uint32_t j = 0; j < count; ++j)
 			{
-				const uint32_t index = playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY + j];
+				const uint32_t index = playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY + j];
 				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 			}
 		}

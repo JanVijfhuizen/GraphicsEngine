@@ -65,7 +65,7 @@ namespace game
 				LevelIndex& loadLevelIndex) override;
 			[[nodiscard]] bool HandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
 			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
-			void DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo, bool allied) const;
+			void DrawDamageAnimation(const State& state, const LevelUpdateInfo& info, Level& level, const CardSelectionDrawInfo& drawInfo, bool allied) const;
 		};
 
 		struct RewardMagicCardState final : LevelState<State>
