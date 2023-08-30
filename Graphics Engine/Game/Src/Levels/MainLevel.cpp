@@ -227,21 +227,6 @@ namespace game
 		constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 5 * 2;
 		constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
 
-		{
-			constexpr uint32_t LINE_POSITIONS[]{ ALLY_HEIGHT };
-
-			PixelPerfectRenderTask lineRenderTask{};
-			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
-			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
-			lineRenderTask.scale.y = 1;
-
-			for (const auto& i : LINE_POSITIONS)
-			{
-				lineRenderTask.position.y = i;
-				info.pixelPerfectRenderTasks.Push(lineRenderTask);
-			}
-		}
-
 		if (state.stack.count > 0)
 		{
 			bool valid = true;
@@ -389,7 +374,18 @@ namespace game
 			}
 		}
 
-		const auto& path = state.paths[state.chosenPath];
+		constexpr uint32_t LINE_POSITIONS[]{ ALLY_HEIGHT };
+
+		PixelPerfectRenderTask lineRenderTask{};
+		lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
+		lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
+		lineRenderTask.scale.y = 1;
+
+		for (const auto& i : LINE_POSITIONS)
+		{
+			lineRenderTask.position.y = i;
+			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+		}
 
 		// Check for new turn.
 		if(state.stack.count == 0)
@@ -423,6 +419,8 @@ namespace game
 		const bool lMouseReleased = lMouse.ReleaseEvent();
 
 		/*
+		const auto& path = state.paths[state.chosenPath];
+
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = &info.rooms[path.room];
 		cardDrawInfo.origin = glm::ivec2(8);
