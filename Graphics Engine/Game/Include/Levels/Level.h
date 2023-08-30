@@ -91,6 +91,7 @@ namespace game
 			CombatStats* combatStats = nullptr;
 			uint32_t cost = -1;
 			bool ignoreAnim = false;
+			float* hoverDuration = nullptr;
 		};
 
 		struct CardSelectionDrawInfo final
@@ -114,6 +115,11 @@ namespace game
 			uint32_t overridePosIndex = -1;
 			uint32_t centerOffset = 0;
 			uint32_t damagedIndex = -1;
+			float* hoverDurations = nullptr;
+			bool spawning = false;
+			float spawnLerp = 0;
+			uint32_t dyingIndex = -1;
+			float dyingLerp;
 		};
 
 		struct PartyDrawInfo final
@@ -159,5 +165,6 @@ namespace game
 		LevelIndex _loadingLevelIndex;
 		float _timeSinceOpened;
 		Card* _fullCard;
+		float _hoverDurations[PARTY_CAPACITY];
 	};
 }

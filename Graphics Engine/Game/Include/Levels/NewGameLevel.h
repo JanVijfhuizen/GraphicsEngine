@@ -26,6 +26,7 @@ namespace game
 			uint32_t monsterChoice;
 			uint32_t artifactChoice;
 			float timeSinceFirstChoicesMade;
+			float hoverDurations[DISCOVER_LENGTH * 2];
 
 			bool Create(State& state, const LevelCreateInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
@@ -33,6 +34,8 @@ namespace game
 
 		struct JoinState final : LevelState<State>
 		{
+			float hoverDuration;
+			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 		};
 

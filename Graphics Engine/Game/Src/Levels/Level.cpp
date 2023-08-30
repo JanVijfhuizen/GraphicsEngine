@@ -3,6 +3,7 @@
 
 #include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
+#include "JLib/Curve.h"
 #include "JLib/Math.h"
 #include "States/BoardState.h"
 #include "States/InputState.h"
@@ -22,6 +23,8 @@ namespace game
 		_timeSinceOpened = 0;
 		_timeSinceLoading = 0;
 		_loading = false;
+		for (auto& hoverDuration : _hoverDurations)
+			hoverDuration = 0;
 	}
 
 	bool Level::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -199,7 +202,6 @@ namespace game
 	uint32_t Level::DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
 	{
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
-		const uint32_t width = cardTexture.resolution.x / CARD_FRAME_COUNT + drawInfo.offsetMod;
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
@@ -209,15 +211,56 @@ namespace game
 		if(drawInfo.outStackSelected)
 			*drawInfo.outStackSelected = -1;
 
+		uint32_t xOffset = 0;
+
+		if(drawInfo.spawning && drawInfo.length > 1)
+		{
+			const auto w = GetCardShape(info, drawInfo).x;
+			const auto curve = je::CreateCurveOvershooting();
+			const float eval = curve.REvaluate(drawInfo.spawnLerp);
+
+			xOffset = (1.f - eval) * w / 2;
+		}
+
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
+			int32_t xAddOffset = 0;
+
 			if(drawInfo.damagedIndex == i)
 			{
 				if (fmodf(drawInfo.lifeTime, .2f) < .1f)
 					continue;
 			}
 
+			if(drawInfo.spawning && i == drawInfo.length - 1)
+			{
+				const auto curve = je::CreateCurveOvershooting();
+				const float eval = curve.REvaluate(drawInfo.spawnLerp);
+
+				xAddOffset = (1.f - eval) * SIMULATED_RESOLUTION.x;
+			}
+
+			if(drawInfo.dyingIndex != -1)
+			{
+				const bool fading = drawInfo.dyingLerp < .5f;
+				if (drawInfo.dyingIndex == i && !fading)
+					continue;
+				if (drawInfo.length > 1 && !fading)
+				{
+					const auto w = GetCardShape(info, drawInfo).x;
+					const auto curve = je::CreateCurveOvershooting();
+					const float eval = curve.REvaluate((drawInfo.dyingLerp - .5f) * 2);
+
+					float o = eval / 2.f * w;
+					if (drawInfo.dyingIndex < i)
+						o *= -1;
+					xAddOffset += o;
+				}
+			}
+
 			cardDrawInfo.origin = drawInfo.overridePosIndex == i ? drawInfo.overridePos : GetCardPosition(info, drawInfo, i);
+			cardDrawInfo.origin.x += xOffset;
+			cardDrawInfo.origin.x += xAddOffset;
 
 			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
@@ -226,6 +269,14 @@ namespace game
 			cardDrawInfo.bgColor = glm::vec4(0, 0, 0, 1);
 			cardDrawInfo.fgColor = greyedOut ? glm::vec4(.1, .1, .1, 1) : cardDrawInfo.fgColor;
 			cardDrawInfo.fgColor = selected ? glm::vec4(0, 1, 0, 1) : cardDrawInfo.fgColor;
+
+			if (drawInfo.dyingIndex == i)
+			{
+				const auto mul = glm::vec4(glm::vec3(1.f - drawInfo.dyingLerp * 2), 1);
+				cardDrawInfo.bgColor *= mul;
+				cardDrawInfo.fgColor *= mul;
+			}
+
 			cardDrawInfo.card = drawInfo.cards[i];
 			cardDrawInfo.selectable = true;
 			const bool collides = CollidesCard(info, cardDrawInfo);
@@ -233,6 +284,7 @@ namespace game
 			uint32_t stackedCount = -1;
 
 			cardDrawInfo.ignoreAnim = true;
+			cardDrawInfo.hoverDuration = nullptr;
 			
 			if (drawInfo.stacks)
 			{
@@ -265,6 +317,8 @@ namespace game
 			cardDrawInfo.ignoreAnim = stackedSelected != -1;
 			if (drawInfo.costs)
 				cardDrawInfo.cost = drawInfo.costs[i];
+			if(drawInfo.hoverDurations && !stackedSelected != -1)
+				cardDrawInfo.hoverDuration = &drawInfo.hoverDurations[i];
 			DrawCard(info, cardDrawInfo);
 			cardDrawInfo.combatStats = nullptr;
 			cardDrawInfo.cost = -1;
@@ -276,6 +330,7 @@ namespace game
 				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
 				stackedDrawInfo.selectable = true;
 				stackedDrawInfo.ignoreAnim = false;
+				stackedDrawInfo.hoverDuration = nullptr;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -309,8 +364,14 @@ namespace game
 		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
 		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
 
+		auto origin = drawInfo.origin;
+		if (drawInfo.hoverDuration)
+		{
+			const auto curve = je::CreateCurveOvershooting();
+			origin.y += curve.REvaluate(*drawInfo.hoverDuration) * 4;
+		}
+
 		PixelPerfectRenderTask bgRenderTask{};
-		bgRenderTask.position = drawInfo.origin;
 		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
 		bgRenderTask.subTexture = cardFrames[0];
 		bgRenderTask.xCenter = drawInfo.center;
@@ -319,6 +380,18 @@ namespace game
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : drawInfo.bgColor;
+		if(drawInfo.hoverDuration && *drawInfo.hoverDuration > 1e-5f)
+		{
+			bgRenderTask.color = glm::vec4(*drawInfo.hoverDuration, 0, 0, 1);
+		}
+
+		if (drawInfo.hoverDuration)
+		{
+			*drawInfo.hoverDuration += 5 * info.deltaTime * (collided * 2 - 1);
+			*drawInfo.hoverDuration = jv::Clamp(*drawInfo.hoverDuration, 0.f, 1.f);
+		}
+
+		bgRenderTask.position = origin;
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
 		// Draw image.
@@ -331,7 +404,7 @@ namespace game
 			i %= CARD_MONSTER_ANIM_LENGTH;
 
 			PixelPerfectRenderTask imageRenderTask{};
-			imageRenderTask.position = drawInfo.origin;
+			imageRenderTask.position = origin;
 			imageRenderTask.image = info.texturePool.Get(drawInfo.card->animIndex);
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
@@ -352,7 +425,7 @@ namespace game
 		if(drawInfo.cost != -1)
 		{
 			PixelPerfectRenderTask costRenderTask{};
-			costRenderTask.position = drawInfo.origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
+			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
 			costRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
 			costRenderTask.xCenter = drawInfo.center;
 			costRenderTask.yCenter = drawInfo.center;
@@ -373,7 +446,7 @@ namespace game
 		if (drawInfo.combatStats)
 		{
 			PixelPerfectRenderTask statsRenderTask{};
-			statsRenderTask.position = drawInfo.origin + bgRenderTask.scale / 2;
+			statsRenderTask.position = origin + bgRenderTask.scale / 2;
 			statsRenderTask.position.x -= 6;
 			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
 			statsRenderTask.xCenter = drawInfo.center;
@@ -488,6 +561,7 @@ namespace game
 		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
 		cardSelectionDrawInfo.greyedOutArr = drawInfo.greyedOutArr;
 		cardSelectionDrawInfo.combatStats = combatInfos;
+		cardSelectionDrawInfo.hoverDurations = _hoverDurations;
 
 		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}
