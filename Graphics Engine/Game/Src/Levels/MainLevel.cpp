@@ -296,6 +296,45 @@ namespace game
 				activeState = nullptr;
 		}
 
+		if(activeState && activeState->trigger == ActionState::Trigger::onStartOfTurn)
+		{
+			PixelPerfectRenderTask lineRenderTask{};
+			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
+			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
+			lineRenderTask.scale.y = 1;
+			lineRenderTask.position = SIMULATED_RESOLUTION / 2;
+
+			const float l = GetActionStateLerp(*level, START_OF_TURN_ACTION_STATE_DURATION);
+			const auto curve = je::CreateCurvePauseInMiddle();
+			const float eval = (curve.Evaluate(l) - .5f) * 2;
+			const float off = eval * SIMULATED_RESOLUTION.x;
+
+			constexpr float textDuration = START_OF_TURN_ACTION_STATE_DURATION / 2;
+
+			const float l2Start = .5f - textDuration / 2;
+			const float l2Dis = l - l2Start;
+			if(l2Dis >= 0 && l2Dis <= textDuration)
+			{
+				const float f = l2Dis / textDuration;
+				const float eval2 = (curve.Evaluate(f) - .5f) * 2;
+				const float off2 = eval2 * SIMULATED_RESOLUTION.x;
+
+				TextTask textTask{};
+				textTask.text = "new";
+				textTask.position = SIMULATED_RESOLUTION / 2 + glm::ivec2(off2, 8);
+				textTask.scale = 2;
+				textTask.center = true;
+
+				info.textTasks.Push(textTask);
+				textTask.text = "turn";
+				textTask.position = SIMULATED_RESOLUTION / 2 - glm::ivec2(off2, 8);
+				info.textTasks.Push(textTask);
+			}
+
+			lineRenderTask.position.x = off;
+			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+		}
+
 		if(state.stack.count == 0)
 		{
 			// Check for game over.
@@ -895,7 +934,7 @@ namespace game
 		const auto curve = je::CreateCurveOvershooting();
 		const auto curveDown = je::CreateCurveDecelerate();
 
-		const float l = (ATTACK_ACTION_STATE_DURATION - (static_cast<float>(ATTACK_ACTION_STATE_DURATION) - aTime)) / ATTACK_ACTION_STATE_DURATION;
+		const float l = GetActionStateLerp(level, ATTACK_ACTION_STATE_DURATION);
 		const float hEval = DoubleCurveEvaluate(l, curve, curveDown);
 		// Move towards each other.
 		const float delta = (offset - oOffset) / 2;
@@ -955,13 +994,9 @@ namespace game
 
 			drawInfo.damagedIndex = activeState->dst - !allied * BOARD_CAPACITY_PER_SIDE;
 		}
-
-		const float t = level.GetTime();
-		const float aTime = t - timeSinceLastActionState;
-		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
 		
 		const auto curve = je::CreateCurveOvershooting();
-		const float eval = curve.Evaluate(l);
+		const float eval = curve.Evaluate(GetActionStateLerp(level));
 
 		textTask.position.y += eval * 24;
 
@@ -986,13 +1021,9 @@ namespace game
 	{
 		if (!activeState)
 			return;
-
-		const float t = level.GetTime();
-		const float aTime = t - timeSinceLastActionState;
-		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
-
+		
 		drawInfo.spawning = true;
-		drawInfo.spawnLerp = l;
+		drawInfo.spawnLerp = GetActionStateLerp(level);
 	}
 
 	void MainLevel::CombatState::DrawDeathAnimation(const LevelUpdateInfo& info, const Level& level,
@@ -1004,15 +1035,11 @@ namespace game
 			return;
 		if (allied && activeState->dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState->dst < BOARD_CAPACITY_PER_SIDE)
 			return;
-
-		const float t = level.GetTime();
-		const float aTime = t - timeSinceLastActionState;
-		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
-
+		
 		drawInfo.dyingIndex = activeState->dst;
 		if (activeState->dst >= BOARD_CAPACITY_PER_SIDE)
 			drawInfo.dyingIndex -= BOARD_CAPACITY_PER_SIDE;
-		drawInfo.dyingLerp = l;
+		drawInfo.dyingLerp = GetActionStateLerp(level);;
 	}
 
 	void MainLevel::CombatState::DrawCardPlayAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const
@@ -1022,12 +1049,15 @@ namespace game
 		if (activeState->trigger != ActionState::Trigger::onCardPlayed)
 			return;
 
+		drawInfo.dyingIndex = activeState->src;
+		drawInfo.dyingLerp = GetActionStateLerp(level);
+	}
+
+	float MainLevel::CombatState::GetActionStateLerp(const Level& level, float duration) const
+	{
 		const float t = level.GetTime();
 		const float aTime = t - timeSinceLastActionState;
-		const float l = (ACTION_STATE_DEFAULT_DURATION - (static_cast<float>(ACTION_STATE_DEFAULT_DURATION) - aTime)) / ACTION_STATE_DEFAULT_DURATION;
-
-		drawInfo.dyingIndex = activeState->src;
-		drawInfo.dyingLerp = l;
+		return (duration - (duration - aTime)) / duration;
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)

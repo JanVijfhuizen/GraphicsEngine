@@ -15,7 +15,7 @@ namespace je
 
 		glm::vec2 points4[4]{};
 		points4[1] = points[0];
-		points4[2] = points[0];
+		points4[2] = points[1];
 		points4[3] = glm::vec2(1);
 
 		const float y = powf(1 - lerp, 3) * points4[0].y + 3 * lerp * powf(1 - lerp, 2) *
@@ -45,6 +45,15 @@ namespace je
 		{
 			glm::vec2(.23f, 1.05f),
 			glm::vec2(1)
+		};
+	}
+
+	Curve CreateCurvePauseInMiddle()
+	{
+		return
+		{
+			glm::vec2(0, 1),
+			glm::vec2(1, 0)
 		};
 	}
 }

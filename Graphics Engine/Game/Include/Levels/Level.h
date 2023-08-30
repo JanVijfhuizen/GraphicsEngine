@@ -57,7 +57,7 @@ namespace game
 		TaskSystem<TextTask>& textTasks;
 		TaskSystem<PixelPerfectRenderTask>& pixelPerfectRenderTasks;
 		float deltaTime;
-		TextureStreamer& texturePool;
+		TextureStreamer& textureStreamer;
 	};
 
 	struct Level
