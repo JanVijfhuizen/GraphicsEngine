@@ -405,7 +405,7 @@ namespace game
 
 			PixelPerfectRenderTask imageRenderTask{};
 			imageRenderTask.position = origin;
-			imageRenderTask.image = info.texturePool.Get(drawInfo.card->animIndex);
+			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];

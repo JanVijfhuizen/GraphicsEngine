@@ -22,4 +22,6 @@ namespace je
 	[[nodiscard]] Curve CreateCurveOvershooting();
 	// Creates a curve that quickly moves to the endpoint, and slows down at the end.
 	[[nodiscard]] Curve CreateCurveDecelerate();
+	// Creates a curve that pauses in the middle.
+	[[nodiscard]] Curve CreateCurvePauseInMiddle();
 }
