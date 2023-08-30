@@ -223,6 +223,25 @@ namespace game
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
 
+		constexpr uint32_t ENEMY_HEIGHT = SIMULATED_RESOLUTION.y / 5 * 4;
+		constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 5 * 2;
+		constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
+
+		{
+			constexpr uint32_t LINE_POSITIONS[]{ ALLY_HEIGHT };
+
+			PixelPerfectRenderTask lineRenderTask{};
+			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
+			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
+			lineRenderTask.scale.y = 1;
+
+			for (const auto& i : LINE_POSITIONS)
+			{
+				lineRenderTask.position.y = i;
+				info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			}
+		}
+
 		if (state.stack.count > 0)
 		{
 			bool valid = true;
@@ -271,7 +290,7 @@ namespace game
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
 			lineRenderTask.scale.y = 1;
-			lineRenderTask.position = SIMULATED_RESOLUTION / 2;
+			lineRenderTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT);
 			lineRenderTask.priority = true;
 
 			const float l = GetActionStateLerp(*level, START_OF_TURN_ACTION_STATE_DURATION);
@@ -291,14 +310,14 @@ namespace game
 
 				TextTask textTask{};
 				textTask.text = "new";
-				textTask.position = SIMULATED_RESOLUTION / 2 + glm::ivec2(off2, 8);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 8);
 				textTask.scale = 2;
 				textTask.center = true;
 				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
 				textTask.text = "turn";
-				textTask.position = SIMULATED_RESOLUTION / 2 - glm::ivec2(off2, 8);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 8);
 				info.textTasks.Push(textTask);
 			}
 
@@ -402,7 +421,8 @@ namespace game
 		const auto& lMouse = info.inputState.lMouse;
 		const bool lMousePressed = lMouse.PressEvent();
 		const bool lMouseReleased = lMouse.ReleaseEvent();
-		
+
+		/*
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = &info.rooms[path.room];
 		cardDrawInfo.origin = glm::ivec2(8);
@@ -412,6 +432,7 @@ namespace game
 		cardDrawInfo.origin.x += 28;
 		cardDrawInfo.hoverDuration = &hoverDurations[1];
 		level->DrawCard(info, cardDrawInfo);
+		*/
 
 		constexpr uint32_t l = HAND_MAX_SIZE > BOARD_CAPACITY_PER_SIDE ? HAND_MAX_SIZE : BOARD_CAPACITY_PER_SIDE;
 
@@ -432,7 +453,7 @@ namespace game
 		enemySelectionDrawInfo.lifeTime = level->GetTime();
 		enemySelectionDrawInfo.cards = cards;
 		enemySelectionDrawInfo.length = boardState.enemyCount;
-		enemySelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 4;
+		enemySelectionDrawInfo.height = ENEMY_HEIGHT;
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
@@ -540,7 +561,7 @@ namespace game
 		CardSelectionDrawInfo playerCardSelectionDrawInfo{};
 		playerCardSelectionDrawInfo.cards = playerCards;
 		playerCardSelectionDrawInfo.length = boardState.allyCount;
-		playerCardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 2;
+		playerCardSelectionDrawInfo.height = ALLY_HEIGHT;
 		playerCardSelectionDrawInfo.stacks = stacks;
 		playerCardSelectionDrawInfo.stackCounts = stacksCount;
 		playerCardSelectionDrawInfo.lifeTime = level->GetTime();
