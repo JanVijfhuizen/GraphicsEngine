@@ -173,7 +173,6 @@ namespace game
 		maxMana = 0;
 		timeSinceLastActionState = 0;
 		activeState = nullptr;
-		actiontext = nullptr;
 		state.boardState = {};
 		state.hand.Clear();
 		state.stack.Clear();
@@ -238,31 +237,11 @@ namespace game
 				// Temp.
 				switch (actionState.trigger)
 				{
-				case ActionState::Trigger::draw:
-					actiontext = "draw";
-					break;
-				case ActionState::Trigger::onSummon:
-					actiontext = "summon";
-					break;
 				case ActionState::Trigger::onAttack:
 					actionStateDuration = ATTACK_ACTION_STATE_DURATION;
-					actiontext = "attack";
-					break;
-				case ActionState::Trigger::onMiss:
-					actiontext = "miss";
-					break;
-				case ActionState::Trigger::onDamage:
-					actiontext = "damage";
-					break;
-				case ActionState::Trigger::onDeath:
-					actiontext = "death";
-					break;
-				case ActionState::Trigger::onCardPlayed:
-					actiontext = "play";
 					break;
 				case ActionState::Trigger::onStartOfTurn:
 					actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
-					actiontext = "new turn";
 					break;
 				default:
 					break;
@@ -275,16 +254,6 @@ namespace game
 
 			if (valid)
 			{
-				if (actiontext)
-				{
-					TextTask textTask{};
-					textTask.text = actiontext;
-					textTask.lifetime = level->GetTime() - timeSinceLastActionState;
-					textTask.center = true;
-					textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 62);
-					info.textTasks.Push(textTask);
-				}
-
 				if (timeSinceLastActionState + actionStateDuration < level->GetTime())
 				{
 					auto actionState = state.stack.Pop();
@@ -303,6 +272,7 @@ namespace game
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
 			lineRenderTask.scale.y = 1;
 			lineRenderTask.position = SIMULATED_RESOLUTION / 2;
+			lineRenderTask.priority = true;
 
 			const float l = GetActionStateLerp(*level, START_OF_TURN_ACTION_STATE_DURATION);
 			const auto curve = je::CreateCurvePauseInMiddle();
@@ -310,8 +280,8 @@ namespace game
 			const float off = eval * SIMULATED_RESOLUTION.x;
 
 			constexpr float textDuration = START_OF_TURN_ACTION_STATE_DURATION / 2;
+			constexpr float l2Start = .5f - textDuration / 2;
 
-			const float l2Start = .5f - textDuration / 2;
 			const float l2Dis = l - l2Start;
 			if(l2Dis >= 0 && l2Dis <= textDuration)
 			{
@@ -324,6 +294,7 @@ namespace game
 				textTask.position = SIMULATED_RESOLUTION / 2 + glm::ivec2(off2, 8);
 				textTask.scale = 2;
 				textTask.center = true;
+				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
 				textTask.text = "turn";

@@ -59,7 +59,6 @@ namespace game
 			uint32_t uniqueId;
 			float timeSinceLastActionState;
 			ActionState* activeState;
-			const char* actiontext;
 			float actionStateDuration;
 			float hoverDurations[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
 
