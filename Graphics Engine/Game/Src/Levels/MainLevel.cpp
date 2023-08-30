@@ -838,6 +838,10 @@ namespace game
 		case ActionState::Trigger::onDeath:
 			validSrc = handSrc || actionState.src != -1 && state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId;
 			validDst = actionState.dst != -1 && state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
+			validSrc = !validSrc ? false : handSrc ? true : actionState.src >= BOARD_CAPACITY_PER_SIDE ? 
+				actionState.src - BOARD_CAPACITY_PER_SIDE < boardState.enemyCount : actionState.src < boardState.allyCount;
+			validDst = !validDst ? false : actionState.dst >= BOARD_CAPACITY_PER_SIDE ?
+				actionState.dst - BOARD_CAPACITY_PER_SIDE < boardState.enemyCount : actionState.dst < boardState.allyCount;
 			validActionState = validSrc && validDst;
 			break;
 		case ActionState::Trigger::onSummon:

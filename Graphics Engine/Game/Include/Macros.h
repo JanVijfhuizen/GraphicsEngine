@@ -32,7 +32,7 @@ constexpr glm::ivec2 CARD_MONSTER_FRAME_SIZE(32);
 
 constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
 constexpr float ACTION_STATE_DEFAULT_DURATION = .4f;
-constexpr float START_OF_TURN_ACTION_STATE_DURATION = .4f;
+constexpr float START_OF_TURN_ACTION_STATE_DURATION = 1;
 constexpr float ATTACK_ACTION_STATE_DURATION = .4f;
 
 enum class LevelIndex
