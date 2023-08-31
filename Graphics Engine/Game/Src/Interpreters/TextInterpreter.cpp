@@ -5,6 +5,18 @@
 
 namespace game
 {
+	const char* TextInterpreter::Concat(const char* a, const char* b, jv::Arena& arena)
+	{
+		const size_t aS = strlen(a);
+		const size_t bS = strlen(b);
+		arena.Alloc(aS + bS);
+		
+		const auto text = static_cast<char*>(arena.Alloc(aS + bS));
+		memcpy(text, a, aS);
+		memcpy(&text[aS], b, bS + 1);
+		return text;
+	}
+
 	const char* TextInterpreter::IntToConstCharPtr(const uint32_t i, jv::Arena& arena)
 	{
 		char s[9 + sizeof(char)];

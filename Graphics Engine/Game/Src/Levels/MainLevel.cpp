@@ -77,6 +77,14 @@ namespace game
 		const bool flawPresent = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW - 1;
 		const bool bossPresent = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1;
 
+		TextTask depthTextTask{};
+		depthTextTask.text = TextInterpreter::IntToConstCharPtr(state.depth + 1, info.frameArena);
+		depthTextTask.text = TextInterpreter::Concat("depth-", depthTextTask.text, info.frameArena);
+		depthTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 72);
+		depthTextTask.center = true;
+		depthTextTask.lifetime = level->GetTime();
+		info.textTasks.Push(depthTextTask);
+
 		// Render bosses.
 		Card* cards[DISCOVER_LENGTH + 1];
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
@@ -309,41 +317,6 @@ namespace game
 			info.pixelPerfectRenderTasks.Push(lineRenderTask);
 		}
 
-		{
-			const bool isStartOfTurn = activeState && activeState->trigger == ActionState::Trigger::onStartOfTurn;
-			auto cards = jv::CreateVector<Card*>(info.frameArena, 3);
-			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
-			if (eventCard != -1)
-				cards.Add() = &info.events[eventCard];
-			if (isStartOfTurn && previousEventCard != -1)
-				cards.Add() = &info.events[previousEventCard];
-
-			CardSelectionDrawInfo eventSelectionDrawInfo{};
-			eventSelectionDrawInfo.lifeTime = level->GetTime();
-			eventSelectionDrawInfo.cards = cards.ptr;
-			eventSelectionDrawInfo.length = cards.count;
-			eventSelectionDrawInfo.height = ALLY_HEIGHT;
-			eventSelectionDrawInfo.hoverDurations = hoverDurations;
-			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
-			eventSelectionDrawInfo.offsetMod = -4;
-			if (isStartOfTurn)
-			{
-				eventSelectionDrawInfo.spawnRight = false;
-				DrawDrawAnimation(info, *level, eventSelectionDrawInfo);
-				if(cards.count > 2)
-				{
-					DrawFadeAnimation(*level, eventSelectionDrawInfo, 1);
-				}
-			}
-
-			level->DrawCardSelection(info, eventSelectionDrawInfo);
-			/*
-			DrawCardPlayAnimation(*level, handSelectionDrawInfo);
-			if (activeState && activeState->trigger == ActionState::Trigger::draw)
-				DrawDrawAnimation(info, *level, handSelectionDrawInfo);
-				*/
-		}
-
 		if(state.stack.count == 0)
 		{
 			// Check for game over.
@@ -406,6 +379,36 @@ namespace game
 				stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 				return true;
 			}
+		}
+
+		{
+			const bool isStartOfTurn = activeState && activeState->trigger == ActionState::Trigger::onStartOfTurn;
+			auto cards = jv::CreateVector<Card*>(info.frameArena, 3);
+			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
+			if (eventCard != -1)
+				cards.Add() = &info.events[eventCard];
+			if (isStartOfTurn && previousEventCard != -1)
+				cards.Add() = &info.events[previousEventCard];
+
+			CardSelectionDrawInfo eventSelectionDrawInfo{};
+			eventSelectionDrawInfo.lifeTime = level->GetTime();
+			eventSelectionDrawInfo.cards = cards.ptr;
+			eventSelectionDrawInfo.length = cards.count;
+			eventSelectionDrawInfo.height = ALLY_HEIGHT;
+			eventSelectionDrawInfo.hoverDurations = hoverDurations;
+			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
+			eventSelectionDrawInfo.offsetMod = -4;
+			if (isStartOfTurn)
+			{
+				eventSelectionDrawInfo.spawnRight = false;
+				DrawDrawAnimation(info, *level, eventSelectionDrawInfo);
+				if (cards.count > 2)
+				{
+					DrawFadeAnimation(*level, eventSelectionDrawInfo, 1);
+				}
+			}
+
+			level->DrawCardSelection(info, eventSelectionDrawInfo);
 		}
 
 		constexpr uint32_t LINE_POSITIONS[]{ ALLY_HEIGHT };
@@ -1013,11 +1016,7 @@ namespace game
 			const uint32_t dmg = activeState->values[static_cast<uint32_t>(ActionState::VDamage::damage)];
 			textTask.text = TextInterpreter::IntToConstCharPtr(dmg, info.frameArena);
 			textTask.color = glm::vec4(1, 0, 0, 1);
-			const uint32_t strLen = strlen(textTask.text);
-			const auto text = static_cast<char*>(info.frameArena.Alloc(strLen + 1));
-			text[0] = '-';
-			memcpy(&text[1], textTask.text, strLen + 1);
-			textTask.text = text;
+			textTask.text = TextInterpreter::Concat("-", textTask.text, info.frameArena);
 
 			drawInfo.damagedIndex = activeState->dst - !allied * BOARD_CAPACITY_PER_SIDE;
 		}
@@ -1186,7 +1185,7 @@ namespace game
 
 		if (flawSlotAvailable)
 		{
-			level->DrawTopCenterHeader(info, HeaderSpacing::normal, "select one ally to carry this flaw.");
+			level->DrawTopCenterHeader(info, HeaderSpacing::normal, "select the bearer of this curse.");
 
 			Card* cards[PARTY_ACTIVE_CAPACITY];
 			CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
@@ -1417,7 +1416,7 @@ namespace game
 
 		if(managingParty)
 		{
-			level->DrawTopCenterHeader(info, HeaderSpacing::close, "your party is too large. choose some to let go.");
+			level->DrawTopCenterHeader(info, HeaderSpacing::close, "your party is too big. choose some to say goodbye to.");
 
 			Card* cards[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
 			Card** artifacts[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY]{};
@@ -1566,6 +1565,7 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
+
 		return stateMachine.Update(info, this, loadLevelIndex);
 	}
 }
