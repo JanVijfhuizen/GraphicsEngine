@@ -30,14 +30,20 @@ namespace game
 		LevelIndex& loadLevelIndex)
 	{
 		Card* cards[DISCOVER_LENGTH]{};
+		CombatStats combatStats[DISCOVER_LENGTH]{};
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.monsters[state.paths[i].boss];
+		{
+			const auto monster = &info.monsters[state.paths[i].boss];
+			cards[i] = monster;
+			combatStats[i] = GetCombatStat(*monster);
+		}
 
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.hoverDurations = hoverDurations;
+		cardSelectionDrawInfo.combatStats = combatStats;
 		level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		const char* text = "the stage bosses have been revealed.";
@@ -86,26 +92,29 @@ namespace game
 		info.textTasks.Push(depthTextTask);
 
 		// Render bosses.
-		Card* cards[DISCOVER_LENGTH + 1];
+		Card* cards[DISCOVER_LENGTH];
+		CombatStats combatStats[DISCOVER_LENGTH]{};
+
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
 			const auto& path = state.paths[i];
 			if(!bossPresent)
-				cards[i] = &info.monsters[state.paths[i].boss];
+			{
+				const auto monster = &info.monsters[state.paths[i].boss];
+				cards[i] = monster;
+				combatStats[i] = GetCombatStat(*monster);
+			}
 			else
 				cards[i] = &info.artifacts[path.artifact];
 		}
-		if (bossPresent)
-			cards[DISCOVER_LENGTH] = &info.monsters[info.bosses[state.paths[state.GetPrimaryPath()].boss]];
 
 		Card** stacks[DISCOVER_LENGTH]{};
 		for (auto& stack : stacks)
 			stack = jv::CreateArray<Card*>(info.frameArena, 3).ptr;
 
-		uint32_t stacksCounts[DISCOVER_LENGTH + 1]{};
+		uint32_t stacksCounts[DISCOVER_LENGTH]{};
 		for (auto& c : stacksCounts)
 			c = 2 + flawPresent;
-		stacksCounts[DISCOVER_LENGTH] = 0;
 
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
@@ -128,16 +137,32 @@ namespace game
 		
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = DISCOVER_LENGTH + bossPresent;
+		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
 		cardSelectionDrawInfo.stacks = stacks;
 		cardSelectionDrawInfo.stackCounts = stacksCounts;
 		cardSelectionDrawInfo.texts = bossPresent ? nullptr : texts;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.highlighted = discoverOption;
 		cardSelectionDrawInfo.hoverDurations = hoverDurations;
+		if (!bossPresent)
+			cardSelectionDrawInfo.combatStats = combatStats;
 		uint32_t selected = level->DrawCardSelection(info, cardSelectionDrawInfo);
-		if (selected == DISCOVER_LENGTH)
-			selected = -1;
+
+		if (bossPresent)
+		{
+			const auto monster = &info.monsters[state.paths[state.GetPrimaryPath()].boss];
+			auto combatStat = GetCombatStat(*monster);
+
+			const auto shape = GetCardShape(info, cardSelectionDrawInfo);
+
+			CardDrawInfo cardDrawInfo{};
+			cardDrawInfo.card = monster;
+			cardDrawInfo.combatStats = &combatStat;
+			cardDrawInfo.center = true;
+			cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
+			cardDrawInfo.origin.x += (shape.x + cardSelectionDrawInfo.offsetMod) * 4 / 2;
+			level->DrawCard(info, cardDrawInfo);
+		}
 
 		if (info.inputState.lMouse.PressEvent())
 		{
@@ -169,6 +194,7 @@ namespace game
 
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
 	{
+		const bool bossPresent = state.depth != 0 && state.depth % ROOM_COUNT_BEFORE_BOSS == 0;
 		const auto& gameState = info.gameState;
 
 		for (auto& hoverDuration : hoverDurations)
@@ -201,8 +227,19 @@ namespace game
 			state.stack.Add() = drawState;
 		}
 
-		const auto enemyCount = jv::Min<uint32_t>(4, state.depth + 1);
-		for (uint32_t i = 0; i < enemyCount; ++i)
+		if (!bossPresent)
+		{
+			const auto enemyCount = jv::Min<uint32_t>(4, state.depth + 1);
+			for (uint32_t i = 0; i < enemyCount; ++i)
+			{
+				ActionState summonState{};
+				summonState.trigger = ActionState::Trigger::onSummon;
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.paths[state.GetPrimaryPath()].boss;
+				state.stack.Add() = summonState;
+			}
+		}
+		else
 		{
 			ActionState summonState{};
 			summonState.trigger = ActionState::Trigger::onSummon;
@@ -722,7 +759,10 @@ namespace game
 
 			for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
 			{
-				const auto& artifact = info.artifacts[info.playerState.artifacts[partyId]];
+				const uint32_t id = info.playerState.artifacts[partyId];
+				if (id == -1)
+					continue;
+				const auto& artifact = info.artifacts[id];
 				if (artifact.onActionEvent)
 					artifact.onActionEvent(state, actionState, i);
 			}
