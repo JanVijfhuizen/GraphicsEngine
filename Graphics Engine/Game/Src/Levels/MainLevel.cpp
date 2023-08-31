@@ -697,6 +697,15 @@ namespace game
 					artifact.onActionEvent(state, actionState, i);
 			}
 		}
+
+		const auto& path = state.paths[state.GetPrimaryPath()];
+		const auto& room = info.rooms[path.room];
+		if (room.onActionEvent)
+			room.onActionEvent(state, actionState, 0);
+		const auto& event = info.events[eventCard];
+		if (event.onActionEvent)
+			event.onActionEvent(state, actionState, 0);
+
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
 			const auto id = boardState.ids[i];
