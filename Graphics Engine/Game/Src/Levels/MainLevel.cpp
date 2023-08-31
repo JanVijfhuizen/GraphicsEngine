@@ -312,16 +312,35 @@ namespace game
 				valid = PreHandleActionState(state, info, actionState);
 				if (!valid)
 					state.stack.Pop();
+				activationDuration = -1;
 			}
 
 			if (valid)
 			{
 				if (timeSinceLastActionState + actionStateDuration < level->GetTime())
 				{
-					auto actionState = state.stack.Pop();
-					CollectActivatedCards(state, info, actionState);
-					PostHandleActionState(state, info, actionState);
-					activeState = nullptr;
+					if(activationDuration < -1e-5f)
+					{
+						auto actionState = state.stack.Peek();
+						CollectActivatedCards(state, info, actionState);
+						activationDuration = 0;
+					}
+					if(activations.count > 0)
+					{
+						if (activationDuration < CARD_ACTIVATE_DURATION)
+							activationDuration += info.deltaTime;
+						else
+						{
+							activations.Pop();
+							activationDuration = 0;
+						}
+					}
+					else
+					{
+						auto actionState = state.stack.Pop();
+						PostHandleActionState(state, info, actionState);
+						activeState = nullptr;
+					}
 				}
 			}
 			else
