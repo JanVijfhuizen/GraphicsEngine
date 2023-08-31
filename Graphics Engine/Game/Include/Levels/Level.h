@@ -1,6 +1,5 @@
 #pragma once
 #include "Cards/ArtifactCard.h"
-#include "Cards/BossCard.h"
 #include "Cards/EventCard.h"
 #include "Cards/FlawCard.h"
 #include "Cards/MagicCard.h"
@@ -38,7 +37,7 @@ namespace game
 
 		const jv::Array<MonsterCard>& monsters;
 		const jv::Array<ArtifactCard>& artifacts;
-		const jv::Array<BossCard>& bosses;
+		const jv::Array<uint32_t>& bosses;
 		const jv::Array<RoomCard>& rooms;
 		const jv::Array<MagicCard>& magics;
 		const jv::Array<FlawCard>& flaws;

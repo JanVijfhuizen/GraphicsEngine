@@ -12,8 +12,7 @@ namespace game
 	{
 		Decks decks{};
 		uint32_t count;
-
-		GetDeck(nullptr, &count, info.bosses);
+		
 		decks.bosses = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
 		GetDeck(nullptr, &count, info.rooms);
 		decks.rooms = jv::CreateVector<uint32_t>(info.arena, count);
@@ -89,7 +88,8 @@ namespace game
 		auto& bosses = decks.bosses;
 		if (bosses.count == 0)
 		{
-			GetDeck(&bosses, nullptr, info.bosses);
+			memcpy(decks.bosses.ptr, info.bosses.ptr, decks.bosses.length * sizeof(uint32_t));
+			decks.bosses.count = decks.bosses.length;
 			RemoveDuplicates(info, bosses, &Path::boss);
 		}
 		return bosses.Pop();

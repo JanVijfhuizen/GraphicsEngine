@@ -31,7 +31,7 @@ namespace game
 	{
 		Card* cards[DISCOVER_LENGTH]{};
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-			cards[i] = &info.bosses[state.paths[i].boss];
+			cards[i] = &info.monsters[state.paths[i].boss];
 
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
@@ -91,12 +91,12 @@ namespace game
 		{
 			const auto& path = state.paths[i];
 			if(!bossPresent)
-				cards[i] = &info.bosses[path.boss];
+				cards[i] = &info.monsters[state.paths[i].boss];
 			else
 				cards[i] = &info.artifacts[path.artifact];
 		}
 		if (bossPresent)
-			cards[DISCOVER_LENGTH] = &info.bosses[state.paths[state.GetPrimaryPath()].boss];
+			cards[DISCOVER_LENGTH] = &info.monsters[info.bosses[state.paths[state.GetPrimaryPath()].boss]];
 
 		Card** stacks[DISCOVER_LENGTH]{};
 		for (auto& stack : stacks)
@@ -331,41 +331,43 @@ namespace game
 			{
 				if (boardState.allyCount < PARTY_ACTIVE_CAPACITY)
 				{
-					// Recruitment.
-					level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.");
-					bool recruitScreenActive = true;
-
 					const auto monster = &info.monsters[lastEnemyDefeatedId];
-					auto combatStats = GetCombatStat(*monster);
-
-					CardDrawInfo cardDrawInfo{};
-					cardDrawInfo.card = monster;
-					cardDrawInfo.center = true;
-					cardDrawInfo.combatStats = &combatStats;
-					cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
-					level->DrawCard(info, cardDrawInfo);
-
-					ButtonDrawInfo buttonAcceptDrawInfo{};
-					buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 28);
-					buttonAcceptDrawInfo.text = "accept";
-					buttonAcceptDrawInfo.center = true;
-					if (level->DrawButton(info, buttonAcceptDrawInfo))
+					if (!monster->unique)
 					{
-						// Add to party.
-						boardState.ids[boardState.allyCount] = lastEnemyDefeatedId;
-						boardState.combatStats[boardState.allyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
-						boardState.partyIds[boardState.allyCount++] = -1;
-						recruitScreenActive = false;
-					}
-					ButtonDrawInfo buttonDeclineDrawInfo{};
-					buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
-					buttonDeclineDrawInfo.text = "decline";
-					buttonDeclineDrawInfo.center = true;
-					if (level->DrawButton(info, buttonDeclineDrawInfo))
-						recruitScreenActive = false;
+						// Recruitment.
+						level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.");
+						bool recruitScreenActive = true;
+						auto combatStats = GetCombatStat(*monster);
 
-					if (recruitScreenActive)
-						return true;
+						CardDrawInfo cardDrawInfo{};
+						cardDrawInfo.card = monster;
+						cardDrawInfo.center = true;
+						cardDrawInfo.combatStats = &combatStats;
+						cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
+						level->DrawCard(info, cardDrawInfo);
+
+						ButtonDrawInfo buttonAcceptDrawInfo{};
+						buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 28);
+						buttonAcceptDrawInfo.text = "accept";
+						buttonAcceptDrawInfo.center = true;
+						if (level->DrawButton(info, buttonAcceptDrawInfo))
+						{
+							// Add to party.
+							boardState.ids[boardState.allyCount] = lastEnemyDefeatedId;
+							boardState.combatStats[boardState.allyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
+							boardState.partyIds[boardState.allyCount++] = -1;
+							recruitScreenActive = false;
+						}
+						ButtonDrawInfo buttonDeclineDrawInfo{};
+						buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
+						buttonDeclineDrawInfo.text = "decline";
+						buttonDeclineDrawInfo.center = true;
+						if (level->DrawButton(info, buttonDeclineDrawInfo))
+							recruitScreenActive = false;
+
+						if (recruitScreenActive)
+							return true;
+					}
 				}
 
 				gameState.partyCount = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);

@@ -164,9 +164,6 @@
     <ClInclude Include="Include\Levels\MainLevel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Cards\BossCard.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Include\Cards\EventCard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
