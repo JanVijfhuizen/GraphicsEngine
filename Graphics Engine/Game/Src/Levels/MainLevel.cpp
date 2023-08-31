@@ -209,6 +209,10 @@ namespace game
 
 		for (auto& metaData : metaDatas)
 			metaData = {};
+
+		activations = {};
+		activations.ptr = activationsPtr;
+		activations.length = 2 + HAND_MAX_SIZE + BOARD_CAPACITY;
 		
 		selectionState = SelectionState::none;
 		time = 0;
@@ -304,8 +308,7 @@ namespace game
 				default:
 					break;
 				}
-
-				activatedCardIndex = 0;
+				
 				valid = PreHandleActionState(state, info, actionState);
 				if (!valid)
 					state.stack.Pop();
@@ -315,12 +318,10 @@ namespace game
 			{
 				if (timeSinceLastActionState + actionStateDuration < level->GetTime())
 				{
-					auto actionState = state.stack.Peek();
-					if(PostHandleActionState(state, info, actionState))
-					{
-						activeState = nullptr;
-						state.stack.Pop();
-					}
+					auto actionState = state.stack.Pop();
+					CollectActivatedCards(state, info, actionState);
+					PostHandleActionState(state, info, actionState);
+					activeState = nullptr;
 				}
 			}
 			else
@@ -755,30 +756,57 @@ namespace game
 		return true;
 	}
 
-	bool MainLevel::CombatState::PostHandleActionState(State& state, const LevelUpdateInfo& info,
+	void MainLevel::CombatState::CollectActivatedCards(State& state, const LevelUpdateInfo& info,
 		ActionState& actionState)
 	{
+		activations.Clear();
 		if (!ValidateActionState(state, actionState))
-			return true;
+			return;
 
-		auto& boardState = state.boardState;
+		const auto& boardState = state.boardState;
 		const auto& playerState = info.playerState;
 
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
+			bool activated = false;
+
 			const auto partyId = boardState.partyIds[i];
+			const auto id = boardState.ids[i];
+			const auto& monster = info.monsters[id];
+			if (monster.onActionEvent)
+				if (monster.onActionEvent(state, actionState, i))
+					activated = true;
 
-			if (partyId == -1)
-				break;
-
-			for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
+			if (partyId != -1)
 			{
-				const uint32_t id = info.playerState.artifacts[partyId];
-				if (id == -1)
+				for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
+				{
+					const uint32_t artifactId = info.playerState.artifacts[partyId];
+					if (artifactId == -1)
+						continue;
+					const auto& artifact = info.artifacts[artifactId];
+					if (artifact.onActionEvent)
+						if (artifact.onActionEvent(state, actionState, i))
+							activated = true;
+				}
+				if (i >= PARTY_ACTIVE_CAPACITY)
 					continue;
-				const auto& artifact = info.artifacts[id];
-				if (artifact.onActionEvent)
-					artifact.onActionEvent(state, actionState, i);
+				const auto flawId = info.gameState.flaws[i];
+				if (flawId != -1)
+				{
+					const auto flaw = info.flaws[flawId];
+					if (flaw.onActionEvent)
+						if (flaw.onActionEvent(state, actionState, i))
+							activated = true;
+				}
+			}
+
+			if (activated)
+			{
+				Activation activation{};
+				activation.id = i;
+				activation.type = Activation::monster;
+				activations.Add() = activation;
 			}
 		}
 
@@ -786,33 +814,49 @@ namespace game
 		const auto& room = info.rooms[path.room];
 		if (room.onActionEvent)
 			room.onActionEvent(state, actionState, 0);
-		if(eventCard != -1)
+		if (eventCard != -1)
 		{
 			const auto& event = info.events[eventCard];
 			if (event.onActionEvent)
-				event.onActionEvent(state, actionState, 0);
+				if (event.onActionEvent(state, actionState, 0))
+				{
+					Activation activation{};
+					activation.type = Activation::event;
+					activations.Add() = activation;
+				}
 		}
 
-		for (uint32_t i = 0; i < boardState.allyCount; ++i)
-		{
-			const auto id = boardState.ids[i];
-			const auto& monster = info.monsters[id];
-			if (monster.onActionEvent)
-				monster.onActionEvent(state, actionState, i);
-		}
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 		{
 			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
-				monster.onActionEvent(state, actionState, i);
+				if (monster.onActionEvent(state, actionState, i))
+				{
+					Activation activation{};
+					activation.id = BOARD_CAPACITY_PER_SIDE + i;
+					activation.type = Activation::monster;
+					activations.Add() = activation;
+				}
 		}
 		for (uint32_t i = 0; i < state.hand.count; ++i)
 		{
 			const auto& magic = &info.magics[state.hand[i]];
 			if (magic->onActionEvent)
-				magic->onActionEvent(state, actionState, i);
+				if (magic->onActionEvent(state, actionState, i))
+				{
+					Activation activation{};
+					activation.id = i;
+					activation.type = Activation::magic;
+					activations.Add() = activation;
+				}
 		}
+	}
+
+	void MainLevel::CombatState::PostHandleActionState(State& state, const LevelUpdateInfo& info,
+		const ActionState& actionState)
+	{
+		auto& boardState = state.boardState;
 
 		if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 		{
@@ -944,8 +988,6 @@ namespace game
 		}
 		else if (actionState.trigger == ActionState::Trigger::onCardPlayed)
 			state.hand.RemoveAtOrdered(actionState.src);
-
-		return true;
 	}
 
 	bool MainLevel::CombatState::ValidateActionState(const State& state, ActionState& actionState)
