@@ -62,6 +62,7 @@ namespace game
 			ActionState* activeState;
 			float actionStateDuration;
 			CardDrawMetaData metaDatas[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
+			uint32_t activatedCardIndex;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;

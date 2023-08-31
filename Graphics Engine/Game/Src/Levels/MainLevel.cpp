@@ -305,6 +305,7 @@ namespace game
 					break;
 				}
 
+				activatedCardIndex = 0;
 				valid = PreHandleActionState(state, info, actionState);
 				if (!valid)
 					state.stack.Pop();
@@ -314,9 +315,12 @@ namespace game
 			{
 				if (timeSinceLastActionState + actionStateDuration < level->GetTime())
 				{
-					auto actionState = state.stack.Pop();
-					valid = PostHandleActionState(state, info, actionState);
-					activeState = nullptr;
+					auto actionState = state.stack.Peek();
+					if(PostHandleActionState(state, info, actionState))
+					{
+						activeState = nullptr;
+						state.stack.Pop();
+					}
 				}
 			}
 			else
@@ -755,7 +759,7 @@ namespace game
 		ActionState& actionState)
 	{
 		if (!ValidateActionState(state, actionState))
-			return false;
+			return true;
 
 		auto& boardState = state.boardState;
 		const auto& playerState = info.playerState;
