@@ -421,7 +421,7 @@ namespace game
 			const auto curve = je::CreateCurveOvershooting();
 			const float eval = DoubleCurveEvaluate(drawInfo.activationLerp, curve, curve);
 	
-			fgRenderTask.color = glm::vec4(0, 0, eval, 1);
+			fgRenderTask.color = glm::vec4(0, eval, 0, 1);
 		}
 
 		info.pixelPerfectRenderTasks.Push(fgRenderTask);
