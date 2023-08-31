@@ -21,7 +21,7 @@ namespace game
 
 		struct BossRevealState final : LevelState<State>
 		{
-			float hoverDurations[DISCOVER_LENGTH];
+			CardDrawMetaData metaDatas[DISCOVER_LENGTH];
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
@@ -29,7 +29,7 @@ namespace game
 
 		struct PathSelectState final : LevelState<State>
 		{
-			float hoverDurations[DISCOVER_LENGTH];
+			CardDrawMetaData metaDatas[DISCOVER_LENGTH];
 			uint32_t discoverOption;
 			float timeSinceDiscovered;
 
@@ -61,7 +61,7 @@ namespace game
 			float timeSinceLastActionState;
 			ActionState* activeState;
 			float actionStateDuration;
-			float hoverDurations[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
+			CardDrawMetaData metaDatas[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
@@ -80,7 +80,7 @@ namespace game
 
 		struct RewardMagicCardState final : LevelState<State>
 		{
-			float hoverDurations[MAGIC_DECK_SIZE + 1];
+			CardDrawMetaData metaDatas[MAGIC_DECK_SIZE + 1];
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;
@@ -90,7 +90,7 @@ namespace game
 
 		struct RewardFlawCardState final : LevelState<State>
 		{
-			float hoverDurations[PARTY_ACTIVE_CAPACITY + 1];
+			CardDrawMetaData metaDatas[PARTY_ACTIVE_CAPACITY + 1];
 			uint32_t discoverOption;
 			float timeSinceDiscovered;
 
@@ -101,7 +101,7 @@ namespace game
 
 		struct RewardArtifactState final : LevelState<State>
 		{
-			float hoverDurations[PARTY_ACTIVE_CAPACITY + 1];
+			CardDrawMetaData metaDatas[PARTY_ACTIVE_CAPACITY + 1];
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;

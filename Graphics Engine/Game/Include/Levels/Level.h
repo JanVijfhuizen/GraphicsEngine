@@ -78,6 +78,11 @@ namespace game
 			bool center = false;
 		};
 
+		struct CardDrawMetaData final
+		{
+			float hoverDuration = 0;
+		};
+
 		struct CardDrawInfo final
 		{
 			glm::ivec2 origin;
@@ -90,7 +95,7 @@ namespace game
 			CombatStats* combatStats = nullptr;
 			uint32_t cost = -1;
 			bool ignoreAnim = false;
-			float* hoverDuration = nullptr;
+			CardDrawMetaData* metaData = nullptr;
 		};
 
 		struct CardSelectionDrawInfo final
@@ -114,7 +119,7 @@ namespace game
 			uint32_t overridePosIndex = -1;
 			uint32_t centerOffset = 0;
 			uint32_t damagedIndex = -1;
-			float* hoverDurations = nullptr;
+			CardDrawMetaData* metaDatas = nullptr;
 			bool spawning = false;
 			float spawnLerp = 0;
 			bool spawnRight = true;
@@ -165,6 +170,6 @@ namespace game
 		LevelIndex _loadingLevelIndex;
 		float _timeSinceOpened;
 		Card* _fullCard;
-		float _hoverDurations[PARTY_CAPACITY];
+		CardDrawMetaData _cardDrawMetaDatas[PARTY_CAPACITY];
 	};
 }
