@@ -11,6 +11,7 @@
 #include "States/BoardState.h"
 #include "States/PlayerState.h"
 #include "Utils/Shuffle.h"
+#include "JLib/VectorUtils.h"
 
 namespace game
 {
@@ -173,6 +174,8 @@ namespace game
 		maxMana = 0;
 		timeSinceLastActionState = 0;
 		activeState = nullptr;
+		eventCard = -1;
+		previousEventCard = -1;
 		state.boardState = {};
 		state.hand.Clear();
 		state.stack.Clear();
@@ -271,7 +274,7 @@ namespace game
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
 			lineRenderTask.scale.y = 1;
-			lineRenderTask.position = SIMULATED_RESOLUTION / 2;
+			lineRenderTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT);
 			lineRenderTask.priority = true;
 
 			const float l = GetActionStateLerp(*level, START_OF_TURN_ACTION_STATE_DURATION);
@@ -291,19 +294,54 @@ namespace game
 
 				TextTask textTask{};
 				textTask.text = "new";
-				textTask.position = SIMULATED_RESOLUTION / 2 + glm::ivec2(off2, 8);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 1);
 				textTask.scale = 2;
 				textTask.center = true;
 				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
 				textTask.text = "turn";
-				textTask.position = SIMULATED_RESOLUTION / 2 - glm::ivec2(off2, 8);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 18);
 				info.textTasks.Push(textTask);
 			}
 
 			lineRenderTask.position.x = off;
 			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+		}
+
+		{
+			const bool isStartOfTurn = activeState && activeState->trigger == ActionState::Trigger::onStartOfTurn;
+			auto cards = jv::CreateVector<Card*>(info.frameArena, 3);
+			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
+			if (eventCard != -1)
+				cards.Add() = &info.events[eventCard];
+			if (isStartOfTurn && previousEventCard != -1)
+				cards.Add() = &info.events[previousEventCard];
+
+			CardSelectionDrawInfo eventSelectionDrawInfo{};
+			eventSelectionDrawInfo.lifeTime = level->GetTime();
+			eventSelectionDrawInfo.cards = cards.ptr;
+			eventSelectionDrawInfo.length = cards.count;
+			eventSelectionDrawInfo.height = ALLY_HEIGHT;
+			eventSelectionDrawInfo.hoverDurations = hoverDurations;
+			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
+			eventSelectionDrawInfo.offsetMod = -4;
+			if (isStartOfTurn)
+			{
+				eventSelectionDrawInfo.spawnRight = false;
+				DrawDrawAnimation(info, *level, eventSelectionDrawInfo);
+				if(cards.count > 2)
+				{
+					DrawFadeAnimation(*level, eventSelectionDrawInfo, 1);
+				}
+			}
+
+			level->DrawCardSelection(info, eventSelectionDrawInfo);
+			/*
+			DrawCardPlayAnimation(*level, handSelectionDrawInfo);
+			if (activeState && activeState->trigger == ActionState::Trigger::draw)
+				DrawDrawAnimation(info, *level, handSelectionDrawInfo);
+				*/
 		}
 
 		if(state.stack.count == 0)
@@ -370,7 +408,18 @@ namespace game
 			}
 		}
 
-		const auto& path = state.paths[state.chosenPath];
+		constexpr uint32_t LINE_POSITIONS[]{ ALLY_HEIGHT };
+
+		PixelPerfectRenderTask lineRenderTask{};
+		lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
+		lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
+		lineRenderTask.scale.y = 1;
+
+		for (const auto& i : LINE_POSITIONS)
+		{
+			lineRenderTask.position.y = i;
+			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+		}
 
 		// Check for new turn.
 		if(state.stack.count == 0)
@@ -402,16 +451,6 @@ namespace game
 		const auto& lMouse = info.inputState.lMouse;
 		const bool lMousePressed = lMouse.PressEvent();
 		const bool lMouseReleased = lMouse.ReleaseEvent();
-		
-		CardDrawInfo cardDrawInfo{};
-		cardDrawInfo.card = &info.rooms[path.room];
-		cardDrawInfo.origin = glm::ivec2(8);
-		cardDrawInfo.hoverDuration = hoverDurations;
-		level->DrawCard(info, cardDrawInfo);
-		cardDrawInfo.card = &info.events[eventCard];
-		cardDrawInfo.origin.x += 28;
-		cardDrawInfo.hoverDuration = &hoverDurations[1];
-		level->DrawCard(info, cardDrawInfo);
 
 		constexpr uint32_t l = HAND_MAX_SIZE > BOARD_CAPACITY_PER_SIDE ? HAND_MAX_SIZE : BOARD_CAPACITY_PER_SIDE;
 
@@ -432,7 +471,7 @@ namespace game
 		enemySelectionDrawInfo.lifeTime = level->GetTime();
 		enemySelectionDrawInfo.cards = cards;
 		enemySelectionDrawInfo.length = boardState.enemyCount;
-		enemySelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 4;
+		enemySelectionDrawInfo.height = ENEMY_HEIGHT;
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
@@ -540,7 +579,7 @@ namespace game
 		CardSelectionDrawInfo playerCardSelectionDrawInfo{};
 		playerCardSelectionDrawInfo.cards = playerCards;
 		playerCardSelectionDrawInfo.length = boardState.allyCount;
-		playerCardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 5 * 2;
+		playerCardSelectionDrawInfo.height = ALLY_HEIGHT;
 		playerCardSelectionDrawInfo.stacks = stacks;
 		playerCardSelectionDrawInfo.stackCounts = stacksCount;
 		playerCardSelectionDrawInfo.lifeTime = level->GetTime();
@@ -625,7 +664,12 @@ namespace game
 			return false;
 
 		auto& boardState = state.boardState;
-		if (actionState.trigger == ActionState::Trigger::onSummon)
+		if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
+		{
+			previousEventCard = eventCard;
+			eventCard = state.GetEvent(info);
+		}
+		else if (actionState.trigger == ActionState::Trigger::onSummon)
 		{
 			constexpr auto vIsAlly = static_cast<uint32_t>(ActionState::VSummon::isAlly);
 			constexpr auto vId = static_cast<uint32_t>(ActionState::VSummon::id);
@@ -678,6 +722,18 @@ namespace game
 					artifact.onActionEvent(state, actionState, i);
 			}
 		}
+
+		const auto& path = state.paths[state.GetPrimaryPath()];
+		const auto& room = info.rooms[path.room];
+		if (room.onActionEvent)
+			room.onActionEvent(state, actionState, 0);
+		if(eventCard != -1)
+		{
+			const auto& event = info.events[eventCard];
+			if (event.onActionEvent)
+				event.onActionEvent(state, actionState, 0);
+		}
+
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
 			const auto id = boardState.ids[i];
@@ -702,7 +758,6 @@ namespace game
 		if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 		{
 			// Set new random enemy targets.
-			eventCard = state.GetEvent(info);
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
 
@@ -900,7 +955,6 @@ namespace game
 
 		constexpr float moveDuration = ATTACK_ACTION_STATE_DURATION / 4;
 		const float t = level.GetTime();
-		const float aTime = t - timeSinceLastActionState;
 
 		const auto curve = je::CreateCurveOvershooting();
 		const auto curveDown = je::CreateCurveDecelerate();
@@ -913,6 +967,8 @@ namespace game
 		const float xS = GetCardShape(info, drawInfo).x;
 		drawInfo.centerOffset += -tOff * delta * xS;
 
+		const auto cardShape = GetCardShape(info, drawInfo);
+
 		// Move towards dst.
 		if(isSrc && l >= moveDuration)
 		{
@@ -920,7 +976,7 @@ namespace game
 			const float tMOff = jv::Min((l - moveDuration) * (1.f / moveDuration) * vEval, 1.f);
 			drawInfo.overridePosIndex = src;
 			drawInfo.overridePos = GetCardPosition(info, drawInfo, src);
-			drawInfo.overridePos.y += tMOff * 64 * (2 * allied - 1);
+			drawInfo.overridePos.y += tMOff * (ENEMY_HEIGHT - ALLY_HEIGHT - cardShape.y) * (2 * allied - 1);
 		}
 		else if(!isSrc && l >= moveDuration * 2)
 		{
@@ -928,7 +984,7 @@ namespace game
 			const float tMOff = jv::Min((t - timeSinceLastActionState - ATTACK_ACTION_STATE_DURATION / 2) * 2 * vEval, 1.f);
 			drawInfo.overridePosIndex = dst;
 			drawInfo.overridePos = GetCardPosition(info, drawInfo, dst);
-			drawInfo.overridePos.y += tMOff * 32 * (2 * !allied - 1);
+			drawInfo.overridePos.y += tMOff * cardShape.x * (2 * !allied - 1);
 		}
 	}
 
@@ -1019,12 +1075,18 @@ namespace game
 			return;
 		if (activeState->trigger != ActionState::Trigger::onCardPlayed)
 			return;
+		DrawFadeAnimation(level, drawInfo, activeState->src);
+	}
 
-		drawInfo.dyingIndex = activeState->src;
+	void MainLevel::CombatState::DrawFadeAnimation(const Level& level, CardSelectionDrawInfo& drawInfo, const uint32_t src) const
+	{
+		if (!activeState)
+			return;
+		drawInfo.dyingIndex = src;
 		drawInfo.dyingLerp = GetActionStateLerp(level);
 	}
 
-	float MainLevel::CombatState::GetActionStateLerp(const Level& level, float duration) const
+	float MainLevel::CombatState::GetActionStateLerp(const Level& level, const float duration) const
 	{
 		const float t = level.GetTime();
 		const float aTime = t - timeSinceLastActionState;

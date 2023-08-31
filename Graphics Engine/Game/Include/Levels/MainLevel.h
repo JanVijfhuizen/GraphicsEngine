@@ -50,6 +50,7 @@ namespace game
 
 			float time;
 			uint32_t eventCard;
+			uint32_t previousEventCard;
 			uint32_t targets[BOARD_CAPACITY_PER_SIDE];
 			bool tapped[BOARD_CAPACITY_PER_SIDE];
 			uint32_t selectedId;
@@ -73,6 +74,7 @@ namespace game
 			void DrawDrawAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo) const;
 			void DrawDeathAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawCardPlayAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const;
+			void DrawFadeAnimation(const Level& level, CardSelectionDrawInfo& drawInfo, uint32_t src) const;
 			float GetActionStateLerp(const Level& level, float duration = ACTION_STATE_DEFAULT_DURATION) const;
 		};
 
