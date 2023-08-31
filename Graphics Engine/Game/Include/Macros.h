@@ -39,6 +39,8 @@ constexpr uint32_t ENEMY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 8;
 constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 4;
 constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
 
+constexpr uint32_t FINAL_BOSS_ID = 1;
+
 enum class LevelIndex
 {
 	mainMenu,
