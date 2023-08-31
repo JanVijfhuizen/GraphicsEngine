@@ -1524,7 +1524,16 @@ namespace game
 					for (uint32_t i = 0; i < playerState.partySize; ++i)
 					{
 						if (!selected[i])
+						{
+							for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
+							{
+								playerState.artifacts[j + d * MONSTER_ARTIFACT_CAPACITY] = playerState.artifacts[j * i * MONSTER_ARTIFACT_CAPACITY];
+								playerState.artifactSlotCounts[d] = playerState.artifactSlotCounts[i];
+							}
 							playerState.monsterIds[d++] = playerState.monsterIds[i];
+						}
+						else
+							playerState.artifactSlotCounts[i] = 0;
 					}
 					
 					for (uint32_t i = 0; i < gameState.partyCount; ++i)
