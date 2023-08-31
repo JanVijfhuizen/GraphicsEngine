@@ -167,7 +167,6 @@
   <ItemGroup>
     <ClInclude Include="Include\CardGame.h" />
     <ClInclude Include="Include\Cards\ArtifactCard.h" />
-    <ClInclude Include="Include\Cards\BossCard.h" />
     <ClInclude Include="Include\Cards\Card.h" />
     <ClInclude Include="Include\Cards\EventCard.h" />
     <ClInclude Include="Include\Cards\FlawCard.h" />

@@ -6,7 +6,6 @@
 #include <stb_image.h>
 #include <Engine/Engine.h>
 #include "Cards/ArtifactCard.h"
-#include "Cards/BossCard.h"
 #include "Cards/MagicCard.h"
 #include "Cards/MonsterCard.h"
 #include "Cards/RoomCard.h"
@@ -80,7 +79,7 @@ namespace game
 
 		jv::Array<MonsterCard> monsters;
 		jv::Array<ArtifactCard> artifacts;
-		jv::Array<BossCard> bosses;
+		jv::Array<uint32_t> bosses;
 		jv::Array<RoomCard> rooms;
 		jv::Array<MagicCard> magic;
 		jv::Array<FlawCard> flaws;
@@ -99,7 +98,7 @@ namespace game
 		[[nodiscard]] static jv::Array<const char*> GetDynamicTexturePaths(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
-		[[nodiscard]] static jv::Array<BossCard> GetBossCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<uint32_t> GetBossCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<RoomCard> GetRoomCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<MagicCard> GetMagicCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<FlawCard> GetFlawCards(jv::Arena& arena);
@@ -415,11 +414,12 @@ namespace game
 		return arr;
 	}
 
-	jv::Array<BossCard> CardGame::GetBossCards(jv::Arena& arena)
+	jv::Array<uint32_t> CardGame::GetBossCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<BossCard>(arena, 10);
+		const auto arr = jv::CreateArray<uint32_t>(arena, 10);
+		uint32_t i = 1;
 		for (auto& card : arr)
-			card.name = "boss";
+			card = i++;
 		return arr;
 	}
 
