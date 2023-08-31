@@ -20,7 +20,10 @@ namespace game
 		for (auto& path : state.paths)
 		{
 			path = {};
-			path.boss = state.GetBoss(info);
+			if (state.depth != SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
+				path.boss = state.GetBoss(info);
+			else
+				path.boss = FINAL_BOSS_ID;
 		}
 		for (auto& hoverDuration : hoverDurations)
 			hoverDuration = 0;
@@ -235,7 +238,7 @@ namespace game
 				ActionState summonState{};
 				summonState.trigger = ActionState::Trigger::onSummon;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
-				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.paths[state.GetPrimaryPath()].boss;
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.GetMonster(info); 
 				state.stack.Add() = summonState;
 			}
 		}
@@ -244,7 +247,7 @@ namespace game
 			ActionState summonState{};
 			summonState.trigger = ActionState::Trigger::onSummon;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
-			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.GetMonster(info);
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.paths[state.GetPrimaryPath()].boss;
 			state.stack.Add() = summonState;
 		}
 		

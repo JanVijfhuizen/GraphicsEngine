@@ -400,6 +400,10 @@ namespace game
 			}
 			return false;
 		};
+		arr[FINAL_BOSS_ID].unique = true;
+		arr[FINAL_BOSS_ID].name = "da true final boss";
+		arr[FINAL_BOSS_ID].health = 44;
+		arr[FINAL_BOSS_ID].attack = 104;
 		return arr;
 	}
 
