@@ -95,6 +95,7 @@ namespace game
 			CombatStats* combatStats = nullptr;
 			uint32_t cost = -1;
 			bool ignoreAnim = false;
+			float activationLerp = -1;
 			CardDrawMetaData* metaData = nullptr;
 		};
 
@@ -125,6 +126,8 @@ namespace game
 			bool spawnRight = true;
 			uint32_t dyingIndex = -1;
 			float dyingLerp;
+			uint32_t activationIndex = -1;
+			float activationLerp;
 		};
 
 		struct PartyDrawInfo final

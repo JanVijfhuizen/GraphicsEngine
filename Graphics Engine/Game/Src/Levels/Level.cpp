@@ -225,6 +225,8 @@ namespace game
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
 			int32_t xAddOffset = 0;
+			
+			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
 
 			if(drawInfo.damagedIndex == i)
 			{
@@ -381,13 +383,11 @@ namespace game
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : drawInfo.bgColor;
 		if(drawInfo.metaData && drawInfo.metaData->hoverDuration > 1e-5f)
-		{
 			bgRenderTask.color = glm::vec4(drawInfo.metaData->hoverDuration, 0, 0, 1);
-		}
 
 		if (drawInfo.metaData)
 		{
-			drawInfo.metaData->hoverDuration += 5 * info.deltaTime * (collided * 2 - 1);
+			drawInfo.metaData->hoverDuration += 5 * info.deltaTime * ((collided || drawInfo.activationLerp >= 0) * 2 - 1);
 			drawInfo.metaData->hoverDuration = jv::Clamp(drawInfo.metaData->hoverDuration, 0.f, 1.f);
 		}
 
@@ -415,6 +415,15 @@ namespace game
 		PixelPerfectRenderTask fgRenderTask = bgRenderTask;
 		fgRenderTask.subTexture = cardFrames[1];
 		fgRenderTask.color = drawInfo.fgColor;
+		
+		if(drawInfo.activationLerp >= 0)
+		{
+			const auto curve = je::CreateCurveOvershooting();
+			const float eval = DoubleCurveEvaluate(drawInfo.activationLerp, curve, curve);
+	
+			fgRenderTask.color = glm::vec4(0, 0, eval, 1);
+		}
+
 		info.pixelPerfectRenderTasks.Push(fgRenderTask);
 
 		const bool priority = !info.inputState.rMouse.pressed;

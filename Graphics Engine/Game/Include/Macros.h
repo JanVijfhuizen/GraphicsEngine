@@ -34,7 +34,7 @@ constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
 constexpr float ACTION_STATE_DEFAULT_DURATION = .4f;
 constexpr float START_OF_TURN_ACTION_STATE_DURATION = 2;
 constexpr float ATTACK_ACTION_STATE_DURATION = .4f;
-constexpr float CARD_ACTIVATE_DURATION = .4f;
+constexpr float CARD_ACTIVATION_DURATION = .4f;
 
 constexpr uint32_t ENEMY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 8;
 constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 4;

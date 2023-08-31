@@ -327,7 +327,7 @@ namespace game
 					}
 					if(activations.count > 0)
 					{
-						if (activationDuration < CARD_ACTIVATE_DURATION)
+						if (activationDuration < CARD_ACTIVATION_DURATION)
 							activationDuration += info.deltaTime;
 						else
 						{
@@ -458,6 +458,7 @@ namespace game
 			const bool isStartOfTurn = activeState && activeState->trigger == ActionState::Trigger::onStartOfTurn;
 			auto cards = jv::CreateVector<Card*>(info.frameArena, 3);
 			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
+
 			if (eventCard != -1)
 				cards.Add() = &info.events[eventCard];
 			if (isStartOfTurn && previousEventCard != -1)
@@ -471,10 +472,15 @@ namespace game
 			eventSelectionDrawInfo.metaDatas = metaDatas;
 			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
 			eventSelectionDrawInfo.offsetMod = -4;
+
+			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
+			if(cards.count > 1)
+				DrawActivationAnimation(eventSelectionDrawInfo, Activation::event, 1);
+
 			if (isStartOfTurn)
 			{
 				eventSelectionDrawInfo.spawnRight = false;
-				DrawDrawAnimation(info, *level, eventSelectionDrawInfo);
+				DrawDrawAnimation(*level, eventSelectionDrawInfo);
 				if (cards.count > 2)
 				{
 					DrawFadeAnimation(*level, eventSelectionDrawInfo, 1);
@@ -552,10 +558,11 @@ namespace game
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[2 + HAND_MAX_SIZE];
+		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		DrawDamageAnimation(info, *level, enemySelectionDrawInfo, false);
 		DrawSummonAnimation(info, *level, enemySelectionDrawInfo, false);
-		DrawDeathAnimation(info, *level, enemySelectionDrawInfo, false);
+		DrawDeathAnimation(*level, enemySelectionDrawInfo, false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
 
@@ -596,9 +603,10 @@ namespace game
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.metaDatas = &metaDatas[2];
+		DrawActivationAnimation(handSelectionDrawInfo, Activation::magic, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
 		if(activeState && activeState->trigger == ActionState::Trigger::draw)
-			DrawDrawAnimation(info, *level, handSelectionDrawInfo);
+			DrawDrawAnimation(*level, handSelectionDrawInfo);
 
 		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
 		selectedArr = nullptr;
@@ -663,10 +671,11 @@ namespace game
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
 		playerCardSelectionDrawInfo.metaDatas = &metaDatas[2 + BOARD_CAPACITY_PER_SIDE + HAND_MAX_SIZE];
+		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(info, *level, playerCardSelectionDrawInfo, true);
 		DrawSummonAnimation(info, *level, playerCardSelectionDrawInfo, true);
-		DrawDeathAnimation(info, *level, playerCardSelectionDrawInfo, true);
+		DrawDeathAnimation(*level, playerCardSelectionDrawInfo, true);
 
 		const auto allyResult = level->DrawCardSelection(info, playerCardSelectionDrawInfo);
 		
@@ -832,7 +841,13 @@ namespace game
 		const auto& path = state.paths[state.GetPrimaryPath()];
 		const auto& room = info.rooms[path.room];
 		if (room.onActionEvent)
-			room.onActionEvent(state, actionState, 0);
+			if(room.onActionEvent(state, actionState, 0))
+			{
+				Activation activation{};
+				activation.type = Activation::room;
+				activations.Add() = activation;
+			}
+
 		if (eventCard != -1)
 		{
 			const auto& event = info.events[eventCard];
@@ -1159,11 +1174,10 @@ namespace game
 		if (allied != activeState->values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
 			return;
 
-		DrawDrawAnimation(info, level, drawInfo);
+		DrawDrawAnimation(level, drawInfo);
 	}
 
-	void MainLevel::CombatState::DrawDrawAnimation(const LevelUpdateInfo& info, const Level& level,
-		CardSelectionDrawInfo& drawInfo) const
+	void MainLevel::CombatState::DrawDrawAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const
 	{
 		if (!activeState)
 			return;
@@ -1172,8 +1186,7 @@ namespace game
 		drawInfo.spawnLerp = GetActionStateLerp(level);
 	}
 
-	void MainLevel::CombatState::DrawDeathAnimation(const LevelUpdateInfo& info, const Level& level,
-		CardSelectionDrawInfo& drawInfo, const bool allied) const
+	void MainLevel::CombatState::DrawDeathAnimation(const Level& level, CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
 		if (!activeState)
 			return;
@@ -1185,7 +1198,24 @@ namespace game
 		drawInfo.dyingIndex = activeState->dst;
 		if (activeState->dst >= BOARD_CAPACITY_PER_SIDE)
 			drawInfo.dyingIndex -= BOARD_CAPACITY_PER_SIDE;
-		drawInfo.dyingLerp = GetActionStateLerp(level);;
+		drawInfo.dyingLerp = GetActionStateLerp(level);
+	}
+
+	void MainLevel::CombatState::DrawActivationAnimation(CardSelectionDrawInfo& drawInfo, 
+		const Activation::Type type, const uint32_t idMod) const
+	{
+		if (!activeState)
+			return;
+		if (activations.count == 0)
+			return;
+		const auto& activation = activations.Peek();
+		if (activation.type != type)
+			return;
+		if (activation.id + idMod >= drawInfo.length)
+			return;
+		drawInfo.activationIndex = activation.id - idMod;
+		const float f = (CARD_ACTIVATION_DURATION - (CARD_ACTIVATION_DURATION - activationDuration)) / CARD_ACTIVATION_DURATION;
+		drawInfo.activationLerp = f;
 	}
 
 	void MainLevel::CombatState::DrawCardPlayAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const
