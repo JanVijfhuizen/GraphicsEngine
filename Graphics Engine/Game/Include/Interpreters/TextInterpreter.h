@@ -26,6 +26,7 @@ namespace game
 	class TextInterpreter final : public TaskInterpreter<TextTask, TextInterpreterCreateInfo>
 	{
 	public:
+		[[nodiscard]] static const char* Concat(const char* a, const char* b, jv::Arena& arena);
 		[[nodiscard]] static const char* IntToConstCharPtr(uint32_t i, jv::Arena& arena);
 
 	private:
