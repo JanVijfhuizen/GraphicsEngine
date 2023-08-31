@@ -23,8 +23,8 @@ namespace game
 		_timeSinceOpened = 0;
 		_timeSinceLoading = 0;
 		_loading = false;
-		for (auto& hoverDuration : _hoverDurations)
-			hoverDuration = 0;
+		for (auto& metaData : _cardDrawMetaDatas)
+			metaData = {};
 	}
 
 	bool Level::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -225,6 +225,8 @@ namespace game
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
 			int32_t xAddOffset = 0;
+			
+			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
 
 			if(drawInfo.damagedIndex == i)
 			{
@@ -284,7 +286,7 @@ namespace game
 			uint32_t stackedCount = -1;
 
 			cardDrawInfo.ignoreAnim = true;
-			cardDrawInfo.hoverDuration = nullptr;
+			cardDrawInfo.metaData = nullptr;
 			
 			if (drawInfo.stacks)
 			{
@@ -317,8 +319,8 @@ namespace game
 			cardDrawInfo.ignoreAnim = stackedSelected != -1;
 			if (drawInfo.costs)
 				cardDrawInfo.cost = drawInfo.costs[i];
-			if(drawInfo.hoverDurations && !stackedSelected != -1)
-				cardDrawInfo.hoverDuration = &drawInfo.hoverDurations[i];
+			if(drawInfo.metaDatas && !stackedSelected != -1)
+				cardDrawInfo.metaData = &drawInfo.metaDatas[i];
 			DrawCard(info, cardDrawInfo);
 			cardDrawInfo.combatStats = nullptr;
 			cardDrawInfo.cost = -1;
@@ -330,7 +332,7 @@ namespace game
 				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
 				stackedDrawInfo.selectable = true;
 				stackedDrawInfo.ignoreAnim = false;
-				stackedDrawInfo.hoverDuration = nullptr;
+				stackedDrawInfo.metaData = nullptr;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -365,10 +367,10 @@ namespace game
 		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
 
 		auto origin = drawInfo.origin;
-		if (drawInfo.hoverDuration)
+		if (drawInfo.metaData)
 		{
 			const auto curve = je::CreateCurveOvershooting();
-			origin.y += curve.REvaluate(*drawInfo.hoverDuration) * 4;
+			origin.y += curve.REvaluate(drawInfo.metaData->hoverDuration) * 4;
 		}
 
 		PixelPerfectRenderTask bgRenderTask{};
@@ -380,15 +382,13 @@ namespace game
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : drawInfo.bgColor;
-		if(drawInfo.hoverDuration && *drawInfo.hoverDuration > 1e-5f)
-		{
-			bgRenderTask.color = glm::vec4(*drawInfo.hoverDuration, 0, 0, 1);
-		}
+		if(drawInfo.metaData && drawInfo.metaData->hoverDuration > 1e-5f)
+			bgRenderTask.color = glm::vec4(drawInfo.metaData->hoverDuration, 0, 0, 1);
 
-		if (drawInfo.hoverDuration)
+		if (drawInfo.metaData)
 		{
-			*drawInfo.hoverDuration += 5 * info.deltaTime * (collided * 2 - 1);
-			*drawInfo.hoverDuration = jv::Clamp(*drawInfo.hoverDuration, 0.f, 1.f);
+			drawInfo.metaData->hoverDuration += 5 * info.deltaTime * ((collided || drawInfo.activationLerp >= 0) * 2 - 1);
+			drawInfo.metaData->hoverDuration = jv::Clamp(drawInfo.metaData->hoverDuration, 0.f, 1.f);
 		}
 
 		bgRenderTask.position = origin;
@@ -415,6 +415,15 @@ namespace game
 		PixelPerfectRenderTask fgRenderTask = bgRenderTask;
 		fgRenderTask.subTexture = cardFrames[1];
 		fgRenderTask.color = drawInfo.fgColor;
+		
+		if(drawInfo.activationLerp >= 0)
+		{
+			const auto curve = je::CreateCurveOvershooting();
+			const float eval = DoubleCurveEvaluate(drawInfo.activationLerp, curve, curve);
+	
+			fgRenderTask.color = glm::vec4(0, eval, 0, 1);
+		}
+
 		info.pixelPerfectRenderTasks.Push(fgRenderTask);
 
 		const bool priority = !info.inputState.rMouse.pressed;
@@ -561,7 +570,7 @@ namespace game
 		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
 		cardSelectionDrawInfo.greyedOutArr = drawInfo.greyedOutArr;
 		cardSelectionDrawInfo.combatStats = combatInfos;
-		cardSelectionDrawInfo.hoverDurations = _hoverDurations;
+		cardSelectionDrawInfo.metaDatas = _cardDrawMetaDatas;
 
 		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}

@@ -431,7 +431,18 @@ namespace game
 	{
 		const auto arr = jv::CreateArray<RoomCard>(arena, 10);
 		for (auto& card : arr)
-			card.name = "room";
+		{
+			card.name = "special room";
+			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					std::cout << "someone's attacking" << std::endl;
+					return true;
+				}
+				return false;
+			};
+		}
 		return arr;
 	}
 
