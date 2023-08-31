@@ -118,6 +118,7 @@ namespace game
 			float* hoverDurations = nullptr;
 			bool spawning = false;
 			float spawnLerp = 0;
+			bool spawnRight = true;
 			uint32_t dyingIndex = -1;
 			float dyingLerp;
 		};

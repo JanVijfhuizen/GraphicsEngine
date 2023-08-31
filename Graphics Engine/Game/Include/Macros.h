@@ -35,6 +35,10 @@ constexpr float ACTION_STATE_DEFAULT_DURATION = .4f;
 constexpr float START_OF_TURN_ACTION_STATE_DURATION = 2;
 constexpr float ATTACK_ACTION_STATE_DURATION = .4f;
 
+constexpr uint32_t ENEMY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 8;
+constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 4;
+constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
+
 enum class LevelIndex
 {
 	mainMenu,

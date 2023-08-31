@@ -237,7 +237,7 @@ namespace game
 				const auto curve = je::CreateCurveOvershooting();
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
-				xAddOffset = (1.f - eval) * SIMULATED_RESOLUTION.x;
+				xAddOffset = (1.f - eval) * SIMULATED_RESOLUTION.x * (drawInfo.spawnRight * 2 - 1);
 			}
 
 			if(drawInfo.dyingIndex != -1)
