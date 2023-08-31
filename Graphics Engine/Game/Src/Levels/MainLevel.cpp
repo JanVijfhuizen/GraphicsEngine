@@ -47,6 +47,9 @@ namespace game
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.hoverDurations = hoverDurations;
 		cardSelectionDrawInfo.combatStats = combatStats;
+		if (state.depth == SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
+			cardSelectionDrawInfo.length = 1;
+
 		level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		const char* text = "the stage bosses have been revealed.";
@@ -137,6 +140,8 @@ namespace game
 			counters += i == discoverOption;
 			texts[i] = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
 		}
+
+		const bool finalBoss = state.depth == SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS;
 		
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
@@ -149,6 +154,8 @@ namespace game
 		cardSelectionDrawInfo.hoverDurations = hoverDurations;
 		if (!bossPresent)
 			cardSelectionDrawInfo.combatStats = combatStats;
+		if (finalBoss)
+			cardSelectionDrawInfo.length = 1;
 		uint32_t selected = level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		if (bossPresent)
@@ -163,7 +170,7 @@ namespace game
 			cardDrawInfo.combatStats = &combatStat;
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
-			cardDrawInfo.origin.x += (shape.x + cardSelectionDrawInfo.offsetMod) * 4 / 2;
+			cardDrawInfo.origin.x += (shape.x + cardSelectionDrawInfo.offsetMod) * (finalBoss ? 2 : 4) / 2;
 			level->DrawCard(info, cardDrawInfo);
 		}
 
