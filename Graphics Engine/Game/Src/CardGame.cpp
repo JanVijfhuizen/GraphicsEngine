@@ -381,7 +381,10 @@ namespace game
 	{
 		const auto arr = jv::CreateArray<MonsterCard>(arena, 30);
 		for (auto& card : arr)
+		{
 			card.name = "monster";
+			card.ruleText = "whenever something happens that isnt supposed to happen, make something that is not supposed to happen happen.";
+		}
 		// Starting pet.
 		arr[0].unique = true;
 		arr[0].name = "daisy, loyal protector";

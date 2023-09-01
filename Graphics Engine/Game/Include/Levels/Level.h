@@ -173,6 +173,7 @@ namespace game
 		LevelIndex _loadingLevelIndex;
 		float _timeSinceOpened;
 		Card* _fullCard;
+		float _fullCardLifeTime;
 		CardDrawMetaData _cardDrawMetaDatas[PARTY_CAPACITY];
 	};
 }

@@ -27,6 +27,35 @@ namespace game
 		return ptr;
 	}
 
+	uint32_t TextInterpreter::GetLineCount(const char* str, const uint32_t lineLength)
+	{
+		uint32_t lineCount = 1;
+		const uint32_t l = strlen(str);
+
+		uint32_t lineStart = 0;
+		uint32_t lastBreakPointFound = -1;
+		for (uint32_t i = 0; i < l; ++i)
+		{
+			const auto c = str[i];
+			if (c == ' ')
+			{
+				if (i - lineStart >= lineLength)
+				{
+					if (lastBreakPointFound != -1)
+					{
+						lineStart = lastBreakPointFound;
+						++lineCount;
+						i = lineStart - 1;
+					}
+				}
+				else
+					lastBreakPointFound = i;
+			}
+		}
+
+		return lineCount;
+	}
+
 	void TextInterpreter::OnStart(const TextInterpreterCreateInfo& createInfo, const EngineMemory& memory)
 	{
 		_createInfo = createInfo;

@@ -56,41 +56,75 @@ namespace game
 		const auto atlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::mouse)];
 
 		jv::ge::SubTexture subTextures[2];
-		Divide(atlasTexture.subTexture, subTextures, (sizeof subTextures) / sizeof(jv::ge::SubTexture));
-
-		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::cardLarge)];
+		Divide(atlasTexture.subTexture, subTextures, sizeof subTextures / sizeof(jv::ge::SubTexture));
 
 		if(_fullCard)
 		{
-			PixelPerfectRenderTask bgRenderTask{};
-			bgRenderTask.position = SIMULATED_RESOLUTION / 2;
-			bgRenderTask.scale = cardTexture.resolution;
-			bgRenderTask.subTexture = cardTexture.subTexture;
-			bgRenderTask.xCenter = true;
-			bgRenderTask.yCenter = true;
-			bgRenderTask.priority = true;
+			constexpr float FULL_CARD_OPEN_DURATION = .1f;
+			constexpr float FULL_CARD_TOTAL_DURATION = .2f;
+			constexpr uint32_t FULL_CARD_LINE_LENGTH = 32;
 
-			bgRenderTask.color = glm::ivec4(1, 0, 0, 1);
-			info.pixelPerfectRenderTasks.Push(bgRenderTask);
+			const float delta = info.deltaTime * (info.inputState.rMouse.pressed * 2 - 1);
+			const float m = jv::Min(_fullCardLifeTime, FULL_CARD_TOTAL_DURATION);
+			if (delta < 0)
+				_fullCardLifeTime = m;
+			_fullCardLifeTime += delta;
+			if(_fullCardLifeTime < 0)
+				_fullCard = nullptr;
+			else
+			{
+				const float lerp = m / FULL_CARD_TOTAL_DURATION;
+				const uint32_t lineCount = TextInterpreter::GetLineCount(_fullCard->ruleText, FULL_CARD_LINE_LENGTH);
 
-			TextTask titleTextTask{};
-			titleTextTask.position = bgRenderTask.position;
-			titleTextTask.position.y += bgRenderTask.scale.y / 2 - 28;
-			titleTextTask.text = _fullCard ? _fullCard->name : "empty slot";
-			titleTextTask.lifetime = 1e2f;
-			titleTextTask.center = true;
-			titleTextTask.priority = true;
-			titleTextTask.lineLength = 18;
-			info.textTasks.Push(titleTextTask);
+				const auto& emptyTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)];
+				const auto& alphabetTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::alphabet)];
 
-			auto ruleTextTask = titleTextTask;
-			ruleTextTask.position = bgRenderTask.position;
-			ruleTextTask.position.y -= 36;
-			ruleTextTask.text = _fullCard ? _fullCard->ruleText : "...";
-			info.textTasks.Push(ruleTextTask);
+				PixelPerfectRenderTask bgRenderTask{};
+				bgRenderTask.position = SIMULATED_RESOLUTION / 2;
+				bgRenderTask.scale = glm::ivec2(SIMULATED_RESOLUTION.x, lineCount * alphabetTexture.resolution.y + 6);
+				bgRenderTask.scale.y *= lerp;
+				bgRenderTask.subTexture = emptyTexture.subTexture;
+				bgRenderTask.xCenter = true;
+				bgRenderTask.yCenter = true;
+				bgRenderTask.priority = true;
+				info.pixelPerfectRenderTasks.Push(bgRenderTask);
+
+				if(bgRenderTask.scale.y > 2)
+				{
+					bgRenderTask.scale.y -= 2;
+					bgRenderTask.color = glm::vec4(0, 0, 0, 1);
+					info.pixelPerfectRenderTasks.Push(bgRenderTask);
+				}
+
+				const float l = _fullCardLifeTime - FULL_CARD_OPEN_DURATION;
+				if(l >= 0)
+				{
+					TextTask titleTextTask{};
+					titleTextTask.position = bgRenderTask.position;
+					titleTextTask.position.y += bgRenderTask.scale.y / 2 + alphabetTexture.resolution.y / 2;
+					titleTextTask.text = _fullCard->name;
+					titleTextTask.lifetime = l * 4;
+					titleTextTask.center = true;
+					titleTextTask.priority = true;
+					titleTextTask.scale = 1;
+					info.textTasks.Push(titleTextTask);
+
+					auto ruleTextTask = titleTextTask;
+					ruleTextTask.position = bgRenderTask.position;
+					ruleTextTask.text = _fullCard->ruleText;
+					ruleTextTask.position.y += alphabetTexture.resolution.y * (lineCount - 1) / 2;
+					ruleTextTask.position.y -= alphabetTexture.resolution.y / 2;
+					ruleTextTask.scale = 1;
+					ruleTextTask.lineLength = FULL_CARD_LINE_LENGTH;
+					info.textTasks.Push(ruleTextTask);
+				}
+			}
 
 			if (!info.inputState.rMouse.pressed)
+			{
+				
 				_fullCard = nullptr;
+			}
 		}
 
 		PixelPerfectRenderTask renderTask{};
@@ -498,6 +532,7 @@ namespace game
 		if (_fullCard)
 			return;
 		_fullCard = card;
+		_fullCardLifeTime = 0;
 	}
 
 	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const HeaderSpacing spacing, 

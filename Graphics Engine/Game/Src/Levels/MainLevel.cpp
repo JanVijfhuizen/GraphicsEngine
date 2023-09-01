@@ -738,6 +738,9 @@ namespace game
 
 			selectionState = SelectionState::none;
 		}
+
+		if (activeStateValid)
+			level->DrawFullCard(nullptr);
 			
 		return true;
 	}
