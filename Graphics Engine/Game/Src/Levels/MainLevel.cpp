@@ -456,7 +456,7 @@ namespace game
 
 		{
 			const float l = jv::Min(1.f, level->GetTime() * 3);
-			constexpr uint32_t LINE_POSITIONS[]{ ALLY_HEIGHT };
+			constexpr uint32_t LINE_POSITIONS[]{ HAND_HEIGHT + 32 };
 			PixelPerfectRenderTask lineRenderTask{};
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x * l;
@@ -484,7 +484,7 @@ namespace game
 			eventSelectionDrawInfo.lifeTime = level->GetTime();
 			eventSelectionDrawInfo.cards = cards.ptr;
 			eventSelectionDrawInfo.length = cards.count;
-			eventSelectionDrawInfo.height = ALLY_HEIGHT;
+			eventSelectionDrawInfo.height = HAND_HEIGHT;
 			eventSelectionDrawInfo.metaDatas = metaDatas;
 			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
 			eventSelectionDrawInfo.offsetMod = -4;
@@ -595,7 +595,7 @@ namespace game
 		handSelectionDrawInfo.lifeTime = level->GetTime();
 		handSelectionDrawInfo.cards = cards;
 		handSelectionDrawInfo.length = state.hand.count;
-		handSelectionDrawInfo.height = 32;
+		handSelectionDrawInfo.height = HAND_HEIGHT;
 		handSelectionDrawInfo.texts = nullptr;
 		handSelectionDrawInfo.offsetMod = -4;
 		handSelectionDrawInfo.selectedArr = selectedArr;

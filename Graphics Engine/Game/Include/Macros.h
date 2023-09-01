@@ -39,6 +39,7 @@ constexpr float CARD_FADE_DURATION = ACTION_STATE_DEFAULT_DURATION;
 
 constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 4;
 constexpr uint32_t ENEMY_HEIGHT = ALLY_HEIGHT + 64;
+constexpr uint32_t HAND_HEIGHT = 32;
 constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
 
 constexpr uint32_t FINAL_BOSS_ID = 1;
