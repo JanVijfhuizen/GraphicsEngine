@@ -78,6 +78,7 @@ namespace game
 			Activation activationsPtr[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
 			jv::Vector<Activation> activations;
 			float activationDuration;
+			float recruitSceneLifetime;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;

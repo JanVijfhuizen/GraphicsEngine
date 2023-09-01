@@ -117,6 +117,7 @@ namespace game
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
 		cardSelectionDrawInfo.combatStats = combatStats;
+		cardSelectionDrawInfo.lifeTime = level->GetTime();
 
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
 

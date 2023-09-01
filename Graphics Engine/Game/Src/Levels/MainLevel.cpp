@@ -47,6 +47,7 @@ namespace game
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.combatStats = combatStats;
+		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		if (state.depth == SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
 			cardSelectionDrawInfo.length = 1;
 
@@ -152,6 +153,7 @@ namespace game
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.highlighted = discoverOption;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
+		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		if (!bossPresent)
 			cardSelectionDrawInfo.combatStats = combatStats;
 		if (finalBoss)
@@ -171,6 +173,7 @@ namespace game
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
 			cardDrawInfo.origin.x += (shape.x + cardSelectionDrawInfo.offsetMod) * (finalBoss ? 2 : 4) / 2;
+			cardDrawInfo.lifeTime = level->GetTime();
 			level->DrawCard(info, cardDrawInfo);
 		}
 
@@ -213,7 +216,8 @@ namespace game
 		activations = {};
 		activations.ptr = activationsPtr;
 		activations.length = 2 + HAND_MAX_SIZE + BOARD_CAPACITY;
-		
+
+		recruitSceneLifetime = -1;
 		selectionState = SelectionState::none;
 		time = 0;
 		selectedId = -1;
@@ -395,8 +399,13 @@ namespace game
 					const auto monster = &info.monsters[lastEnemyDefeatedId];
 					if (!monster->unique)
 					{
+						if (recruitSceneLifetime < -1e-5f)
+							recruitSceneLifetime = 0;
+						else
+							recruitSceneLifetime += info.deltaTime;
+
 						// Recruitment.
-						level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.");
+						level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.", 1, recruitSceneLifetime);
 						bool recruitScreenActive = true;
 						auto combatStats = GetCombatStat(*monster);
 
@@ -405,6 +414,7 @@ namespace game
 						cardDrawInfo.center = true;
 						cardDrawInfo.combatStats = &combatStats;
 						cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
+						cardDrawInfo.lifeTime = recruitSceneLifetime;
 						level->DrawCard(info, cardDrawInfo);
 
 						ButtonDrawInfo buttonAcceptDrawInfo{};
@@ -460,7 +470,7 @@ namespace game
 			eventSelectionDrawInfo.length = cards.count;
 			eventSelectionDrawInfo.height = ALLY_HEIGHT;
 			eventSelectionDrawInfo.metaDatas = metaDatas;
-			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
+			eventSelectionDrawInfo.centerOffset = SIMULATED_RESOLUTION.x / 2 - 32;
 			eventSelectionDrawInfo.offsetMod = -4;
 
 			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
@@ -469,12 +479,9 @@ namespace game
 
 			if (isStartOfTurn)
 			{
-				eventSelectionDrawInfo.spawnRight = false;
 				DrawDrawAnimation(*level, eventSelectionDrawInfo);
 				if (cards.count > 2)
-				{
 					DrawFadeAnimation(*level, eventSelectionDrawInfo, 1);
-				}
 			}
 
 			level->DrawCardSelection(info, eventSelectionDrawInfo);
@@ -1376,6 +1383,7 @@ namespace game
 			cardSelectionDrawInfo.highlighted = discoverOption;
 			cardSelectionDrawInfo.combatStats = combatStats;
 			cardSelectionDrawInfo.metaDatas = metaDatas;
+			cardSelectionDrawInfo.lifeTime = level->GetTime();
 			const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 			
 			const auto& path = state.paths[state.chosenPath];
@@ -1440,7 +1448,7 @@ namespace game
 		const auto& gameState = info.gameState;
 
 		const char* text = "you have the chance to equip this new artifact, and swap your artifacts around.";
-		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text);
+		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text, 1);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if (f >= 0)
 			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
@@ -1490,6 +1498,7 @@ namespace game
 		cardSelectionDrawInfo.outStackSelected = &outStackSelected;
 		cardSelectionDrawInfo.combatStats = combatStats;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
+		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		const auto choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		auto& path = state.paths[state.chosenPath];

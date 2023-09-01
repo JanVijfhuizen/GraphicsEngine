@@ -202,10 +202,10 @@ namespace game
 	uint32_t Level::DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo)
 	{
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		const auto shape = GetCardShape(info, drawInfo);
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
-		cardDrawInfo.lifeTime = drawInfo.lifeTime;
 		
 		uint32_t choice = -1;
 		if(drawInfo.outStackSelected)
@@ -215,7 +215,7 @@ namespace game
 
 		if(drawInfo.spawning && drawInfo.length > 1)
 		{
-			const auto w = GetCardShape(info, drawInfo).x;
+			const auto w = shape.x;
 			const auto curve = je::CreateCurveOvershooting();
 			const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
@@ -227,6 +227,7 @@ namespace game
 			int32_t xAddOffset = 0;
 			
 			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
+			cardDrawInfo.lifeTime = drawInfo.lifeTime;
 
 			if(drawInfo.damagedIndex == i)
 			{
@@ -239,7 +240,8 @@ namespace game
 				const auto curve = je::CreateCurveOvershooting();
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
-				xAddOffset = (1.f - eval) * SIMULATED_RESOLUTION.x * (drawInfo.spawnRight * 2 - 1);
+				xAddOffset = (1.f - eval) * shape.x * (drawInfo.spawnRight * 2 - 1);
+				cardDrawInfo.lifeTime = curve.Evaluate(drawInfo.spawnLerp);
 			}
 
 			if(drawInfo.dyingIndex != -1)
@@ -418,6 +420,7 @@ namespace game
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];
+			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			info.pixelPerfectRenderTasks.Push(imageRenderTask);
 		}
 

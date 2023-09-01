@@ -91,7 +91,7 @@ namespace game
 			glm::vec4 bgColor{0, 0, 0, 1};
 			glm::vec4 fgColor{ 1 };
 			bool selectable = true;
-			float lifeTime = 0;
+			float lifeTime = -1;
 			CombatStats* combatStats = nullptr;
 			uint32_t cost = -1;
 			bool ignoreAnim = false;
