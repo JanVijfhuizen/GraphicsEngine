@@ -53,6 +53,7 @@ namespace game
 		[[nodiscard]] uint32_t GetFlaw(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetEvent(const LevelInfo& info);
 		[[nodiscard]] uint32_t Draw(const LevelInfo& info);
+		void ResetDeck(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetPrimaryPath() const;
 
 		[[nodiscard]] static State Create(const LevelCreateInfo& info);

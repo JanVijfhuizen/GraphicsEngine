@@ -529,6 +529,8 @@ namespace game
 
 	void Level::DrawFullCard(Card* card)
 	{
+		if (card == nullptr)
+			_fullCard = nullptr;
 		if (_fullCard)
 			return;
 		_fullCard = card;

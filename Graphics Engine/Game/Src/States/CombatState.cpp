@@ -153,13 +153,16 @@ namespace game
 	uint32_t State::Draw(const LevelInfo& info)
 	{
 		if (magicDeck.count == 0)
-		{
-			for (const auto& magic : info.gameState.magics)
-				magicDeck.Add() = magic;
-			Shuffle(magicDeck.ptr, magicDeck.count);
-		}
-
+			ResetDeck(info);
 		return magicDeck.Pop();
+	}
+
+	void State::ResetDeck(const LevelInfo& info)
+	{
+		magicDeck.Clear();
+		for (const auto& magic : info.gameState.magics)
+			magicDeck.Add() = magic;
+		Shuffle(magicDeck.ptr, magicDeck.count);
 	}
 
 	uint32_t State::GetPrimaryPath() const

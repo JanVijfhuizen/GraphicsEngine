@@ -232,6 +232,7 @@ namespace game
 		state.boardState = {};
 		state.hand.Clear();
 		state.stack.Clear();
+		state.ResetDeck(info);
 		for (bool& b : tapped)
 			b = false;
 
@@ -456,7 +457,7 @@ namespace game
 
 		{
 			const float l = jv::Min(1.f, level->GetTime() * 3);
-			constexpr uint32_t LINE_POSITIONS[]{ HAND_HEIGHT + 32 };
+			constexpr uint32_t LINE_POSITIONS[]{ HAND_HEIGHT + 28 };
 			PixelPerfectRenderTask lineRenderTask{};
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x * l;
