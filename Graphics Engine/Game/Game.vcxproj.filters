@@ -75,6 +75,9 @@
     <ClCompile Include="Src\States\CombatState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Levels\GameOverLevel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Shuffle.h">
@@ -186,6 +189,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\States\CombatState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Levels\GameOverLevel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

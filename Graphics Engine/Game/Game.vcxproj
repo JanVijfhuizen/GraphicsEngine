@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Levels\GameOverLevel.cpp" />
     <ClCompile Include="Src\Interpreters\PixelPerfectRenderInterpreter.cpp" />
     <ClCompile Include="Src\Levels\Level.cpp" />
     <ClCompile Include="Src\Levels\LevelUtils.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="Include\Cards\RoomCard.h" />
     <ClInclude Include="Include\Interpreters\PriorityInterpreter.h" />
     <ClInclude Include="Include\LevelStates\LevelStateMachine.h" />
+    <ClInclude Include="Include\Levels\GameOverLevel.h" />
     <ClInclude Include="Include\Levels\Level.h" />
     <ClInclude Include="Include\Levels\LevelUtils.h" />
     <ClInclude Include="Include\Levels\MainLevel.h" />

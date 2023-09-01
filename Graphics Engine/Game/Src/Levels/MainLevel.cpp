@@ -387,7 +387,7 @@ namespace game
 			// Check for game over.
 			if (boardState.allyCount == 0)
 			{
-				loadLevelIndex = LevelIndex::mainMenu;
+				loadLevelIndex = LevelIndex::gameOver;
 				return true;
 			}
 

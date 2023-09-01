@@ -49,6 +49,7 @@ enum class LevelIndex
 	newGame,
 	partySelect,
 	main,
+	gameOver,
 	animOnly
 };
 

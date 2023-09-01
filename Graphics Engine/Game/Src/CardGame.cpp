@@ -17,6 +17,7 @@
 #include "Interpreters/PixelPerfectRenderInterpreter.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/ArrayUtils.h"
+#include "Levels/GameOverLevel.h"
 #include "Levels/Level.h"
 #include "Levels/MainLevel.h"
 #include "Levels/MainMenuLevel.h"
@@ -324,11 +325,12 @@ namespace game
 		}
 
 		{
-			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 4);
+			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 5);
 			outCardGame->levels[0] = outCardGame->arena.New<MainMenuLevel>();
 			outCardGame->levels[1] = outCardGame->arena.New<NewGameLevel>();
 			outCardGame->levels[2] = outCardGame->arena.New<PartySelectLevel>();
 			outCardGame->levels[3] = outCardGame->arena.New<MainLevel>();
+			outCardGame->levels[4] = outCardGame->arena.New<GameOverLevel>();
 		}
 
 		outCardGame->time = outCardGame->timer.now();
