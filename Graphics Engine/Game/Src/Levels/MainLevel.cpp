@@ -494,6 +494,7 @@ namespace game
 			if (isStartOfTurn && previousEventCard != -1)
 				cards.Add() = &info.events[previousEventCard];
 
+			eventSelectionDrawInfo.metaDatas = &metaDatas[1];
 			eventSelectionDrawInfo.activationIndex = -1;
 			eventSelectionDrawInfo.centerOffset *= -1;
 			eventSelectionDrawInfo.length = cards.count;
