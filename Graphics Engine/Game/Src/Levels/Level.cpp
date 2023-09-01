@@ -225,7 +225,6 @@ namespace game
 
 				xAddOffset = (1.f - eval) * w / 2 * (drawInfo.spawnRight * 2 - 1);
 				cardDrawInfo.lifeTime = drawInfo.spawnLerp * CARD_FADE_DURATION;
-				std::cout << cardDrawInfo.lifeTime << std::endl;
 			}
 
 			if(drawInfo.fadeIndex != -1)

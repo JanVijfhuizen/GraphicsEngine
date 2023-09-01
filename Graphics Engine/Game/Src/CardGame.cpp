@@ -413,7 +413,22 @@ namespace game
 	{
 		const auto arr = jv::CreateArray<ArtifactCard>(arena, 10);
 		for (auto& card : arr)
+		{
 			card.name = "artifact";
+			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onSummon)
+				{
+					const uint32_t other = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] ? state.boardState.allyCount : BOARD_CAPACITY_PER_SIDE + state.boardState.enemyCount;
+					if (other - 1 != self)
+						return false;
+
+					std::cout << "on summoned" << std::endl;
+					return true;
+				}
+				return false;
+			};
+		}
 		arr[0].unique = true;
 		arr[0].name = "sword of a thousand truths";
 		arr[0].ruleText = "whenever you attack, win the game.";

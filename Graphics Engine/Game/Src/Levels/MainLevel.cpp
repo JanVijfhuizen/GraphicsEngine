@@ -1270,6 +1270,7 @@ namespace game
 		cardSelectionDrawInfo.length = MAGIC_DECK_SIZE;
 		cardSelectionDrawInfo.costs = costs;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
+		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		const auto& path = state.paths[state.chosenPath];
