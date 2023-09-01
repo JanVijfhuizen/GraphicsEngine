@@ -221,7 +221,8 @@ namespace game
 		mana = 0;
 		maxMana = 0;
 		timeSinceLastActionState = 0;
-		activeState = nullptr;
+		activeState = {};
+		activeStateValid = false;
 		eventCard = -1;
 		previousEventCard = -1;
 		state.boardState = {};
@@ -285,69 +286,58 @@ namespace game
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
 
-		if (state.stack.count > 0)
+		if(!activeStateValid && state.stack.count > 0)
 		{
-			bool valid = true;
-			if (!activeState)
+			timeSinceLastActionState = level->GetTime();
+			actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
+
+			activeState = state.stack.Pop();
+
+			// Temp.
+			switch (activeState.trigger)
 			{
-				timeSinceLastActionState = level->GetTime();
-				actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
-
-				auto& actionState = state.stack.Peek();
-				activeState = &actionState;
-
-				// Temp.
-				switch (actionState.trigger)
-				{
-				case ActionState::Trigger::onAttack:
-					actionStateDuration = ATTACK_ACTION_STATE_DURATION;
-					break;
-				case ActionState::Trigger::onStartOfTurn:
-					actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
-					break;
-				default:
-					break;
-				}
-				
-				valid = PreHandleActionState(state, info, actionState);
-				if (!valid)
-					state.stack.Pop();
-				activationDuration = -1;
+			case ActionState::Trigger::onAttack:
+				actionStateDuration = ATTACK_ACTION_STATE_DURATION;
+				break;
+			case ActionState::Trigger::onStartOfTurn:
+				actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
+				break;
+			default:
+				break;
 			}
 
-			if (valid)
-			{
-				if (timeSinceLastActionState + actionStateDuration < level->GetTime())
-				{
-					if(activationDuration < -1e-5f)
-					{
-						auto actionState = state.stack.Peek();
-						CollectActivatedCards(state, info, actionState);
-						activationDuration = 0;
-					}
-					if(activations.count > 0)
-					{
-						if (activationDuration < CARD_ACTIVATION_DURATION)
-							activationDuration += info.deltaTime;
-						else
-						{
-							activations.Pop();
-							activationDuration = 0;
-						}
-					}
-					else
-					{
-						auto actionState = state.stack.Pop();
-						PostHandleActionState(state, info, actionState);
-						activeState = nullptr;
-					}
-				}
-			}
-			else
-				activeState = nullptr;
+			activeStateValid = PreHandleActionState(state, info, activeState);
+			activationDuration = -1;
 		}
 
-		if(activeState && activeState->trigger == ActionState::Trigger::onStartOfTurn)
+		if (activeStateValid)
+		{
+			if (timeSinceLastActionState + actionStateDuration < level->GetTime())
+			{
+				if (activationDuration < -1e-5f)
+				{
+					CollectActivatedCards(state, info, activeState);
+					activationDuration = 0;
+				}
+				if (activations.count > 0)
+				{
+					if (activationDuration < CARD_ACTIVATION_DURATION)
+						activationDuration += info.deltaTime;
+					else
+					{
+						activations.Pop();
+						activationDuration = 0;
+					}
+				}
+				else
+				{
+					PostHandleActionState(state, info, activeState);
+					activeStateValid = false;
+				}
+			}
+		}
+
+		if(activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn)
 		{
 			PixelPerfectRenderTask lineRenderTask{};
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
@@ -455,7 +445,7 @@ namespace game
 		}
 
 		{
-			const bool isStartOfTurn = activeState && activeState->trigger == ActionState::Trigger::onStartOfTurn;
+			const bool isStartOfTurn = activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn;
 			auto cards = jv::CreateVector<Card*>(info.frameArena, 3);
 			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
 
@@ -605,7 +595,7 @@ namespace game
 		handSelectionDrawInfo.metaDatas = &metaDatas[2];
 		DrawActivationAnimation(handSelectionDrawInfo, Activation::magic, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
-		if(activeState && activeState->trigger == ActionState::Trigger::draw)
+		if(activeStateValid && activeState.trigger == ActionState::Trigger::draw)
 			DrawDrawAnimation(*level, handSelectionDrawInfo);
 
 		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
@@ -743,9 +733,9 @@ namespace game
 	}
 
 	bool MainLevel::CombatState::PreHandleActionState(State& state, const LevelUpdateInfo& info,
-		ActionState& actionState)
+		const ActionState& actionState)
 	{
-		if (!ValidateActionState(state, actionState))
+		if (!ValidateActionState(state, activeState))
 			return false;
 
 		auto& boardState = state.boardState;
@@ -1064,17 +1054,16 @@ namespace game
 	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
-		if (!activeState)
+		if (!activeStateValid)
 			return;
-		const auto& actionState = state.stack.Peek();
-		if (actionState.trigger != ActionState::Trigger::onAttack)
+		if (activeState.trigger != ActionState::Trigger::onAttack)
 			return;
 
 		const auto& boardState = state.boardState;
-		assert(actionState.trigger == ActionState::Trigger::onAttack);
+		assert(activeState.trigger == ActionState::Trigger::onAttack);
 
-		uint32_t src = actionState.src;
-		uint32_t dst = actionState.dst;
+		uint32_t src = activeState.src;
+		uint32_t dst = activeState.dst;
 
 		if (src >= BOARD_CAPACITY_PER_SIDE)
 			src -= BOARD_CAPACITY_PER_SIDE;
@@ -1083,7 +1072,7 @@ namespace game
 		
 		const uint32_t c = allied ? boardState.allyCount : boardState.enemyCount;
 		const uint32_t oC = allied ? boardState.enemyCount : boardState.allyCount;
-		const bool isSrc = allied ? actionState.src < BOARD_CAPACITY_PER_SIDE : actionState.src >= BOARD_CAPACITY_PER_SIDE;
+		const bool isSrc = allied ? activeState.src < BOARD_CAPACITY_PER_SIDE : activeState.src >= BOARD_CAPACITY_PER_SIDE;
 
 		const float ind = static_cast<float>(isSrc ? src : dst);
 		const float offset = ind - static_cast<float>(c - 1) / 2;
@@ -1129,16 +1118,16 @@ namespace game
 	void MainLevel::CombatState::DrawDamageAnimation(const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
-		if (!activeState)
+		if (!activeStateValid)
 			return;
-		if (allied && activeState->dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState->dst < BOARD_CAPACITY_PER_SIDE)
+		if (allied && activeState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState.dst < BOARD_CAPACITY_PER_SIDE)
 			return;
-		const auto damageTrigger = activeState->trigger == ActionState::Trigger::onDamage;
-		const auto missTrigger = activeState->trigger == ActionState::Trigger::onMiss;
+		const auto damageTrigger = activeState.trigger == ActionState::Trigger::onDamage;
+		const auto missTrigger = activeState.trigger == ActionState::Trigger::onMiss;
 		if (!damageTrigger && !missTrigger)
 			return;
 
-		const auto pos = GetCardPosition(info, drawInfo, activeState->dst - !allied * BOARD_CAPACITY_PER_SIDE);
+		const auto pos = GetCardPosition(info, drawInfo, activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
 
 		TextTask textTask{};
 		textTask.center = true;
@@ -1148,12 +1137,12 @@ namespace game
 
 		if(damageTrigger)
 		{
-			const uint32_t dmg = activeState->values[static_cast<uint32_t>(ActionState::VDamage::damage)];
+			const uint32_t dmg = activeState.values[static_cast<uint32_t>(ActionState::VDamage::damage)];
 			textTask.text = TextInterpreter::IntToConstCharPtr(dmg, info.frameArena);
 			textTask.color = glm::vec4(1, 0, 0, 1);
 			textTask.text = TextInterpreter::Concat("-", textTask.text, info.frameArena);
 
-			drawInfo.damagedIndex = activeState->dst - !allied * BOARD_CAPACITY_PER_SIDE;
+			drawInfo.damagedIndex = activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE;
 		}
 		
 		const auto curve = je::CreateCurveOvershooting();
@@ -1167,11 +1156,11 @@ namespace game
 	void MainLevel::CombatState::DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level,
 		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
-		if (!activeState)
+		if (!activeStateValid)
 			return;
-		if (activeState->trigger != ActionState::Trigger::onSummon)
+		if (activeState.trigger != ActionState::Trigger::onSummon)
 			return;
-		if (allied != activeState->values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
+		if (allied != activeState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
 			return;
 
 		DrawDrawAnimation(level, drawInfo);
@@ -1179,7 +1168,7 @@ namespace game
 
 	void MainLevel::CombatState::DrawDrawAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const
 	{
-		if (!activeState)
+		if (!activeStateValid)
 			return;
 		
 		drawInfo.spawning = true;
@@ -1188,15 +1177,15 @@ namespace game
 
 	void MainLevel::CombatState::DrawDeathAnimation(const Level& level, CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
-		if (!activeState)
+		if (!activeStateValid)
 			return;
-		if (activeState->trigger != ActionState::Trigger::onDeath)
+		if (activeState.trigger != ActionState::Trigger::onDeath)
 			return;
-		if (allied && activeState->dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState->dst < BOARD_CAPACITY_PER_SIDE)
+		if (allied && activeState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState.dst < BOARD_CAPACITY_PER_SIDE)
 			return;
 		
-		drawInfo.dyingIndex = activeState->dst;
-		if (activeState->dst >= BOARD_CAPACITY_PER_SIDE)
+		drawInfo.dyingIndex = activeState.dst;
+		if (activeState.dst >= BOARD_CAPACITY_PER_SIDE)
 			drawInfo.dyingIndex -= BOARD_CAPACITY_PER_SIDE;
 		drawInfo.dyingLerp = GetActionStateLerp(level);
 	}
@@ -1204,7 +1193,7 @@ namespace game
 	void MainLevel::CombatState::DrawActivationAnimation(CardSelectionDrawInfo& drawInfo, 
 		const Activation::Type type, const uint32_t idMod) const
 	{
-		if (!activeState)
+		if (!activeStateValid)
 			return;
 		if (activations.count == 0)
 			return;
@@ -1220,16 +1209,16 @@ namespace game
 
 	void MainLevel::CombatState::DrawCardPlayAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const
 	{
-		if (!activeState)
+		if (!activeStateValid)
 			return;
-		if (activeState->trigger != ActionState::Trigger::onCardPlayed)
+		if (activeState.trigger != ActionState::Trigger::onCardPlayed)
 			return;
-		DrawFadeAnimation(level, drawInfo, activeState->src);
+		DrawFadeAnimation(level, drawInfo, activeState.src);
 	}
 
 	void MainLevel::CombatState::DrawFadeAnimation(const Level& level, CardSelectionDrawInfo& drawInfo, const uint32_t src) const
 	{
-		if (!activeState)
+		if (!activeStateValid)
 			return;
 		drawInfo.dyingIndex = src;
 		drawInfo.dyingLerp = GetActionStateLerp(level);

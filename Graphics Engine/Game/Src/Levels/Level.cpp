@@ -373,6 +373,14 @@ namespace game
 			origin.y += curve.REvaluate(drawInfo.metaData->hoverDuration) * 4;
 		}
 
+		glm::vec3 fadeMod{1};
+		if(CARD_FADE_DURATION > drawInfo.lifeTime && drawInfo.lifeTime > -1e-5f)
+		{
+			const auto curve = je::CreateCurveOvershooting();
+			const float eval = curve.Evaluate(drawInfo.lifeTime / CARD_FADE_DURATION);
+			fadeMod *= eval;
+		}
+
 		PixelPerfectRenderTask bgRenderTask{};
 		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
 		bgRenderTask.subTexture = cardFrames[0];
@@ -392,6 +400,7 @@ namespace game
 		}
 
 		bgRenderTask.position = origin;
+		bgRenderTask.color *= glm::vec4(fadeMod, 1);
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
 		// Draw image.
@@ -415,6 +424,7 @@ namespace game
 		PixelPerfectRenderTask fgRenderTask = bgRenderTask;
 		fgRenderTask.subTexture = cardFrames[1];
 		fgRenderTask.color = drawInfo.fgColor;
+		fgRenderTask.color *= glm::vec4(fadeMod, 1);
 
 		info.pixelPerfectRenderTasks.Push(fgRenderTask);
 
@@ -431,6 +441,7 @@ namespace game
 			costRenderTask.xCenter = drawInfo.center;
 			costRenderTask.yCenter = drawInfo.center;
 			costRenderTask.color = drawInfo.fgColor;
+			costRenderTask.color *= glm::vec4(fadeMod, 1);
 			costRenderTask.subTexture = statFrames[4];
 			costRenderTask.priority = priority;
 			info.pixelPerfectRenderTasks.Push(costRenderTask);
@@ -441,6 +452,7 @@ namespace game
 			textTask.position.y -= 4;
 			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
 			textTask.priority = priority;
+			textTask.color = costRenderTask.color;
 			info.textTasks.Push(textTask);
 		}
 
@@ -453,6 +465,7 @@ namespace game
 			statsRenderTask.xCenter = drawInfo.center;
 			statsRenderTask.yCenter = drawInfo.center;
 			statsRenderTask.color = drawInfo.fgColor;
+			statsRenderTask.color *= glm::vec4(fadeMod, 1);
 			statsRenderTask.priority = priority;
 
 			uint32_t values[3]
@@ -473,6 +486,7 @@ namespace game
 				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
 				textTask.lifetime = drawInfo.lifeTime;
 				textTask.priority = priority;
+				textTask.color = statsRenderTask.color;
 				info.textTasks.Push(textTask);
 			}
 		}

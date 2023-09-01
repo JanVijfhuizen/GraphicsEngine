@@ -36,10 +36,10 @@ namespace game
 			hand
 		} source = Source::board;
 
-		uint32_t src = -1;
-		uint32_t dst = -1;
-		uint32_t srcUniqueId = -1;
-		uint32_t dstUniqueId = -1;
+		uint32_t src = UINT32_MAX;
+		uint32_t dst = UINT32_MAX;
+		uint32_t srcUniqueId = UINT32_MAX;
+		uint32_t dstUniqueId = UINT32_MAX;
 		uint32_t values[4]
 		{
 			UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX
