@@ -113,7 +113,7 @@ namespace game
 			bool* greyedOutArr = nullptr;
 			float lifeTime = -1;
 			uint32_t rowCutoff = 8;
-			int32_t offsetMod = 0;
+			int32_t offsetMod = 8;
 			CombatStats* combatStats = nullptr;
 			uint32_t* costs = nullptr;
 			glm::ivec2 overridePos;

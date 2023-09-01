@@ -13,7 +13,7 @@
 
 namespace game
 {
-	constexpr uint32_t CARD_FRAME_COUNT = 4;
+	constexpr uint32_t CARD_FRAME_COUNT = 2;
 	constexpr uint32_t CARD_STACKED_SPACING = 6;
 	constexpr float CARD_MONSTER_ANIM_SPEED = .5f;
 
@@ -257,7 +257,7 @@ namespace game
 				const auto curve = je::CreateCurveOvershooting();
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
-				xAddOffset = (1.f - eval) * w / 2 * (drawInfo.spawnRight * 2 - 1);
+				//xAddOffset = (1.f - eval) * w / 4 * (drawInfo.spawnRight * 2 - 1);
 				cardDrawInfo.lifeTime = drawInfo.spawnLerp * CARD_FADE_DURATION;
 			}
 

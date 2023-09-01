@@ -472,33 +472,38 @@ namespace game
 		}
 
 		{
-			const bool isStartOfTurn = activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn;
-			auto cards = jv::CreateVector<Card*>(info.frameArena, 3);
-			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
+			auto cards = jv::CreateVector<Card*>(info.frameArena, 2);
 
+			CardSelectionDrawInfo eventSelectionDrawInfo{};
+			eventSelectionDrawInfo.lifeTime = level->GetTime();
+			eventSelectionDrawInfo.cards = cards.ptr;
+			eventSelectionDrawInfo.height = HAND_HEIGHT;
+			eventSelectionDrawInfo.metaDatas = metaDatas;
+			eventSelectionDrawInfo.offsetMod = -4;
+			eventSelectionDrawInfo.length = 1;
+			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
+
+			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
+			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
+			level->DrawCardSelection(info, eventSelectionDrawInfo);
+
+			cards.Clear();
+			const bool isStartOfTurn = activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn;
 			if (eventCard != -1)
 				cards.Add() = &info.events[eventCard];
 			if (isStartOfTurn && previousEventCard != -1)
 				cards.Add() = &info.events[previousEventCard];
 
-			CardSelectionDrawInfo eventSelectionDrawInfo{};
-			eventSelectionDrawInfo.lifeTime = level->GetTime();
-			eventSelectionDrawInfo.cards = cards.ptr;
+			eventSelectionDrawInfo.activationIndex = -1;
+			eventSelectionDrawInfo.centerOffset *= -1;
 			eventSelectionDrawInfo.length = cards.count;
-			eventSelectionDrawInfo.height = HAND_HEIGHT;
-			eventSelectionDrawInfo.metaDatas = metaDatas;
-			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
-			eventSelectionDrawInfo.offsetMod = -4;
-
-			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
-			if(cards.count > 1)
-				DrawActivationAnimation(eventSelectionDrawInfo, Activation::event, 1);
+			DrawActivationAnimation(eventSelectionDrawInfo, Activation::event, 0);
 
 			if (isStartOfTurn)
 			{
 				DrawDrawAnimation(*level, eventSelectionDrawInfo);
-				if (cards.count > 2)
-					DrawFadeAnimation(*level, eventSelectionDrawInfo, 1);
+				if (cards.count > 1)
+					DrawFadeAnimation(*level, eventSelectionDrawInfo, 0);
 			}
 
 			level->DrawCardSelection(info, eventSelectionDrawInfo);
@@ -559,6 +564,7 @@ namespace game
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[2 + HAND_MAX_SIZE];
+		enemySelectionDrawInfo.offsetMod = 16;
 		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		DrawDamageAnimation(info, *level, enemySelectionDrawInfo, false);
@@ -598,12 +604,12 @@ namespace game
 		handSelectionDrawInfo.length = state.hand.count;
 		handSelectionDrawInfo.height = HAND_HEIGHT;
 		handSelectionDrawInfo.texts = nullptr;
-		handSelectionDrawInfo.offsetMod = -4;
 		handSelectionDrawInfo.selectedArr = selectedArr;
 		handSelectionDrawInfo.greyedOutArr = greyedOutArr;
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.metaDatas = &metaDatas[2];
+		handSelectionDrawInfo.offsetMod = 4;
 		DrawActivationAnimation(handSelectionDrawInfo, Activation::magic, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
 		if(activeStateValid && activeState.trigger == ActionState::Trigger::draw)
@@ -672,6 +678,7 @@ namespace game
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
 		playerCardSelectionDrawInfo.metaDatas = &metaDatas[2 + BOARD_CAPACITY_PER_SIDE + HAND_MAX_SIZE];
+		playerCardSelectionDrawInfo.offsetMod = 16;
 		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(info, *level, playerCardSelectionDrawInfo, true);
@@ -1293,10 +1300,10 @@ namespace game
 			discoverOption = choice == discoverOption ? -1 : choice;
 
 		const char* text = "select a card to replace, if any.";
-		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text);
+		level->DrawTopCenterHeader(info, HeaderSpacing::far, text);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if (f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
+			level->DrawPressEnterToContinue(info, HeaderSpacing::far, f);
 		
 		if (info.inputState.enter.PressEvent())
 		{
