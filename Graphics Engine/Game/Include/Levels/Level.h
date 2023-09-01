@@ -149,7 +149,7 @@ namespace game
 		virtual void PostUpdate(const LevelUpdateInfo& info);
 
 		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
-		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const;
+		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo, float overrideLifetime = -1) const;
 		[[nodiscard]] static glm::ivec2 GetCardShape(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
 		[[nodiscard]] static glm::ivec2 GetCardPosition(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo, uint32_t i);
 		uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);

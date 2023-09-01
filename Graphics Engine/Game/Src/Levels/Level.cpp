@@ -124,25 +124,17 @@ namespace game
 		info.textTasks.Push(titleTextTask);
 	}
 
-	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo) const
+	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo, float overrideLifetime) const
 	{
 		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
 
 		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)];
 		uint32_t textMaxLen = -1;
 
-		const float lifeTime = _loading ? _timeSinceLoading : GetTime();
+		const float lifeTime = overrideLifetime < -1e-5f  ? GetTime() : overrideLifetime;
+		float l = 1;
 		if (lifeTime <= BUTTON_SPAWN_ANIM_DURATION)
-		{
-			const float lerp = lifeTime / BUTTON_SPAWN_ANIM_DURATION;
-			if (_loading)
-			{
-				const auto len = static_cast<uint32_t>(strlen(drawInfo.text));
-				textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
-			}
-		}
-		else if (_loading)
-			textMaxLen = 0;
+			l = lifeTime / BUTTON_SPAWN_ANIM_DURATION;
 
 		PixelPerfectRenderTask buttonRenderTask{};
 		buttonRenderTask.position = drawInfo.origin;
@@ -155,10 +147,11 @@ namespace game
 		buttonTextTask.position.x += drawInfo.center ? 0 : buttonRenderTask.scale.x / 2;
 		buttonTextTask.position.y += 3;
 		buttonTextTask.text = drawInfo.text;
-		buttonTextTask.lifetime = _loading ? 1e2f : lifeTime;
+		buttonTextTask.lifetime = lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
 		buttonTextTask.center = true;
-		
+
+		buttonRenderTask.scale.x *= l;
 		bool pressed = false;
 		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin - 
 			glm::ivec2(buttonRenderTask.scale.x / 2, 0) * static_cast<int32_t>(drawInfo.center),

@@ -487,17 +487,20 @@ namespace game
 			level->DrawCardSelection(info, eventSelectionDrawInfo);
 		}
 
-		constexpr uint32_t LINE_POSITIONS[]{ ALLY_HEIGHT };
-
-		PixelPerfectRenderTask lineRenderTask{};
-		lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
-		lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
-		lineRenderTask.scale.y = 1;
-
-		for (const auto& i : LINE_POSITIONS)
 		{
-			lineRenderTask.position.y = i;
-			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			const float l = jv::Min(1.f, level->GetTime() * 3);
+			constexpr uint32_t LINE_POSITIONS[]{ ALLY_HEIGHT };
+			PixelPerfectRenderTask lineRenderTask{};
+			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
+			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x * l;
+			lineRenderTask.scale.y = 1;
+			lineRenderTask.position.x = (1.f - l) * SIMULATED_RESOLUTION.x;
+
+			for (const auto& i : LINE_POSITIONS)
+			{
+				lineRenderTask.position.y = i;
+				info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			}
 		}
 
 		// Check for new turn.
