@@ -103,23 +103,12 @@ namespace game
 
 	void Level::DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const
 	{
-		uint32_t textMaxLen = -1;
-		if(_loading)
-		{
-			if (_timeSinceLoading > _LOAD_DURATION)
-				return;
-			const float lerp = _timeSinceLoading / _LOAD_DURATION;
-			const auto len = static_cast<uint32_t>(strlen(drawInfo.text));
-			textMaxLen = static_cast<uint32_t>((1.f - lerp) * static_cast<float>(len));
-		}
-
 		TextTask titleTextTask{};
 		titleTextTask.lineLength = drawInfo.lineLength;
 		titleTextTask.position = drawInfo.origin;
 		titleTextTask.text = drawInfo.text;
 		titleTextTask.scale = drawInfo.scale;
-		titleTextTask.lifetime = _loading ? 1e2f : drawInfo.overrideLifeTime < 0 ? GetTime() : drawInfo.overrideLifeTime;
-		titleTextTask.maxLength = textMaxLen;
+		titleTextTask.lifetime = drawInfo.overrideLifeTime < 0 ? GetTime() : drawInfo.overrideLifeTime;
 		titleTextTask.center = drawInfo.center;
 		info.textTasks.Push(titleTextTask);
 	}
@@ -227,29 +216,31 @@ namespace game
 				if (fmodf(drawInfo.lifeTime, .2f) < .1f)
 					continue;
 			}
-
+			
 			if(drawInfo.spawning && i == drawInfo.length - 1)
 			{
+				const auto w = shape.x;
 				const auto curve = je::CreateCurveOvershooting();
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
-				xAddOffset = (1.f - eval) * shape.x * (drawInfo.spawnRight * 2 - 1);
-				cardDrawInfo.lifeTime = curve.Evaluate(drawInfo.spawnLerp);
+				xAddOffset = (1.f - eval) * w / 2 * (drawInfo.spawnRight * 2 - 1);
+				cardDrawInfo.lifeTime = drawInfo.spawnLerp * CARD_FADE_DURATION;
+				std::cout << cardDrawInfo.lifeTime << std::endl;
 			}
 
-			if(drawInfo.dyingIndex != -1)
+			if(drawInfo.fadeIndex != -1)
 			{
-				const bool fading = drawInfo.dyingLerp < .5f;
-				if (drawInfo.dyingIndex == i && !fading)
+				const bool fading = drawInfo.fadeLerp < .5f;
+				if (drawInfo.fadeIndex == i && !fading)
 					continue;
 				if (drawInfo.length > 1 && !fading)
 				{
 					const auto w = GetCardShape(info, drawInfo).x;
 					const auto curve = je::CreateCurveOvershooting();
-					const float eval = curve.REvaluate((drawInfo.dyingLerp - .5f) * 2);
+					const float eval = curve.REvaluate((drawInfo.fadeLerp - .5f) * 2);
 
 					float o = eval / 2.f * w;
-					if (drawInfo.dyingIndex < i)
+					if (drawInfo.fadeIndex < i)
 						o *= -1;
 					xAddOffset += o;
 				}
@@ -267,9 +258,9 @@ namespace game
 			cardDrawInfo.fgColor = greyedOut ? glm::vec4(.1, .1, .1, 1) : cardDrawInfo.fgColor;
 			cardDrawInfo.fgColor = selected ? glm::vec4(0, 1, 0, 1) : cardDrawInfo.fgColor;
 
-			if (drawInfo.dyingIndex == i)
+			if (drawInfo.fadeIndex == i)
 			{
-				const auto mul = glm::vec4(glm::vec3(1.f - drawInfo.dyingLerp * 2), 1);
+				const auto mul = glm::vec4(glm::vec3(jv::Max(1.f - drawInfo.fadeLerp * 2, 0.f)), 1);
 				cardDrawInfo.bgColor *= mul;
 				cardDrawInfo.fgColor *= mul;
 			}
@@ -343,7 +334,7 @@ namespace game
 				if (stackedCount != -1)
 					textTask.position.y += static_cast<int32_t>(CARD_STACKED_SPACING * stackedCount);
 				textTask.text = drawInfo.texts[i];
-				textTask.lifetime = drawInfo.lifeTime;
+				textTask.lifetime = cardDrawInfo.lifeTime;
 				textTask.center = true;
 				info.textTasks.Push(textTask);
 			}
@@ -421,7 +412,6 @@ namespace game
 		fgRenderTask.subTexture = cardFrames[1];
 		fgRenderTask.color = drawInfo.fgColor;
 		fgRenderTask.color *= glm::vec4(fadeMod, 1);
-
 		info.pixelPerfectRenderTasks.Push(fgRenderTask);
 
 		const bool priority = !info.inputState.rMouse.pressed;

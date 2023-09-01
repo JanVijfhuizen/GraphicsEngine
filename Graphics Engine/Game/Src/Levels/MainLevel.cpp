@@ -479,7 +479,6 @@ namespace game
 
 			if (isStartOfTurn)
 			{
-				eventSelectionDrawInfo.spawnRight = false;
 				DrawDrawAnimation(*level, eventSelectionDrawInfo);
 				if (cards.count > 2)
 					DrawFadeAnimation(*level, eventSelectionDrawInfo, 1);
@@ -1195,10 +1194,10 @@ namespace game
 		if (allied && activeState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState.dst < BOARD_CAPACITY_PER_SIDE)
 			return;
 		
-		drawInfo.dyingIndex = activeState.dst;
+		drawInfo.fadeIndex = activeState.dst;
 		if (activeState.dst >= BOARD_CAPACITY_PER_SIDE)
-			drawInfo.dyingIndex -= BOARD_CAPACITY_PER_SIDE;
-		drawInfo.dyingLerp = GetActionStateLerp(level);
+			drawInfo.fadeIndex -= BOARD_CAPACITY_PER_SIDE;
+		drawInfo.fadeLerp = GetActionStateLerp(level);
 	}
 
 	void MainLevel::CombatState::DrawActivationAnimation(CardSelectionDrawInfo& drawInfo, 
@@ -1231,15 +1230,16 @@ namespace game
 	{
 		if (!activeStateValid)
 			return;
-		drawInfo.dyingIndex = src;
-		drawInfo.dyingLerp = GetActionStateLerp(level);
+		drawInfo.fadeIndex = src;
+		drawInfo.fadeLerp = GetActionStateLerp(level);
 	}
 
 	float MainLevel::CombatState::GetActionStateLerp(const Level& level, const float duration) const
 	{
 		const float t = level.GetTime();
 		const float aTime = t - timeSinceLastActionState;
-		return (duration - (duration - aTime)) / duration;
+		const float a = (duration - (duration - aTime)) / duration;
+		return jv::Clamp(a, 0.f, 1.f);
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)

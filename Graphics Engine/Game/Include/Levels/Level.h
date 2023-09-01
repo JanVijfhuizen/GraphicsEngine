@@ -124,8 +124,8 @@ namespace game
 			bool spawning = false;
 			float spawnLerp = 0;
 			bool spawnRight = true;
-			uint32_t dyingIndex = -1;
-			float dyingLerp;
+			uint32_t fadeIndex = -1;
+			float fadeLerp;
 			uint32_t activationIndex = -1;
 			float activationLerp;
 		};
