@@ -470,7 +470,7 @@ namespace game
 			eventSelectionDrawInfo.length = cards.count;
 			eventSelectionDrawInfo.height = ALLY_HEIGHT;
 			eventSelectionDrawInfo.metaDatas = metaDatas;
-			eventSelectionDrawInfo.centerOffset = SIMULATED_RESOLUTION.x / 2 - 32;
+			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
 			eventSelectionDrawInfo.offsetMod = -4;
 
 			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
@@ -479,6 +479,7 @@ namespace game
 
 			if (isStartOfTurn)
 			{
+				eventSelectionDrawInfo.spawnRight = false;
 				DrawDrawAnimation(*level, eventSelectionDrawInfo);
 				if (cards.count > 2)
 					DrawFadeAnimation(*level, eventSelectionDrawInfo, 1);
