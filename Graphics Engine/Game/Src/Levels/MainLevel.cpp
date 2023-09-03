@@ -755,7 +755,7 @@ namespace game
 	}
 
 	bool MainLevel::CombatState::PreHandleActionState(State& state, const LevelUpdateInfo& info,
-		const ActionState& actionState)
+		ActionState& actionState)
 	{
 		if (!ValidateActionState(state, activeState))
 			return false;
@@ -789,6 +789,7 @@ namespace game
 				++boardState.allyCount;
 			else
 				++boardState.enemyCount;
+			actionState.dst = targetId;
 		}
 		else if (actionState.trigger == ActionState::Trigger::draw)
 			state.hand.Add() = state.Draw(info);

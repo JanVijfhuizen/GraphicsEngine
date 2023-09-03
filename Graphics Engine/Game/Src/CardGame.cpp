@@ -420,12 +420,8 @@ namespace game
 			card.name = "artifact";
 			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onSummon)
+				if (actionState.trigger == ActionState::Trigger::onSummon && self == actionState.dst)
 				{
-					const uint32_t other = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] ? state.boardState.allyCount : BOARD_CAPACITY_PER_SIDE + state.boardState.enemyCount;
-					if (other - 1 != self)
-						return false;
-
 					std::cout << "on summoned" << std::endl;
 					return true;
 				}
