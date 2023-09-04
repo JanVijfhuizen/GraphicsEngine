@@ -81,6 +81,7 @@ namespace game
 		struct CardDrawMetaData final
 		{
 			float hoverDuration = 0;
+			bool actionPending = false;
 		};
 
 		struct CardDrawInfo final

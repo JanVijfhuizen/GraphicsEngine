@@ -391,11 +391,24 @@ namespace game
 		arr[0].ruleText = "follows you around.";
 		arr[0].health = 999;
 		arr[0].animIndex = 1;
-		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
 		{
+			if (actionPending && actionState.trigger == ActionState::Trigger::onStartOfTurn)
+			{
+				ActionState damageState = actionState;
+				damageState.trigger = ActionState::Trigger::onDamage;
+				damageState.source = ActionState::Source::board;
+				damageState.src = self;
+				damageState.dst = self;
+				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
+				state.stack.Add() = damageState;
+				actionPending = false;
+			}
+
 			if(actionState.trigger == ActionState::Trigger::onAttack && self == actionState.src)
 			{
 				std::cout << "daisy attacking" << std::endl;
+				actionPending = true;
 				return true;
 			}
 			if (actionState.trigger == ActionState::Trigger::onAttack && self == actionState.dst)
@@ -418,7 +431,7 @@ namespace game
 		for (auto& card : arr)
 		{
 			card.name = "artifact";
-			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
 			{
 				if (actionState.trigger == ActionState::Trigger::onSummon && self == actionState.dst)
 				{
@@ -449,7 +462,7 @@ namespace game
 		for (auto& card : arr)
 		{
 			card.name = "special room";
-			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
@@ -467,7 +480,7 @@ namespace game
 		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
 		arr[0].name = "lightning bolt";
 		arr[0].ruleText = "deals 2 damage";
-		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
 		{
 			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
 			{

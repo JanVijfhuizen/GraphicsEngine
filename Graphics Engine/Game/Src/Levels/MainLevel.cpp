@@ -281,6 +281,11 @@ namespace game
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = gameState.healths[i];
 			state.stack.Add() = summonState;
 		}
+
+		for (auto& b : artifactsActionPending)
+			b = false;
+		for (auto& b : flawsActionPending)
+			b = false;
 	}
 
 	bool MainLevel::CombatState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -478,7 +483,7 @@ namespace game
 			eventSelectionDrawInfo.lifeTime = level->GetTime();
 			eventSelectionDrawInfo.cards = cards.ptr;
 			eventSelectionDrawInfo.height = HAND_HEIGHT;
-			eventSelectionDrawInfo.metaDatas = metaDatas;
+			eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ROOM_INDEX];
 			eventSelectionDrawInfo.offsetMod = -4;
 			eventSelectionDrawInfo.length = 1;
 			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
@@ -494,7 +499,7 @@ namespace game
 			if (isStartOfTurn && previousEventCard != -1)
 				cards.Add() = &info.events[previousEventCard];
 
-			eventSelectionDrawInfo.metaDatas = &metaDatas[1];
+			eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
 			eventSelectionDrawInfo.activationIndex = -1;
 			eventSelectionDrawInfo.centerOffset *= -1;
 			eventSelectionDrawInfo.length = cards.count;
@@ -564,7 +569,7 @@ namespace game
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
-		enemySelectionDrawInfo.metaDatas = &metaDatas[2 + HAND_MAX_SIZE];
+		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
 		enemySelectionDrawInfo.offsetMod = 16;
 		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
@@ -609,7 +614,7 @@ namespace game
 		handSelectionDrawInfo.greyedOutArr = greyedOutArr;
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
-		handSelectionDrawInfo.metaDatas = &metaDatas[2];
+		handSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_HAND_INDEX];
 		handSelectionDrawInfo.offsetMod = 4;
 		DrawActivationAnimation(handSelectionDrawInfo, Activation::magic, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
@@ -678,7 +683,7 @@ namespace game
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
-		playerCardSelectionDrawInfo.metaDatas = &metaDatas[2 + BOARD_CAPACITY_PER_SIDE + HAND_MAX_SIZE];
+		playerCardSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ALLY_INDEX];
 		playerCardSelectionDrawInfo.offsetMod = 16;
 		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
@@ -815,7 +820,7 @@ namespace game
 			const auto id = boardState.ids[i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
-				if (monster.onActionEvent(state, actionState, i))
+				if (monster.onActionEvent(state, actionState, i, metaDatas[META_DATA_ALLY_INDEX + i].actionPending))
 					activated = true;
 
 			if (partyId != -1)
@@ -827,7 +832,7 @@ namespace game
 						continue;
 					const auto& artifact = info.artifacts[artifactId];
 					if (artifact.onActionEvent)
-						if (artifact.onActionEvent(state, actionState, i))
+						if (artifact.onActionEvent(state, actionState, i, artifactsActionPending[i * MONSTER_ARTIFACT_CAPACITY + j]))
 							activated = true;
 				}
 				if (i >= PARTY_ACTIVE_CAPACITY)
@@ -837,7 +842,7 @@ namespace game
 				{
 					const auto flaw = info.flaws[flawId];
 					if (flaw.onActionEvent)
-						if (flaw.onActionEvent(state, actionState, i))
+						if (flaw.onActionEvent(state, actionState, i, flawsActionPending[i]))
 							activated = true;
 				}
 			}
@@ -854,7 +859,7 @@ namespace game
 		const auto& path = state.paths[state.GetPrimaryPath()];
 		const auto& room = info.rooms[path.room];
 		if (room.onActionEvent)
-			if(room.onActionEvent(state, actionState, 0))
+			if(room.onActionEvent(state, actionState, 0, metaDatas[META_DATA_ROOM_INDEX].actionPending))
 			{
 				Activation activation{};
 				activation.type = Activation::room;
@@ -865,7 +870,7 @@ namespace game
 		{
 			const auto& event = info.events[eventCard];
 			if (event.onActionEvent)
-				if (event.onActionEvent(state, actionState, 0))
+				if (event.onActionEvent(state, actionState, 0, metaDatas[META_DATA_EVENT_INDEX].actionPending))
 				{
 					Activation activation{};
 					activation.type = Activation::event;
@@ -878,7 +883,7 @@ namespace game
 			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
-				if (monster.onActionEvent(state, actionState, i))
+				if (monster.onActionEvent(state, actionState, i, metaDatas[META_DATA_ENEMY_INDEX + i].actionPending))
 				{
 					Activation activation{};
 					activation.id = BOARD_CAPACITY_PER_SIDE + i;
@@ -890,7 +895,7 @@ namespace game
 		{
 			const auto& magic = &info.magics[state.hand[i]];
 			if (magic->onActionEvent)
-				if (magic->onActionEvent(state, actionState, i))
+				if (magic->onActionEvent(state, actionState, i, metaDatas[META_DATA_HAND_INDEX + i].actionPending))
 				{
 					Activation activation{};
 					activation.id = i;
@@ -980,7 +985,7 @@ namespace game
 			const bool isEnemy = i >= BOARD_CAPACITY_PER_SIDE;
 			const uint32_t mod = BOARD_CAPACITY_PER_SIDE * isEnemy;
 			i -= mod;
-			const uint32_t c = isEnemy ? boardState.enemyCount : boardState.allyCount;
+			const uint32_t c = (isEnemy ? boardState.enemyCount : boardState.allyCount) - 1;
 
 			for (uint32_t j = actionState.dst + 2 + HAND_MAX_SIZE; j < BOARD_CAPACITY + HAND_MAX_SIZE + 1; ++j)
 				metaDatas[j] = metaDatas[j + 1];
@@ -995,7 +1000,12 @@ namespace game
 			else
 			{
 				for (uint32_t j = i; j < c; ++j)
+				{
 					boardState.partyIds[j + mod] = boardState.partyIds[j + 1 + mod];
+					flawsActionPending[j + mod] = flawsActionPending[j + 1 + mod];
+					for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
+						artifactsActionPending[j + mod + k] = artifactsActionPending[j + mod + k + MONSTER_ARTIFACT_CAPACITY];
+				}
 				--boardState.allyCount;
 			}
 
