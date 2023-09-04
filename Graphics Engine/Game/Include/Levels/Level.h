@@ -94,6 +94,7 @@ namespace game
 			bool selectable = true;
 			float lifeTime = -1;
 			CombatStats* combatStats = nullptr;
+			CombatStatModifier* combatStatModifier = nullptr;
 			uint32_t cost = -1;
 			bool ignoreAnim = false;
 			float activationLerp = -1;
@@ -116,6 +117,7 @@ namespace game
 			uint32_t rowCutoff = 8;
 			int32_t offsetMod = 8;
 			CombatStats* combatStats = nullptr;
+			CombatStatModifier* combatStatModifiers = nullptr;
 			uint32_t* costs = nullptr;
 			glm::ivec2 overridePos;
 			uint32_t overridePosIndex = -1;

@@ -341,7 +341,7 @@ namespace game
 				}
 				else
 				{
-					PostHandleActionState(state, info, activeState);
+					PostHandleActionState(state, activeState);
 					activeStateValid = false;
 				}
 			}
@@ -569,6 +569,7 @@ namespace game
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
+		enemySelectionDrawInfo.combatStatModifiers = &boardState.combatStatModifiers[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
 		enemySelectionDrawInfo.offsetMod = 16;
 		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
@@ -682,6 +683,7 @@ namespace game
 		playerCardSelectionDrawInfo.lifeTime = level->GetTime();
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
+		playerCardSelectionDrawInfo.combatStatModifiers = boardState.combatStatModifiers;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
 		playerCardSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ALLY_INDEX];
 		playerCardSelectionDrawInfo.offsetMod = 16;
@@ -905,8 +907,7 @@ namespace game
 		}
 	}
 
-	void MainLevel::CombatState::PostHandleActionState(State& state, const LevelUpdateInfo& info,
-		const ActionState& actionState)
+	void MainLevel::CombatState::PostHandleActionState(State& state, const ActionState& actionState)
 	{
 		auto& boardState = state.boardState;
 
@@ -929,8 +930,8 @@ namespace game
 		}
 		else if (actionState.trigger == ActionState::Trigger::onAttack)
 		{
-			const auto& combatStats = boardState.combatStats[actionState.dst];
-			const auto attack = boardState.combatStats[actionState.src].attack;
+			const auto srcCombatStats = boardState.combatStatModifiers[actionState.src].GetProcessedCombatStats(boardState.combatStats[actionState.src]);
+			const auto dstCombatStats = boardState.combatStatModifiers[actionState.dst].GetProcessedCombatStats(boardState.combatStats[actionState.dst]);
 
 			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
 			{
@@ -946,12 +947,12 @@ namespace game
 
 			const uint32_t roll = rand() % 6;
 
-			if (roll == 6 || roll >= combatStats.armorClass)
+			if (roll == 6 || roll >= dstCombatStats.armorClass)
 			{
 				ActionState damageState = actionState;
 				damageState.trigger = ActionState::Trigger::onDamage;
 				constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
-				damageState.values[vDamage] = attack;
+				damageState.values[vDamage] = srcCombatStats.attack;
 				state.stack.Add() = damageState;
 			}
 			else
@@ -1001,10 +1002,10 @@ namespace game
 			{
 				for (uint32_t j = i; j < c; ++j)
 				{
-					boardState.partyIds[j + mod] = boardState.partyIds[j + 1 + mod];
-					flawsActionPending[j + mod] = flawsActionPending[j + 1 + mod];
+					boardState.partyIds[j] = boardState.partyIds[j + 1];
+					flawsActionPending[j] = flawsActionPending[j + 1];
 					for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
-						artifactsActionPending[j + mod + k] = artifactsActionPending[j + mod + k + MONSTER_ARTIFACT_CAPACITY];
+						artifactsActionPending[j + k] = artifactsActionPending[j + k + MONSTER_ARTIFACT_CAPACITY];
 				}
 				--boardState.allyCount;
 			}
@@ -1014,7 +1015,9 @@ namespace game
 			{
 				boardState.ids[j + mod] = boardState.ids[j + 1 + mod];
 				boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
+				boardState.combatStatModifiers[j + mod] = boardState.combatStatModifiers[j + 1 + mod];
 				boardState.uniqueIds[j + mod] = boardState.uniqueIds[j + 1 + mod];
+				metaDatas[META_DATA_ENEMY_INDEX + j + mod] = metaDatas[META_DATA_ENEMY_INDEX + j + mod + 1];
 			}
 
 			// Modify states as to ensure other events can go through.
@@ -1044,7 +1047,11 @@ namespace game
 			}
 		}
 		else if (actionState.trigger == ActionState::Trigger::onCardPlayed)
+		{
 			state.hand.RemoveAtOrdered(actionState.src);
+			for (uint32_t i = 0; i < HAND_MAX_SIZE - 1; ++i)
+				metaDatas[META_DATA_HAND_INDEX + i] = metaDatas[META_DATA_HAND_INDEX + i + 1];
+		}
 	}
 
 	bool MainLevel::CombatState::ValidateActionState(const State& state, ActionState& actionState)

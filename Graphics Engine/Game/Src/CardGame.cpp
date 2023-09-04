@@ -402,7 +402,9 @@ namespace game
 				damageState.dst = self;
 				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
 				state.stack.Add() = damageState;
+				state.boardState.combatStatModifiers[self].attack++;
 				actionPending = false;
+				return true;
 			}
 
 			if(actionState.trigger == ActionState::Trigger::onAttack && self == actionState.src)
