@@ -50,6 +50,12 @@ namespace game
 
 			for (int32_t i = static_cast<int32_t>(monsters.count) - 1; i >= 0; --i)
 			{
+				if(info.monsters[i].unique)
+				{
+					monsters.RemoveAt(i);
+					continue;
+				}
+
 				bool removed = false;
 
 				for (uint32_t j = 0; j < boardState.allyCount; ++j)
@@ -94,6 +100,10 @@ namespace game
 			decks.bosses.count = decks.bosses.length;
 			RemoveDuplicates(info, bosses, &Path::boss);
 			Shuffle(decks.bosses.ptr, decks.bosses.count);
+
+			for (int32_t i = static_cast<int32_t>(decks.bosses.count) - 1; i >= 0; --i)
+				if(info.monsters[decks.bosses[i]].unique)
+					decks.bosses.RemoveAt(i);
 		}
 		return bosses.Pop();
 	}
@@ -106,6 +116,10 @@ namespace game
 			GetDeck(&rooms, nullptr, info.rooms);
 			RemoveDuplicates(info, rooms, &Path::room);
 			Shuffle(decks.rooms.ptr, decks.rooms.count);
+
+			for (int32_t i = static_cast<int32_t>(decks.rooms.count) - 1; i >= 0; --i)
+				if (info.rooms[decks.rooms[i]].unique)
+					decks.rooms.RemoveAt(i);
 		}
 		return rooms.Pop();
 	}
@@ -118,6 +132,10 @@ namespace game
 			GetDeck(&magics, nullptr, info.magics);
 			RemoveDuplicates(info, magics, &Path::magic);
 			Shuffle(decks.magics.ptr, decks.magics.count);
+
+			for (int32_t i = static_cast<int32_t>(decks.magics.count) - 1; i >= 0; --i)
+				if (info.magics[decks.magics[i]].unique)
+					decks.magics.RemoveAt(i);
 		}
 		RemoveMagicsInParty(magics, info.gameState);
 		return magics.Pop();
@@ -131,6 +149,10 @@ namespace game
 			GetDeck(&artifacts, nullptr, info.artifacts);
 			RemoveDuplicates(info, artifacts, &Path::artifact);
 			Shuffle(decks.artifacts.ptr, decks.artifacts.count);
+
+			for (int32_t i = static_cast<int32_t>(decks.artifacts.count) - 1; i >= 0; --i)
+				if (info.artifacts[decks.artifacts[i]].unique)
+					decks.artifacts.RemoveAt(i);
 		}
 		RemoveArtifactsInParty(artifacts, info.playerState);
 		return artifacts.Pop();
@@ -144,6 +166,10 @@ namespace game
 			GetDeck(&flaws, nullptr, info.flaws);
 			RemoveDuplicates(info, flaws, &Path::flaw);
 			Shuffle(decks.flaws.ptr, decks.flaws.count);
+
+			for (int32_t i = static_cast<int32_t>(decks.flaws.count) - 1; i >= 0; --i)
+				if (info.flaws[decks.flaws[i]].unique)
+					decks.flaws.RemoveAt(i);
 		}
 		RemoveFlawsInParty(flaws, info.gameState);
 		return flaws.Pop();
@@ -156,6 +182,10 @@ namespace game
 		{
 			GetDeck(&events, nullptr, info.flaws);
 			Shuffle(decks.events.ptr, decks.events.count);
+
+			for (int32_t i = static_cast<int32_t>(decks.events.count) - 1; i >= 0; --i)
+				if (info.events[decks.events[i]].unique)
+					decks.events.RemoveAt(i);
 		}
 		return events.Pop();
 	}
