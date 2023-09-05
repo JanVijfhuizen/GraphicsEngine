@@ -197,6 +197,8 @@ namespace game
 
 	void CardGame::Create(CardGame* outCardGame)
 	{
+		srand(std::time(nullptr));
+
 		*outCardGame = {};
 		{
 			EngineCreateInfo engineCreateInfo{};
@@ -502,6 +504,7 @@ namespace game
 
 		arr[0].name = "lightning bolt";
 		arr[0].ruleText = "deals 2 damage";
+		arr[0].animIndex = 24;
 		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
 		{
 			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)

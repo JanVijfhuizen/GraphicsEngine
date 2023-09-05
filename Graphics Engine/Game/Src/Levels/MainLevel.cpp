@@ -459,7 +459,7 @@ namespace game
 				return true;
 			}
 		}
-
+		
 		{
 			const float l = jv::Min(1.f, level->GetTime() * 3);
 			constexpr uint32_t LINE_POSITIONS[]{ HAND_HEIGHT + 28 };
@@ -494,10 +494,10 @@ namespace game
 
 			cards.Clear();
 			const bool isStartOfTurn = activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn;
-			if (eventCard != -1)
-				cards.Add() = &info.events[eventCard];
 			if (isStartOfTurn && previousEventCard != -1)
 				cards.Add() = &info.events[previousEventCard];
+			if (eventCard != -1)
+				cards.Add() = &info.events[eventCard];
 
 			eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
 			eventSelectionDrawInfo.activationIndex = -1;
@@ -704,8 +704,10 @@ namespace game
 		// Draw mana.
 		{
 			TextTask manaTextTask{};
-			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 4);
+			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, HAND_HEIGHT + 32);
 			manaTextTask.text = TextInterpreter::IntToConstCharPtr(mana, info.frameArena);
+			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
+			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(maxMana, info.frameArena), info.frameArena);
 			manaTextTask.lifetime = level->GetTime();
 			manaTextTask.center = true;
 			info.textTasks.Push(manaTextTask);
