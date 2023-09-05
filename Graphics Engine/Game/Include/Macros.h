@@ -27,9 +27,6 @@ constexpr uint32_t HAND_MAX_SIZE = 5;
 constexpr uint32_t MAX_MANA = 7;
 constexpr uint32_t STACK_MAX_SIZE = 128;
 
-constexpr uint32_t CARD_MONSTER_ANIM_LENGTH = 4;
-constexpr glm::ivec2 CARD_MONSTER_FRAME_SIZE(32);
-
 constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
 constexpr float ACTION_STATE_DEFAULT_DURATION = .4f;
 constexpr float START_OF_TURN_ACTION_STATE_DURATION = 2;
@@ -49,6 +46,10 @@ constexpr uint32_t META_DATA_EVENT_INDEX = META_DATA_ROOM_INDEX + 1;
 constexpr uint32_t META_DATA_HAND_INDEX = META_DATA_EVENT_INDEX + 1;
 constexpr uint32_t META_DATA_ALLY_INDEX = META_DATA_HAND_INDEX + HAND_MAX_SIZE;
 constexpr uint32_t META_DATA_ENEMY_INDEX = META_DATA_ALLY_INDEX + BOARD_CAPACITY_PER_SIDE;
+
+constexpr glm::ivec2 CARD_ART_SHAPE{ 16 };
+constexpr uint32_t CARD_ART_LENGTH = 2;
+constexpr float CARD_ANIM_SPEED = .5f;
 
 enum class LevelIndex
 {
@@ -73,12 +74,5 @@ enum class TextureId
 	fallback,
 	empty,
 	buttonSmall,
-	length
-};
-
-enum class DynTextureId
-{
-	monster,
-	mage,
 	length
 };

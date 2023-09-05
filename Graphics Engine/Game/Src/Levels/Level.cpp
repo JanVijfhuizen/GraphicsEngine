@@ -15,7 +15,6 @@ namespace game
 {
 	constexpr uint32_t CARD_FRAME_COUNT = 2;
 	constexpr uint32_t CARD_STACKED_SPACING = 6;
-	constexpr float CARD_MONSTER_ANIM_SPEED = .5f;
 
 	void Level::Create(const LevelCreateInfo& info)
 	{
@@ -427,15 +426,16 @@ namespace game
 		// Draw image.
 		if(!drawInfo.ignoreAnim && drawInfo.card)
 		{
-			jv::ge::SubTexture animFrames[CARD_MONSTER_ANIM_LENGTH];
-			Divide({}, animFrames, CARD_MONSTER_ANIM_LENGTH);
+			jv::ge::SubTexture animFrames[CARD_ART_LENGTH];
+			Divide({}, animFrames, CARD_ART_LENGTH);
 
-			auto i = static_cast<uint32_t>(GetTime() / CARD_MONSTER_ANIM_SPEED);
-			i %= CARD_MONSTER_ANIM_LENGTH;
+			auto i = static_cast<uint32_t>(GetTime() / CARD_ANIM_SPEED);
+			i %= CARD_ART_LENGTH;
 
 			PixelPerfectRenderTask imageRenderTask{};
 			imageRenderTask.position = origin;
 			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
+			imageRenderTask.scale = CARD_ART_SHAPE;
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];

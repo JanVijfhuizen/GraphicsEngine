@@ -96,7 +96,7 @@ namespace game
 		static void Destroy(const CardGame& cardGame);
 
 		[[nodiscard]] static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
-		[[nodiscard]] static jv::Array<const char*> GetDynamicTexturePaths(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<const char*> GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena);
 		[[nodiscard]] static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<uint32_t> GetBossCards(jv::Arena& arena);
@@ -336,12 +336,12 @@ namespace game
 		outCardGame->time = outCardGame->timer.now();
 
 		jv::ge::ImageCreateInfo imageCreateInfo{};
-		imageCreateInfo.resolution = glm::ivec2(128, 32);
+		imageCreateInfo.resolution = CARD_ART_SHAPE * glm::ivec2(CARD_ART_LENGTH, 1);
 		imageCreateInfo.usage = jv::ge::ImageCreateInfo::Usage::read;
 		imageCreateInfo.scene = outCardGame->scene;
 
 		outCardGame->textureStreamer = TextureStreamer::Create(outCardGame->arena, 32, 256, imageCreateInfo);
-		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().frameArena);
+		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().arena, outCardGame->engine.GetMemory().frameArena);
 		for (const auto& dynText : dynTexts)
 			outCardGame->textureStreamer.DefineTexturePath(dynText);
 	}
@@ -369,28 +369,35 @@ namespace game
 		return arr;
 	}
 
-	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena)
+	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		const auto arr = jv::CreateArray<const char*>(arena, static_cast<uint32_t>(DynTextureId::length));
-		arr[0] = "Art/monster.png";
-		arr[1] = "Art/monster-mage.png";
+		const auto arr = jv::CreateArray<const char*>(frameArena, 30);
+		for (uint32_t i = 0; i < 30; ++i)
+		{
+			const char* prefix = "Art/Monsters/";
+			arr[i] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
+			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
+		}
+
 		return arr;
 	}
 
 	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MonsterCard>(arena, 30);
+		uint32_t c = 0;
 		for (auto& card : arr)
 		{
 			card.name = "monster";
 			card.ruleText = "whenever something happens that isnt supposed to happen, make something that is not supposed to happen happen.";
+			card.animIndex = c++;
 		}
 		// Starting pet.
 		arr[0].unique = true;
 		arr[0].name = "daisy, loyal protector";
 		arr[0].ruleText = "follows you around.";
 		arr[0].health = 999;
-		arr[0].animIndex = 1;
+
 		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
 		{
 			if (actionPending && actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -430,6 +437,11 @@ namespace game
 	jv::Array<ArtifactCard> CardGame::GetArtifactCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<ArtifactCard>(arena, 10);
+
+		uint32_t c = 0;
+		for (auto& card : arr)
+			card.animIndex = c++;
+
 		for (auto& card : arr)
 		{
 			card.name = "artifact";
@@ -461,6 +473,10 @@ namespace game
 	jv::Array<RoomCard> CardGame::GetRoomCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<RoomCard>(arena, 10);
+		uint32_t c = 0;
+		for (auto& card : arr)
+			card.animIndex = c++;
+
 		for (auto& card : arr)
 		{
 			card.name = "special room";
@@ -480,6 +496,10 @@ namespace game
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
+		uint32_t c = 0;
+		for (auto& card : arr)
+			card.animIndex = c++;
+
 		arr[0].name = "lightning bolt";
 		arr[0].ruleText = "deals 2 damage";
 		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
@@ -501,6 +521,10 @@ namespace game
 	jv::Array<FlawCard> CardGame::GetFlawCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<FlawCard>(arena, 24);
+		uint32_t c = 0;
+		for (auto& card : arr)
+			card.animIndex = c++;
+
 		for (auto& card : arr)
 			card.name = "flaw";
 		return arr;
@@ -509,6 +533,10 @@ namespace game
 	jv::Array<EventCard> CardGame::GetEventCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<EventCard>(arena, 24);
+		uint32_t c = 0;
+		for (auto& card : arr)
+			card.animIndex = c++;
+
 		for (auto& card : arr)
 			card.name = "event";
 		return arr;
