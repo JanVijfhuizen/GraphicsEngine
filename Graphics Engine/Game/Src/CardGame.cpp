@@ -26,6 +26,7 @@
 #include "States/GameState.h"
 #include "States/InputState.h"
 #include "States/PlayerState.h"
+#include <time.h>
 
 namespace game 
 {
@@ -87,7 +88,7 @@ namespace game
 		jv::Array<EventCard> events;
 
 		std::chrono::high_resolution_clock timer{};
-		std::chrono::time_point<std::chrono::steady_clock> time{};
+		std::chrono::time_point<std::chrono::steady_clock> prevTime{};
 
 		TextureStreamer textureStreamer;
 
@@ -150,7 +151,7 @@ namespace game
 		}
 
 		const auto currentTime = timer.now();
-		const auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - time).count();
+		const auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - prevTime).count();
 		
 		const LevelUpdateInfo info
 		{
@@ -176,7 +177,7 @@ namespace game
 			textureStreamer
 		};
 
-		time = currentTime;
+		prevTime = currentTime;
 		auto loadLevelIndex = levelIndex;
 		const auto level = levels[static_cast<uint32_t>(levelIndex)];
 
@@ -197,7 +198,7 @@ namespace game
 
 	void CardGame::Create(CardGame* outCardGame)
 	{
-		srand(std::time(nullptr));
+		srand(time(nullptr));
 
 		*outCardGame = {};
 		{
@@ -335,7 +336,7 @@ namespace game
 			outCardGame->levels[4] = outCardGame->arena.New<GameOverLevel>();
 		}
 
-		outCardGame->time = outCardGame->timer.now();
+		outCardGame->prevTime = outCardGame->timer.now();
 
 		jv::ge::ImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.resolution = CARD_ART_SHAPE * glm::ivec2(CARD_ART_LENGTH, 1);

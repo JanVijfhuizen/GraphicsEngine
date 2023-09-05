@@ -79,6 +79,8 @@ namespace game
 						break;
 					}
 			}
+
+			Shuffle(decks.monsters.ptr, decks.monsters.count);
 		}
 		return monsters.Pop();
 	}
@@ -91,6 +93,7 @@ namespace game
 			memcpy(decks.bosses.ptr, info.bosses.ptr, decks.bosses.length * sizeof(uint32_t));
 			decks.bosses.count = decks.bosses.length;
 			RemoveDuplicates(info, bosses, &Path::boss);
+			Shuffle(decks.bosses.ptr, decks.bosses.count);
 		}
 		return bosses.Pop();
 	}
@@ -102,6 +105,7 @@ namespace game
 		{
 			GetDeck(&rooms, nullptr, info.rooms);
 			RemoveDuplicates(info, rooms, &Path::room);
+			Shuffle(decks.rooms.ptr, decks.rooms.count);
 		}
 		return rooms.Pop();
 	}
@@ -113,6 +117,7 @@ namespace game
 		{
 			GetDeck(&magics, nullptr, info.magics);
 			RemoveDuplicates(info, magics, &Path::magic);
+			Shuffle(decks.magics.ptr, decks.magics.count);
 		}
 		RemoveMagicsInParty(magics, info.gameState);
 		return magics.Pop();
@@ -125,6 +130,7 @@ namespace game
 		{
 			GetDeck(&artifacts, nullptr, info.artifacts);
 			RemoveDuplicates(info, artifacts, &Path::artifact);
+			Shuffle(decks.artifacts.ptr, decks.artifacts.count);
 		}
 		RemoveArtifactsInParty(artifacts, info.playerState);
 		return artifacts.Pop();
@@ -137,6 +143,7 @@ namespace game
 		{
 			GetDeck(&flaws, nullptr, info.flaws);
 			RemoveDuplicates(info, flaws, &Path::flaw);
+			Shuffle(decks.flaws.ptr, decks.flaws.count);
 		}
 		RemoveFlawsInParty(flaws, info.gameState);
 		return flaws.Pop();
@@ -146,7 +153,10 @@ namespace game
 	{
 		auto& events = decks.events;
 		if (events.count == 0)
+		{
 			GetDeck(&events, nullptr, info.flaws);
+			Shuffle(decks.events.ptr, decks.events.count);
+		}
 		return events.Pop();
 	}
 
