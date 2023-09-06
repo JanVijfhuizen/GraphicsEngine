@@ -354,7 +354,6 @@ namespace game
 			pipelineCreateInfo.shader = swapChain.shader;
 			pipelineCreateInfo.layoutCount = 1;
 			pipelineCreateInfo.layouts = &swapChain.layout;
-			pipelineCreateInfo.renderPass = swapChain.renderPass;
 			pipelineCreateInfo.vertexType = jv::ge::VertexType::v3D;
 			swapChain.pipeline = CreatePipeline(pipelineCreateInfo);
 		}
@@ -472,7 +471,6 @@ namespace game
 
 		jv::ge::ImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.resolution = CARD_ART_SHAPE * glm::ivec2(CARD_ART_LENGTH, 1);
-		imageCreateInfo.usage = jv::ge::ImageCreateInfo::Usage::read;
 		imageCreateInfo.scene = outCardGame->scene;
 
 		outCardGame->textureStreamer = TextureStreamer::Create(outCardGame->arena, 32, 256, imageCreateInfo);

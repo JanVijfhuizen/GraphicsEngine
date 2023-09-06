@@ -66,13 +66,6 @@ namespace jv::ge
 	{
 		Resource scene;
 		ImageFormat format = ImageFormat::color;
-		
-		enum class Usage
-		{
-			read,
-			write,
-			readWrite
-		} usage = Usage::readWrite;
 		glm::ivec2 resolution;
 	};
 

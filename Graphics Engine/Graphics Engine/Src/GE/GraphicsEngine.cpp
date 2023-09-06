@@ -924,7 +924,7 @@ namespace jv::ge
 		pipelineCreateInfo.modules.ptr = modules;
 		pipelineCreateInfo.modules.length = moduleCount;
 		pipelineCreateInfo.resolution = info.resolution;
-		pipelineCreateInfo.renderPass = static_cast<RenderPass*>(info.renderPass)->renderPass;
+		pipelineCreateInfo.renderPass = info.renderPass ? static_cast<RenderPass*>(info.renderPass)->renderPass : ge.swapChain.renderPass;
 		pipelineCreateInfo.layouts.ptr = pipeline.layouts.ptr;
 		pipelineCreateInfo.layouts.length = info.layoutCount;
 		pipelineCreateInfo.pushConstantSize = info.pushConstantSize;
