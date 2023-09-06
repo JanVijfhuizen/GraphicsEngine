@@ -46,6 +46,24 @@ namespace game
 
 	struct CardGame final
 	{
+		struct FrameBuffer final
+		{
+			jv::ge::Resource image;
+			jv::ge::Resource frameBuffer;
+			jv::ge::Resource semaphore;
+			jv::ge::Resource sampler;
+		};
+
+		struct SwapChain final
+		{
+			jv::Array<FrameBuffer> frameBuffers;
+			jv::ge::Resource pool;
+			jv::ge::Resource renderPass;
+			jv::ge::Resource shader;
+			jv::ge::Resource layout;
+			jv::ge::Resource pipeline;
+		};
+
 		Engine engine;
 		jv::Arena arena;
 		jv::Arena levelArena;
@@ -54,9 +72,7 @@ namespace game
 		jv::ge::Resource atlas;
 		InputState inputState{};
 
-		jv::Array<jv::ge::Resource> frameBufferImages;
-		jv::Array<jv::ge::Resource> frameBuffers;
-		jv::Array<jv::ge::Resource> frameBufferSemaphores;
+		SwapChain swapChain;
 
 		jv::Array<jv::ge::AtlasTexture> atlasTextures;
 		jv::Array<glm::ivec2> subTextureResolutions;
@@ -205,16 +221,37 @@ namespace game
 		result = engine.Update([](void* userPtr)
 		{
 			const auto cardGame = static_cast<CardGame*>(userPtr);
+			const auto& swapChain = cardGame->swapChain;
 			const uint32_t frameIndex = jv::ge::GetFrameIndex();
+			auto& frameBuffer = swapChain.frameBuffers[frameIndex];
 
 			jv::ge::RenderFrameInfo renderFrameInfo{};
-			renderFrameInfo.frameBuffer = cardGame->frameBuffers[frameIndex];
-			renderFrameInfo.signalSemaphore = cardGame->frameBufferSemaphores[frameIndex];
+			renderFrameInfo.frameBuffer = frameBuffer.frameBuffer;
+			renderFrameInfo.signalSemaphore = frameBuffer.semaphore;
 			if (!RenderFrame(renderFrameInfo))
 				return false;
 
+			jv::ge::WriteInfo::Binding writeBindingInfo{};
+			writeBindingInfo.type = jv::ge::BindingType::sampler;
+			writeBindingInfo.image.image = frameBuffer.image;
+			writeBindingInfo.image.sampler = frameBuffer.sampler;
+			writeBindingInfo.index = 0;
+
+			jv::ge::WriteInfo writeInfo{};
+			writeInfo.descriptorSet = jv::ge::GetDescriptorSet(swapChain.pool, frameIndex);
+			writeInfo.bindings = &writeBindingInfo;
+			writeInfo.bindingCount = 1;
+			Write(writeInfo);
+			
+			jv::ge::DrawInfo drawInfo{};
+			drawInfo.pipeline = swapChain.pipeline;
+			drawInfo.mesh = cardGame->dynamicRenderInterpreter->GetFallbackMesh();
+			drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(swapChain.pool, frameIndex);
+			drawInfo.descriptorSetCount = 1;
+			Draw(drawInfo);
+
 			jv::ge::RenderFrameInfo finalRenderFrameInfo{};
-			finalRenderFrameInfo.waitSemaphores = &cardGame->frameBufferSemaphores[frameIndex];
+			finalRenderFrameInfo.waitSemaphores = &frameBuffer.semaphore;
 			finalRenderFrameInfo.waitSemaphoreCount = 1;
 			if (!RenderFrame(finalRenderFrameInfo))
 				return false;
@@ -258,28 +295,68 @@ namespace game
 
 		// TEMP NO RENDER GRAPH
 		{
+			auto& swapChain = outCardGame->swapChain;
+
 			jv::ge::RenderPassCreateInfo renderPassCreateInfo{};
 			renderPassCreateInfo.target = jv::ge::RenderPassCreateInfo::DrawTarget::image;
-			auto renderPass = CreateRenderPass(renderPassCreateInfo);
+			swapChain.renderPass = CreateRenderPass(renderPassCreateInfo);
 
 			const uint32_t frameCount = jv::ge::GetFrameCount();
-			outCardGame->frameBufferImages = jv::CreateArray<jv::ge::Resource>(mem.arena, frameCount);
-			outCardGame->frameBuffers = jv::CreateArray<jv::ge::Resource>(mem.arena, frameCount);
-			outCardGame->frameBufferSemaphores = jv::CreateArray<jv::ge::Resource>(mem.arena, frameCount);
+			swapChain.frameBuffers = jv::CreateArray<FrameBuffer>(mem.arena, frameCount);
 
 			for (uint32_t i = 0; i < frameCount; ++i)
 			{
+				auto& frameBuffer = swapChain.frameBuffers[i];
+
 				jv::ge::ImageCreateInfo imageCreateInfo{};
 				imageCreateInfo.resolution = SIMULATED_RESOLUTION;
 				imageCreateInfo.scene = outCardGame->scene;
-				outCardGame->frameBufferImages[i] = AddImage(imageCreateInfo);
+				frameBuffer.image = AddImage(imageCreateInfo);
 
 				jv::ge::FrameBufferCreateInfo frameBufferCreateInfo{};
-				frameBufferCreateInfo.renderPass = renderPass;
-				frameBufferCreateInfo.images = &outCardGame->frameBufferImages[i];
-				outCardGame->frameBuffers[i] = CreateFrameBuffer(frameBufferCreateInfo);
-				outCardGame->frameBufferSemaphores[i] = jv::ge::CreateSemaphore();
+				frameBufferCreateInfo.renderPass = swapChain.renderPass;
+				frameBufferCreateInfo.images = &frameBuffer.image;
+				frameBuffer.frameBuffer = CreateFrameBuffer(frameBufferCreateInfo);
+				frameBuffer.semaphore = jv::ge::CreateSemaphore();
+
+				jv::ge::SamplerCreateInfo samplerCreateInfo{};
+				samplerCreateInfo.scene = outCardGame->scene;
+				frameBuffer.sampler = AddSampler(samplerCreateInfo);
 			}
+			
+			const auto vertCode = jv::file::Load(mem.frameArena, "Shaders/vert-sc.spv");
+			const auto fragCode = jv::file::Load(mem.frameArena, "Shaders/frag-sc.spv");
+
+			jv::ge::ShaderCreateInfo shaderCreateInfo{};
+			shaderCreateInfo.vertexCode = vertCode.ptr;
+			shaderCreateInfo.vertexCodeLength = vertCode.length;
+			shaderCreateInfo.fragmentCode = fragCode.ptr;
+			shaderCreateInfo.fragmentCodeLength = fragCode.length;
+			swapChain.shader = CreateShader(shaderCreateInfo);
+
+			jv::ge::LayoutCreateInfo::Binding bindingCreateInfo{};
+			bindingCreateInfo.stage = jv::ge::ShaderStage::fragment;
+			bindingCreateInfo.type = jv::ge::BindingType::sampler;
+
+			jv::ge::LayoutCreateInfo layoutCreateInfo{};
+			layoutCreateInfo.bindings = &bindingCreateInfo;
+			layoutCreateInfo.bindingsCount = 1;
+			swapChain.layout = CreateLayout(layoutCreateInfo);
+
+			jv::ge::DescriptorPoolCreateInfo poolCreateInfo{};
+			poolCreateInfo.layout = swapChain.layout;
+			poolCreateInfo.capacity = frameCount;
+			poolCreateInfo.scene = outCardGame->scene;
+			swapChain.pool = AddDescriptorPool(poolCreateInfo);
+
+			jv::ge::PipelineCreateInfo pipelineCreateInfo{};
+			pipelineCreateInfo.resolution = RESOLUTION;
+			pipelineCreateInfo.shader = swapChain.shader;
+			pipelineCreateInfo.layoutCount = 1;
+			pipelineCreateInfo.layouts = &swapChain.layout;
+			pipelineCreateInfo.renderPass = swapChain.renderPass;
+			pipelineCreateInfo.vertexType = jv::ge::VertexType::v3D;
+			swapChain.pipeline = CreatePipeline(pipelineCreateInfo);
 		}
 
 		int texWidth, texHeight, texChannels2;

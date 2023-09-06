@@ -34,6 +34,7 @@ namespace game
 		} camera{};
 
 		void Enable(const DynamicRenderInterpreterEnableInfo& info);
+		jv::ge::Resource GetFallbackMesh() const;
 
 	private:
 		struct PushConstant final
