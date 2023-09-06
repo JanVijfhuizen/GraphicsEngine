@@ -1057,6 +1057,10 @@ namespace jv::ge
 			const auto resolution = image0->info.resolution;
 			const auto extent = VkExtent2D{static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y)};
 
+			const auto oldLayout = image0->image.layout;
+			if(oldLayout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+				image0->image.TransitionLayout(cmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, image0->image.aspectFlags);
+
 			VkRenderPassBeginInfo renderPassBeginInfo{};
 			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
@@ -1072,6 +1076,10 @@ namespace jv::ge
 				DrawInstances(draw, cmd);
 
 			vkCmdEndRenderPass(cmd);
+
+			if (image0->image.layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+				image0->image.TransitionLayout(cmd, oldLayout, image0->image.aspectFlags);
+
 			result = vkEndCommandBuffer(cmd);
 			assert(!result);
 
