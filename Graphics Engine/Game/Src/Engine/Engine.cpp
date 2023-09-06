@@ -26,11 +26,14 @@ namespace game
 		return _taskSystem;
 	}
 
-	bool Engine::Update()
+	bool Engine::Update(bool(*customRenderFunc)())
 	{
-		const bool waitForImage = jv::ge::WaitForImage();
-		if (!waitForImage)
-			return false;
+		if(!customRenderFunc)
+		{
+			const bool waitForImage = jv::ge::WaitForImage();
+			if (!waitForImage)
+				return false;
+		}
 
 		const auto memory = GetMemory();
 		
@@ -38,9 +41,14 @@ namespace game
 			interpreter->Update(memory);
 
 		// Update renderer.
-		jv::ge::RenderFrameInfo renderFrameInfo{};
-		if (!RenderFrame(renderFrameInfo))
-			return false;
+		if(customRenderFunc)
+			customRenderFunc();
+		else
+		{
+			constexpr jv::ge::RenderFrameInfo renderFrameInfo{};
+			if (!RenderFrame(renderFrameInfo))
+				return false;
+		}
 
 		// Clear tasks.
 		for (const auto& taskSystem : _taskSystems)

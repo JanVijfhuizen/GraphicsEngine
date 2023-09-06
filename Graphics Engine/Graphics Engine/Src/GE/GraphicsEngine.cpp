@@ -336,23 +336,23 @@ namespace jv::ge
 
 		switch (info.format)
 		{
-			case ImageCreateInfo::Format::color:
+			case ImageFormat::color:
 				vkImageCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				resolution.z = 3;
 				break;
-			case ImageCreateInfo::Format::grayScale:
+			case ImageFormat::grayScale:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				break;
-			case ImageCreateInfo::Format::depth:
+			case ImageFormat::depth:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
 				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 				break;
-			case ImageCreateInfo::Format::stencil:
+			case ImageFormat::stencil:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
 				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -775,15 +775,16 @@ namespace jv::ge
 		attachmentInfo.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachmentInfo.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachmentInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachmentInfo.format = ge.swapChain.GetFormat();
 
 		switch (info.target)
 		{
 			case RenderPassCreateInfo::DrawTarget::image:
 				attachmentInfo.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				attachmentInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
 				break;
 			case RenderPassCreateInfo::DrawTarget::swapChain:
 				attachmentInfo.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+				attachmentInfo.format = ge.swapChain.GetFormat();
 				break;
 			default:
 				std::cerr << "Draw target not supported." << std::endl;

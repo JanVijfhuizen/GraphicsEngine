@@ -53,6 +53,10 @@ namespace game
 		jv::ge::Resource levelScene;
 		jv::ge::Resource atlas;
 		InputState inputState{};
+
+		jv::Array<jv::ge::Resource> frameBufferImages;
+		jv::Array<jv::ge::Resource> frameBuffers;
+
 		jv::Array<jv::ge::AtlasTexture> atlasTextures;
 		jv::Array<glm::ivec2> subTextureResolutions;
 		TaskSystem<RenderTask>* renderTasks;
@@ -231,6 +235,30 @@ namespace game
 		}
 #endif
 
+		// TEMP NO RENDER GRAPH
+		{
+			jv::ge::RenderPassCreateInfo renderPassCreateInfo{};
+			renderPassCreateInfo.target = jv::ge::RenderPassCreateInfo::DrawTarget::image;
+			auto renderPass = CreateRenderPass(renderPassCreateInfo);
+
+			const uint32_t frameCount = jv::ge::GetFrameCount();
+			outCardGame->frameBufferImages = jv::CreateArray<jv::ge::Resource>(mem.arena, frameCount);
+			outCardGame->frameBuffers = jv::CreateArray<jv::ge::Resource>(mem.arena, frameCount);
+
+			for (uint32_t i = 0; i < frameCount; ++i)
+			{
+				jv::ge::ImageCreateInfo imageCreateInfo{};
+				imageCreateInfo.resolution = SIMULATED_RESOLUTION;
+				imageCreateInfo.scene = outCardGame->scene;
+				outCardGame->frameBufferImages[i] = AddImage(imageCreateInfo);
+
+				jv::ge::FrameBufferCreateInfo frameBufferCreateInfo{};
+				frameBufferCreateInfo.renderPass = renderPass;
+				frameBufferCreateInfo.images = &outCardGame->frameBufferImages[i];
+				outCardGame->frameBuffers[i] = CreateFrameBuffer(frameBufferCreateInfo);
+			}
+		}
+
 		int texWidth, texHeight, texChannels2;
 		{
 			stbi_uc* pixels = stbi_load(ATLAS_PATH, &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
@@ -262,6 +290,7 @@ namespace game
 		{
 			InstancedRenderInterpreterCreateInfo createInfo{};
 			createInfo.resolution = jv::ge::GetResolution();
+			createInfo.drawsDirectlyToSwapChain = true;
 
 			InstancedRenderInterpreterEnableInfo enableInfo{};
 			enableInfo.scene = outCardGame->scene;
@@ -270,6 +299,7 @@ namespace game
 			DynamicRenderInterpreterCreateInfo dynamicCreateInfo{};
 			dynamicCreateInfo.resolution = jv::ge::GetResolution();
 			dynamicCreateInfo.frameArena = &mem.frameArena;
+			dynamicCreateInfo.drawsDirectlyToSwapChain = true;
 
 			DynamicRenderInterpreterEnableInfo dynamicEnableInfo{};
 			dynamicEnableInfo.arena = &outCardGame->arena;
@@ -351,6 +381,7 @@ namespace game
 			outCardGame->textureStreamer.DefineTexturePath(dynText);
 
 		// Render graph.
+		/*
 		{
 			auto mem = outCardGame->engine.GetMemory();
 			const auto resources = jv::CreateArray<jv::rg::ResourceMaskDescription>(mem.frameArena, 2);
@@ -380,6 +411,7 @@ namespace game
 			renderGraphCreateInfo.nodeCount = nodes.length;
 			const auto graph = jv::rg::RenderGraph::Create(mem.arena, mem.tempArena, renderGraphCreateInfo);
 		}
+		*/
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)
