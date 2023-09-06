@@ -1028,6 +1028,9 @@ namespace jv::ge
 				return false;
 
 		const auto draws = ToArray(ge.frameArena, ge.draws, false);
+		const auto waitSemaphores = CreateArray<VkSemaphore>(ge.tempArena, info.waitSemaphoreCount);
+		for (uint32_t i = 0; i < info.waitSemaphoreCount; ++i)
+			waitSemaphores[i] = static_cast<Semaphore*>(info.waitSemaphores[i])->semaphore;
 
 		if(info.frameBuffer)
 		{
@@ -1076,10 +1079,6 @@ namespace jv::ge
 			for (auto& waitStage : waitStages)
 				waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-			const auto waitSemaphores = CreateArray<VkSemaphore>(ge.tempArena, info.waitSemaphoreCount);
-			for (uint32_t i = 0; i < info.waitSemaphoreCount; ++i)
-				waitSemaphores[i] = static_cast<Semaphore*>(info.waitSemaphores[i])->semaphore;
-
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 			submitInfo.commandBufferCount = 1;
@@ -1098,7 +1097,8 @@ namespace jv::ge
 			const auto cmd = ge.swapChain.BeginFrame(ge.app, true);
 			for (auto& draw : draws)
 				DrawInstances(draw, cmd);
-			ge.swapChain.EndFrame(ge.tempArena, ge.app);
+			
+			ge.swapChain.EndFrame(ge.tempArena, ge.app, waitSemaphores);
 			ge.waitedForImage = false;
 		}
 

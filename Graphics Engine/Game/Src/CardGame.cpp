@@ -56,6 +56,7 @@ namespace game
 
 		jv::Array<jv::ge::Resource> frameBufferImages;
 		jv::Array<jv::ge::Resource> frameBuffers;
+		jv::Array<jv::ge::Resource> frameBufferSemaphores;
 
 		jv::Array<jv::ge::AtlasTexture> atlasTextures;
 		jv::Array<glm::ivec2> subTextureResolutions;
@@ -183,10 +184,13 @@ namespace game
 			textureStreamer
 		};
 
+		const bool waitForImage = jv::ge::WaitForImage();
+		if (!waitForImage)
+			return false;
+
 		prevTime = currentTime;
 		auto loadLevelIndex = levelIndex;
 		const auto level = levels[static_cast<uint32_t>(levelIndex)];
-
 		auto result = level->Update(info, loadLevelIndex);
 		if (!result)
 			return result;
@@ -198,7 +202,24 @@ namespace game
 			levelLoading = true;
 		}
 
-		result = engine.Update();
+		result = engine.Update([](void* userPtr)
+		{
+			const auto cardGame = static_cast<CardGame*>(userPtr);
+			const uint32_t frameIndex = jv::ge::GetFrameIndex();
+
+			jv::ge::RenderFrameInfo renderFrameInfo{};
+			renderFrameInfo.frameBuffer = cardGame->frameBuffers[frameIndex];
+			renderFrameInfo.signalSemaphore = cardGame->frameBufferSemaphores[frameIndex];
+			if (!RenderFrame(renderFrameInfo))
+				return false;
+
+			jv::ge::RenderFrameInfo finalRenderFrameInfo{};
+			finalRenderFrameInfo.waitSemaphores = &cardGame->frameBufferSemaphores[frameIndex];
+			finalRenderFrameInfo.waitSemaphoreCount = 1;
+			if (!RenderFrame(finalRenderFrameInfo))
+				return false;
+			return true;
+		}, this);
 		return result;
 	}
 
@@ -244,6 +265,7 @@ namespace game
 			const uint32_t frameCount = jv::ge::GetFrameCount();
 			outCardGame->frameBufferImages = jv::CreateArray<jv::ge::Resource>(mem.arena, frameCount);
 			outCardGame->frameBuffers = jv::CreateArray<jv::ge::Resource>(mem.arena, frameCount);
+			outCardGame->frameBufferSemaphores = jv::CreateArray<jv::ge::Resource>(mem.arena, frameCount);
 
 			for (uint32_t i = 0; i < frameCount; ++i)
 			{
@@ -256,6 +278,7 @@ namespace game
 				frameBufferCreateInfo.renderPass = renderPass;
 				frameBufferCreateInfo.images = &outCardGame->frameBufferImages[i];
 				outCardGame->frameBuffers[i] = CreateFrameBuffer(frameBufferCreateInfo);
+				outCardGame->frameBufferSemaphores[i] = jv::ge::CreateSemaphore();
 			}
 		}
 
@@ -290,7 +313,7 @@ namespace game
 		{
 			InstancedRenderInterpreterCreateInfo createInfo{};
 			createInfo.resolution = jv::ge::GetResolution();
-			createInfo.drawsDirectlyToSwapChain = true;
+			createInfo.drawsDirectlyToSwapChain = false;
 
 			InstancedRenderInterpreterEnableInfo enableInfo{};
 			enableInfo.scene = outCardGame->scene;
@@ -299,7 +322,7 @@ namespace game
 			DynamicRenderInterpreterCreateInfo dynamicCreateInfo{};
 			dynamicCreateInfo.resolution = jv::ge::GetResolution();
 			dynamicCreateInfo.frameArena = &mem.frameArena;
-			dynamicCreateInfo.drawsDirectlyToSwapChain = true;
+			dynamicCreateInfo.drawsDirectlyToSwapChain = false;
 
 			DynamicRenderInterpreterEnableInfo dynamicEnableInfo{};
 			dynamicEnableInfo.arena = &outCardGame->arena;

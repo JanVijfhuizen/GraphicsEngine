@@ -39,10 +39,10 @@ namespace game
 	}
 
 	RenderTask PixelPerfectRenderTask::ToNormalTask(const PixelPerfectRenderTask& task, glm::ivec2 resolution,
-		glm::ivec2 simulatedResolution)
+		glm::ivec2 simulatedResolution, const bool upscale)
 	{
-		const auto upscaleMul = GetUpscaleMultiplier(resolution, simulatedResolution);
-		const auto pixelSize = GetPixelSize(resolution, upscaleMul);
+		const auto upscaleMul = upscale ? GetUpscaleMultiplier(resolution, simulatedResolution) : 1;
+		const auto pixelSize = GetPixelSize(upscale ? simulatedResolution : resolution, upscaleMul);
 		const auto lBot = pixelSize * glm::vec2(simulatedResolution) * glm::vec2(-1, 1);
 
 		RenderTask renderTask{};

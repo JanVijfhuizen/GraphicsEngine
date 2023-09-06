@@ -62,7 +62,7 @@ namespace game
 		[[nodiscard]] TaskSystem<T>& AddTaskSystem();
 		template <typename Task, typename Interpreter, typename CreateInfo>
 		[[nodiscard]] Interpreter& AddTaskInterpreter(TaskSystem<Task>& taskSystem, const CreateInfo& createInfo);
-		[[nodiscard]] bool Update(bool(*customRenderFunc)() = nullptr);
+		[[nodiscard]] bool Update(bool(*customRenderFunc)(void* userPtr) = nullptr, void* userPtr = nullptr);
 
 		[[nodiscard]] static Engine Create(const EngineCreateInfo& info);
 		static void Destroy(const Engine& engine);

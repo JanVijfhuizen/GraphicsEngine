@@ -26,7 +26,7 @@ namespace game
 		return _taskSystem;
 	}
 
-	bool Engine::Update(bool(*customRenderFunc)())
+	bool Engine::Update(bool(*customRenderFunc)(void* userPtr), void* userPtr)
 	{
 		if(!customRenderFunc)
 		{
@@ -42,7 +42,7 @@ namespace game
 
 		// Update renderer.
 		if(customRenderFunc)
-			customRenderFunc();
+			customRenderFunc(userPtr);
 		else
 		{
 			constexpr jv::ge::RenderFrameInfo renderFrameInfo{};

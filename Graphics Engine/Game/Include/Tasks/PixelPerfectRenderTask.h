@@ -18,6 +18,6 @@ namespace game
 		[[nodiscard]] static uint32_t GetUpscaleMultiplier(glm::ivec2 resolution, glm::ivec2 simulatedResolution);
 		[[nodiscard]] static glm::vec2 GetPixelSize(glm::vec2 resolution, uint32_t upscaleMul);
 		[[nodiscard]] static glm::ivec2 ToPixelPosition(glm::ivec2 resolution, glm::ivec2 simulatedResolution, glm::vec2 position);
-		[[nodiscard]] static RenderTask ToNormalTask(const PixelPerfectRenderTask& task, glm::ivec2 resolution, glm::ivec2 simulatedResolution);
+		[[nodiscard]] static RenderTask ToNormalTask(const PixelPerfectRenderTask& task, glm::ivec2 resolution, glm::ivec2 simulatedResolution, bool upscale = false);
 	};
 }
