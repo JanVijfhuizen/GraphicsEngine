@@ -32,19 +32,17 @@ void main()
     float m =  pushConstants.resolution.x / pushConstants.resolution.y;
     vec2 res = vec2(pushConstants.simResolution.x * m, pushConstants.simResolution.y);
 
-    vec2 uv = gl_FragCoord.xy/pushConstants.resolution;
+    vec2 uv = fragPos;
     uv *= res;
     uv = floor(uv);
     uv /= res;
-    
-    vec4 c = vec4(vec3(0.0), 1.0);
     
     float nx = noise(uv.xy * 100.0);
     float ny = noise(uv.yx * 100.0);
     
     float v = sin(nx * pushConstants.time + ny * pushConstants.time);
-    c += v * .35f;
+    v *= .05f;
 
     vec4 color = texture(img, fragPos);
-    outColor = color.a > .01f ? color : c;
+    outColor = color.a < .01f ? vec4(vec3(v), 1.0) : color;
 }

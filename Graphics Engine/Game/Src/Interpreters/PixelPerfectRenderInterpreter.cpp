@@ -12,13 +12,6 @@ namespace game
 	void PixelPerfectRenderInterpreter::OnUpdate(const EngineMemory& memory,
 		const jv::LinkedList<jv::Vector<PixelPerfectRenderTask>>& tasks)
 	{
-		PixelPerfectRenderTask bgRenderTask{};
-		bgRenderTask.color = glm::vec4(0, 0, 0, 1);
-		bgRenderTask.scale = _createInfo.simulatedResolution;
-		bgRenderTask.subTexture = _createInfo.background;
-		const auto normalBgTask = PixelPerfectRenderTask::ToNormalTask(bgRenderTask, _createInfo.resolution, _createInfo.simulatedResolution);
-		_createInfo.renderTasks->Push(normalBgTask);
-		
 		for (const auto& batch : tasks)
 			for (const auto& task : batch)
 			{
