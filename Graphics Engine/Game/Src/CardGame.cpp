@@ -54,6 +54,13 @@ namespace game
 			jv::ge::Resource sampler;
 		};
 
+		struct SwapChainPushConstant
+		{
+			glm::ivec2 resolution;
+			glm::ivec2 simResolution;
+			float time;
+		};
+
 		struct SwapChain final
 		{
 			jv::Array<FrameBuffer> frameBuffers;
@@ -73,6 +80,7 @@ namespace game
 		InputState inputState{};
 
 		SwapChain swapChain;
+		float timeSinceStarted;
 
 		jv::Array<jv::ge::AtlasTexture> atlasTextures;
 		jv::Array<glm::ivec2> subTextureResolutions;
@@ -175,6 +183,9 @@ namespace game
 
 		const auto currentTime = timer.now();
 		const auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - prevTime).count();
+
+		const float dt = static_cast<float>(deltaTime) / 1e3f;
+		timeSinceStarted += dt;
 		
 		const LevelUpdateInfo info
 		{
@@ -196,7 +207,7 @@ namespace game
 			inputState,
 			*textTasks,
 			*pixelPerfectRenderTasks,
-			static_cast<float>(deltaTime) / 1e3f,
+			dt,
 			textureStreamer
 		};
 
@@ -242,12 +253,20 @@ namespace game
 			writeInfo.bindings = &writeBindingInfo;
 			writeInfo.bindingCount = 1;
 			Write(writeInfo);
-			
+
+			SwapChainPushConstant pushConstant{};
+			pushConstant.time = cardGame->timeSinceStarted;
+			pushConstant.resolution = RESOLUTION;
+			pushConstant.simResolution = {80, 60};
+
 			jv::ge::DrawInfo drawInfo{};
 			drawInfo.pipeline = swapChain.pipeline;
 			drawInfo.mesh = cardGame->dynamicRenderInterpreter->GetFallbackMesh();
 			drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(swapChain.pool, frameIndex);
 			drawInfo.descriptorSetCount = 1;
+			drawInfo.pushConstantSize = sizeof(SwapChainPushConstant);
+			drawInfo.pushConstant = &pushConstant;
+			drawInfo.pushConstantStage = jv::ge::ShaderStage::fragment;
 			Draw(drawInfo);
 
 			jv::ge::RenderFrameInfo finalRenderFrameInfo{};
@@ -355,6 +374,8 @@ namespace game
 			pipelineCreateInfo.layoutCount = 1;
 			pipelineCreateInfo.layouts = &swapChain.layout;
 			pipelineCreateInfo.vertexType = jv::ge::VertexType::v3D;
+			pipelineCreateInfo.pushConstantSize = sizeof(SwapChainPushConstant);
+			pipelineCreateInfo.pushConstantStage = jv::ge::ShaderStage::fragment;
 			swapChain.pipeline = CreatePipeline(pipelineCreateInfo);
 		}
 

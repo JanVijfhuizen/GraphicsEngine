@@ -929,6 +929,18 @@ namespace jv::ge
 		pipelineCreateInfo.layouts.length = info.layoutCount;
 		pipelineCreateInfo.pushConstantSize = info.pushConstantSize;
 
+		switch (info.pushConstantStage)
+		{
+			case ShaderStage::vertex:
+				pipelineCreateInfo.pushConstantShaderStageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case ShaderStage::fragment:
+				pipelineCreateInfo.pushConstantShaderStageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			default:
+				std::cerr << "Push constant shader stage not supported." << std::endl;
+		}
+
 		switch (info.vertexType)
 		{
 			case VertexType::v2D:
@@ -999,9 +1011,22 @@ namespace jv::ge
 
 		const auto descriptorSets = reinterpret_cast<const VkDescriptorSet*>(info.descriptorSets);
 
+		VkShaderStageFlags shaderStage;
+		switch (info.pushConstantStage)
+		{
+		case ShaderStage::vertex:
+			shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
+			break;
+		case ShaderStage::fragment:
+			shaderStage = VK_SHADER_STAGE_FRAGMENT_BIT;
+			break;
+		default:
+			std::cerr << "Push constant shader stage not supported." << std::endl;
+		}
+
 		// Push constant.
 		if(info.pushConstantSize > 0)
-			vkCmdPushConstants(cmd, pipeline->pipeline.layout, VK_SHADER_STAGE_VERTEX_BIT, 
+			vkCmdPushConstants(cmd, pipeline->pipeline.layout, shaderStage,
 				0, info.pushConstantSize, info.pushConstant);
 
 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline.layout,

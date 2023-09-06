@@ -145,6 +145,7 @@ namespace jv::ge
 		glm::ivec2 resolution;
 		VertexType vertexType = VertexType::v2D;
 		uint32_t pushConstantSize = 0;
+		ShaderStage pushConstantStage = ShaderStage::vertex;
 	};
 
 	struct SamplerCreateInfo final
@@ -214,6 +215,7 @@ namespace jv::ge
 		uint32_t instanceCount = 1;
 		void* pushConstant;
 		uint32_t pushConstantSize = 0;
+		ShaderStage pushConstantStage = ShaderStage::vertex;
 	};
 
 	struct RenderFrameInfo final

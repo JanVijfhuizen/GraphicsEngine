@@ -128,7 +128,7 @@ namespace jv::vk
 		VkPushConstantRange pushConstant{};
 		pushConstant.offset = 0;
 		pushConstant.size = static_cast<uint32_t>(info.pushConstantSize);
-		pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		pushConstant.stageFlags = info.pushConstantShaderStageFlags;
 
 		VkPipelineDepthStencilStateCreateInfo depthStencil{};
 		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
