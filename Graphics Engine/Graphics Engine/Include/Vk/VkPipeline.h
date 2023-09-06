@@ -31,6 +31,7 @@ namespace jv::vk
 		bool shaderSamplingEnabled = false;
 		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
 		size_t pushConstantSize = 0;
+		VkShaderStageFlags pushConstantShaderStageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 		VkCompareOp depthBufferCompareOp = VK_COMPARE_OP_LESS;
 		bool depthBufferEnabled = false;
 		VkPipeline basePipeline = VK_NULL_HANDLE;

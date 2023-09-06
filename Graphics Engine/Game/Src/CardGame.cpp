@@ -57,6 +57,7 @@ namespace game
 		struct SwapChainPushConstant
 		{
 			glm::ivec2 resolution;
+			glm::ivec2 simResolution;
 			float time;
 		};
 
@@ -255,7 +256,8 @@ namespace game
 
 			SwapChainPushConstant pushConstant{};
 			pushConstant.time = cardGame->timeSinceStarted;
-			pushConstant.resolution = SIMULATED_RESOLUTION;
+			pushConstant.resolution = RESOLUTION;
+			pushConstant.simResolution = {80, 60};
 
 			jv::ge::DrawInfo drawInfo{};
 			drawInfo.pipeline = swapChain.pipeline;
@@ -264,6 +266,7 @@ namespace game
 			drawInfo.descriptorSetCount = 1;
 			drawInfo.pushConstantSize = sizeof(SwapChainPushConstant);
 			drawInfo.pushConstant = &pushConstant;
+			drawInfo.pushConstantStage = jv::ge::ShaderStage::fragment;
 			Draw(drawInfo);
 
 			jv::ge::RenderFrameInfo finalRenderFrameInfo{};
@@ -372,6 +375,7 @@ namespace game
 			pipelineCreateInfo.layouts = &swapChain.layout;
 			pipelineCreateInfo.vertexType = jv::ge::VertexType::v3D;
 			pipelineCreateInfo.pushConstantSize = sizeof(SwapChainPushConstant);
+			pipelineCreateInfo.pushConstantStage = jv::ge::ShaderStage::fragment;
 			swapChain.pipeline = CreatePipeline(pipelineCreateInfo);
 		}
 
