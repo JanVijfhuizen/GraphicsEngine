@@ -42,7 +42,7 @@ namespace game
 		glm::ivec2 simulatedResolution)
 	{
 		const auto upscaleMul = GetUpscaleMultiplier(resolution, simulatedResolution);
-		const auto pixelSize = GetPixelSize(resolution, upscaleMul);
+		const auto pixelSize = GetPixelSize(simulatedResolution, upscaleMul);
 		const auto lBot = pixelSize * glm::vec2(simulatedResolution) * glm::vec2(-1, 1);
 
 		RenderTask renderTask{};

@@ -336,23 +336,23 @@ namespace jv::ge
 
 		switch (info.format)
 		{
-			case ImageCreateInfo::Format::color:
+			case ImageFormat::color:
 				vkImageCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				resolution.z = 3;
 				break;
-			case ImageCreateInfo::Format::grayScale:
+			case ImageFormat::grayScale:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 				break;
-			case ImageCreateInfo::Format::depth:
+			case ImageFormat::depth:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
 				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 				break;
-			case ImageCreateInfo::Format::stencil:
+			case ImageFormat::stencil:
 				vkImageCreateInfo.format = VK_FORMAT_R8_UNORM;
 				vkImageCreateInfo.aspectFlags = VK_IMAGE_ASPECT_STENCIL_BIT;
 				vkImageCreateInfo.usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -775,15 +775,16 @@ namespace jv::ge
 		attachmentInfo.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachmentInfo.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachmentInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachmentInfo.format = ge.swapChain.GetFormat();
 
 		switch (info.target)
 		{
 			case RenderPassCreateInfo::DrawTarget::image:
 				attachmentInfo.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				attachmentInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
 				break;
 			case RenderPassCreateInfo::DrawTarget::swapChain:
 				attachmentInfo.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+				attachmentInfo.format = ge.swapChain.GetFormat();
 				break;
 			default:
 				std::cerr << "Draw target not supported." << std::endl;
@@ -923,7 +924,7 @@ namespace jv::ge
 		pipelineCreateInfo.modules.ptr = modules;
 		pipelineCreateInfo.modules.length = moduleCount;
 		pipelineCreateInfo.resolution = info.resolution;
-		pipelineCreateInfo.renderPass = static_cast<RenderPass*>(info.renderPass)->renderPass;
+		pipelineCreateInfo.renderPass = info.renderPass ? static_cast<RenderPass*>(info.renderPass)->renderPass : ge.swapChain.renderPass;
 		pipelineCreateInfo.layouts.ptr = pipeline.layouts.ptr;
 		pipelineCreateInfo.layouts.length = info.layoutCount;
 		pipelineCreateInfo.pushConstantSize = info.pushConstantSize;
@@ -1027,6 +1028,9 @@ namespace jv::ge
 				return false;
 
 		const auto draws = ToArray(ge.frameArena, ge.draws, false);
+		const auto waitSemaphores = CreateArray<VkSemaphore>(ge.tempArena, info.waitSemaphoreCount);
+		for (uint32_t i = 0; i < info.waitSemaphoreCount; ++i)
+			waitSemaphores[i] = static_cast<Semaphore*>(info.waitSemaphores[i])->semaphore;
 
 		if(info.frameBuffer)
 		{
@@ -1053,6 +1057,10 @@ namespace jv::ge
 			const auto resolution = image0->info.resolution;
 			const auto extent = VkExtent2D{static_cast<uint32_t>(resolution.x), static_cast<uint32_t>(resolution.y)};
 
+			const auto oldLayout = image0->image.layout;
+			if(oldLayout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+				image0->image.TransitionLayout(cmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, image0->image.aspectFlags);
+
 			VkRenderPassBeginInfo renderPassBeginInfo{};
 			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
@@ -1068,16 +1076,16 @@ namespace jv::ge
 				DrawInstances(draw, cmd);
 
 			vkCmdEndRenderPass(cmd);
+
+			if (image0->image.layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+				image0->image.TransitionLayout(cmd, oldLayout, image0->image.aspectFlags);
+
 			result = vkEndCommandBuffer(cmd);
 			assert(!result);
 
 			const auto waitStages = CreateArray<VkPipelineStageFlags>(ge.tempArena, info.waitSemaphoreCount);
 			for (auto& waitStage : waitStages)
 				waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-			const auto waitSemaphores = CreateArray<VkSemaphore>(ge.tempArena, info.waitSemaphoreCount);
-			for (uint32_t i = 0; i < info.waitSemaphoreCount; ++i)
-				waitSemaphores[i] = static_cast<Semaphore*>(info.waitSemaphores[i])->semaphore;
 
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1097,7 +1105,8 @@ namespace jv::ge
 			const auto cmd = ge.swapChain.BeginFrame(ge.app, true);
 			for (auto& draw : draws)
 				DrawInstances(draw, cmd);
-			ge.swapChain.EndFrame(ge.tempArena, ge.app);
+			
+			ge.swapChain.EndFrame(ge.tempArena, ge.app, waitSemaphores);
 			ge.waitedForImage = false;
 		}
 

@@ -56,6 +56,11 @@ namespace game
 		_frameCapacity = info.capacity;
 	}
 
+	jv::ge::Resource DynamicRenderInterpreter::GetFallbackMesh() const
+	{
+		return _fallbackMesh;
+	}
+
 	void DynamicRenderInterpreter::OnStart(const DynamicRenderInterpreterCreateInfo& createInfo,
 		const EngineMemory& memory)
 	{

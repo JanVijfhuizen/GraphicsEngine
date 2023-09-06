@@ -28,6 +28,8 @@
 #include "States/PlayerState.h"
 #include <time.h>
 
+#include "RenderGraph/RenderGraph.h"
+
 namespace game 
 {
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
@@ -44,6 +46,24 @@ namespace game
 
 	struct CardGame final
 	{
+		struct FrameBuffer final
+		{
+			jv::ge::Resource image;
+			jv::ge::Resource frameBuffer;
+			jv::ge::Resource semaphore;
+			jv::ge::Resource sampler;
+		};
+
+		struct SwapChain final
+		{
+			jv::Array<FrameBuffer> frameBuffers;
+			jv::ge::Resource pool;
+			jv::ge::Resource renderPass;
+			jv::ge::Resource shader;
+			jv::ge::Resource layout;
+			jv::ge::Resource pipeline;
+		};
+
 		Engine engine;
 		jv::Arena arena;
 		jv::Arena levelArena;
@@ -51,6 +71,9 @@ namespace game
 		jv::ge::Resource levelScene;
 		jv::ge::Resource atlas;
 		InputState inputState{};
+
+		SwapChain swapChain;
+
 		jv::Array<jv::ge::AtlasTexture> atlasTextures;
 		jv::Array<glm::ivec2> subTextureResolutions;
 		TaskSystem<RenderTask>* renderTasks;
@@ -177,10 +200,13 @@ namespace game
 			textureStreamer
 		};
 
+		const bool waitForImage = jv::ge::WaitForImage();
+		if (!waitForImage)
+			return false;
+
 		prevTime = currentTime;
 		auto loadLevelIndex = levelIndex;
 		const auto level = levels[static_cast<uint32_t>(levelIndex)];
-
 		auto result = level->Update(info, loadLevelIndex);
 		if (!result)
 			return result;
@@ -192,7 +218,45 @@ namespace game
 			levelLoading = true;
 		}
 
-		result = engine.Update();
+		result = engine.Update([](void* userPtr)
+		{
+			const auto cardGame = static_cast<CardGame*>(userPtr);
+			const auto& swapChain = cardGame->swapChain;
+			const uint32_t frameIndex = jv::ge::GetFrameIndex();
+			auto& frameBuffer = swapChain.frameBuffers[frameIndex];
+
+			jv::ge::RenderFrameInfo renderFrameInfo{};
+			renderFrameInfo.frameBuffer = frameBuffer.frameBuffer;
+			renderFrameInfo.signalSemaphore = frameBuffer.semaphore;
+			if (!RenderFrame(renderFrameInfo))
+				return false;
+
+			jv::ge::WriteInfo::Binding writeBindingInfo{};
+			writeBindingInfo.type = jv::ge::BindingType::sampler;
+			writeBindingInfo.image.image = frameBuffer.image;
+			writeBindingInfo.image.sampler = frameBuffer.sampler;
+			writeBindingInfo.index = 0;
+
+			jv::ge::WriteInfo writeInfo{};
+			writeInfo.descriptorSet = jv::ge::GetDescriptorSet(swapChain.pool, frameIndex);
+			writeInfo.bindings = &writeBindingInfo;
+			writeInfo.bindingCount = 1;
+			Write(writeInfo);
+			
+			jv::ge::DrawInfo drawInfo{};
+			drawInfo.pipeline = swapChain.pipeline;
+			drawInfo.mesh = cardGame->dynamicRenderInterpreter->GetFallbackMesh();
+			drawInfo.descriptorSets[0] = jv::ge::GetDescriptorSet(swapChain.pool, frameIndex);
+			drawInfo.descriptorSetCount = 1;
+			Draw(drawInfo);
+
+			jv::ge::RenderFrameInfo finalRenderFrameInfo{};
+			finalRenderFrameInfo.waitSemaphores = &frameBuffer.semaphore;
+			finalRenderFrameInfo.waitSemaphoreCount = 1;
+			if (!RenderFrame(finalRenderFrameInfo))
+				return false;
+			return true;
+		}, this);
 		return result;
 	}
 
@@ -229,6 +293,71 @@ namespace game
 		}
 #endif
 
+		// TEMP NO RENDER GRAPH
+		{
+			auto& swapChain = outCardGame->swapChain;
+
+			jv::ge::RenderPassCreateInfo renderPassCreateInfo{};
+			renderPassCreateInfo.target = jv::ge::RenderPassCreateInfo::DrawTarget::image;
+			swapChain.renderPass = CreateRenderPass(renderPassCreateInfo);
+
+			const uint32_t frameCount = jv::ge::GetFrameCount();
+			swapChain.frameBuffers = jv::CreateArray<FrameBuffer>(mem.arena, frameCount);
+
+			for (uint32_t i = 0; i < frameCount; ++i)
+			{
+				auto& frameBuffer = swapChain.frameBuffers[i];
+
+				jv::ge::ImageCreateInfo imageCreateInfo{};
+				imageCreateInfo.resolution = SIMULATED_RESOLUTION;
+				imageCreateInfo.scene = outCardGame->scene;
+				frameBuffer.image = AddImage(imageCreateInfo);
+
+				jv::ge::FrameBufferCreateInfo frameBufferCreateInfo{};
+				frameBufferCreateInfo.renderPass = swapChain.renderPass;
+				frameBufferCreateInfo.images = &frameBuffer.image;
+				frameBuffer.frameBuffer = CreateFrameBuffer(frameBufferCreateInfo);
+				frameBuffer.semaphore = jv::ge::CreateSemaphore();
+
+				jv::ge::SamplerCreateInfo samplerCreateInfo{};
+				samplerCreateInfo.scene = outCardGame->scene;
+				frameBuffer.sampler = AddSampler(samplerCreateInfo);
+			}
+			
+			const auto vertCode = jv::file::Load(mem.frameArena, "Shaders/vert-sc.spv");
+			const auto fragCode = jv::file::Load(mem.frameArena, "Shaders/frag-sc.spv");
+
+			jv::ge::ShaderCreateInfo shaderCreateInfo{};
+			shaderCreateInfo.vertexCode = vertCode.ptr;
+			shaderCreateInfo.vertexCodeLength = vertCode.length;
+			shaderCreateInfo.fragmentCode = fragCode.ptr;
+			shaderCreateInfo.fragmentCodeLength = fragCode.length;
+			swapChain.shader = CreateShader(shaderCreateInfo);
+
+			jv::ge::LayoutCreateInfo::Binding bindingCreateInfo{};
+			bindingCreateInfo.stage = jv::ge::ShaderStage::fragment;
+			bindingCreateInfo.type = jv::ge::BindingType::sampler;
+
+			jv::ge::LayoutCreateInfo layoutCreateInfo{};
+			layoutCreateInfo.bindings = &bindingCreateInfo;
+			layoutCreateInfo.bindingsCount = 1;
+			swapChain.layout = CreateLayout(layoutCreateInfo);
+
+			jv::ge::DescriptorPoolCreateInfo poolCreateInfo{};
+			poolCreateInfo.layout = swapChain.layout;
+			poolCreateInfo.capacity = frameCount;
+			poolCreateInfo.scene = outCardGame->scene;
+			swapChain.pool = AddDescriptorPool(poolCreateInfo);
+
+			jv::ge::PipelineCreateInfo pipelineCreateInfo{};
+			pipelineCreateInfo.resolution = RESOLUTION;
+			pipelineCreateInfo.shader = swapChain.shader;
+			pipelineCreateInfo.layoutCount = 1;
+			pipelineCreateInfo.layouts = &swapChain.layout;
+			pipelineCreateInfo.vertexType = jv::ge::VertexType::v3D;
+			swapChain.pipeline = CreatePipeline(pipelineCreateInfo);
+		}
+
 		int texWidth, texHeight, texChannels2;
 		{
 			stbi_uc* pixels = stbi_load(ATLAS_PATH, &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
@@ -259,15 +388,17 @@ namespace game
 
 		{
 			InstancedRenderInterpreterCreateInfo createInfo{};
-			createInfo.resolution = jv::ge::GetResolution();
+			createInfo.resolution = SIMULATED_RESOLUTION;
+			createInfo.drawsDirectlyToSwapChain = false;
 
 			InstancedRenderInterpreterEnableInfo enableInfo{};
 			enableInfo.scene = outCardGame->scene;
 			enableInfo.capacity = 1024;
 
 			DynamicRenderInterpreterCreateInfo dynamicCreateInfo{};
-			dynamicCreateInfo.resolution = jv::ge::GetResolution();
+			dynamicCreateInfo.resolution = SIMULATED_RESOLUTION;
 			dynamicCreateInfo.frameArena = &mem.frameArena;
+			dynamicCreateInfo.drawsDirectlyToSwapChain = false;
 
 			DynamicRenderInterpreterEnableInfo dynamicEnableInfo{};
 			dynamicEnableInfo.arena = &outCardGame->arena;
@@ -298,7 +429,7 @@ namespace game
 			pixelPerfectRenderInterpreterCreateInfo.dynRenderTasks = outCardGame->dynamicRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.dynPriorityRenderTasks = outCardGame->dynamicRenderTasks;
 
-			pixelPerfectRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
+			pixelPerfectRenderInterpreterCreateInfo.resolution = SIMULATED_RESOLUTION;
 			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = SIMULATED_RESOLUTION;
 			pixelPerfectRenderInterpreterCreateInfo.background = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 
@@ -340,13 +471,45 @@ namespace game
 
 		jv::ge::ImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.resolution = CARD_ART_SHAPE * glm::ivec2(CARD_ART_LENGTH, 1);
-		imageCreateInfo.usage = jv::ge::ImageCreateInfo::Usage::read;
 		imageCreateInfo.scene = outCardGame->scene;
 
 		outCardGame->textureStreamer = TextureStreamer::Create(outCardGame->arena, 32, 256, imageCreateInfo);
 		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().arena, outCardGame->engine.GetMemory().frameArena);
 		for (const auto& dynText : dynTexts)
 			outCardGame->textureStreamer.DefineTexturePath(dynText);
+
+		// Render graph.
+		/*
+		{
+			auto mem = outCardGame->engine.GetMemory();
+			const auto resources = jv::CreateArray<jv::rg::ResourceMaskDescription>(mem.frameArena, 2);
+			const auto nodes = jv::CreateArray<jv::rg::RenderGraphNodeInfo>(mem.frameArena, 3);
+
+			// Scene.
+			uint32_t outSceneImage = 0;
+			nodes[0].inResourceCount = 0;
+			nodes[0].outResourceCount = 1;
+			nodes[0].outResources = &outSceneImage;
+
+			// Background.
+			uint32_t outBgImage = 1;
+			nodes[1].inResourceCount = 0;
+			nodes[1].outResourceCount = 1;
+			nodes[1].outResources = &outBgImage;
+
+			// Final node.
+			uint32_t finalInResources[2]{outSceneImage, outBgImage};
+			nodes[2].inResourceCount = 2;
+			nodes[2].inResources = finalInResources;
+
+			jv::rg::RenderGraphCreateInfo renderGraphCreateInfo{};
+			renderGraphCreateInfo.resources = resources.ptr;
+			renderGraphCreateInfo.resourceCount = resources.length;
+			renderGraphCreateInfo.nodes = nodes.ptr;
+			renderGraphCreateInfo.nodeCount = nodes.length;
+			const auto graph = jv::rg::RenderGraph::Create(mem.arena, mem.tempArena, renderGraphCreateInfo);
+		}
+		*/
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)

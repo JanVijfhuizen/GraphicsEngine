@@ -27,6 +27,14 @@ namespace jv::ge
 		fragment
 	};
 
+	enum class ImageFormat
+	{
+		color,
+		grayScale,
+		depth,
+		stencil
+	};
+
 	struct Vertex2D final
 	{
 		glm::vec2 position{};
@@ -57,19 +65,7 @@ namespace jv::ge
 	struct ImageCreateInfo final
 	{
 		Resource scene;
-		enum class Format
-		{
-			color,
-			grayScale,
-			depth,
-			stencil
-		} format = Format::color;
-		enum class Usage
-		{
-			read,
-			write,
-			readWrite
-		} usage = Usage::readWrite;
+		ImageFormat format = ImageFormat::color;
 		glm::ivec2 resolution;
 	};
 
