@@ -388,7 +388,7 @@ namespace game
 
 		{
 			InstancedRenderInterpreterCreateInfo createInfo{};
-			createInfo.resolution = jv::ge::GetResolution();
+			createInfo.resolution = SIMULATED_RESOLUTION;
 			createInfo.drawsDirectlyToSwapChain = false;
 
 			InstancedRenderInterpreterEnableInfo enableInfo{};
@@ -396,7 +396,7 @@ namespace game
 			enableInfo.capacity = 1024;
 
 			DynamicRenderInterpreterCreateInfo dynamicCreateInfo{};
-			dynamicCreateInfo.resolution = jv::ge::GetResolution();
+			dynamicCreateInfo.resolution = SIMULATED_RESOLUTION;
 			dynamicCreateInfo.frameArena = &mem.frameArena;
 			dynamicCreateInfo.drawsDirectlyToSwapChain = false;
 
@@ -429,7 +429,7 @@ namespace game
 			pixelPerfectRenderInterpreterCreateInfo.dynRenderTasks = outCardGame->dynamicRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.dynPriorityRenderTasks = outCardGame->dynamicRenderTasks;
 
-			pixelPerfectRenderInterpreterCreateInfo.resolution = jv::ge::GetResolution();
+			pixelPerfectRenderInterpreterCreateInfo.resolution = SIMULATED_RESOLUTION;
 			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = SIMULATED_RESOLUTION;
 			pixelPerfectRenderInterpreterCreateInfo.background = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 
