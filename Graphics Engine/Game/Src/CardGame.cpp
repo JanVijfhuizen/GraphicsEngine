@@ -28,6 +28,8 @@
 #include "States/PlayerState.h"
 #include <time.h>
 
+#include "RenderGraph/RenderGraph.h"
+
 namespace game 
 {
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
@@ -347,6 +349,37 @@ namespace game
 		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().arena, outCardGame->engine.GetMemory().frameArena);
 		for (const auto& dynText : dynTexts)
 			outCardGame->textureStreamer.DefineTexturePath(dynText);
+
+		// Render graph.
+		{
+			auto mem = outCardGame->engine.GetMemory();
+			const auto resources = jv::CreateArray<jv::rg::ResourceMaskDescription>(mem.frameArena, 2);
+			const auto nodes = jv::CreateArray<jv::rg::RenderGraphNodeInfo>(mem.frameArena, 3);
+
+			// Scene.
+			uint32_t outSceneImage = 0;
+			nodes[0].inResourceCount = 0;
+			nodes[0].outResourceCount = 1;
+			nodes[0].outResources = &outSceneImage;
+
+			// Background.
+			uint32_t outBgImage = 1;
+			nodes[1].inResourceCount = 0;
+			nodes[1].outResourceCount = 1;
+			nodes[1].outResources = &outBgImage;
+
+			// Final node.
+			uint32_t finalInResources[2]{outSceneImage, outBgImage};
+			nodes[2].inResourceCount = 2;
+			nodes[2].inResources = finalInResources;
+
+			jv::rg::RenderGraphCreateInfo renderGraphCreateInfo{};
+			renderGraphCreateInfo.resources = resources.ptr;
+			renderGraphCreateInfo.resourceCount = resources.length;
+			renderGraphCreateInfo.nodes = nodes.ptr;
+			renderGraphCreateInfo.nodeCount = nodes.length;
+			const auto graph = jv::rg::RenderGraph::Create(mem.arena, mem.tempArena, renderGraphCreateInfo);
+		}
 	}
 
 	void CardGame::Destroy(const CardGame& cardGame)

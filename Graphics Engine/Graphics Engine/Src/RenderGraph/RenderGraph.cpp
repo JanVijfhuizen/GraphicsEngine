@@ -524,7 +524,26 @@ namespace jv::rg
 		return graph;
 	}
 
+	void RenderGraph::Debug() const
+	{
+		for (auto& batch : batches)
+		{
+			std::cout << "batch: " << std::endl;
+			for (auto& pass : batch.passes)
+			{
+				std::cout << "node: " << pass.nodeIndex << std::endl;
+				std::cout << "--in--: " << std::endl;
+				for (const auto& resource : pass.inResources)
+					std::cout << resource.pool << " " << resource.instance << std::endl;
+				std::cout << "--out--: " << std::endl;
+				for (const auto& resource : pass.outResources)
+					std::cout << resource.pool << " " << resource.instance << std::endl;
+			}
+		}
+	}
+
 	void RenderGraph::Destroy(Arena& arena, const RenderGraph& renderGraph)
 	{
+		arena.DestroyScope(renderGraph.scope);
 	}
 }

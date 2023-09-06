@@ -52,6 +52,7 @@ namespace jv::rg
 		Array<Batch> batches{};
 
 		[[nodiscard]] static RenderGraph Create(Arena& arena, Arena& tempArena, const RenderGraphCreateInfo& info);
+		void Debug() const;
 		static void Destroy(Arena& arena, const RenderGraph& renderGraph);
 	};
 }
