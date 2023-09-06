@@ -27,12 +27,36 @@ layout(push_constant) uniform PushConstants
     float time;
 } pushConstants;
 
+float applyVignette(vec2 uv)
+{
+    uv *=  1.0 - uv.yx;
+    float vig = uv.x*uv.y * 15.0;
+    vig = pow(vig, 0.25);
+    return vig;
+}
+
+vec2 Dist(vec2 pos, vec2 res)
+{
+	pos = pos * res;
+	pos -= floor(pos);
+	pos -= vec2(.5);
+	pos = abs(pos);
+	pos.xy = vec2(max(pos.x, pos.y));
+	return pos;
+}
+
 void main() 
 {
     float m =  pushConstants.resolution.x / pushConstants.resolution.y;
     vec2 res = vec2(pushConstants.simResolution.x * m, pushConstants.simResolution.y);
 
     vec2 uv = fragPos;
+    
+    vec2 d = Dist(uv, res);
+    d = pow(d, vec2(2.0));
+    float b = length(d);
+    b = step(0.2, b);
+
     uv *= res;
     uv = floor(uv);
     uv /= res;
@@ -41,8 +65,14 @@ void main()
     float ny = noise(uv.yx * 100.0);
     
     float v = sin(nx * pushConstants.time + ny * pushConstants.time);
-    v *= .05f;
+    v *= .02f;
+    v *= applyVignette(fragPos);
+
+    vec2 center = vec2(.5, .6);
+    float dist = 1.0/length(uv - center);
+    v *= dist * .4f;
+    v = max(v, 0.0);
 
     vec4 color = texture(img, fragPos);
-    outColor = color.a < .01f ? vec4(vec3(v), 1.0) : color;
+    outColor = (color.a > .01f ? color : vec4(vec3(v), 1.0) - vec4(vec3(b), 1.0));
 }
