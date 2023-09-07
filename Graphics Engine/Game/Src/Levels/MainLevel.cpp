@@ -572,6 +572,7 @@ namespace game
 		enemySelectionDrawInfo.combatStatModifiers = &boardState.combatStatModifiers[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
 		enemySelectionDrawInfo.offsetMod = 16;
+		enemySelectionDrawInfo.mirrorHorizontal = true;
 		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		DrawDamageAnimation(info, *level, enemySelectionDrawInfo, false);

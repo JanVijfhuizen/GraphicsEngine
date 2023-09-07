@@ -221,6 +221,7 @@ namespace game
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
+		cardDrawInfo.mirrorHorizontal = drawInfo.mirrorHorizontal;
 		
 		uint32_t choice = -1;
 		if(drawInfo.outStackSelected)
@@ -440,6 +441,8 @@ namespace game
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
+			if(drawInfo.mirrorHorizontal)
+				imageRenderTask.subTexture = imageRenderTask.subTexture.MirrorHorizontal();
 			info.pixelPerfectRenderTasks.Push(imageRenderTask);
 		}
 
