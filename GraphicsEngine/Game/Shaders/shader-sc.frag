@@ -30,7 +30,7 @@ layout(push_constant) uniform PushConstants
 float applyVignette(vec2 uv)
 {
     uv *=  1.0 - uv.yx;
-    float vig = uv.x*uv.y * 15.0;
+    float vig = uv.x*uv.y * 30.0;
     vig = pow(vig, 0.25);
     return vig;
 }
@@ -68,11 +68,13 @@ void main()
     v *= .02f;
     v *= applyVignette(uv);
 
-    vec2 center = vec2(.5, .6);
+    // Light.
+    vec2 center = vec2(.2, .2);
     float dist = 1.0/length(uv - center);
-    v *= dist * .4f;
-    v = max(v, 0.0);
+    //v *= dist * 3.4f;
+    //v = abs(v);
 
     vec4 color = texture(img, fragPos);
-    outColor = mix(color, vec4(vec3(v), 1.0) - vec4(vec3(b), 1.0), 1.f - color.a);
+    vec4 bgColor = vec4(vec3(v), 1.0) - vec4(vec3(b), 1.0);
+    outColor = mix(color, bgColor, 1.f - color.a);
 }
