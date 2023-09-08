@@ -395,7 +395,7 @@ namespace game
 		if (drawInfo.metaData)
 		{
 			const auto curve = je::CreateCurveOvershooting();
-			origin.y += curve.REvaluate(drawInfo.metaData->hoverDuration) * 4;
+			origin.y += curve.Evaluate(drawInfo.metaData->hoverDuration) * 4;
 		}
 
 		glm::vec3 fadeMod{1};
