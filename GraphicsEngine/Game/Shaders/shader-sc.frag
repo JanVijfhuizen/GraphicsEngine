@@ -30,8 +30,8 @@ layout(push_constant) uniform PushConstants
 float applyVignette(vec2 uv)
 {
     uv *=  1.0 - uv.yx;
-    float vig = uv.x*uv.y * 30.0;
-    vig = pow(vig, 0.25);
+    float vig = uv.x*uv.y * 15.0;
+    vig = pow(vig, 0.45);
     return vig;
 }
 
@@ -64,7 +64,7 @@ void main()
     float ny = noise(uv.yx * pushConstants.simResolution.y);
     
     float v = sin(nx * pushConstants.time + ny * pushConstants.time);
-    v *= .02f;
+    v *= .06f;
     v *= applyVignette(uv);
 
     // Light.
