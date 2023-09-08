@@ -75,5 +75,9 @@ void main()
 
     vec4 color = texture(img, fragPos);
     vec4 bgColor = vec4(vec3(v), 1.0);
-    outColor = mix(color, bgColor, 1.f - color.a) - vec4(vec3(b), 0.0);
+    vec4 mixed = mix(color, bgColor, 1.f - color.a);
+    vec4 sub = vec4(vec3(b), 0.0);
+    vec4 f = mixed - sub;
+    f = max(f, color * .25 * color.a);
+    outColor = f; 
 }
