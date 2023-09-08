@@ -116,6 +116,12 @@ namespace jv::ge
 		LinkedList<Allocation> allocations;
 	};
 
+	struct CmdBufferPool final
+	{
+		LinkedList<VkCommandBuffer> instances{};
+		uint32_t activeCount = 0;
+	};
+
 	struct GraphicsEngine final
 	{
 		bool initialized = false;
@@ -146,6 +152,8 @@ namespace jv::ge
 		
 		LinkedList<DrawInfo> draws{};
 		bool waitedForImage = false;
+
+		Array<CmdBufferPool> cmdPools{};
 	} ge{};
 
 	void GLFWKeyCallback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods)
@@ -246,6 +254,7 @@ namespace jv::ge
 		ge.app = CreateApp(vkInfo);
 
 		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, info.resolution);
+		ge.cmdPools = CreateArray<CmdBufferPool>(ge.arena, ge.swapChain.GetLength());
 
 		ge.scope = ge.arena.CreateScope();
 	}
@@ -1057,17 +1066,27 @@ namespace jv::ge
 		for (uint32_t i = 0; i < info.waitSemaphoreCount; ++i)
 			waitSemaphores[i] = static_cast<Semaphore*>(info.waitSemaphores[i])->semaphore;
 
+		auto& cmdPool = ge.cmdPools[ge.swapChain.GetIndex()];
+
 		if(info.frameBuffer)
 		{
 			VkCommandBuffer cmd;
-			VkCommandBufferAllocateInfo cmdBufferAllocInfo{};
-			cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			cmdBufferAllocInfo.commandPool = ge.app.commandPool;
-			cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			cmdBufferAllocInfo.commandBufferCount = 1;
 
-			auto result = vkAllocateCommandBuffers(ge.app.device, &cmdBufferAllocInfo, &cmd);
-			assert(!result);
+			if(cmdPool.activeCount >= cmdPool.instances.GetCount())
+			{
+				VkCommandBufferAllocateInfo cmdBufferAllocInfo{};
+				cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+				cmdBufferAllocInfo.commandPool = ge.app.commandPool;
+				cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+				cmdBufferAllocInfo.commandBufferCount = 1;
+
+				const auto result = vkAllocateCommandBuffers(ge.app.device, &cmdBufferAllocInfo, &cmd);
+				assert(!result);
+				Add(ge.arena, cmdPool.instances) = cmd;
+			}
+			else
+				cmd = cmdPool.instances[cmdPool.activeCount];
+			++cmdPool.activeCount;
 
 			VkCommandBufferBeginInfo cmdBufferBeginInfo{};
 			cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1105,7 +1124,7 @@ namespace jv::ge
 			if (image0->image.layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 				image0->image.TransitionLayout(cmd, oldLayout, image0->image.aspectFlags);
 
-			result = vkEndCommandBuffer(cmd);
+			auto result = vkEndCommandBuffer(cmd);
 			assert(!result);
 
 			const auto waitStages = CreateArray<VkPipelineStageFlags>(ge.tempArena, info.waitSemaphoreCount);
@@ -1133,6 +1152,7 @@ namespace jv::ge
 			
 			ge.swapChain.EndFrame(ge.tempArena, ge.app, waitSemaphores);
 			ge.waitedForImage = false;
+			cmdPool.activeCount = 0;
 		}
 
 		ge.frameArena.Clear();

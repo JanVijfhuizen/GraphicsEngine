@@ -221,6 +221,7 @@ namespace game
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
+		cardDrawInfo.mirrorHorizontal = drawInfo.mirrorHorizontal;
 		
 		uint32_t choice = -1;
 		if(drawInfo.outStackSelected)
@@ -240,6 +241,7 @@ namespace game
 		for (uint32_t i = 0; i < drawInfo.length; ++i)
 		{
 			int32_t xAddOffset = 0;
+			int32_t yAddOffset = 0;
 			
 			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
 			cardDrawInfo.lifeTime = drawInfo.lifeTime;
@@ -256,7 +258,9 @@ namespace game
 				const auto curve = je::CreateCurveOvershooting();
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
-				//xAddOffset = (1.f - eval) * w / 4 * (drawInfo.spawnRight * 2 - 1);
+				//xAddOffset = (1.f - eval) * w / 8 * (drawInfo.spawnRight * 2 - 1);
+
+				//yAddOffset = DoubleCurveEvaluate(drawInfo.spawnLerp, curve, curve) * shape.y / 4;
 				cardDrawInfo.lifeTime = drawInfo.spawnLerp * CARD_FADE_DURATION;
 			}
 
@@ -281,6 +285,7 @@ namespace game
 			cardDrawInfo.origin = drawInfo.overridePosIndex == i ? drawInfo.overridePos : GetCardPosition(info, drawInfo, i);
 			cardDrawInfo.origin.x += xOffset;
 			cardDrawInfo.origin.x += xAddOffset;
+			cardDrawInfo.origin.y += yAddOffset;
 
 			const bool greyedOut = drawInfo.greyedOutArr ? drawInfo.greyedOutArr[i] : false;
 			const bool selected = drawInfo.selectedArr ? drawInfo.selectedArr[i] : drawInfo.highlighted == i;
@@ -390,7 +395,7 @@ namespace game
 		if (drawInfo.metaData)
 		{
 			const auto curve = je::CreateCurveOvershooting();
-			origin.y += curve.REvaluate(drawInfo.metaData->hoverDuration) * 4;
+			origin.y += curve.Evaluate(drawInfo.metaData->hoverDuration) * 4;
 		}
 
 		glm::vec3 fadeMod{1};
@@ -440,6 +445,8 @@ namespace game
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
+			if(drawInfo.mirrorHorizontal)
+				imageRenderTask.subTexture = imageRenderTask.subTexture.MirrorHorizontal();
 			info.pixelPerfectRenderTasks.Push(imageRenderTask);
 		}
 

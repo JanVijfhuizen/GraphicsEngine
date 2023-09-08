@@ -99,6 +99,7 @@ namespace game
 			bool ignoreAnim = false;
 			float activationLerp = -1;
 			CardDrawMetaData* metaData = nullptr;
+			bool mirrorHorizontal = false;
 		};
 
 		struct CardSelectionDrawInfo final
@@ -131,6 +132,7 @@ namespace game
 			float fadeLerp;
 			uint32_t activationIndex = -1;
 			float activationLerp;
+			bool mirrorHorizontal = false;
 		};
 
 		struct PartyDrawInfo final

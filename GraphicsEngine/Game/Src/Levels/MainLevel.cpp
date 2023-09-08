@@ -462,18 +462,18 @@ namespace game
 		
 		{
 			const float l = jv::Min(1.f, level->GetTime() * 3);
-			constexpr uint32_t LINE_POSITIONS[]{ HAND_HEIGHT + 28 };
+			constexpr uint32_t LINE_POSITION = HAND_HEIGHT + 28;
 			PixelPerfectRenderTask lineRenderTask{};
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
-			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x * l;
-			lineRenderTask.scale.y = 1;
-			lineRenderTask.position.x = (1.f - l) * SIMULATED_RESOLUTION.x;
-
-			for (const auto& i : LINE_POSITIONS)
-			{
-				lineRenderTask.position.y = i;
-				info.pixelPerfectRenderTasks.Push(lineRenderTask);
-			}
+			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
+			lineRenderTask.scale.y = LINE_POSITION;
+			lineRenderTask.position.y = 0;
+			lineRenderTask.position.x = 0;
+			lineRenderTask.color.a = l;
+			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			lineRenderTask.color = glm::vec4(0, 0, 0, l);
+			lineRenderTask.scale.y -= 2;
+			info.pixelPerfectRenderTasks.Push(lineRenderTask);
 		}
 
 		{
@@ -572,6 +572,7 @@ namespace game
 		enemySelectionDrawInfo.combatStatModifiers = &boardState.combatStatModifiers[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
 		enemySelectionDrawInfo.offsetMod = 16;
+		enemySelectionDrawInfo.mirrorHorizontal = true;
 		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		DrawDamageAnimation(info, *level, enemySelectionDrawInfo, false);
