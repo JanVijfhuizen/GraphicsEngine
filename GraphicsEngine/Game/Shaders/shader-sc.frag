@@ -66,7 +66,7 @@ void main()
     
     float v = sin(nx * pushConstants.time + ny * pushConstants.time);
     v *= .02f;
-    v *= applyVignette(fragPos);
+    v *= applyVignette(uv);
 
     vec2 center = vec2(.5, .6);
     float dist = 1.0/length(uv - center);
@@ -74,5 +74,5 @@ void main()
     v = max(v, 0.0);
 
     vec4 color = texture(img, fragPos);
-    outColor = (color.a > .01f ? color : vec4(vec3(v), 1.0) - vec4(vec3(b), 1.0));
+    outColor = mix(color, vec4(vec3(v), 1.0) - vec4(vec3(b), 1.0), 1.f - color.a);
 }
