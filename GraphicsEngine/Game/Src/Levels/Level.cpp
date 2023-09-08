@@ -258,9 +258,9 @@ namespace game
 				const auto curve = je::CreateCurveOvershooting();
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
-				xAddOffset = (1.f - eval) * w / 4 * (drawInfo.spawnRight * 2 - 1);
+				//xAddOffset = (1.f - eval) * w / 8 * (drawInfo.spawnRight * 2 - 1);
 
-				yAddOffset = DoubleCurveEvaluate(drawInfo.spawnLerp, curve, curve) * shape.y / 2;
+				//yAddOffset = DoubleCurveEvaluate(drawInfo.spawnLerp, curve, curve) * shape.y / 4;
 				cardDrawInfo.lifeTime = drawInfo.spawnLerp * CARD_FADE_DURATION;
 			}
 

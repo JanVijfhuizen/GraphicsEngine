@@ -53,16 +53,15 @@ void main()
     vec2 uv = fragPos;
     
     vec2 d = Dist(uv, res);
-    d = pow(d, vec2(2.0));
     float b = length(d);
-    b = step(1.f / pushConstants.simResolution.y + 1e-1f, b);
+    b = step(.4, b);
 
     uv *= res;
     uv = floor(uv);
     uv /= res;
     
-    float nx = noise(uv.xy * 100.0);
-    float ny = noise(uv.yx * 100.0);
+    float nx = noise(uv.xy * pushConstants.simResolution.x);
+    float ny = noise(uv.yx * pushConstants.simResolution.y);
     
     float v = sin(nx * pushConstants.time + ny * pushConstants.time);
     v *= .02f;
@@ -74,7 +73,7 @@ void main()
     //v *= dist * 3.4f;
     //v = abs(v);
 
-    vec4 color = texture(img, fragPos) - vec4(vec3(b), 0.0);
-    vec4 bgColor = vec4(vec3(v), 1.0) - vec4(vec3(b), 1.0);
-    outColor = mix(color, bgColor, 1.f - color.a);
+    vec4 color = texture(img, fragPos);
+    vec4 bgColor = vec4(vec3(v), 1.0);
+    outColor = mix(color, bgColor, 1.f - color.a) - vec4(vec3(b), 0.0);
 }
