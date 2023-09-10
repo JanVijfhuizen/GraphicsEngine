@@ -918,7 +918,10 @@ namespace game
 		{
 			// Set new random enemy targets.
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+			{
 				targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
+				metaDatas[i + META_DATA_ENEMY_INDEX].timeSinceStatsChanged = level->GetTime();
+			}
 
 			// Untap.
 			for (auto& b : tapped)
@@ -945,6 +948,7 @@ namespace game
 				{
 					while (target == oldTarget)
 						target = rand() % boardState.allyCount;
+					metaDatas[actionState.dst + META_DATA_ENEMY_INDEX - BOARD_CAPACITY_PER_SIDE].timeSinceStatsChanged = level->GetTime();
 				}
 			}
 
