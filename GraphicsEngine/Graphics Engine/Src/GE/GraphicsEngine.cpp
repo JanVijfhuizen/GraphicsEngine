@@ -154,6 +154,7 @@ namespace jv::ge
 		bool waitedForImage = false;
 
 		Array<CmdBufferPool> cmdPools{};
+		VkCommandBuffer cmd;
 	} ge{};
 
 	void GLFWKeyCallback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods)
@@ -257,6 +258,14 @@ namespace jv::ge
 		ge.cmdPools = CreateArray<CmdBufferPool>(ge.arena, ge.swapChain.GetLength());
 
 		ge.scope = ge.arena.CreateScope();
+
+		VkCommandBufferAllocateInfo cmdBufferAllocInfo{};
+		cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		cmdBufferAllocInfo.commandPool = ge.app.commandPool;
+		cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		cmdBufferAllocInfo.commandBufferCount = 1;
+		const auto result = vkAllocateCommandBuffers(ge.app.device, &cmdBufferAllocInfo, &ge.cmd);
+		assert(!result);
 	}
 
 	glm::ivec2 GetResolution()
@@ -342,6 +351,8 @@ namespace jv::ge
 
 		vk::ImageCreateInfo vkImageCreateInfo{};
 		glm::vec3 resolution = glm::vec3(info.resolution, 1);
+		vkImageCreateInfo.resolution = resolution;
+		vkImageCreateInfo.cmd = ge.cmd;
 
 		switch (info.format)
 		{
@@ -370,7 +381,7 @@ namespace jv::ge
 				std::cerr << "Format not supported." << std::endl;
 		}
 
-		const auto vkImage = vk::Image::Create(scene->arena, scene->freeArena, ge.app, vkImageCreateInfo, resolution);
+		const auto vkImage = vk::Image::Create(scene->arena, scene->freeArena, ge.app, vkImageCreateInfo);
 
 		VkImageViewCreateInfo viewCreateInfo{};
 		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -403,7 +414,7 @@ namespace jv::ge
 		assert(ge.initialized);
 		const auto pImage = static_cast<Image*>(image);
 		const auto scene = pImage->scene;
-		pImage->image.FillImage(scene->arena, scene->freeArena, ge.app, pixels);
+		pImage->image.FillImage(scene->arena, scene->freeArena, ge.app, pixels, ge.cmd);
 	}
 
 	Resource AddMesh(MeshCreateInfo& info)

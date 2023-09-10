@@ -82,6 +82,7 @@ namespace game
 		{
 			float hoverDuration = 0;
 			bool actionPending = false;
+			float timeSinceStatsChanged = -1;
 		};
 
 		struct CardDrawInfo final
