@@ -96,7 +96,9 @@ namespace game
 			void DrawActivationAnimation(CardSelectionDrawInfo& drawInfo, Activation::Type type, uint32_t idMod) const;
 			void DrawCardPlayAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const;
 			void DrawFadeAnimation(const Level& level, CardSelectionDrawInfo& drawInfo, uint32_t src) const;
-			float GetActionStateLerp(const Level& level, float duration = ACTION_STATE_DEFAULT_DURATION) const;
+			[[nodiscard]] float GetActionStateLerp(const Level& level, float duration = ACTION_STATE_DEFAULT_DURATION, float startoffset = 0) const;
+			[[nodiscard]] float GetAttackMoveOffset(const State& state, const ActionState& actionState) const;
+			[[nodiscard]] float GetAttackMoveDuration(const State& state, const ActionState& actionState) const;
 		};
 
 		struct RewardMagicCardState final : LevelState<State>
