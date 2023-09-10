@@ -307,7 +307,7 @@ namespace game
 			switch (activeState.trigger)
 			{
 			case ActionState::Trigger::onAttack:
-				actionStateDuration = ATTACK_ACTION_STATE_DURATION;
+				actionStateDuration = GetAttackMoveDuration(state, activeState) * 2 + CARD_VERTICAL_MOVE_SPEED * 2;
 				break;
 			case ActionState::Trigger::onStartOfTurn:
 				actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
@@ -1102,8 +1102,7 @@ namespace game
 			return;
 		if (activeState.trigger != ActionState::Trigger::onAttack)
 			return;
-
-		const auto& boardState = state.boardState;
+		
 		assert(activeState.trigger == ActionState::Trigger::onAttack);
 
 		uint32_t src = activeState.src;
@@ -1114,48 +1113,52 @@ namespace game
 		else if (dst >= BOARD_CAPACITY_PER_SIDE)
 			dst -= BOARD_CAPACITY_PER_SIDE;
 		
-		const uint32_t c = allied ? boardState.allyCount : boardState.enemyCount;
-		const uint32_t oC = allied ? boardState.enemyCount : boardState.allyCount;
 		const bool isSrc = allied ? activeState.src < BOARD_CAPACITY_PER_SIDE : activeState.src >= BOARD_CAPACITY_PER_SIDE;
 
-		const float ind = static_cast<float>(isSrc ? src : dst);
-		const float offset = ind - static_cast<float>(c - 1) / 2;
+		// Move towards each other.
+		const float delta = GetAttackMoveOffset(state, activeState);
 
-		const float oInd = static_cast<float>(isSrc ? dst : src);
-		const float oOffset = oInd - static_cast<float>(oC - 1) / 2;
-
-		constexpr float moveDuration = ATTACK_ACTION_STATE_DURATION / 4;
-		const float t = level.GetTime();
+		const float moveDuration = GetAttackMoveDuration(state, activeState);
+		const float current = level.GetTime() - timeSinceLastActionState;
 
 		const auto curve = je::CreateCurveOvershooting();
 		const auto curveDown = je::CreateCurveDecelerate();
 
-		const float l = GetActionStateLerp(level, ATTACK_ACTION_STATE_DURATION);
-		const float hEval = DoubleCurveEvaluate(l, curve, curveDown);
-		// Move towards each other.
-		const float delta = (offset - oOffset) / 2;
-		const float tOff = jv::Min(hEval * (1.f / moveDuration), 1.f);
-		const float xS = GetCardShape(info, drawInfo).x;
-		drawInfo.centerOffset += -tOff * delta * xS;
-
-		const auto cardShape = GetCardShape(info, drawInfo);
-
-		// Move towards dst.
-		if(isSrc && l >= moveDuration)
+		float eval = 0;
+		if (moveDuration > 1e-5f)
 		{
+			if(current <= moveDuration + CARD_VERTICAL_MOVE_SPEED * 2)
+			{
+				const float lerp = current / moveDuration;
+				eval = curve.Evaluate(lerp);
+			}
+			else
+			{
+				const float lerp = (current - (moveDuration + CARD_VERTICAL_MOVE_SPEED * 2)) / moveDuration;
+				eval = curveDown.Evaluate(1.f - lerp);
+			}
+		}
+		
+		const auto cardShape = GetCardShape(info, drawInfo);
+		drawInfo.centerOffset += eval * delta * cardShape.x * (2 * !allied - 1);
+
+		// Move towards dst vertically.
+		if(isSrc && current >= moveDuration)
+		{
+			const float l = GetActionStateLerp(level, CARD_VERTICAL_MOVE_SPEED * 2, moveDuration);
 			const float vEval = DoubleCurveEvaluate(l, curve, curveDown);
-			const float tMOff = jv::Min((l - moveDuration) * (1.f / moveDuration) * vEval, 1.f);
 			drawInfo.overridePosIndex = src;
 			drawInfo.overridePos = GetCardPosition(info, drawInfo, src);
-			drawInfo.overridePos.y += tMOff * (ENEMY_HEIGHT - ALLY_HEIGHT - cardShape.y) * (2 * allied - 1);
+			drawInfo.overridePos.y += vEval * (ENEMY_HEIGHT - ALLY_HEIGHT - cardShape.y) * (2 * allied - 1);
 		}
-		else if(!isSrc && l >= moveDuration * 2)
+		// On hit.
+		else if(!isSrc && current >= moveDuration + CARD_VERTICAL_MOVE_SPEED)
 		{
+			const float l = GetActionStateLerp(level, CARD_VERTICAL_MOVE_SPEED, moveDuration + CARD_VERTICAL_MOVE_SPEED);
 			const float vEval = DoubleCurveEvaluate(l, curveDown, curve);
-			const float tMOff = jv::Min((t - timeSinceLastActionState - ATTACK_ACTION_STATE_DURATION / 2) * 2 * vEval, 1.f);
 			drawInfo.overridePosIndex = dst;
 			drawInfo.overridePos = GetCardPosition(info, drawInfo, dst);
-			drawInfo.overridePos.y += tMOff * cardShape.x * (2 * !allied - 1);
+			drawInfo.overridePos.y += vEval * cardShape.y * (2 * !allied - 1);
 		}
 	}
 
@@ -1268,12 +1271,45 @@ namespace game
 		drawInfo.fadeLerp = GetActionStateLerp(level);
 	}
 
-	float MainLevel::CombatState::GetActionStateLerp(const Level& level, const float duration) const
+	float MainLevel::CombatState::GetActionStateLerp(const Level& level, const float duration, const float startoffset) const
 	{
 		const float t = level.GetTime();
-		const float aTime = t - timeSinceLastActionState;
+		const float aTime = t - (timeSinceLastActionState + startoffset);
 		const float a = (duration - (duration - aTime)) / duration;
 		return jv::Clamp(a, 0.f, 1.f);
+	}
+
+	float MainLevel::CombatState::GetAttackMoveOffset(const State& state, const ActionState& actionState) const
+	{
+		const auto& boardState = state.boardState;
+
+		uint32_t src = actionState.src;
+		uint32_t dst = actionState.dst;
+
+		if (src >= BOARD_CAPACITY_PER_SIDE)
+			src -= BOARD_CAPACITY_PER_SIDE;
+		else if (dst >= BOARD_CAPACITY_PER_SIDE)
+			dst -= BOARD_CAPACITY_PER_SIDE;
+
+		const bool allied = src <= BOARD_CAPACITY_PER_SIDE;
+		const uint32_t c = allied ? boardState.allyCount : boardState.enemyCount;
+		const uint32_t oC = allied ? boardState.enemyCount : boardState.allyCount;
+		const bool isSrc = allied ? activeState.src < BOARD_CAPACITY_PER_SIDE : activeState.src >= BOARD_CAPACITY_PER_SIDE;
+
+		const float ind = static_cast<float>(isSrc ? src : dst);
+		const float offset = ind - static_cast<float>(c - 1) / 2;
+
+		const float oInd = static_cast<float>(isSrc ? dst : src);
+		const float oOffset = oInd - static_cast<float>(oC - 1) / 2;
+
+		// Move towards each other.
+		const float delta = (offset - oOffset) / 2;
+		return delta;
+	}
+
+	float MainLevel::CombatState::GetAttackMoveDuration(const State& state, const ActionState& actionState) const
+	{
+		return fabs(GetAttackMoveOffset(state, actionState)) / CARD_HORIZONTAL_MOVE_SPEED;
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
