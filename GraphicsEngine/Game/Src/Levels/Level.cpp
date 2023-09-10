@@ -462,6 +462,10 @@ namespace game
 		jv::ge::SubTexture statFrames[5];
 		Divide(statsTexture.subTexture, statFrames, 5);
 
+		float textLifeTime = drawInfo.lifeTime;
+		if (drawInfo.metaData && drawInfo.metaData->timeSinceStatsChanged > 0)
+			textLifeTime -= drawInfo.metaData->timeSinceStatsChanged;
+
 		if(drawInfo.cost != -1)
 		{
 			PixelPerfectRenderTask costRenderTask{};
@@ -482,6 +486,7 @@ namespace game
 			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
 			textTask.priority = priority;
 			textTask.color = costRenderTask.color;
+			textTask.lifetime = textLifeTime;
 			info.textTasks.Push(textTask);
 		}
 
@@ -527,7 +532,7 @@ namespace game
 				TextTask textTask{};
 				textTask.position = statsRenderTask.position + glm::ivec2(2, -statsRenderTask.scale.y / 2);
 				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
-				textTask.lifetime = drawInfo.lifeTime;
+				textTask.lifetime = textLifeTime;
 				textTask.priority = priority;
 				textTask.color = glm::vec4(m <= 0, m >= 0, m == 0, 1);
 				info.textTasks.Push(textTask);

@@ -341,7 +341,7 @@ namespace game
 				}
 				else
 				{
-					PostHandleActionState(state, activeState);
+					PostHandleActionState(state, level, activeState);
 					activeStateValid = false;
 				}
 			}
@@ -910,7 +910,7 @@ namespace game
 		}
 	}
 
-	void MainLevel::CombatState::PostHandleActionState(State& state, const ActionState& actionState)
+	void MainLevel::CombatState::PostHandleActionState(State& state, Level* level, const ActionState& actionState)
 	{
 		auto& boardState = state.boardState;
 
@@ -974,6 +974,7 @@ namespace game
 			{
 				constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
 				health = health < actionState.values[vDamage] ? 0 : health - actionState.values[vDamage];
+				metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
 
 				if (health == 0)
 				{
