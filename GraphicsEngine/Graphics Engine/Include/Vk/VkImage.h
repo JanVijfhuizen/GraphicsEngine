@@ -13,6 +13,8 @@ namespace jv::vk
 		VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		glm::ivec3 resolution;
+		VkCommandBuffer cmd;
 	};
 
 	// Image that can be used for things like textures or post effects.
@@ -29,9 +31,9 @@ namespace jv::vk
 
 		// Transition the layout for it to be used in different ways, like for a depth attachment, or a sampled image.
 		void TransitionLayout(VkCommandBuffer cmd, VkImageLayout newLayout, VkImageAspectFlags aspectFlags);
-		void FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels);
+		void FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels, VkCommandBuffer cmd);
 
-		[[nodiscard]] static Image Create(Arena& arena, const FreeArena& freeArena, const App& app, const ImageCreateInfo& info, glm::ivec3 resolution);
+		[[nodiscard]] static Image Create(Arena& arena, const FreeArena& freeArena, const App& app, const ImageCreateInfo& info);
 		static void Destroy(const FreeArena& freeArena, const App& app, const Image& image);
 	};
 }

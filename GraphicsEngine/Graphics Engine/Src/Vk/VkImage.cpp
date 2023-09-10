@@ -69,7 +69,7 @@ namespace jv::vk
 		layout = newLayout;
 	}
 
-	void Image::FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels)
+	void Image::FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels, const VkCommandBuffer cmd)
 	{
 		assert(usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
@@ -99,16 +99,7 @@ namespace jv::vk
 		memcpy(data, pixels, imageSize);
 		vkUnmapMemory(app.device, stagingMem.memory);
 		
-		// Record and execute copy. 
-		VkCommandBuffer cmd;
-		VkCommandBufferAllocateInfo cmdBufferAllocInfo{};
-		cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		cmdBufferAllocInfo.commandPool = app.commandPool;
-		cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		cmdBufferAllocInfo.commandBufferCount = 1;
-
-		result = vkAllocateCommandBuffers(app.device, &cmdBufferAllocInfo, &cmd);
-		assert(!result);
+		vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
 		VkFence fence;
 		VkFenceCreateInfo fenceInfo{};
@@ -182,10 +173,10 @@ namespace jv::vk
 	}
 
 	Image Image::Create(Arena& arena, const FreeArena& freeArena, const App& app, 
-		const ImageCreateInfo& info, glm::ivec3 resolution)
+		const ImageCreateInfo& info)
 	{
 		Image image{};
-		image.resolution = resolution;
+		image.resolution = info.resolution;
 		image.format = info.format;
 		image.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 		image.aspectFlags = info.aspectFlags;
@@ -194,8 +185,8 @@ namespace jv::vk
 		VkImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageCreateInfo.extent.width = resolution.x;
-		imageCreateInfo.extent.height = resolution.y;
+		imageCreateInfo.extent.width = info.resolution.x;
+		imageCreateInfo.extent.height = info.resolution.y;
 		imageCreateInfo.extent.depth = 1;
 		imageCreateInfo.mipLevels = 1;
 		imageCreateInfo.arrayLayers = 1;
@@ -219,16 +210,7 @@ namespace jv::vk
 
 		if (info.layout != VK_IMAGE_LAYOUT_UNDEFINED)
 		{
-			// Record and execute initial layout transition. 
-			VkCommandBuffer cmdBuffer;
-			VkCommandBufferAllocateInfo cmdBufferAllocInfo{};
-			cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			cmdBufferAllocInfo.commandPool = app.commandPool;
-			cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			cmdBufferAllocInfo.commandBufferCount = 1;
-
-			auto result = vkAllocateCommandBuffers(app.device, &cmdBufferAllocInfo, &cmdBuffer);
-			assert(!result);
+			vkResetCommandBuffer(info.cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
 			VkFence fence;
 			VkFenceCreateInfo fenceInfo{};
@@ -243,18 +225,18 @@ namespace jv::vk
 			VkCommandBufferBeginInfo cmdBeginInfo{};
 			cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 			cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			vkBeginCommandBuffer(cmdBuffer, &cmdBeginInfo);
+			vkBeginCommandBuffer(info.cmd, &cmdBeginInfo);
 
-			image.TransitionLayout(cmdBuffer, info.layout, image.aspectFlags);
+			image.TransitionLayout(info.cmd, info.layout, image.aspectFlags);
 
 			// End recording.
-			result = vkEndCommandBuffer(cmdBuffer);
+			result = vkEndCommandBuffer(info.cmd);
 			assert(!result);
 
 			VkSubmitInfo cmdSubmitInfo{};
 			cmdSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 			cmdSubmitInfo.commandBufferCount = 1;
-			cmdSubmitInfo.pCommandBuffers = &cmdBuffer;
+			cmdSubmitInfo.pCommandBuffers = &info.cmd;
 			cmdSubmitInfo.waitSemaphoreCount = 0;
 			cmdSubmitInfo.pWaitSemaphores = nullptr;
 			cmdSubmitInfo.signalSemaphoreCount = 0;

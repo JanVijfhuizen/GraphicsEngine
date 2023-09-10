@@ -92,8 +92,10 @@ namespace jv::vk
 		assert(pixels);
 
 		assert(info.usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-		auto image = Image::Create(arena, freeArena, app, info, glm::ivec3(texWidth, texHeight, texChannels));
-		image.FillImage(arena, freeArena, app, pixels);
+		auto cpyInfo = info;
+		cpyInfo.resolution = glm::ivec3(texWidth, texHeight, texChannels);
+		auto image = Image::Create(arena, freeArena, app, cpyInfo);
+		image.FillImage(arena, freeArena, app, pixels, info.cmd);
 
 		// Free pixels.
 		stbi_image_free(pixels);
@@ -101,7 +103,7 @@ namespace jv::vk
 		return image;
 	}
 
-	void FillTexture(Arena& arena, const FreeArena& freeArena, const App& app, Image& image, const char* imageFilePath)
+	void FillTexture(Arena& arena, const FreeArena& freeArena, const App& app, Image& image, const char* imageFilePath, const VkCommandBuffer cmd)
 	{
 		// Load pixels.
 		int texWidth, texHeight, texChannels;
@@ -109,7 +111,7 @@ namespace jv::vk
 		assert(pixels);
 
 		assert(image.usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-		image.FillImage(arena, freeArena, app, pixels);
+		image.FillImage(arena, freeArena, app, pixels, cmd);
 
 		// Free pixels.
 		stbi_image_free(pixels);
