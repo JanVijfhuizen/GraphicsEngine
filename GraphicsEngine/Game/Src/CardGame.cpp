@@ -448,7 +448,7 @@ namespace game
 			pixelPerfectRenderInterpreterCreateInfo.renderTasks = outCardGame->renderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.dynRenderTasks = outCardGame->dynamicRenderTasks;
-			pixelPerfectRenderInterpreterCreateInfo.dynPriorityRenderTasks = outCardGame->dynamicRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.dynPriorityRenderTasks = outCardGame->dynamicPriorityRenderTasks;
 
 			pixelPerfectRenderInterpreterCreateInfo.resolution = SIMULATED_RESOLUTION;
 			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = SIMULATED_RESOLUTION;
@@ -581,7 +581,7 @@ namespace game
 		}
 		// Starting pet.
 		arr[0].unique = true;
-		arr[0].name = "daisy, loyal protector";
+		arr[0].name = "daisy";
 		arr[0].ruleText = "follows you around.";
 		arr[0].health = 999;
 

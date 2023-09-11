@@ -61,6 +61,13 @@ namespace game
 
 	struct Level
 	{
+		enum class FullCardType
+		{
+			other,
+			monster,
+			magic
+		};
+
 		struct HeaderDrawInfo final
 		{
 			glm::ivec2 origin;
@@ -89,7 +96,7 @@ namespace game
 		{
 			glm::ivec2 origin;
 			Card* card;
-			bool center = false;
+			bool center = true;
 			glm::vec4 bgColor{0, 0, 0, 1};
 			glm::vec4 fgColor{ 1 };
 			bool selectable = true;
@@ -101,6 +108,8 @@ namespace game
 			float activationLerp = -1;
 			CardDrawMetaData* metaData = nullptr;
 			bool mirrorHorizontal = false;
+			bool priority = false;
+			uint32_t scale = 1;
 		};
 
 		struct CardSelectionDrawInfo final
@@ -161,7 +170,7 @@ namespace game
 		uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
 		bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
 		static bool CollidesCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
-		void DrawFullCard(Card* card);
+		void DrawFullCard(Card* card, FullCardType cardType);
 		void DrawTopCenterHeader(const LevelUpdateInfo& info, HeaderSpacing spacing, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
 		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;
 		uint32_t DrawParty(const LevelUpdateInfo& info, const PartyDrawInfo& drawInfo);
@@ -179,6 +188,7 @@ namespace game
 		LevelIndex _loadingLevelIndex;
 		float _timeSinceOpened;
 		Card* _fullCard;
+		FullCardType _fullCardType;
 		float _fullCardLifeTime;
 		CardDrawMetaData _cardDrawMetaDatas[PARTY_CAPACITY];
 	};
