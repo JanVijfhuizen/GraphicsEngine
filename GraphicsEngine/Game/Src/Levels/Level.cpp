@@ -96,20 +96,24 @@ namespace game
 				}
 
 				const float l = _fullCardLifeTime - FULL_CARD_OPEN_DURATION;
+				const uint32_t textOffsetX = SIMULATED_RESOLUTION.x / 8;
+
 				if(l >= 0)
 				{
 					TextTask titleTextTask{};
 					titleTextTask.position = bgRenderTask.position;
+					titleTextTask.position.x += textOffsetX;
 					titleTextTask.position.y += bgRenderTask.scale.y / 2 + alphabetTexture.resolution.y / 2;
 					titleTextTask.text = _fullCard->name;
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
 					titleTextTask.priority = true;
-					titleTextTask.scale = 1;
+					titleTextTask.scale = 2;
 					info.textTasks.Push(titleTextTask);
 
 					auto ruleTextTask = titleTextTask;
 					ruleTextTask.position = bgRenderTask.position;
+					ruleTextTask.position.x += textOffsetX;
 					ruleTextTask.text = _fullCard->ruleText;
 					ruleTextTask.position.y += alphabetTexture.resolution.y * (lineCount - 1) / 2;
 					ruleTextTask.position.y -= alphabetTexture.resolution.y / 2;
@@ -117,15 +121,35 @@ namespace game
 					ruleTextTask.lineLength = FULL_CARD_LINE_LENGTH;
 					info.textTasks.Push(ruleTextTask);
 				}
+
+				CardDrawInfo cardDrawInfo{};
+				cardDrawInfo.card = _fullCard;
+				cardDrawInfo.origin = glm::ivec2(0, SIMULATED_RESOLUTION.y / 2);
+				cardDrawInfo.origin.x += textOffsetX * lerp;
+				cardDrawInfo.priority = true;
+				cardDrawInfo.selectable = false;
+				cardDrawInfo.scale = 2;
+
+				if(_fullCardType == FullCardType::magic)
+				{
+					const auto c = static_cast<MagicCard*>(_fullCard);
+					cardDrawInfo.cost = c->cost;
+				}
+				else if (_fullCardType == FullCardType::monster)
+				{
+					const auto c = static_cast<MonsterCard*>(_fullCard);
+					auto stats = GetCombatStat(*c);
+					cardDrawInfo.combatStats = &stats;
+				}
+
+				DrawCard(info, cardDrawInfo);
 			}
 
 			if (!info.inputState.rMouse.pressed)
-			{
-				
 				_fullCard = nullptr;
-			}
 		}
 
+		// Mouse.
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = atlasTexture.resolution / glm::ivec2(2, 1);
 		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
@@ -395,7 +419,7 @@ namespace game
 		if (drawInfo.metaData)
 		{
 			const auto curve = je::CreateCurveOvershooting();
-			origin.y += curve.Evaluate(drawInfo.metaData->hoverDuration) * 4;
+			origin.y += curve.Evaluate(drawInfo.metaData->hoverDuration) * 4 * drawInfo.scale;
 		}
 
 		glm::vec3 fadeMod{1};
@@ -408,9 +432,11 @@ namespace game
 
 		PixelPerfectRenderTask bgRenderTask{};
 		bgRenderTask.scale = cardTexture.resolution / glm::ivec2(CARD_FRAME_COUNT, 1);
+		bgRenderTask.scale *= drawInfo.scale;
 		bgRenderTask.subTexture = cardFrames[0];
 		bgRenderTask.xCenter = drawInfo.center;
 		bgRenderTask.yCenter = drawInfo.center;
+		bgRenderTask.priority = drawInfo.priority;
 
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
@@ -429,8 +455,13 @@ namespace game
 		bgRenderTask.color *= glm::vec4(fadeMod, 1);
 		info.pixelPerfectRenderTasks.Push(bgRenderTask);
 
+		PixelPerfectRenderTask fgRenderTask = bgRenderTask;
+		fgRenderTask.subTexture = cardFrames[1];
+		fgRenderTask.color = drawInfo.fgColor * glm::vec4(fadeMod, 1);
+		info.pixelPerfectRenderTasks.Push(fgRenderTask);
+
 		// Draw image.
-		if(!drawInfo.ignoreAnim && drawInfo.card)
+		if (!drawInfo.ignoreAnim && drawInfo.card)
 		{
 			jv::ge::SubTexture animFrames[CARD_ART_LENGTH];
 			Divide({}, animFrames, CARD_ART_LENGTH);
@@ -442,22 +473,18 @@ namespace game
 			imageRenderTask.position = origin;
 			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
 			imageRenderTask.scale = CARD_ART_SHAPE;
+			imageRenderTask.scale *= drawInfo.scale;
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
-			if(drawInfo.mirrorHorizontal)
+			imageRenderTask.priority = drawInfo.priority;
+			if (drawInfo.mirrorHorizontal)
 				imageRenderTask.subTexture = imageRenderTask.subTexture.MirrorHorizontal();
 			info.pixelPerfectRenderTasks.Push(imageRenderTask);
 		}
 
-		PixelPerfectRenderTask fgRenderTask = bgRenderTask;
-		fgRenderTask.subTexture = cardFrames[1];
-		fgRenderTask.color = drawInfo.fgColor;
-		fgRenderTask.color *= glm::vec4(fadeMod, 1);
-		info.pixelPerfectRenderTasks.Push(fgRenderTask);
-
-		const bool priority = !info.inputState.rMouse.pressed;
+		const bool priority = drawInfo.priority || !info.inputState.rMouse.pressed;
 		const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
 		jv::ge::SubTexture statFrames[5];
 		Divide(statsTexture.subTexture, statFrames, 5);
@@ -471,6 +498,7 @@ namespace game
 			PixelPerfectRenderTask costRenderTask{};
 			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
 			costRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
+			costRenderTask.scale *= drawInfo.scale;
 			costRenderTask.xCenter = drawInfo.center;
 			costRenderTask.yCenter = drawInfo.center;
 			costRenderTask.color = drawInfo.fgColor;
@@ -482,11 +510,12 @@ namespace game
 			TextTask textTask{};
 			textTask.position = costRenderTask.position;
 			textTask.center = drawInfo.center;
-			textTask.position.y -= 4;
+			textTask.position.y -= 4 * drawInfo.scale;
 			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
 			textTask.priority = priority;
 			textTask.color = costRenderTask.color;
 			textTask.lifetime = textLifeTime;
+			textTask.scale *= drawInfo.scale;
 			info.textTasks.Push(textTask);
 		}
 
@@ -496,8 +525,9 @@ namespace game
 
 			PixelPerfectRenderTask statsRenderTask{};
 			statsRenderTask.position = origin + bgRenderTask.scale / 2;
-			statsRenderTask.position.x -= 6;
+			statsRenderTask.position.x -= 2 * drawInfo.scale;
 			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
+			statsRenderTask.scale *= drawInfo.scale;
 			statsRenderTask.xCenter = drawInfo.center;
 			statsRenderTask.yCenter = drawInfo.center;
 			statsRenderTask.color = drawInfo.fgColor;
@@ -530,17 +560,25 @@ namespace game
 				const int32_t m = vMods[i];
 
 				TextTask textTask{};
-				textTask.position = statsRenderTask.position + glm::ivec2(2, -statsRenderTask.scale.y / 2);
+				textTask.position = statsRenderTask.position + glm::ivec2(2 * drawInfo.scale, -statsRenderTask.scale.y / 2);
 				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
 				textTask.lifetime = textLifeTime;
 				textTask.priority = priority;
 				textTask.color = glm::vec4(m <= 0, m >= 0, m == 0, 1);
+				textTask.scale *= drawInfo.scale;
 				info.textTasks.Push(textTask);
 			}
 		}
 
 		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
-			DrawFullCard(drawInfo.card);
+		{
+			FullCardType type{};
+			if (drawInfo.combatStats)
+				type = FullCardType::monster;
+			else if (drawInfo.cost)
+				type = FullCardType::magic;
+			DrawFullCard(drawInfo.card, type);
+		}
 		return collided;
 	}
 
@@ -556,8 +594,9 @@ namespace game
 		return collided;
 	}
 
-	void Level::DrawFullCard(Card* card)
+	void Level::DrawFullCard(Card* card, const FullCardType cardType)
 	{
+		_fullCardType = cardType;
 		if (card == nullptr)
 			_fullCard = nullptr;
 		if (_fullCard)

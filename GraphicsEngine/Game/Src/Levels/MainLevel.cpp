@@ -374,13 +374,13 @@ namespace game
 				TextTask textTask{};
 				textTask.text = "new";
 				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 1);
-				textTask.scale = 2;
+				textTask.scale = 3;
 				textTask.center = true;
 				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
 				textTask.text = "turn";
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 18);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 28);
 				info.textTasks.Push(textTask);
 			}
 
@@ -759,7 +759,7 @@ namespace game
 		}
 
 		if (activeStateValid)
-			level->DrawFullCard(nullptr);
+			level->DrawFullCard(nullptr, FullCardType::other);
 			
 		return true;
 	}
@@ -1162,7 +1162,7 @@ namespace game
 			const float vEval = DoubleCurveEvaluate(l, curveDown, curve);
 			drawInfo.overridePosIndex = dst;
 			drawInfo.overridePos = GetCardPosition(info, drawInfo, dst);
-			drawInfo.overridePos.y += vEval * cardShape.y * (2 * !allied - 1);
+			drawInfo.overridePos.y += vEval * cardShape.y * .5f * (2 * !allied - 1);
 		}
 	}
 
