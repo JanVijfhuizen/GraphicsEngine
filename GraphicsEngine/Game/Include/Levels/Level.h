@@ -9,6 +9,7 @@
 #include "Engine/TextureStreamer.h"
 #include "JLib/Array.h"
 #include "States/BoardState.h"
+#include "Tasks/LightTask.h"
 #include "Tasks/TextTask.h"
 #include "Tasks/PixelPerfectRenderTask.h"
 
@@ -54,7 +55,8 @@ namespace game
 		glm::ivec2 resolution;
 		const InputState& inputState;
 		TaskSystem<TextTask>& textTasks;
-		TaskSystem<PixelPerfectRenderTask>& pixelPerfectRenderTasks;
+		TaskSystem<PixelPerfectRenderTask>& renderTasks;
+		TaskSystem<LightTask>& lightTasks;
 		float deltaTime;
 		TextureStreamer& textureStreamer;
 	};

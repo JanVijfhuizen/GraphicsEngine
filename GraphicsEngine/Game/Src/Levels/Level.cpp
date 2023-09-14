@@ -86,13 +86,13 @@ namespace game
 				bgRenderTask.xCenter = true;
 				bgRenderTask.yCenter = true;
 				bgRenderTask.priority = true;
-				info.pixelPerfectRenderTasks.Push(bgRenderTask);
+				info.renderTasks.Push(bgRenderTask);
 
 				if(bgRenderTask.scale.y > 2)
 				{
 					bgRenderTask.scale.y -= 2;
 					bgRenderTask.color = glm::vec4(0, 0, 0, 1);
-					info.pixelPerfectRenderTasks.Push(bgRenderTask);
+					info.renderTasks.Push(bgRenderTask);
 				}
 
 				const float l = _fullCardLifeTime - FULL_CARD_OPEN_DURATION;
@@ -155,7 +155,7 @@ namespace game
 		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
 		renderTask.priority = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
-		info.pixelPerfectRenderTasks.Push(renderTask);
+		info.renderTasks.Push(renderTask);
 	}
 
 	void Level::DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const
@@ -211,7 +211,7 @@ namespace game
 			pressed = true;
 
 		info.textTasks.Push(buttonTextTask);
-		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
+		info.renderTasks.Push(buttonRenderTask);
 		return pressed;
 	}
 
@@ -452,12 +452,12 @@ namespace game
 
 		bgRenderTask.position = origin;
 		bgRenderTask.color *= glm::vec4(fadeMod, 1);
-		info.pixelPerfectRenderTasks.Push(bgRenderTask);
+		info.renderTasks.Push(bgRenderTask);
 
 		PixelPerfectRenderTask fgRenderTask = bgRenderTask;
 		fgRenderTask.subTexture = cardFrames[1];
 		fgRenderTask.color = drawInfo.fgColor * glm::vec4(fadeMod, 1);
-		info.pixelPerfectRenderTasks.Push(fgRenderTask);
+		info.renderTasks.Push(fgRenderTask);
 
 		// Draw image.
 		if (!drawInfo.ignoreAnim && drawInfo.card)
@@ -481,7 +481,7 @@ namespace game
 			imageRenderTask.priority = drawInfo.priority;
 			//if (drawInfo.mirrorHorizontal)
 				//imageRenderTask.subTexture = imageRenderTask.subTexture.MirrorHorizontal();
-			info.pixelPerfectRenderTasks.Push(imageRenderTask);
+			info.renderTasks.Push(imageRenderTask);
 		}
 
 		const bool priority = drawInfo.priority || !info.inputState.rMouse.pressed;
@@ -505,7 +505,7 @@ namespace game
 			costRenderTask.color *= glm::vec4(fadeMod, 1);
 			costRenderTask.subTexture = statFrames[4];
 			costRenderTask.priority = priority;
-			info.pixelPerfectRenderTasks.Push(costRenderTask);
+			info.renderTasks.Push(costRenderTask);
 
 			TextTask textTask{};
 			textTask.position = costRenderTask.position;
@@ -555,7 +555,7 @@ namespace game
 			{
 				statsRenderTask.subTexture = statFrames[i + 1];
 				statsRenderTask.position.y -= statsRenderTask.scale.y;
-				info.pixelPerfectRenderTasks.Push(statsRenderTask);
+				info.renderTasks.Push(statsRenderTask);
 
 				const int32_t m = vMods[i];
 

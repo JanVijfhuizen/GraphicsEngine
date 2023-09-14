@@ -387,7 +387,7 @@ namespace game
 			}
 
 			lineRenderTask.position.x = off;
-			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			info.renderTasks.Push(lineRenderTask);
 		}
 
 		if(state.stack.count == 0)
@@ -472,10 +472,10 @@ namespace game
 			lineRenderTask.position.y = 0;
 			lineRenderTask.position.x = 0;
 			lineRenderTask.color.a = l;
-			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			info.renderTasks.Push(lineRenderTask);
 			lineRenderTask.color = glm::vec4(0, 0, 0, l);
 			lineRenderTask.scale.y -= 2;
-			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			info.renderTasks.Push(lineRenderTask);
 		}
 
 		{

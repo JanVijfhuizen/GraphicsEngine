@@ -13,10 +13,14 @@ struct Light
     vec3 pos;
 };
 
-layout(std140, set = 0, binding = 0) readonly buffer LightBuffer
+layout(set=0, binding = 2) uniform LightInfo
 {
     vec3 ambient;
     int count;
+} lightInfo; 
+
+layout(std140, set = 0, binding = 3) readonly buffer LightBuffer
+{
     Light lights[];
 } lightBuffer;
 
@@ -31,7 +35,7 @@ void main()
 
     vec3 lightMul = vec3(0);
 
-    for(int i = 0; i < lightBuffer.count; i++)
+    for(int i = 0; i < lightInfo.count; i++)
     {
         Light light = lightBuffer.lights[i];
         vec3 lightDir = normalize(light.pos - vec3(fragPos, 0.0));
@@ -40,6 +44,6 @@ void main()
         lightMul += diffuse;
     }
 
-    vec4 result = vec4(lightBuffer.ambient + lightMul, 1.0) * color;
+    vec4 result = vec4(lightInfo.ambient + lightMul, 1.0) * color;
     outColor = result;
 }

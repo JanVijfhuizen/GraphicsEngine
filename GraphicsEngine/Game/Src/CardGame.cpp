@@ -90,6 +90,7 @@ namespace game
 		TaskSystem<DynamicRenderTask>* dynamicPriorityRenderTasks;
 		TaskSystem<TextTask>* textTasks;
 		TaskSystem<PixelPerfectRenderTask>* pixelPerfectRenderTasks;
+		TaskSystem<LightTask>* lightTasks;
 		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
 		InstancedRenderInterpreter<RenderTask>* priorityRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
@@ -207,6 +208,7 @@ namespace game
 			inputState,
 			*textTasks,
 			*pixelPerfectRenderTasks,
+			*lightTasks,
 			dt,
 			textureStreamer
 		};
@@ -405,6 +407,8 @@ namespace game
 			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->pixelPerfectRenderTasks = &outCardGame->engine.AddTaskSystem<PixelPerfectRenderTask>();
 			outCardGame->pixelPerfectRenderTasks->Allocate(outCardGame->arena, 128);
+			outCardGame->lightTasks = &outCardGame->engine.AddTaskSystem<LightTask>();
+			outCardGame->lightTasks->Allocate(outCardGame->arena, 16);
 		}
 
 		{
@@ -420,6 +424,7 @@ namespace game
 			dynamicCreateInfo.resolution = SIMULATED_RESOLUTION;
 			dynamicCreateInfo.frameArena = &mem.frameArena;
 			dynamicCreateInfo.drawsDirectlyToSwapChain = false;
+			dynamicCreateInfo.lightTasks = outCardGame->lightTasks;
 
 			DynamicRenderInterpreterEnableInfo dynamicEnableInfo{};
 			dynamicEnableInfo.arena = &outCardGame->arena;

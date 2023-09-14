@@ -7,6 +7,14 @@
 
 namespace game
 {
+	constexpr uint32_t LIGHT_CAPACITY = 16;
+
+	struct LightInfo final
+	{
+		glm::vec3 ambient{.1f};
+		uint32_t count;
+	};
+
 	void DynamicRenderInterpreter::Enable(const DynamicRenderInterpreterEnableInfo& info)
 	{
 		_capacity = info.capacity;
@@ -59,6 +67,45 @@ namespace game
 		poolCreateInfo.scene = info.scene;
 		_pool = AddDescriptorPool(poolCreateInfo);
 		_frameCapacity = info.capacity;
+
+		jv::ge::BufferCreateInfo lightInfoBufferCreateInfo{};
+		lightInfoBufferCreateInfo.size = sizeof(LightInfo) * jv::ge::GetFrameCount();
+		lightInfoBufferCreateInfo.scene = info.scene;
+		lightInfoBufferCreateInfo.type = jv::ge::BufferCreateInfo::Type::uniform;
+		_lightInfoBuffer = AddBuffer(lightInfoBufferCreateInfo);
+
+		constexpr uint32_t lightBufferSize = static_cast<uint32_t>(sizeof(LightTask)) * LIGHT_CAPACITY;
+
+		jv::ge::BufferCreateInfo lightsBufferCreateInfo{};
+		lightsBufferCreateInfo.size = lightBufferSize * jv::ge::GetFrameCount();
+		lightsBufferCreateInfo.scene = info.scene;
+		lightsBufferCreateInfo.type = jv::ge::BufferCreateInfo::Type::storage;
+		_lightsBuffer = AddBuffer(lightsBufferCreateInfo);
+
+		for (uint32_t i = 0; i < frameCount; ++i)
+		{
+			jv::ge::WriteInfo::Binding writeInfos[2]{};
+
+			auto& uniformWriteBindingInfo = writeInfos[0];
+			uniformWriteBindingInfo.type = jv::ge::BindingType::uniformBuffer;
+			uniformWriteBindingInfo.buffer.buffer = _lightInfoBuffer;
+			uniformWriteBindingInfo.buffer.offset = sizeof(LightInfo) * i;
+			uniformWriteBindingInfo.buffer.range = sizeof(LightInfo);
+			uniformWriteBindingInfo.index = 2;
+
+			auto& storageWriteBindingInfo = writeInfos[1];
+			storageWriteBindingInfo.type = jv::ge::BindingType::storageBuffer;
+			storageWriteBindingInfo.buffer.buffer = _lightsBuffer;
+			storageWriteBindingInfo.buffer.offset = lightBufferSize * i;
+			storageWriteBindingInfo.buffer.range = sizeof(LightTask) * LIGHT_CAPACITY;
+			storageWriteBindingInfo.index = 3;
+
+			jv::ge::WriteInfo writeInfo{};
+			writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, i);
+			writeInfo.bindings = writeInfos;
+			writeInfo.bindingCount = 2;
+			Write(writeInfo);
+		}
 	}
 
 	jv::ge::Resource DynamicRenderInterpreter::GetFallbackMesh() const
@@ -82,15 +129,19 @@ namespace game
 		shaderCreateInfo.fragmentCodeLength = fragCode.length;
 		_shader = CreateShader(shaderCreateInfo);
 
-		jv::ge::LayoutCreateInfo::Binding bindingCreateInfos[2]{};
+		jv::ge::LayoutCreateInfo::Binding bindingCreateInfos[4]{};
 		bindingCreateInfos[0].stage = jv::ge::ShaderStage::fragment;
 		bindingCreateInfos[0].type = jv::ge::BindingType::sampler;
 		bindingCreateInfos[1].stage = jv::ge::ShaderStage::fragment;
 		bindingCreateInfos[1].type = jv::ge::BindingType::sampler;
+		bindingCreateInfos[2].stage = jv::ge::ShaderStage::fragment;
+		bindingCreateInfos[2].type = jv::ge::BindingType::uniformBuffer;
+		bindingCreateInfos[3].stage = jv::ge::ShaderStage::fragment;
+		bindingCreateInfos[3].type = jv::ge::BindingType::storageBuffer;
 
 		jv::ge::LayoutCreateInfo layoutCreateInfo{};
 		layoutCreateInfo.bindings = bindingCreateInfos;
-		layoutCreateInfo.bindingsCount = 2;
+		layoutCreateInfo.bindingsCount = 4;
 
 		_layout = CreateLayout(layoutCreateInfo);
 
@@ -119,6 +170,27 @@ namespace game
 		const uint32_t startIndex = _capacity * frameIndex;
 
 		uint32_t i = startIndex;
+
+		// Update lighting.
+		{
+			const auto& lightTasks = _createInfo.lightTasks->GetTaskBatches()[0];
+			LightInfo lightInfo{};
+			lightInfo.count = lightTasks.count;
+
+			jv::ge::BufferUpdateInfo bufferUpdateInfo{};
+			bufferUpdateInfo.buffer = _lightInfoBuffer;
+			bufferUpdateInfo.size = sizeof(LightInfo);
+			bufferUpdateInfo.offset = sizeof(LightInfo) * frameIndex;
+			bufferUpdateInfo.data = &lightInfo;
+			UpdateBuffer(bufferUpdateInfo);
+
+			jv::ge::BufferUpdateInfo storageBufferUpdateInfo{};
+			storageBufferUpdateInfo.buffer = _lightsBuffer;
+			storageBufferUpdateInfo.size = sizeof(LightTask) * lightTasks.count;
+			storageBufferUpdateInfo.offset = sizeof(LightTask) * lightTasks.count * frameIndex;
+			storageBufferUpdateInfo.data = lightTasks.ptr;
+			UpdateBuffer(storageBufferUpdateInfo);
+		}
 
 		for (const auto& batch : tasks)
 			for (const auto& task : batch)

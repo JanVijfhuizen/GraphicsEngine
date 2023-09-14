@@ -196,6 +196,7 @@
     <ClInclude Include="Include\States\InputState.h" />
     <ClInclude Include="Include\States\PlayerState.h" />
     <ClInclude Include="Include\Tasks\DynamicRenderTask.h" />
+    <ClInclude Include="Include\Tasks\LightTask.h" />
     <ClInclude Include="Include\Tasks\PixelPerfectRenderTask.h" />
     <ClInclude Include="Include\Tasks\RenderTask.h" />
     <ClInclude Include="Include\Tasks\TextTask.h" />
