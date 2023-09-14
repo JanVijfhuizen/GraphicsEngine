@@ -7,9 +7,18 @@ layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 0) uniform sampler2D diffuse;
 layout(set = 0, binding = 1) uniform sampler2D normal;
 
-vec3 lightPos = vec3(.5f);
-vec3 lightColor = vec3(1.f);
-vec3 ambient = vec3(.1f);
+struct Light
+{
+    vec3 color;
+    vec3 pos;
+};
+
+layout(std140, set = 0, binding = 0) readonly buffer LightBuffer
+{
+    vec3 ambient;
+    int count;
+    Light lights[];
+} lightBuffer;
 
 void main() 
 {
@@ -19,10 +28,18 @@ void main()
 
     vec4 normal = texture(normal, fragPos);
     vec3 norm = normalize(normal.xyz);
-    vec3 lightDir = normalize(lightPos - vec3(fragPos, 0.0));
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
 
-    vec4 result = vec4(ambient + diffuse, 1.0) * color;
+    vec3 lightMul = vec3(0);
+
+    for(int i = 0; i < lightBuffer.count; i++)
+    {
+        Light light = lightBuffer.lights[i];
+        vec3 lightDir = normalize(light.pos - vec3(fragPos, 0.0));
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse = diff * light.color;
+        lightMul += diffuse;
+    }
+
+    vec4 result = vec4(lightBuffer.ambient + lightMul, 1.0) * color;
     outColor = result;
 }
