@@ -282,9 +282,8 @@ namespace game
 				const auto curve = je::CreateCurveOvershooting();
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
-				//xAddOffset = (1.f - eval) * w / 8 * (drawInfo.spawnRight * 2 - 1);
-
-				//yAddOffset = DoubleCurveEvaluate(drawInfo.spawnLerp, curve, curve) * shape.y / 4;
+				xAddOffset = (1.f - eval) * w / 8 * (drawInfo.spawnRight * 2 - 1);
+				yAddOffset = DoubleCurveEvaluate(drawInfo.spawnLerp, curve, curve) * shape.y / 4;
 				cardDrawInfo.lifeTime = drawInfo.spawnLerp * CARD_FADE_DURATION;
 			}
 
@@ -471,6 +470,7 @@ namespace game
 
 			PixelPerfectRenderTask imageRenderTask{};
 			imageRenderTask.position = origin;
+			imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex);
 			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
 			imageRenderTask.scale = CARD_ART_SHAPE;
 			imageRenderTask.scale *= drawInfo.scale;
@@ -479,8 +479,8 @@ namespace game
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			imageRenderTask.priority = drawInfo.priority;
-			if (drawInfo.mirrorHorizontal)
-				imageRenderTask.subTexture = imageRenderTask.subTexture.MirrorHorizontal();
+			//if (drawInfo.mirrorHorizontal)
+				//imageRenderTask.subTexture = imageRenderTask.subTexture.MirrorHorizontal();
 			info.pixelPerfectRenderTasks.Push(imageRenderTask);
 		}
 

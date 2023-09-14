@@ -558,11 +558,13 @@ namespace game
 
 	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		const auto arr = jv::CreateArray<const char*>(frameArena, 30);
-		for (uint32_t i = 0; i < 30; ++i)
+		constexpr uint32_t l = 30;
+		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
+		for (uint32_t i = 0; i < l; ++i)
 		{
 			const char* prefix = "Art/Monsters/";
-			arr[i] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
+			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
+			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 		}
 
@@ -584,6 +586,8 @@ namespace game
 		arr[0].name = "daisy";
 		arr[0].ruleText = "follows you around.";
 		arr[0].health = 999;
+		arr[0].animIndex = 2;
+		arr[0].normalAnimIndex = 2 + 30;
 
 		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
 		{

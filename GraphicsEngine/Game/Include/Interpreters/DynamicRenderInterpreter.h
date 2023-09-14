@@ -54,6 +54,7 @@ namespace game
 
 		jv::ge::Resource _buffer;
 		jv::ge::Resource _fallbackImage;
+		jv::ge::Resource _fallbackNormalImage;
 		jv::ge::Resource _fallbackMesh;
 		jv::Array<jv::ge::Resource> _samplers;
 		jv::ge::Resource _pool;

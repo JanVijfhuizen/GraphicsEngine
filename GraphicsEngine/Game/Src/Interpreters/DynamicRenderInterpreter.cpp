@@ -21,6 +21,11 @@ namespace game
 		jv::ge::FillImage(_fallbackImage, pixels);
 		stbi_image_free(pixels);
 
+		pixels = stbi_load("Art/fallback_normal.png", &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
+		_fallbackNormalImage = AddImage(imageCreateInfo);
+		jv::ge::FillImage(_fallbackImage, pixels);
+		stbi_image_free(pixels);
+
 		jv::ge::Vertex3D vertices[4]
 		{
 			{glm::vec3{ -1, -1, 0 }, glm::vec3{0, 0, 1}, glm::vec2{0, 0}},
@@ -42,7 +47,7 @@ namespace game
 		const uint32_t frameCount = jv::ge::GetFrameCount();
 		const uint32_t resourceCount = frameCount * info.capacity;
 
-		_samplers = jv::CreateArray<jv::ge::Resource>(*info.arena, resourceCount);
+		_samplers = jv::CreateArray<jv::ge::Resource>(*info.arena, resourceCount * 2);
 		jv::ge::SamplerCreateInfo samplerCreateInfo{};
 		samplerCreateInfo.scene = info.scene;
 		for (auto& sampler : _samplers)
@@ -77,13 +82,15 @@ namespace game
 		shaderCreateInfo.fragmentCodeLength = fragCode.length;
 		_shader = CreateShader(shaderCreateInfo);
 
-		jv::ge::LayoutCreateInfo::Binding bindingCreateInfo{};
-		bindingCreateInfo.stage = jv::ge::ShaderStage::fragment;
-		bindingCreateInfo.type = jv::ge::BindingType::sampler;
+		jv::ge::LayoutCreateInfo::Binding bindingCreateInfos[2]{};
+		bindingCreateInfos[0].stage = jv::ge::ShaderStage::fragment;
+		bindingCreateInfos[0].type = jv::ge::BindingType::sampler;
+		bindingCreateInfos[1].stage = jv::ge::ShaderStage::fragment;
+		bindingCreateInfos[1].type = jv::ge::BindingType::sampler;
 
 		jv::ge::LayoutCreateInfo layoutCreateInfo{};
-		layoutCreateInfo.bindings = &bindingCreateInfo;
-		layoutCreateInfo.bindingsCount = 1;
+		layoutCreateInfo.bindings = bindingCreateInfos;
+		layoutCreateInfo.bindingsCount = 2;
 
 		_layout = CreateLayout(layoutCreateInfo);
 
@@ -116,16 +123,26 @@ namespace game
 		for (const auto& batch : tasks)
 			for (const auto& task : batch)
 			{
-				jv::ge::WriteInfo::Binding writeBindingInfo{};
-				writeBindingInfo.type = jv::ge::BindingType::sampler;
-				writeBindingInfo.image.image = task.image ? task.image : _fallbackImage;
-				writeBindingInfo.image.sampler = _samplers[i];
-				writeBindingInfo.index = 0;
+				jv::ge::WriteInfo::Binding bindings[2]{};
+
+				// Diffuse.
+				auto& diffWriteBindingInfo = bindings[0];
+				diffWriteBindingInfo.type = jv::ge::BindingType::sampler;
+				diffWriteBindingInfo.image.image = task.image ? task.image : _fallbackImage;
+				diffWriteBindingInfo.image.sampler = _samplers[i];
+				diffWriteBindingInfo.index = 0;
+
+				// Normal map.
+				auto& normWriteBindingInfo = bindings[1];
+				normWriteBindingInfo.type = jv::ge::BindingType::sampler;
+				normWriteBindingInfo.image.image = task.normalImage ? task.normalImage : _fallbackNormalImage;
+				normWriteBindingInfo.image.sampler = _samplers[i + _samplers.length / 2];
+				normWriteBindingInfo.index = 1;
 
 				jv::ge::WriteInfo writeInfo{};
 				writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, i);
-				writeInfo.bindings = &writeBindingInfo;
-				writeInfo.bindingCount = 1;
+				writeInfo.bindings = bindings;
+				writeInfo.bindingCount = 2;
 				Write(writeInfo);
 
 				PushConstant& pushConstant = *_createInfo.frameArena->New<PushConstant>();

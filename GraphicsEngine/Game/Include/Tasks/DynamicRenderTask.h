@@ -6,6 +6,7 @@ namespace game
 	struct DynamicRenderTask final
 	{
 		jv::ge::Resource image = nullptr;
+		jv::ge::Resource normalImage = nullptr;
 		jv::ge::Resource mesh = nullptr;
 		RenderTask renderTask{};
 	};
