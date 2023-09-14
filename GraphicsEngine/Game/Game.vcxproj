@@ -139,7 +139,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Src\Utils\NormalMapGenerator.cpp" />
     <ClCompile Include="Src\Levels\GameOverLevel.cpp" />
     <ClCompile Include="Src\Interpreters\PixelPerfectRenderInterpreter.cpp" />
     <ClCompile Include="Src\Levels\Level.cpp" />
@@ -201,7 +200,6 @@
     <ClInclude Include="Include\Tasks\RenderTask.h" />
     <ClInclude Include="Include\Tasks\TextTask.h" />
     <ClInclude Include="Include\Utils\BoxCollision.h" />
-    <ClInclude Include="Include\Utils\NormalMapGenerator.h" />
     <ClInclude Include="Include\Utils\Shuffle.h" />
     <ClInclude Include="Include\Engine\TaskSystem.h" />
     <ClInclude Include="Include\Utils\SubTextureUtils.h" />

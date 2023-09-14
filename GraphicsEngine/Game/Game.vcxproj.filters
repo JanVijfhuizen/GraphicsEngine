@@ -78,9 +78,6 @@
     <ClCompile Include="Src\Levels\GameOverLevel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Utils\NormalMapGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Shuffle.h">
@@ -195,9 +192,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Levels\GameOverLevel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Utils\NormalMapGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
