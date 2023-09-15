@@ -101,10 +101,14 @@ namespace game
 			storageWriteBindingInfo.index = 3;
 
 			jv::ge::WriteInfo writeInfo{};
-			writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, i);
 			writeInfo.bindings = writeInfos;
 			writeInfo.bindingCount = 2;
-			Write(writeInfo);
+
+			for (uint32_t j = 0; j < _capacity; ++j)
+			{
+				writeInfo.descriptorSet = jv::ge::GetDescriptorSet(_pool, i * _capacity + j);
+				Write(writeInfo);
+			}
 		}
 	}
 
@@ -184,12 +188,15 @@ namespace game
 			bufferUpdateInfo.data = &lightInfo;
 			UpdateBuffer(bufferUpdateInfo);
 
-			jv::ge::BufferUpdateInfo storageBufferUpdateInfo{};
-			storageBufferUpdateInfo.buffer = _lightsBuffer;
-			storageBufferUpdateInfo.size = sizeof(LightTask) * lightTasks.count;
-			storageBufferUpdateInfo.offset = sizeof(LightTask) * lightTasks.count * frameIndex;
-			storageBufferUpdateInfo.data = lightTasks.ptr;
-			UpdateBuffer(storageBufferUpdateInfo);
+			if(lightTasks.count > 0)
+			{
+				jv::ge::BufferUpdateInfo storageBufferUpdateInfo{};
+				storageBufferUpdateInfo.buffer = _lightsBuffer;
+				storageBufferUpdateInfo.size = sizeof(LightTask) * lightTasks.count;
+				storageBufferUpdateInfo.offset = sizeof(LightTask) * LIGHT_CAPACITY * frameIndex;
+				storageBufferUpdateInfo.data = lightTasks.ptr;
+				UpdateBuffer(storageBufferUpdateInfo);
+			}
 		}
 
 		for (const auto& batch : tasks)

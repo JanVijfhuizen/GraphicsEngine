@@ -156,6 +156,12 @@ namespace game
 		renderTask.priority = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
 		info.renderTasks.Push(renderTask);
+
+		LightTask lightTask{};
+		lightTask.pos = glm::vec3(glm::vec2(renderTask.position) / glm::vec2(SIMULATED_RESOLUTION), 0.1f);
+		lightTask.intensity = 1;
+		lightTask.fallOf = 0;
+		info.lightTasks.Push(lightTask);
 	}
 
 	void Level::DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const
