@@ -158,9 +158,13 @@ namespace game
 		info.renderTasks.Push(renderTask);
 
 		LightTask lightTask{};
-		lightTask.pos = glm::vec3(glm::vec2(renderTask.position) / glm::vec2(SIMULATED_RESOLUTION), 0.1f);
-		lightTask.intensity = 1;
-		lightTask.fallOf = 0;
+		lightTask.pos = glm::vec3(glm::vec2(renderTask.position) / glm::vec2(SIMULATED_RESOLUTION), 0);
+		lightTask.pos *= 2;
+		lightTask.pos -= 1;
+		lightTask.pos.z = .1f;
+		lightTask.pos.y *= -1;
+		lightTask.intensity = 5;
+		lightTask.fallOf = 2;
 		info.lightTasks.Push(lightTask);
 	}
 

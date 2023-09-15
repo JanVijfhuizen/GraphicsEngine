@@ -31,7 +31,7 @@ namespace game
 
 		pixels = stbi_load("Art/fallback_normal.png", &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
 		_fallbackNormalImage = AddImage(imageCreateInfo);
-		jv::ge::FillImage(_fallbackImage, pixels);
+		jv::ge::FillImage(_fallbackNormalImage, pixels);
 		stbi_image_free(pixels);
 
 		jv::ge::Vertex3D vertices[4]

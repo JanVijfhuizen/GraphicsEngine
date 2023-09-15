@@ -33,8 +33,8 @@ void main()
     if(color.a < .01f)
         discard;
 
-    vec4 normal = texture(normal, fragPos);
-    vec3 norm = normalize(normal.xyz);
+    vec4 n = texture(normal, fragPos);
+    vec3 norm = normalize(n.xyz);
 
     vec3 lightMul = vec3(0);
 
@@ -49,6 +49,7 @@ void main()
         diffuse -= light.fallOf * dis;
         diffuse = max(vec3(0), diffuse);
         lightMul += diffuse;
+        lightMul = vec3(1.f - light.fallOf * dis);
     }
 
     vec4 result = vec4(lightInfo.ambient + lightMul, 1.0) * color;
