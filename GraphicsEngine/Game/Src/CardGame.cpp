@@ -265,7 +265,7 @@ namespace game
 			Write(writeInfo);
 
 			glm::vec2 pixelatedResolution = SIMULATED_RESOLUTION;
-			pixelatedResolution *= cardGame->pixelation;
+			pixelatedResolution /= cardGame->pixelation;
 
 			SwapChainPushConstant pushConstant{};
 			pushConstant.time = cardGame->timeSinceStarted;

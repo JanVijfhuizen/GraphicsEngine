@@ -36,6 +36,7 @@ namespace game
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
+			void OnExit(State& state, const LevelInfo& info) override;
 		};
 
 		struct CombatState final : LevelState<State>

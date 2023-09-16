@@ -196,13 +196,17 @@ namespace game
 				state.chosenPath = discoverOption;
 				auto& path = state.paths[discoverOption];
 				++path.counters;
-				++state.depth;
 
 				stateIndex = static_cast<uint32_t>(StateNames::combat);
 			}
 		}
 
 		return true;
+	}
+
+	void MainLevel::PathSelectState::OnExit(State& state, const LevelInfo& info)
+	{
+		++state.depth;
 	}
 
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
