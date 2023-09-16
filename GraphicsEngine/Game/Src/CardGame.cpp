@@ -59,6 +59,7 @@ namespace game
 			glm::ivec2 resolution;
 			glm::ivec2 simResolution;
 			float time;
+			float pixelation;
 		};
 
 		struct SwapChain final
@@ -263,14 +264,12 @@ namespace game
 			writeInfo.bindings = &writeBindingInfo;
 			writeInfo.bindingCount = 1;
 			Write(writeInfo);
-
-			glm::vec2 pixelatedResolution = SIMULATED_RESOLUTION;
-			pixelatedResolution /= cardGame->pixelation;
-
+			
 			SwapChainPushConstant pushConstant{};
 			pushConstant.time = cardGame->timeSinceStarted;
 			pushConstant.resolution = RESOLUTION;
-			pushConstant.simResolution = glm::ivec2(pixelatedResolution);
+			pushConstant.simResolution = SIMULATED_RESOLUTION;
+			pushConstant.pixelation = cardGame->pixelation;
 
 			jv::ge::DrawInfo drawInfo{};
 			drawInfo.pipeline = swapChain.pipeline;

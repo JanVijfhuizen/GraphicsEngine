@@ -196,7 +196,7 @@ namespace game
 		void Load(LevelIndex index);
 
 	private:
-		const float _LOAD_DURATION = .5f;
+		const float _LOAD_DURATION = .2f;
 		bool _loading;
 		float _timeSinceLoading;
 		LevelIndex _loadingLevelIndex;
