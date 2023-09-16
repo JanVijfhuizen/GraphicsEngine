@@ -29,6 +29,7 @@ layout(push_constant) uniform PushConstants
 
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragPos;
+layout(location = 2) out vec2 wFragPos;
 
 void HandleInstance(in InstanceData instance)
 {
@@ -41,6 +42,7 @@ void HandleInstance(in InstanceData instance)
     gl_Position = vec4(pos, 0.0, 1.0);
     fragPos = CalculateTextureCoordinates(instance.subTexture, inTexCoords);
     fragColor = instance.color.xyz;
+    wFragPos = pos;
 }
 
 void main() 

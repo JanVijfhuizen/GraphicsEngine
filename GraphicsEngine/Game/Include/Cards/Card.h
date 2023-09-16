@@ -52,6 +52,7 @@ namespace game
 		const char* name = "unnamed";
 		const char* ruleText = "no rule text yet";
 		uint32_t animIndex = 0;
+		uint32_t normalAnimIndex = -1;
 
 		bool(*onActionEvent)(State& state, ActionState& actionState, uint32_t self, bool& actionPending) = nullptr;
 	};

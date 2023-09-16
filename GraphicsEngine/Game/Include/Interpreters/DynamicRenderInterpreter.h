@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Engine/Engine.h"
 #include "Tasks/DynamicRenderTask.h"
+#include "Tasks/LightTask.h"
 #include "Tasks/RenderTask.h"
 
 namespace game
@@ -9,6 +10,7 @@ namespace game
 	{
 		glm::ivec2 resolution;
 		jv::Arena* frameArena;
+		TaskSystem<LightTask>* lightTasks;
 
 		const char* fragPath = "Shaders/frag-dyn.spv";
 		const char* vertPath = "Shaders/vert-dyn.spv";
@@ -54,10 +56,13 @@ namespace game
 
 		jv::ge::Resource _buffer;
 		jv::ge::Resource _fallbackImage;
+		jv::ge::Resource _fallbackNormalImage;
 		jv::ge::Resource _fallbackMesh;
 		jv::Array<jv::ge::Resource> _samplers;
 		jv::ge::Resource _pool;
 		uint32_t _frameCapacity;
+		jv::ge::Resource _lightInfoBuffer;
+		jv::ge::Resource _lightsBuffer;
 
 		void OnStart(const DynamicRenderInterpreterCreateInfo& createInfo, const EngineMemory& memory) override;
 		void OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<DynamicRenderTask>>& tasks) override;

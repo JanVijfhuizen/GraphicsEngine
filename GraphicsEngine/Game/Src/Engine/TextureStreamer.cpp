@@ -11,6 +11,9 @@ namespace game
 {
 	jv::ge::Resource TextureStreamer::Get(const uint32_t i)
 	{
+		if (i == -1)
+			return nullptr;
+
 		auto& id = _ids[i];
 		assert(id.path);
 		if (id.resource)
@@ -65,7 +68,6 @@ namespace game
 		stbi_image_free(pixels);
 		id.resource->active = true;
 		id.inactiveCount = 0;
-
 		return id.resource->resource;
 	}
 

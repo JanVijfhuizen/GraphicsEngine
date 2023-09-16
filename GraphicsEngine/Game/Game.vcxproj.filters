@@ -194,5 +194,8 @@
     <ClInclude Include="Include\Levels\GameOverLevel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Tasks\LightTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

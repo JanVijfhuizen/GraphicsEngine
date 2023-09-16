@@ -86,13 +86,13 @@ namespace game
 				bgRenderTask.xCenter = true;
 				bgRenderTask.yCenter = true;
 				bgRenderTask.priority = true;
-				info.pixelPerfectRenderTasks.Push(bgRenderTask);
+				info.renderTasks.Push(bgRenderTask);
 
 				if(bgRenderTask.scale.y > 2)
 				{
 					bgRenderTask.scale.y -= 2;
 					bgRenderTask.color = glm::vec4(0, 0, 0, 1);
-					info.pixelPerfectRenderTasks.Push(bgRenderTask);
+					info.renderTasks.Push(bgRenderTask);
 				}
 
 				const float l = _fullCardLifeTime - FULL_CARD_OPEN_DURATION;
@@ -155,7 +155,14 @@ namespace game
 		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
 		renderTask.priority = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
-		info.pixelPerfectRenderTasks.Push(renderTask);
+		info.renderTasks.Push(renderTask);
+
+		LightTask lightTask{};
+		lightTask.pos = LightTask::ToLightTaskPos(renderTask.position);
+		lightTask.pos.z = .2f;
+		lightTask.intensity = 10;
+		lightTask.fallOf = 8;
+		info.lightTasks.Push(lightTask);
 	}
 
 	void Level::DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const
@@ -211,7 +218,7 @@ namespace game
 			pressed = true;
 
 		info.textTasks.Push(buttonTextTask);
-		info.pixelPerfectRenderTasks.Push(buttonRenderTask);
+		info.renderTasks.Push(buttonRenderTask);
 		return pressed;
 	}
 
@@ -283,8 +290,7 @@ namespace game
 				const float eval = curve.REvaluate(drawInfo.spawnLerp);
 
 				//xAddOffset = (1.f - eval) * w / 8 * (drawInfo.spawnRight * 2 - 1);
-
-				//yAddOffset = DoubleCurveEvaluate(drawInfo.spawnLerp, curve, curve) * shape.y / 4;
+				yAddOffset = DoubleCurveEvaluate(drawInfo.spawnLerp, curve, curve) * shape.y / 4;
 				cardDrawInfo.lifeTime = drawInfo.spawnLerp * CARD_FADE_DURATION;
 			}
 
@@ -453,12 +459,12 @@ namespace game
 
 		bgRenderTask.position = origin;
 		bgRenderTask.color *= glm::vec4(fadeMod, 1);
-		info.pixelPerfectRenderTasks.Push(bgRenderTask);
+		info.renderTasks.Push(bgRenderTask);
 
 		PixelPerfectRenderTask fgRenderTask = bgRenderTask;
 		fgRenderTask.subTexture = cardFrames[1];
 		fgRenderTask.color = drawInfo.fgColor * glm::vec4(fadeMod, 1);
-		info.pixelPerfectRenderTasks.Push(fgRenderTask);
+		info.renderTasks.Push(fgRenderTask);
 
 		// Draw image.
 		if (!drawInfo.ignoreAnim && drawInfo.card)
@@ -471,6 +477,7 @@ namespace game
 
 			PixelPerfectRenderTask imageRenderTask{};
 			imageRenderTask.position = origin;
+			imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex);
 			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
 			imageRenderTask.scale = CARD_ART_SHAPE;
 			imageRenderTask.scale *= drawInfo.scale;
@@ -479,9 +486,9 @@ namespace game
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			imageRenderTask.priority = drawInfo.priority;
-			if (drawInfo.mirrorHorizontal)
-				imageRenderTask.subTexture = imageRenderTask.subTexture.MirrorHorizontal();
-			info.pixelPerfectRenderTasks.Push(imageRenderTask);
+			//if (drawInfo.mirrorHorizontal)
+				//imageRenderTask.subTexture = imageRenderTask.subTexture.MirrorHorizontal();
+			info.renderTasks.Push(imageRenderTask);
 		}
 
 		const bool priority = drawInfo.priority || !info.inputState.rMouse.pressed;
@@ -505,7 +512,7 @@ namespace game
 			costRenderTask.color *= glm::vec4(fadeMod, 1);
 			costRenderTask.subTexture = statFrames[4];
 			costRenderTask.priority = priority;
-			info.pixelPerfectRenderTasks.Push(costRenderTask);
+			info.renderTasks.Push(costRenderTask);
 
 			TextTask textTask{};
 			textTask.position = costRenderTask.position;
@@ -555,7 +562,7 @@ namespace game
 			{
 				statsRenderTask.subTexture = statFrames[i + 1];
 				statsRenderTask.position.y -= statsRenderTask.scale.y;
-				info.pixelPerfectRenderTasks.Push(statsRenderTask);
+				info.renderTasks.Push(statsRenderTask);
 
 				const int32_t m = vMods[i];
 
@@ -596,11 +603,11 @@ namespace game
 
 	void Level::DrawFullCard(Card* card, const FullCardType cardType)
 	{
-		_fullCardType = cardType;
 		if (card == nullptr)
 			_fullCard = nullptr;
 		if (_fullCard)
 			return;
+		_fullCardType = cardType;
 		_fullCard = card;
 		_fullCardLifeTime = 0;
 	}

@@ -22,6 +22,7 @@ namespace game
 					DynamicRenderTask dynTask{};
 					dynTask.renderTask = normalTask;
 					dynTask.image = task.image;
+					dynTask.normalImage = task.normalImage;
 					if (!task.priority)
 						_createInfo.dynRenderTasks->Push(dynTask);
 					else

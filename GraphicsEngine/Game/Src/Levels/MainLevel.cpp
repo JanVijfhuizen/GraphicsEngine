@@ -312,6 +312,8 @@ namespace game
 			case ActionState::Trigger::onStartOfTurn:
 				actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
 				break;
+			case ActionState::Trigger::draw:
+				actionStateDuration = CARD_DRAW_DURATION;
 			default:
 				break;
 			}
@@ -352,7 +354,7 @@ namespace game
 			PixelPerfectRenderTask lineRenderTask{};
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
-			lineRenderTask.scale.y = 1;
+			lineRenderTask.scale.y = 3;
 			lineRenderTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT);
 			lineRenderTask.priority = true;
 
@@ -373,19 +375,26 @@ namespace game
 
 				TextTask textTask{};
 				textTask.text = "new";
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 1);
-				textTask.scale = 3;
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 2);
+				textTask.scale = 2;
 				textTask.center = true;
 				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
 				textTask.text = "turn";
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 28);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 17);
 				info.textTasks.Push(textTask);
+
+				LightTask lightTask{};
+				lightTask.intensity = 20;
+				lightTask.fallOf = 8;
+				lightTask.pos = LightTask::ToLightTaskPos(textTask.position);
+				lightTask.pos.z = .2f;
+				info.lightTasks.Push(lightTask);
 			}
 
 			lineRenderTask.position.x = off;
-			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			info.renderTasks.Push(lineRenderTask);
 		}
 
 		if(state.stack.count == 0)
@@ -470,10 +479,10 @@ namespace game
 			lineRenderTask.position.y = 0;
 			lineRenderTask.position.x = 0;
 			lineRenderTask.color.a = l;
-			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			info.renderTasks.Push(lineRenderTask);
 			lineRenderTask.color = glm::vec4(0, 0, 0, l);
 			lineRenderTask.scale.y -= 2;
-			info.pixelPerfectRenderTasks.Push(lineRenderTask);
+			info.renderTasks.Push(lineRenderTask);
 		}
 
 		{
@@ -1214,7 +1223,8 @@ namespace game
 		if (allied != activeState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)])
 			return;
 
-		DrawDrawAnimation(level, drawInfo);
+		drawInfo.spawning = true;
+		drawInfo.spawnLerp = GetActionStateLerp(level);
 	}
 
 	void MainLevel::CombatState::DrawDrawAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const
@@ -1223,7 +1233,7 @@ namespace game
 			return;
 		
 		drawInfo.spawning = true;
-		drawInfo.spawnLerp = GetActionStateLerp(level);
+		drawInfo.spawnLerp = GetActionStateLerp(level, CARD_DRAW_DURATION);
 	}
 
 	void MainLevel::CombatState::DrawDeathAnimation(const Level& level, CardSelectionDrawInfo& drawInfo, const bool allied) const
