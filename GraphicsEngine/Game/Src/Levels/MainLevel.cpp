@@ -353,7 +353,7 @@ namespace game
 			PixelPerfectRenderTask lineRenderTask{};
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
-			lineRenderTask.scale.y = 3;
+			lineRenderTask.scale.y = 1;
 			lineRenderTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT);
 			lineRenderTask.priority = true;
 
@@ -374,14 +374,14 @@ namespace game
 
 				TextTask textTask{};
 				textTask.text = "new";
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 5);
-				textTask.scale = 3;
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 1);
+				textTask.scale = 2;
 				textTask.center = true;
 				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
 				textTask.text = "turn";
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 28);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 19);
 				info.textTasks.Push(textTask);
 
 				LightTask lightTask{};
@@ -713,7 +713,7 @@ namespace game
 		// Draw mana.
 		{
 			TextTask manaTextTask{};
-			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 2);
+			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, HAND_HEIGHT + 32);
 			manaTextTask.text = TextInterpreter::IntToConstCharPtr(mana, info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(maxMana, info.frameArena), info.frameArena);
