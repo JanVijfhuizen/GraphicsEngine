@@ -15,6 +15,7 @@ struct Light
     float intensity;
     float fallOf;
     float size;
+    float specularity;
 };
 
 layout(std140, set=0, binding = 2) uniform LightInfo
@@ -61,6 +62,14 @@ void main()
         diffuse *= light.intensity;
         diffuse -= light.fallOf * dis;
         diffuse = max(vec3(0), diffuse);
+
+        // Specularity.
+        vec3 viewDir = vec3(0, 0, -1);
+        vec3 reflectDir = reflect(-lightDir, norm);  
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+        vec3 specular = light.color.xyz * light.specularity * spec;  
+        diffuse += specular;
+
         lightMul += diffuse;
     }
 
