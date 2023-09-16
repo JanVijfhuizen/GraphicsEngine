@@ -14,6 +14,7 @@ struct Light
     vec4 pos;
     float intensity;
     float fallOf;
+    float size;
 };
 
 layout(std140, set=0, binding = 2) uniform LightInfo
@@ -51,7 +52,8 @@ void main()
     for(int i = 0; i < lightInfo.count; i++)
     {
         Light light = lightBuffer.lights[i];
-        float dis = length(light.pos.xyz - vec3(wFragPos, 0.0));
+        float dis = length(light.pos.xyz - vec3(wFragPos, 0.0)) - light.size;
+        dis = max(0.0, dis);
         vec3 lightDir = normalize(light.pos.xyz - vec3(wFragPos, 0.0));
         float normAngle = dot(norm, lightDir);
         float diff = max(normAngle, 0.0);
