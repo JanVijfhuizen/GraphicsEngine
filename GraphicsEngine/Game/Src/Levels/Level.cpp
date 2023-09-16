@@ -158,20 +158,14 @@ namespace game
 		info.renderTasks.Push(renderTask);
 
 		LightTask lightTask{};
-		lightTask.pos = glm::vec3(glm::vec2(renderTask.position) / glm::vec2(SIMULATED_RESOLUTION), 0);
+		lightTask.pos = glm::vec4(glm::vec2(renderTask.position) / glm::vec2(SIMULATED_RESOLUTION), 0, 0);
 		lightTask.pos *= 2;
 		lightTask.pos -= 1;
 		lightTask.pos.y *= -1;
 		lightTask.pos.z = .2f;
-		lightTask.intensity = 5;
+		lightTask.intensity = 20;
 		lightTask.fallOf = 2;
 		info.lightTasks.Push(lightTask);
-
-		LightTask mainLightTask{};
-		mainLightTask.fallOf = 0;
-		mainLightTask.pos = glm::vec3(.5f, .5f, 10);
-		mainLightTask.intensity = 5;
-		info.lightTasks.Push(mainLightTask);
 	}
 
 	void Level::DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const

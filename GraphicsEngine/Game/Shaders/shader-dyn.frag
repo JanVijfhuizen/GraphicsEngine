@@ -10,8 +10,8 @@ layout(set = 0, binding = 1) uniform sampler2D normal;
 
 struct Light
 {
-    vec3 color;
-    vec3 pos;
+    vec4 color;
+    vec4 pos;
     float intensity;
     float fallOf;
 };
@@ -51,11 +51,11 @@ void main()
     for(int i = 0; i < lightInfo.count; i++)
     {
         Light light = lightBuffer.lights[i];
-        float dis = length(light.pos - vec3(wFragPos, 0.0));
-        vec3 lightDir = normalize(light.pos - vec3(wFragPos, 0.0));
+        float dis = length(light.pos.xyz - vec3(wFragPos, 0.0));
+        vec3 lightDir = normalize(light.pos.xyz - vec3(wFragPos, 0.0));
         float normAngle = dot(norm, lightDir);
         float diff = max(normAngle, 0.0);
-        vec3 diffuse = diff * light.color;
+        vec3 diffuse = diff * light.color.xyz;
         diffuse *= light.intensity;
         diffuse -= light.fallOf * dis;
         diffuse = max(vec3(0), diffuse);

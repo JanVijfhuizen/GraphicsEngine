@@ -180,6 +180,7 @@ namespace game
 			const auto& lightTasks = _createInfo.lightTasks->GetTaskBatches()[0];
 			LightInfo lightInfo{};
 			lightInfo.count = lightTasks.count;
+			lightInfo.ambient = glm::vec3(1);
 
 			jv::ge::BufferUpdateInfo bufferUpdateInfo{};
 			bufferUpdateInfo.buffer = _lightInfoBuffer;
