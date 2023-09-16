@@ -68,8 +68,8 @@ void main()
     v *= applyVignette(uv);
 
     // Light.
-    vec2 center = vec2(.2, .2);
-    float dist = 1.0/length(uv - center);
+    //vec2 center = vec2(.2, .2);
+    //float dist = 1.0/length(uv - center);
     //v *= dist * 3.4f;
     //v = abs(v);
 
@@ -79,5 +79,5 @@ void main()
     vec4 sub = vec4(vec3(b), 0.0);
     vec4 f = mixed - sub;
     f = max(f, color * .25 * color.a);
-    outColor = f; 
+    outColor = f;
 }

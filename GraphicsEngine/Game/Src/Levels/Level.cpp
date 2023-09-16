@@ -16,6 +16,11 @@ namespace game
 	constexpr uint32_t CARD_FRAME_COUNT = 2;
 	constexpr uint32_t CARD_STACKED_SPACING = 6;
 
+	bool LevelUpdateInfo::ScreenShakeInfo::IsInTimeOut() const
+	{
+		return remaining > -timeOut;
+	}
+
 	void Level::Create(const LevelCreateInfo& info)
 	{
 		_fullCard = nullptr;
