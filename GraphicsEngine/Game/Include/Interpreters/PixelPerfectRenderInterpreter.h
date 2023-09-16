@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Engine/Engine.h"
+#include "Levels/Level.h"
 #include "Tasks/DynamicRenderTask.h"
 #include "Tasks/PixelPerfectRenderTask.h"
 #include "Tasks/RenderTask.h"
@@ -15,6 +16,7 @@ namespace game
 		TaskSystem<DynamicRenderTask>* dynRenderTasks;
 		TaskSystem<DynamicRenderTask>* dynPriorityRenderTasks;
 		jv::ge::SubTexture background;
+		LevelUpdateInfo::ScreenShakeInfo* screenShakeInfo;
 	};
 
 	class PixelPerfectRenderInterpreter final : public TaskInterpreter<PixelPerfectRenderTask, PixelPerfectRenderInterpreterCreateInfo>

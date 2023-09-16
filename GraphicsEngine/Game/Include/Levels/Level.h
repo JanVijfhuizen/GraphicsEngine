@@ -52,6 +52,16 @@ namespace game
 
 	struct LevelUpdateInfo final : LevelInfo
 	{
+		struct ScreenShakeInfo final
+		{
+			float fallOfThreshold = 1;
+			float remaining = -1e5;
+			float timeOut = ACTION_STATE_DEFAULT_DURATION;
+			uint32_t intensity = 4;
+
+			[[nodiscard]] bool IsInTimeOut() const;
+		};
+
 		glm::ivec2 resolution;
 		const InputState& inputState;
 		TaskSystem<TextTask>& textTasks;
@@ -59,6 +69,7 @@ namespace game
 		TaskSystem<LightTask>& lightTasks;
 		float deltaTime;
 		TextureStreamer& textureStreamer;
+		ScreenShakeInfo& screenShakeInfo;
 	};
 
 	struct Level

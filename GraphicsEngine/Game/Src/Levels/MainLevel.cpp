@@ -300,7 +300,6 @@ namespace game
 		{
 			timeSinceLastActionState = level->GetTime();
 			actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
-
 			activeState = state.stack.Pop();
 
 			// Temp.
@@ -471,7 +470,7 @@ namespace game
 		
 		{
 			const float l = jv::Min(1.f, level->GetTime() * 3);
-			constexpr uint32_t LINE_POSITION = HAND_HEIGHT + 28;
+			constexpr uint32_t LINE_POSITION = HAND_HEIGHT + 6;
 			PixelPerfectRenderTask lineRenderTask{};
 			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
@@ -714,7 +713,7 @@ namespace game
 		// Draw mana.
 		{
 			TextTask manaTextTask{};
-			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, HAND_HEIGHT + 32);
+			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 2);
 			manaTextTask.text = TextInterpreter::IntToConstCharPtr(mana, info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(maxMana, info.frameArena), info.frameArena);
@@ -776,6 +775,7 @@ namespace game
 	bool MainLevel::CombatState::PreHandleActionState(State& state, const LevelUpdateInfo& info,
 		ActionState& actionState)
 	{
+		info.screenShakeInfo.timeOut = 0;
 		if (!ValidateActionState(state, activeState))
 			return false;
 
@@ -1109,7 +1109,7 @@ namespace game
 	}
 
 	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
-		CardSelectionDrawInfo& drawInfo, const bool allied) const
+		CardSelectionDrawInfo& drawInfo, const bool allied)
 	{
 		if (!activeStateValid)
 			return;
@@ -1172,6 +1172,7 @@ namespace game
 			drawInfo.overridePosIndex = dst;
 			drawInfo.overridePos = GetCardPosition(info, drawInfo, dst);
 			drawInfo.overridePos.y += vEval * cardShape.y * .5f * (2 * !allied - 1);
+			Shake(info);
 		}
 	}
 
@@ -1211,6 +1212,7 @@ namespace game
 		textTask.position.y += eval * 24;
 
 		info.textTasks.Push(textTask);
+		Shake(info);
 	}
 
 	void MainLevel::CombatState::DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level,
@@ -1324,6 +1326,17 @@ namespace game
 	float MainLevel::CombatState::GetAttackMoveDuration(const State& state, const ActionState& actionState) const
 	{
 		return fabs(GetAttackMoveOffset(state, actionState)) / CARD_HORIZONTAL_MOVE_SPEED;
+	}
+
+	void MainLevel::CombatState::Shake(const LevelUpdateInfo& info)
+	{
+		if (!info.screenShakeInfo.IsInTimeOut())
+		{
+			info.screenShakeInfo.fallOfThreshold = .1f;
+			info.screenShakeInfo.intensity = 2;
+			info.screenShakeInfo.remaining = .1f;
+			info.screenShakeInfo.timeOut = 1e4;
+		}
 	}
 
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)

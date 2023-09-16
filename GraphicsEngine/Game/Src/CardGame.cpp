@@ -71,6 +71,8 @@ namespace game
 			jv::ge::Resource pipeline;
 		};
 
+		LevelUpdateInfo::ScreenShakeInfo screenShakeInfo{};
+
 		Engine engine;
 		jv::Arena arena;
 		jv::Arena levelArena;
@@ -188,6 +190,9 @@ namespace game
 		const float dt = static_cast<float>(deltaTime) / 1e3f;
 		timeSinceStarted += dt;
 		
+		if (screenShakeInfo.IsInTimeOut())
+			screenShakeInfo.remaining -= dt;
+		
 		const LevelUpdateInfo info
 		{
 			levelArena,
@@ -210,7 +215,8 @@ namespace game
 			*pixelPerfectRenderTasks,
 			*lightTasks,
 			dt,
-			textureStreamer
+			textureStreamer,
+			screenShakeInfo
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -454,6 +460,7 @@ namespace game
 			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.dynRenderTasks = outCardGame->dynamicRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.dynPriorityRenderTasks = outCardGame->dynamicPriorityRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.screenShakeInfo = &outCardGame->screenShakeInfo;
 
 			pixelPerfectRenderInterpreterCreateInfo.resolution = SIMULATED_RESOLUTION;
 			pixelPerfectRenderInterpreterCreateInfo.simulatedResolution = SIMULATED_RESOLUTION;

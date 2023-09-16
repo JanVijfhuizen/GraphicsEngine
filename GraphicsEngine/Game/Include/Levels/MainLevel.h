@@ -88,7 +88,7 @@ namespace game
 			void CollectActivatedCards(State& state, const LevelUpdateInfo& info, ActionState& actionState);
 			void PostHandleActionState(State& state, Level* level, const ActionState& actionState);
 			[[nodiscard]] static bool ValidateActionState(const State& state, ActionState& actionState);
-			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
+			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied);
 			void DrawDamageAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawDrawAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const;
@@ -99,6 +99,7 @@ namespace game
 			[[nodiscard]] float GetActionStateLerp(const Level& level, float duration = ACTION_STATE_DEFAULT_DURATION, float startoffset = 0) const;
 			[[nodiscard]] float GetAttackMoveOffset(const State& state, const ActionState& actionState) const;
 			[[nodiscard]] float GetAttackMoveDuration(const State& state, const ActionState& actionState) const;
+			static void Shake(const LevelUpdateInfo& info);
 		};
 
 		struct RewardMagicCardState final : LevelState<State>
