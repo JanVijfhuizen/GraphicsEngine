@@ -8,7 +8,7 @@ namespace game
 		glm::vec4 pos{0.f, 0.f, 1.f, 0};
 		float intensity = 1;
 		float fallOf = 2;
-		float size = .05f;
+		float size = .1f;
 		float specularity = 10;
 
 		[[nodiscard]] static glm::vec4 ToLightTaskPos(const glm::ivec2 pos)

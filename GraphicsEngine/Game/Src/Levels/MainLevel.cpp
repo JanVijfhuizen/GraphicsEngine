@@ -375,14 +375,14 @@ namespace game
 
 				TextTask textTask{};
 				textTask.text = "new";
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 5);
-				textTask.scale = 3;
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 2);
+				textTask.scale = 2;
 				textTask.center = true;
 				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
 				textTask.text = "turn";
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 30);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 17);
 				info.textTasks.Push(textTask);
 
 				LightTask lightTask{};
