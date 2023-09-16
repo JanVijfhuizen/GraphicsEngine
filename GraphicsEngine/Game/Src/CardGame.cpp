@@ -125,6 +125,7 @@ namespace game
 		std::chrono::time_point<std::chrono::steady_clock> prevTime{};
 
 		TextureStreamer textureStreamer;
+		float pixelation = 1;
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -216,7 +217,8 @@ namespace game
 			*lightTasks,
 			dt,
 			textureStreamer,
-			screenShakeInfo
+			screenShakeInfo,
+			pixelation
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -262,10 +264,13 @@ namespace game
 			writeInfo.bindingCount = 1;
 			Write(writeInfo);
 
+			glm::vec2 pixelatedResolution = SIMULATED_RESOLUTION;
+			pixelatedResolution *= cardGame->pixelation;
+
 			SwapChainPushConstant pushConstant{};
 			pushConstant.time = cardGame->timeSinceStarted;
 			pushConstant.resolution = RESOLUTION;
-			pushConstant.simResolution = SIMULATED_RESOLUTION;
+			pushConstant.simResolution = glm::ivec2(pixelatedResolution);
 
 			jv::ge::DrawInfo drawInfo{};
 			drawInfo.pipeline = swapChain.pipeline;

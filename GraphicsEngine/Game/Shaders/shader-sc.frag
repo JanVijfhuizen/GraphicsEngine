@@ -59,6 +59,7 @@ void main()
     uv *= res;
     uv = floor(uv);
     uv /= res;
+    uv += vec2(0.5f / pushConstants.simResolution);
     
     float nx = noise(uv.xy * pushConstants.simResolution.x);
     float ny = noise(uv.yx * pushConstants.simResolution.y);
@@ -73,7 +74,7 @@ void main()
     //v *= dist * 3.4f;
     //v = abs(v);
 
-    vec4 color = texture(img, fragPos);
+    vec4 color = texture(img, uv);
     vec4 bgColor = vec4(vec3(v), 1.0);
     vec4 mixed = mix(color, bgColor, 1.f - color.a);
     vec4 sub = vec4(vec3(b), 0.0);

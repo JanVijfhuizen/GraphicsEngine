@@ -70,6 +70,7 @@ namespace game
 		float deltaTime;
 		TextureStreamer& textureStreamer;
 		ScreenShakeInfo& screenShakeInfo;
+		float& pixelation;
 	};
 
 	struct Level
