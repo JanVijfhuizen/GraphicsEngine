@@ -1200,6 +1200,7 @@ namespace jv::ge
 		DestroyScenes();
 
 		ge.arena.DestroyScope(ge.scope);
+		DestroyArray(ge.arena, ge.cmdPools);
 		vk::SwapChain::Destroy(ge.arena, ge.app, ge.swapChain);
 
 		for (const auto& pipeline : ge.pipelines)
