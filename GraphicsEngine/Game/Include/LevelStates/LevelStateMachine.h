@@ -9,6 +9,7 @@ namespace game
 		virtual bool Create(T& state, const LevelCreateInfo& info) { return true; }
 		virtual void Reset(T& state, const LevelInfo& info){}
 		virtual bool Update(T& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) = 0;
+		virtual void OnExit(T& state, const LevelInfo& info){};
 	};
 
 	template <typename T>
@@ -29,6 +30,8 @@ namespace game
 	{
 		if(next != -1 && !level->GetIsLoading())
 		{
+			if (current != -1)
+				states[current]->OnExit(state, info);
 			current = next;
 			next = -1;
 			states[current]->Reset(state, info);

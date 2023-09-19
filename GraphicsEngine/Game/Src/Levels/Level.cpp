@@ -33,9 +33,19 @@ namespace game
 
 	bool Level::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
+		uint32_t pixelationSteps = 0;
+		auto res = SIMULATED_RESOLUTION;
+		while(res.x > 1 || res.y > 1)
+		{
+			res /= 2;
+			++pixelationSteps;
+		}
+
 		if(_loading)
 		{
 			_timeSinceLoading += info.deltaTime;
+			info.pixelation = 1.f + (_timeSinceLoading / _LOAD_DURATION) * pixelationSteps;
+
 			if (_timeSinceLoading > _LOAD_DURATION)
 			{
 				if(_loadingLevelIndex == LevelIndex::animOnly)
@@ -50,6 +60,8 @@ namespace game
 				return true;
 			}
 		}
+		else
+			info.pixelation = 1.f + jv::Max(0.f, 1.f - _timeSinceOpened / _LOAD_DURATION) * pixelationSteps;
 
 		_timeSinceOpened += info.deltaTime;
 		return true;
@@ -724,6 +736,8 @@ namespace game
 
 	void Level::Load(const LevelIndex index)
 	{
+		if (_loading)
+			return;
 		_loading = true;
 		_loadingLevelIndex = index;
 		_timeSinceLoading = 0;

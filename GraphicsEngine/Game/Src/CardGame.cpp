@@ -59,6 +59,7 @@ namespace game
 			glm::ivec2 resolution;
 			glm::ivec2 simResolution;
 			float time;
+			float pixelation;
 		};
 
 		struct SwapChain final
@@ -125,6 +126,7 @@ namespace game
 		std::chrono::time_point<std::chrono::steady_clock> prevTime{};
 
 		TextureStreamer textureStreamer;
+		float pixelation = 1;
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -216,7 +218,8 @@ namespace game
 			*lightTasks,
 			dt,
 			textureStreamer,
-			screenShakeInfo
+			screenShakeInfo,
+			pixelation
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -261,11 +264,12 @@ namespace game
 			writeInfo.bindings = &writeBindingInfo;
 			writeInfo.bindingCount = 1;
 			Write(writeInfo);
-
+			
 			SwapChainPushConstant pushConstant{};
 			pushConstant.time = cardGame->timeSinceStarted;
 			pushConstant.resolution = RESOLUTION;
 			pushConstant.simResolution = SIMULATED_RESOLUTION;
+			pushConstant.pixelation = cardGame->pixelation;
 
 			jv::ge::DrawInfo drawInfo{};
 			drawInfo.pipeline = swapChain.pipeline;

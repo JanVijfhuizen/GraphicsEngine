@@ -177,7 +177,7 @@ namespace game
 			level->DrawCard(info, cardDrawInfo);
 		}
 
-		if (info.inputState.lMouse.PressEvent())
+		if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
 		{
 			discoverOption = selected == discoverOption ? -1 : selected;
 			if (selected != -1)
@@ -191,18 +191,22 @@ namespace game
 		{
 			level->DrawPressEnterToContinue(info, HeaderSpacing::close, level->GetTime() - timeSinceDiscovered);
 			
-			if (info.inputState.enter.PressEvent())
+			if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 			{
 				state.chosenPath = discoverOption;
 				auto& path = state.paths[discoverOption];
 				++path.counters;
-				++state.depth;
 
 				stateIndex = static_cast<uint32_t>(StateNames::combat);
 			}
 		}
 
 		return true;
+	}
+
+	void MainLevel::PathSelectState::OnExit(State& state, const LevelInfo& info)
+	{
+		++state.depth;
 	}
 
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
@@ -374,7 +378,7 @@ namespace game
 
 				TextTask textTask{};
 				textTask.text = "new";
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 1);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 3);
 				textTask.scale = 2;
 				textTask.center = true;
 				textTask.priority = true;
@@ -393,6 +397,10 @@ namespace game
 			}
 
 			lineRenderTask.position.x = off;
+			++lineRenderTask.position.y;
+			info.renderTasks.Push(lineRenderTask);
+			lineRenderTask.position.x = -off;
+			lineRenderTask.position.y -= 2;
 			info.renderTasks.Push(lineRenderTask);
 		}
 
@@ -1391,7 +1399,7 @@ namespace game
 		if (f >= 0)
 			level->DrawPressEnterToContinue(info, HeaderSpacing::far, f);
 		
-		if (info.inputState.enter.PressEvent())
+		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 		{
 			if (discoverOption != -1)
 				info.gameState.magics[discoverOption] = path.magic;
@@ -1498,7 +1506,7 @@ namespace game
 			cardDrawInfo.metaData = &metaDatas[PARTY_ACTIVE_CAPACITY];
 			level->DrawCard(info, cardDrawInfo);
 
-			if (info.inputState.lMouse.PressEvent())
+			if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
 			{
 				discoverOption = choice == discoverOption ? -1 : choice;
 				if (discoverOption != -1)
@@ -1509,7 +1517,7 @@ namespace game
 				return true;
 			
 			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, level->GetTime() - timeSinceDiscovered);
-			if (!info.inputState.enter.PressEvent())
+			if (level->GetIsLoading() || !info.inputState.enter.PressEvent())
 				return true;
 
 			info.gameState.flaws[discoverOption] = path.flaw;
@@ -1617,7 +1625,7 @@ namespace game
 		{
 			const uint32_t id = gameState.partyIds[choice];
 
-			if (info.inputState.lMouse.PressEvent())
+			if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
 			{
 				const uint32_t swappable = path.artifact;
 				path.artifact = playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY + outStackSelected];
@@ -1625,7 +1633,7 @@ namespace game
 			}
 		}
 
-		if (info.inputState.enter.PressEvent())
+		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 			stateIndex = static_cast<uint32_t>(StateNames::exitFound);
 
 		return true;
@@ -1726,7 +1734,7 @@ namespace game
 					timeSincePartySelected = level->GetTime();
 
 				level->DrawPressEnterToContinue(info, HeaderSpacing::normal, level->GetTime() - timeSincePartySelected);
-				if (info.inputState.enter.PressEvent())
+				if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 				{
 					uint32_t d = 0;
 					for (uint32_t i = 0; i < playerState.partySize; ++i)
