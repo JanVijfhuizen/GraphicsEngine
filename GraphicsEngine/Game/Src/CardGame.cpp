@@ -610,6 +610,8 @@ namespace game
 			damageState.source = ActionState::Source::board;
 			damageState.src = self;
 			damageState.dst = self;
+			damageState.srcUniqueId = state.boardState.uniqueIds[self];
+			damageState.dstUniqueId = damageState.srcUniqueId;
 			damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 1;
 			state.stack.Add() = damageState;
 

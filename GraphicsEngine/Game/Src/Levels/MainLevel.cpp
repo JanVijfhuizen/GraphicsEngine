@@ -559,6 +559,9 @@ namespace game
 						state.stack.Add() = attackActionState;
 					}
 				}
+
+				for (bool& b : tapped)
+					b = true;
 			}
 		}
 
@@ -1034,6 +1037,7 @@ namespace game
 				{
 					boardState.partyIds[j] = boardState.partyIds[j + 1];
 					flawsActionPending[j] = flawsActionPending[j + 1];
+					tapped[j] = tapped[j + 1];
 					for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
 						artifactsActionPending[j + k] = artifactsActionPending[j + k + MONSTER_ARTIFACT_CAPACITY];
 				}
