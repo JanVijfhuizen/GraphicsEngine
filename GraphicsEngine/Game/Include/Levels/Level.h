@@ -193,13 +193,14 @@ namespace game
 
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;
-		void Load(LevelIndex index);
+		void Load(LevelIndex index, bool animate);
 
 	private:
 		const float _LOAD_DURATION = .2f;
 		bool _loading;
 		float _timeSinceLoading;
 		LevelIndex _loadingLevelIndex;
+		bool _animateLoading;
 		float _timeSinceOpened;
 		Card* _fullCard;
 		FullCardType _fullCardType;

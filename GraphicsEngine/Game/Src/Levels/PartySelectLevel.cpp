@@ -59,7 +59,7 @@ namespace game
 			}
 
 			if (info.inputState.enter.PressEvent())
-				Load(LevelIndex::main);
+				Load(LevelIndex::main, true);
 		}
 		else
 			timeSincePartySelected = -1;

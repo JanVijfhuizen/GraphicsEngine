@@ -27,6 +27,7 @@ namespace game
 		_timeSinceOpened = 0;
 		_timeSinceLoading = 0;
 		_loading = false;
+		_animateLoading = false;
 		for (auto& metaData : _cardDrawMetaDatas)
 			metaData = {};
 	}
@@ -62,6 +63,8 @@ namespace game
 		}
 		else
 			info.pixelation = 1.f + jv::Max(0.f, 1.f - _timeSinceOpened / _LOAD_DURATION) * pixelationSteps;
+		if (!_animateLoading)
+			info.pixelation = 1;
 
 		_timeSinceOpened += info.deltaTime;
 		return true;
@@ -78,7 +81,7 @@ namespace game
 		{
 			constexpr float FULL_CARD_OPEN_DURATION = .1f;
 			constexpr float FULL_CARD_TOTAL_DURATION = .2f;
-			constexpr uint32_t FULL_CARD_LINE_LENGTH = 32;
+			constexpr uint32_t FULL_CARD_LINE_LENGTH = 26;
 
 			const float delta = info.deltaTime * (info.inputState.rMouse.pressed * 2 - 1);
 			const float m = jv::Min(_fullCardLifeTime, FULL_CARD_TOTAL_DURATION);
@@ -734,12 +737,13 @@ namespace game
 		return _loading;
 	}
 
-	void Level::Load(const LevelIndex index)
+	void Level::Load(const LevelIndex index, bool animate)
 	{
 		if (_loading)
 			return;
 		_loading = true;
 		_loadingLevelIndex = index;
 		_timeSinceLoading = 0;
+		_animateLoading = animate;
 	}
 }

@@ -594,46 +594,40 @@ namespace game
 		for (auto& card : arr)
 		{
 			card.name = "monster";
-			card.ruleText = "whenever something happens that isnt supposed to happen, make something that is not supposed to happen happen.";
 			card.animIndex = c++;
 		}
-		// Starting pet.
-		arr[0].unique = true;
-		arr[0].name = "daisy";
-		arr[0].ruleText = "follows you around.";
-		arr[0].health = 999;
+		arr[0].name = "mama slime";
+		arr[0].health = 20;
+		arr[0].attack = 2;
+		arr[0].ruleText = "end of turn, take one damage and summon a slime.";
+		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+		{
+			if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
+				return false;
+
+			ActionState damageState = actionState;
+			damageState.trigger = ActionState::Trigger::onDamage;
+			damageState.source = ActionState::Source::board;
+			damageState.src = self;
+			damageState.dst = self;
+			damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 1;
+			state.stack.Add() = damageState;
+
+			ActionState summonState = actionState;
+			summonState.trigger = ActionState::Trigger::onSummon;
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = self < BOARD_CAPACITY_PER_SIDE;
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = 1;
+			state.stack.Add() = summonState;
+
+			return true;
+		};
 		arr[0].animIndex = 2;
 		arr[0].normalAnimIndex = 2 + 30;
 
-		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
-		{
-			if (actionPending && actionState.trigger == ActionState::Trigger::onStartOfTurn)
-			{
-				ActionState damageState = actionState;
-				damageState.trigger = ActionState::Trigger::onDamage;
-				damageState.source = ActionState::Source::board;
-				damageState.src = self;
-				damageState.dst = self;
-				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
-				state.stack.Add() = damageState;
-				state.boardState.combatStatModifiers[self].attack++;
-				actionPending = false;
-				return true;
-			}
+		arr[1].name = "slime jr.";
+		arr[1].attack = 1;
+		arr[1].health = 1;
 
-			if(actionState.trigger == ActionState::Trigger::onAttack && self == actionState.src)
-			{
-				std::cout << "daisy attacking" << std::endl;
-				actionPending = true;
-				return true;
-			}
-			if (actionState.trigger == ActionState::Trigger::onAttack && self == actionState.dst)
-			{
-				std::cout << "daisy attacked" << std::endl;
-				return true;
-			}
-			return false;
-		};
 		arr[FINAL_BOSS_ID].unique = true;
 		arr[FINAL_BOSS_ID].name = "da true final boss";
 		arr[FINAL_BOSS_ID].health = 44;

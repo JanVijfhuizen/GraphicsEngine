@@ -53,7 +53,8 @@ namespace game
 			}
 		}
 
-		return lineCount;
+		const uint32_t a = static_cast<int32_t>(l) - static_cast<int32_t>(lineStart) >= static_cast<int32_t>(lineLength);
+		return lineCount + a;
 	}
 
 	void TextInterpreter::OnStart(const TextInterpreterCreateInfo& createInfo, const EngineMemory& memory)
@@ -140,8 +141,8 @@ namespace game
 						const bool isInteger = !isSymbol && c < 'a';
 
 						// Assert if it's a valid character.
-						assert(isInteger ? c >= '0' && c <= '9' : isSymbol ? c >= ',' && c <= '/' : c >= 'a' && c <= 'z');
-						const auto position = c - (isInteger ? '0' : isSymbol ? ',' : 'a');
+						assert(isInteger ? c >= '0' && c <= '9' : isSymbol ? c >= '+' && c <= '/' : c >= 'a' && c <= 'z');
+						const auto position = c - (isInteger ? '0' : isSymbol ? '+' : 'a');
 
 						auto subTexture = isInteger ? _createInfo.numberAtlasTexture.subTexture : isSymbol ? 
 							_createInfo.symbolAtlasTexture.subTexture : _createInfo.alphabetAtlasTexture.subTexture;

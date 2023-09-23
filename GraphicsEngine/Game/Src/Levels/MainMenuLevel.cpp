@@ -25,14 +25,14 @@ namespace game
 		buttonDrawInfo.origin = headerDrawInfo.origin - glm::ivec2(0, 36);
 		buttonDrawInfo.text = "new game";
 		if (DrawButton(info, buttonDrawInfo))
-			Load(LevelIndex::newGame);
+			Load(LevelIndex::newGame, true);
 		
 		if (saveDataValid)
 		{
 			buttonDrawInfo.origin.y -= 18;
 			buttonDrawInfo.text = "continue";
 			if (DrawButton(info, buttonDrawInfo))
-				Load(LevelIndex::partySelect);
+				Load(LevelIndex::partySelect, true);
 		}
 
 		return true;

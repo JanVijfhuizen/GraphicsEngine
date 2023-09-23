@@ -89,7 +89,7 @@ namespace game
 			void CollectActivatedCards(State& state, const LevelUpdateInfo& info, ActionState& actionState);
 			void PostHandleActionState(State& state, Level* level, const ActionState& actionState);
 			[[nodiscard]] static bool ValidateActionState(const State& state, ActionState& actionState);
-			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied);
+			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawDamageAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawDrawAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const;

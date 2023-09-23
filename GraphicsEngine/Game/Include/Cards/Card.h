@@ -28,7 +28,8 @@ namespace game
 			onDamage,
 			onDeath,
 			onCardPlayed,
-			onStartOfTurn
+			onStartOfTurn,
+			onEndOfTurn
 		} trigger;
 		enum class Source
 		{

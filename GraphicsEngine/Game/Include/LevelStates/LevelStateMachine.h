@@ -42,7 +42,7 @@ namespace game
 		if(index != current)
 		{
 			next = index;
-			level->Load(LevelIndex::animOnly);
+			level->Load(LevelIndex::animOnly, true);
 		}
 		return res;
 	}

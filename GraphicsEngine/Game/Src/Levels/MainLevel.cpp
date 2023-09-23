@@ -253,7 +253,7 @@ namespace game
 
 		if (!bossPresent)
 		{
-			const auto enemyCount = jv::Min<uint32_t>(4, state.depth + 1);
+			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(4 + state.depth / 10, BOARD_CAPACITY_PER_SIDE), state.depth + 1);
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				ActionState summonState{};
@@ -540,6 +540,10 @@ namespace game
 				ActionState startOfTurnActionState{};
 				startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
 				state.stack.Add() = startOfTurnActionState;
+
+				ActionState endOfTurnActionState{};
+				endOfTurnActionState.trigger = ActionState::Trigger::onEndOfTurn;
+				state.stack.Add() = endOfTurnActionState;
 
 				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				{
@@ -1117,7 +1121,7 @@ namespace game
 	}
 
 	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
-		CardSelectionDrawInfo& drawInfo, const bool allied)
+		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
 		if (!activeStateValid)
 			return;
@@ -1218,7 +1222,6 @@ namespace game
 		const float eval = curve.Evaluate(GetActionStateLerp(level));
 
 		textTask.position.y += eval * 24;
-
 		info.textTasks.Push(textTask);
 		Shake(info);
 	}

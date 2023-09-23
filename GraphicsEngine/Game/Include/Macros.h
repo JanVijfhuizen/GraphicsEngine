@@ -11,7 +11,7 @@ constexpr float TEXT_DRAW_SPEED = 20;
 constexpr uint32_t PARTY_ACTIVE_CAPACITY = 4;
 constexpr uint32_t PARTY_INACTIVE_CAPACITY = 2;
 constexpr uint32_t PARTY_CAPACITY = PARTY_ACTIVE_CAPACITY + PARTY_INACTIVE_CAPACITY;
-constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 7;
+constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 6;
 constexpr uint32_t BOARD_CAPACITY = BOARD_CAPACITY_PER_SIDE * 2;
 constexpr uint32_t MONSTER_ARTIFACT_CAPACITY = 4;
 constexpr uint32_t MONSTER_FLAW_CAPACITY = 4;
@@ -39,7 +39,7 @@ constexpr uint32_t ENEMY_HEIGHT = ALLY_HEIGHT + 92;
 constexpr uint32_t HAND_HEIGHT = 32;
 constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
 
-constexpr uint32_t FINAL_BOSS_ID = 1;
+constexpr uint32_t FINAL_BOSS_ID = 16;
 
 constexpr uint32_t META_DATA_ROOM_INDEX = 0;
 constexpr uint32_t META_DATA_EVENT_INDEX = META_DATA_ROOM_INDEX + 1;
