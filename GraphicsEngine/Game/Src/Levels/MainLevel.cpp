@@ -404,7 +404,7 @@ namespace game
 			info.renderTasks.Push(lineRenderTask);
 		}
 
-		if(state.stack.count == 0)
+		if(!activeStateValid && state.stack.count == 0)
 		{
 			// Check for game over.
 			if (boardState.allyCount == 0)
@@ -778,7 +778,7 @@ namespace game
 			selectionState = SelectionState::none;
 		}
 
-		if (activeStateValid)
+		if (activeStateValid || state.stack.count != 0)
 			level->DrawFullCard(nullptr, FullCardType::other);
 			
 		return true;
@@ -813,7 +813,8 @@ namespace game
 			boardState.ids[targetId] = monsterId;
 			boardState.combatStats[targetId] = GetCombatStat(info.monsters[monsterId]);
 			boardState.uniqueIds[targetId] = uniqueId++;
-			boardState.partyIds[targetId] = partyId;
+			if(partyId != -1)
+				boardState.partyIds[targetId] = partyId;
 			if (health != -1)
 				boardState.combatStats[targetId].health = health;
 			if (isAlly)

@@ -51,7 +51,7 @@ namespace game
 	{
 		bool unique = false;
 		const char* name = "unnamed";
-		const char* ruleText = "no rule text yet";
+		const char* ruleText = "...";
 		uint32_t animIndex = 0;
 		uint32_t normalAnimIndex = -1;
 

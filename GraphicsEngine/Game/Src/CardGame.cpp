@@ -627,6 +627,33 @@ namespace game
 		arr[1].name = "slime jr.";
 		arr[1].attack = 1;
 		arr[1].health = 1;
+		arr[1].unique = true;
+
+		arr[2].name = "hunted drake";
+		arr[2].attack = 12;
+		arr[2].health = 12;
+		arr[2].ruleText = "whenever this attacks, summon two soldiers for the opponent";
+		arr[2].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+		{
+			if (actionState.trigger != ActionState::Trigger::onAttack)
+				return false;
+			if (actionState.src != self)
+				return false;
+
+			ActionState summonState = actionState;
+			summonState.trigger = ActionState::Trigger::onSummon;
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = self >= BOARD_CAPACITY_PER_SIDE;
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = 3;
+			state.stack.Add() = summonState;
+			state.stack.Add() = summonState;
+
+			return true;
+		};
+
+		arr[3].name = "soldier";
+		arr[3].attack = 1;
+		arr[3].health = 1;
+		arr[3].unique = true;
 
 		arr[FINAL_BOSS_ID].unique = true;
 		arr[FINAL_BOSS_ID].name = "da true final boss";
@@ -680,12 +707,23 @@ namespace game
 
 		for (auto& card : arr)
 		{
-			card.name = "special room";
+			card.name = "retribution";
+			card.ruleText = "whenever a monster is dealt damage, it attacks a random enemy monster.";
 			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
 			{
-				if (actionState.trigger == ActionState::Trigger::onAttack)
+				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
-					std::cout << "someone's attacking" << std::endl;
+					const auto& boardState = state.boardState;
+
+					ActionState attackState = actionState;
+					attackState.trigger = ActionState::Trigger::onAttack;
+					attackState.source = ActionState::Source::board;
+					attackState.src = actionState.dst;
+					attackState.dst = rand() % (actionState.dst < BOARD_CAPACITY_PER_SIDE ? boardState.enemyCount : boardState.allyCount);
+					attackState.dst += (actionState.dst < BOARD_CAPACITY_PER_SIDE) * BOARD_CAPACITY_PER_SIDE;
+					attackState.srcUniqueId = boardState.uniqueIds[attackState.src];
+					attackState.dstUniqueId = boardState.uniqueIds[attackState.dst];
+					state.stack.Add() = attackState;
 					return true;
 				}
 				return false;
