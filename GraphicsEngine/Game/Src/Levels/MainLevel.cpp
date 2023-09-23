@@ -752,6 +752,7 @@ namespace game
 					attackActionState.srcUniqueId = boardState.uniqueIds[selectedId];
 					attackActionState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + enemyResult];
 					state.stack.Add() = attackActionState;
+					tapped[selectedId] = true;
 				}
 			}
 			else if(selectionState == SelectionState::hand)
@@ -966,7 +967,6 @@ namespace game
 
 			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
 			{
-				tapped[actionState.src] = true;
 				auto& target = targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
 				const auto oldTarget = target;
 				if (boardState.allyCount > 1)
