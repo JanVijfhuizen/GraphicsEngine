@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Level.h"
+#include "Macros.h"
 #include "LevelStates/LevelStateMachine.h"
 #include "States/BoardState.h"
 #include "States/CombatState.h"
@@ -36,7 +37,6 @@ namespace game
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;
-			void OnExit(State& state, const LevelInfo& info) override;
 		};
 
 		struct CombatState final : LevelState<State>
@@ -62,8 +62,8 @@ namespace game
 			} selectionState;
 
 			float time;
-			uint32_t eventCard;
-			uint32_t previousEventCard;
+			uint32_t eventCards[EVENT_CARD_MAX_COUNT];
+			uint32_t previousEventCards[EVENT_CARD_MAX_COUNT];
 			uint32_t targets[BOARD_CAPACITY_PER_SIDE];
 			bool tapped[BOARD_CAPACITY_PER_SIDE];
 			uint32_t selectedId;
@@ -100,7 +100,9 @@ namespace game
 			[[nodiscard]] float GetActionStateLerp(const Level& level, float duration = ACTION_STATE_DEFAULT_DURATION, float startoffset = 0) const;
 			[[nodiscard]] float GetAttackMoveOffset(const State& state, const ActionState& actionState) const;
 			[[nodiscard]] float GetAttackMoveDuration(const State& state, const ActionState& actionState) const;
+			[[nodiscard]] static uint32_t GetEventCardCount(const State& state);
 			static void Shake(const LevelUpdateInfo& info);
+			void OnExit(State& state, const LevelInfo& info) override;
 		};
 
 		struct RewardMagicCardState final : LevelState<State>

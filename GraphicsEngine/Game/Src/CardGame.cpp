@@ -605,7 +605,7 @@ namespace game
 			if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
 				return false;
 
-			ActionState damageState = actionState;
+			ActionState damageState{};
 			damageState.trigger = ActionState::Trigger::onDamage;
 			damageState.source = ActionState::Source::board;
 			damageState.src = self;
@@ -615,7 +615,7 @@ namespace game
 			damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 1;
 			state.stack.Add() = damageState;
 
-			ActionState summonState = actionState;
+			ActionState summonState{};
 			summonState.trigger = ActionState::Trigger::onSummon;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = self < BOARD_CAPACITY_PER_SIDE;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = 1;
@@ -642,9 +642,9 @@ namespace game
 			if (actionState.src != self)
 				return false;
 
-			ActionState summonState = actionState;
+			ActionState summonState{};
 			summonState.trigger = ActionState::Trigger::onSummon;
-			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = self >= BOARD_CAPACITY_PER_SIDE;
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = self <= BOARD_CAPACITY_PER_SIDE;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = 3;
 			state.stack.Add() = summonState;
 			state.stack.Add() = summonState;
@@ -716,6 +716,8 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
 					const auto& boardState = state.boardState;
+					if (boardState.enemyCount == 0 || boardState.allyCount == 0)
+						return false;
 
 					ActionState attackState = actionState;
 					attackState.trigger = ActionState::Trigger::onAttack;
@@ -768,7 +770,7 @@ namespace game
 			card.animIndex = c++;
 
 		for (auto& card : arr)
-			card.name = "flaw";
+			card.name = "curse";
 		return arr;
 	}
 
