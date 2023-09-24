@@ -695,7 +695,7 @@ namespace game
 		{
 			const auto partyId = boardState.partyIds[i];
 
-			if(boardState.partyIds[i] == -1)
+			if(i >= PARTY_ACTIVE_CAPACITY || boardState.partyIds[i] == -1)
 			{
 				stacksCount[i] = 0;
 				continue;
