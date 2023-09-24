@@ -138,7 +138,6 @@ namespace game
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
 			uint32_t counters = state.paths[i].counters;
-			counters += i == discoverOption;
 			texts[i] = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
 		}
 
