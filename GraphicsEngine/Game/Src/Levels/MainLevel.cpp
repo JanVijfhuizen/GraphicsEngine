@@ -864,7 +864,8 @@ namespace game
 		const auto& boardState = state.boardState;
 		const auto& playerState = info.playerState;
 
-		for (uint32_t i = 0; i < boardState.allyCount; ++i)
+		const uint32_t allyCount = boardState.allyCount;
+		for (uint32_t i = 0; i < allyCount; ++i)
 		{
 			bool activated = false;
 
@@ -934,7 +935,8 @@ namespace game
 				}
 		}
 
-		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+		const uint32_t enemyCount = boardState.enemyCount;
+		for (uint32_t i = 0; i < enemyCount; ++i)
 		{
 			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 			const auto& monster = info.monsters[id];
