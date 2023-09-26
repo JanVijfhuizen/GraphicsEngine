@@ -67,8 +67,6 @@ namespace game
 			uint32_t targets[BOARD_CAPACITY_PER_SIDE];
 			bool tapped[BOARD_CAPACITY_PER_SIDE];
 			uint32_t selectedId;
-			uint32_t mana;
-			uint32_t maxMana;
 			uint32_t lastEnemyDefeatedId;
 			uint32_t uniqueId;
 			float timeSinceLastActionState;

@@ -223,8 +223,6 @@ namespace game
 		time = 0;
 		selectedId = -1;
 		uniqueId = 0;
-		mana = 0;
-		maxMana = 0;
 		timeSinceLastActionState = 0;
 		activeState = {};
 		activeStateValid = false;
@@ -637,7 +635,7 @@ namespace game
 
 		bool greyedOutArr[HAND_MAX_SIZE];
 		for (uint32_t i = 0; i < state.hand.count; ++i)
-			greyedOutArr[i] = info.magics[state.hand[i]].cost > mana;
+			greyedOutArr[i] = info.magics[state.hand[i]].cost > state.mana;
 
 		// Draw hand.
 		uint32_t costs[HAND_MAX_SIZE];
@@ -748,9 +746,9 @@ namespace game
 		{
 			TextTask manaTextTask{};
 			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, HAND_HEIGHT + 32);
-			manaTextTask.text = TextInterpreter::IntToConstCharPtr(mana, info.frameArena);
+			manaTextTask.text = TextInterpreter::IntToConstCharPtr(state.mana, info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
-			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(maxMana, info.frameArena), info.frameArena);
+			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(state.maxMana, info.frameArena), info.frameArena);
 			manaTextTask.lifetime = level->GetTime();
 			manaTextTask.center = true;
 			info.textTasks.Push(manaTextTask);
@@ -782,10 +780,10 @@ namespace game
 				const bool validTarget = card.type == MagicCard::Type::target && (enemyResult != -1 || allyResult != -1);
 				const bool validPlay = validAll || validTarget;
 
-				if(validPlay && card.cost <= mana)
+				if(validPlay && card.cost <= state.mana)
 				{
 					// Play card.
-					mana -= card.cost;
+					state.mana -= card.cost;
 					const uint32_t target = enemyResult == -1 ? allyResult : enemyResult;
 
 					ActionState cardPlayActionState{};
@@ -980,8 +978,9 @@ namespace game
 			for (auto& b : tapped)
 				b = false;
 
-			maxMana = jv::Min(maxMana + 1, MAX_MANA);;
-			mana = maxMana;
+			if (state.maxMana < MAX_MANA)
+				++state.maxMana;
+			state.mana = state.maxMana;
 
 			ActionState drawState{};
 			drawState.trigger = ActionState::Trigger::draw;

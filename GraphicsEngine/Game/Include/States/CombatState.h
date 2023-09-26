@@ -44,6 +44,9 @@ namespace game
 		BoardState boardState;
 		jv::Vector<ActionState> stack;
 
+		uint32_t mana;
+		uint32_t maxMana;
+
 		void RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const;
 		[[nodiscard]] uint32_t GetMonster(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetBoss(const LevelInfo& info);

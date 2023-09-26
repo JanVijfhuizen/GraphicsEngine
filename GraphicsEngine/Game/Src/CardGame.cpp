@@ -626,7 +626,7 @@ namespace game
 		arr[0].animIndex = 2;
 		arr[0].normalAnimIndex = 2 + 30;
 
-		arr[1].name = "slime jr.";
+		arr[1].name = "slime";
 		arr[1].attack = 1;
 		arr[1].health = 1;
 		arr[1].unique = true;
@@ -656,6 +656,19 @@ namespace game
 		arr[3].attack = 1;
 		arr[3].health = 1;
 		arr[3].unique = true;
+
+		arr[4].name = "arbor elf";
+		arr[4].attack = 4;
+		arr[4].health = 6;
+		arr[4].ruleText = "start of turn, get one additional mana.";
+		arr[4].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+		{
+			if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
+				return false;
+
+			++state.maxMana;
+			return true;
+		};
 
 		arr[FINAL_BOSS_ID].unique = true;
 		arr[FINAL_BOSS_ID].name = "da true final boss";

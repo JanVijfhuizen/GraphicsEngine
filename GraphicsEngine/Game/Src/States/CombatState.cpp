@@ -231,6 +231,8 @@ namespace game
 		state.magicDeck = jv::CreateVector<uint32_t>(info.arena, MAGIC_DECK_SIZE);
 		state.hand = jv::CreateVector<uint32_t>(info.arena, HAND_MAX_SIZE);
 		state.stack = jv::CreateVector<ActionState>(info.arena, STACK_MAX_SIZE);
+		state.mana = 0;
+		state.maxMana = 0;
 		return state;
 	}
 }
