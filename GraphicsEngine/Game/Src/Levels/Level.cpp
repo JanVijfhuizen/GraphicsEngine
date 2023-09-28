@@ -118,7 +118,56 @@ namespace game
 				const float l = _fullCardLifeTime - FULL_CARD_OPEN_DURATION;
 				const uint32_t textOffsetX = SIMULATED_RESOLUTION.x / 8;
 
-				if(l >= 0)
+				CardDrawInfo cardDrawInfo{};
+				cardDrawInfo.card = _fullCard;
+				cardDrawInfo.origin = glm::ivec2(0, SIMULATED_RESOLUTION.y / 2);
+				cardDrawInfo.origin.x += textOffsetX * lerp;
+				cardDrawInfo.priority = true;
+				cardDrawInfo.selectable = false;
+				cardDrawInfo.scale = 2;
+
+				const char* text = _fullCard->ruleText;
+				jv::LinkedList<const char*> tags{};
+
+				if(_fullCardType == FullCardType::magic)
+				{
+					const auto c = static_cast<MagicCard*>(_fullCard);
+					cardDrawInfo.cost = c->cost;
+				}
+				else if (_fullCardType == FullCardType::monster)
+				{
+					const auto c = static_cast<MonsterCard*>(_fullCard);
+					auto stats = GetCombatStat(*c);
+					cardDrawInfo.combatStats = &stats;
+
+					if (c->tags & TAG_TOKEN)
+						Add(info.frameArena, tags) = "token";
+					if (c->tags & TAG_SLIME)
+						Add(info.frameArena, tags) = "slime";
+					if (c->tags & TAG_DRAGON)
+						Add(info.frameArena, tags) = "dragon";
+					if (c->tags & TAG_HUMAN)
+						Add(info.frameArena, tags) = "human";
+					if (c->tags & TAG_ELF)
+						Add(info.frameArena, tags) = "elf";
+
+					const uint32_t tagCount = tags.GetCount();
+					if(tagCount > 0)
+					{
+						text = "[";
+						uint32_t i = 0;
+						for (const auto& tag : tags)
+						{
+							text = TextInterpreter::Concat(text, tag, info.frameArena);
+							if(++i != tagCount)
+								text = TextInterpreter::Concat(text, ", ", info.frameArena);
+						}
+						text = TextInterpreter::Concat(text, "] ", info.frameArena);
+						text = TextInterpreter::Concat(text, _fullCard->ruleText, info.frameArena);
+					}
+				}
+
+				if (l >= 0)
 				{
 					TextTask titleTextTask{};
 					titleTextTask.position = bgRenderTask.position;
@@ -134,32 +183,12 @@ namespace game
 					auto ruleTextTask = titleTextTask;
 					ruleTextTask.position = bgRenderTask.position;
 					ruleTextTask.position.x += textOffsetX;
-					ruleTextTask.text = _fullCard->ruleText;
+					ruleTextTask.text = text;
 					ruleTextTask.position.y += alphabetTexture.resolution.y * (lineCount - 1) / 2;
 					ruleTextTask.position.y -= alphabetTexture.resolution.y / 2;
 					ruleTextTask.scale = 1;
 					ruleTextTask.lineLength = FULL_CARD_LINE_LENGTH;
 					info.textTasks.Push(ruleTextTask);
-				}
-
-				CardDrawInfo cardDrawInfo{};
-				cardDrawInfo.card = _fullCard;
-				cardDrawInfo.origin = glm::ivec2(0, SIMULATED_RESOLUTION.y / 2);
-				cardDrawInfo.origin.x += textOffsetX * lerp;
-				cardDrawInfo.priority = true;
-				cardDrawInfo.selectable = false;
-				cardDrawInfo.scale = 2;
-
-				if(_fullCardType == FullCardType::magic)
-				{
-					const auto c = static_cast<MagicCard*>(_fullCard);
-					cardDrawInfo.cost = c->cost;
-				}
-				else if (_fullCardType == FullCardType::monster)
-				{
-					const auto c = static_cast<MonsterCard*>(_fullCard);
-					auto stats = GetCombatStat(*c);
-					cardDrawInfo.combatStats = &stats;
 				}
 
 				DrawCard(info, cardDrawInfo);

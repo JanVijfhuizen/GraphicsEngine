@@ -625,11 +625,14 @@ namespace game
 		};
 		arr[0].animIndex = 2;
 		arr[0].normalAnimIndex = 2 + 30;
+		arr[0].tags = static_cast<uint32_t>(MonsterCard::Tag::slime);
 
 		arr[1].name = "slime";
 		arr[1].attack = 1;
 		arr[1].health = 1;
 		arr[1].unique = true;
+		arr[1].tags = static_cast<uint32_t>(MonsterCard::Tag::slime);
+		arr[1].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
 
 		arr[2].name = "hunted drake";
 		arr[2].attack = 12;
@@ -651,11 +654,14 @@ namespace game
 
 			return true;
 		};
+		arr[2].tags = static_cast<uint32_t>(MonsterCard::Tag::dragon);
 
 		arr[3].name = "soldier";
 		arr[3].attack = 1;
 		arr[3].health = 1;
 		arr[3].unique = true;
+		arr[3].tags = static_cast<uint32_t>(MonsterCard::Tag::human);
+		arr[3].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
 
 		arr[4].name = "arbor elf";
 		arr[4].attack = 4;
@@ -669,6 +675,7 @@ namespace game
 			++state.maxMana;
 			return true;
 		};
+		arr[4].tags = static_cast<uint32_t>(MonsterCard::Tag::elf);
 
 		arr[FINAL_BOSS_ID].unique = true;
 		arr[FINAL_BOSS_ID].name = "da true final boss";

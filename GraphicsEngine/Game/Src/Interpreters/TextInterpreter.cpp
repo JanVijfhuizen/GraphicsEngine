@@ -137,12 +137,14 @@ namespace game
 
 					if (c != ' ')
 					{
-						const bool isSymbol = c < '0';
+						const bool isSymbol2ndRow = c > '9' && c < 'a';
+						const bool isSymbol = c < '0' || isSymbol2ndRow;
 						const bool isInteger = !isSymbol && c < 'a';
 
 						// Assert if it's a valid character.
-						assert(isInteger ? c >= '0' && c <= '9' : isSymbol ? c >= '+' && c <= '/' : c >= 'a' && c <= 'z');
-						const auto position = c - (isInteger ? '0' : isSymbol ? '+' : 'a');
+						constexpr uint32_t secondRow = '[' - 5;
+						assert(isInteger ? c >= '0' && c <= '9' : isSymbol ? c >= isSymbol2ndRow ? secondRow : '+' && c <= '/' : c >= 'a' && c <= 'z');
+						auto position = c - (isInteger ? '0' : isSymbol ? isSymbol2ndRow ? secondRow : '+' : 'a');
 
 						auto subTexture = isInteger ? _createInfo.numberAtlasTexture.subTexture : isSymbol ? 
 							_createInfo.symbolAtlasTexture.subTexture : _createInfo.alphabetAtlasTexture.subTexture;
