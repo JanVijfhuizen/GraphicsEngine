@@ -597,30 +597,19 @@ namespace game
 			card.animIndex = c++;
 		}
 		arr[MONSTER_IDS::MANA_SLIME].name = "mama slime";
-		arr[MONSTER_IDS::MANA_SLIME].health = 10;
 		arr[MONSTER_IDS::MANA_SLIME].attack = 1;
-		arr[MONSTER_IDS::MANA_SLIME].ruleText = "[end of turn] take one damage and summon a slime.";
+		arr[MONSTER_IDS::MANA_SLIME].health = 6;
+		arr[MONSTER_IDS::MANA_SLIME].ruleText = "[end of turn] summon a slime.";
 		arr[MONSTER_IDS::MANA_SLIME].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
 				return false;
-
-			ActionState damageState{};
-			damageState.trigger = ActionState::Trigger::onDamage;
-			damageState.source = ActionState::Source::board;
-			damageState.src = self;
-			damageState.dst = self;
-			damageState.srcUniqueId = state.boardState.uniqueIds[self];
-			damageState.dstUniqueId = damageState.srcUniqueId;
-			damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 1;
-			state.stack.Add() = damageState;
-
+			
 			ActionState summonState{};
 			summonState.trigger = ActionState::Trigger::onSummon;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = self < BOARD_CAPACITY_PER_SIDE;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = 1;
 			state.stack.Add() = summonState;
-
 			return true;
 		};
 		arr[MONSTER_IDS::MANA_SLIME].animIndex = 2;
@@ -665,7 +654,7 @@ namespace game
 
 		arr[MONSTER_IDS::ARBOR_ELF].name = "arbor elf";
 		arr[MONSTER_IDS::ARBOR_ELF].attack = 1;
-		arr[MONSTER_IDS::ARBOR_ELF].health = 6;
+		arr[MONSTER_IDS::ARBOR_ELF].health = 9;
 		arr[MONSTER_IDS::ARBOR_ELF].ruleText = "[start of turn] gain one mana.";
 		arr[MONSTER_IDS::ARBOR_ELF].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
@@ -690,7 +679,7 @@ namespace game
 		arr[MONSTER_IDS::GOBLIN].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
 
 		arr[MONSTER_IDS::DAISY].name = "daisy";
-		arr[MONSTER_IDS::DAISY].attack = 3;
+		arr[MONSTER_IDS::DAISY].attack = 4;
 		arr[MONSTER_IDS::DAISY].health = 4;
 		arr[MONSTER_IDS::DAISY].unique = true;
 		return arr;
@@ -737,7 +726,32 @@ namespace game
 		const auto arr = jv::CreateArray<RoomCard>(arena, 10);
 		uint32_t c = 0;
 		for (auto& card : arr)
+		{
 			card.animIndex = c++;
+			card.name = "field of carnage";
+			card.ruleText = "[monster is dealt damage] it attacks a random enemy monster.";
+			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDamage)
+				{
+					const auto& boardState = state.boardState;
+					if (boardState.enemyCount == 0 || boardState.allyCount == 0)
+						return false;
+
+					ActionState attackState{};
+					attackState.trigger = ActionState::Trigger::onAttack;
+					attackState.source = ActionState::Source::board;
+					attackState.src = actionState.dst;
+					attackState.dst = rand() % (actionState.dst < BOARD_CAPACITY_PER_SIDE ? boardState.enemyCount : boardState.allyCount);
+					attackState.dst += (actionState.dst < BOARD_CAPACITY_PER_SIDE) * BOARD_CAPACITY_PER_SIDE;
+					attackState.srcUniqueId = boardState.uniqueIds[attackState.src];
+					attackState.dstUniqueId = boardState.uniqueIds[attackState.dst];
+					state.stack.Add() = attackState;
+					return true;
+				}
+				return false;
+			};
+		}
 
 		arr[ROOM_IDS::FIELD_OF_CARNAGE].name = "field of carnage";
 		arr[ROOM_IDS::FIELD_OF_CARNAGE].ruleText = "[monster is dealt damage] it attacks a random enemy monster.";

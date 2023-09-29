@@ -836,6 +836,8 @@ namespace game
 			boardState.uniqueIds[targetId] = uniqueId++;
 			if(isAlly && targetId < PARTY_ACTIVE_CAPACITY)
 				boardState.partyIds[targetId] = partyId;
+			else if(!isAlly)
+				targets[boardState.enemyCount] = rand() % boardState.allyCount;
 			if (health != -1)
 				boardState.combatStats[targetId].health = health;
 			if (isAlly)
@@ -1059,7 +1061,7 @@ namespace game
 				boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
 				boardState.combatStatModifiers[j + mod] = boardState.combatStatModifiers[j + 1 + mod];
 				boardState.uniqueIds[j + mod] = boardState.uniqueIds[j + 1 + mod];
-				metaDatas[META_DATA_ENEMY_INDEX + j + mod] = metaDatas[META_DATA_ENEMY_INDEX + j + mod + 1];
+				metaDatas[META_DATA_ALLY_INDEX + j + mod] = metaDatas[META_DATA_ALLY_INDEX + j + mod + 1];
 			}
 
 			// Modify states as to ensure other events can go through.
