@@ -726,32 +726,7 @@ namespace game
 		const auto arr = jv::CreateArray<RoomCard>(arena, 10);
 		uint32_t c = 0;
 		for (auto& card : arr)
-		{
 			card.animIndex = c++;
-			card.name = "field of carnage";
-			card.ruleText = "[monster is dealt damage] it attacks a random enemy monster.";
-			card.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-			{
-				if (actionState.trigger == ActionState::Trigger::onDamage)
-				{
-					const auto& boardState = state.boardState;
-					if (boardState.enemyCount == 0 || boardState.allyCount == 0)
-						return false;
-
-					ActionState attackState{};
-					attackState.trigger = ActionState::Trigger::onAttack;
-					attackState.source = ActionState::Source::board;
-					attackState.src = actionState.dst;
-					attackState.dst = rand() % (actionState.dst < BOARD_CAPACITY_PER_SIDE ? boardState.enemyCount : boardState.allyCount);
-					attackState.dst += (actionState.dst < BOARD_CAPACITY_PER_SIDE) * BOARD_CAPACITY_PER_SIDE;
-					attackState.srcUniqueId = boardState.uniqueIds[attackState.src];
-					attackState.dstUniqueId = boardState.uniqueIds[attackState.dst];
-					state.stack.Add() = attackState;
-					return true;
-				}
-				return false;
-			};
-		}
 
 		arr[ROOM_IDS::FIELD_OF_CARNAGE].name = "field of carnage";
 		arr[ROOM_IDS::FIELD_OF_CARNAGE].ruleText = "[monster is dealt damage] it attacks a random enemy monster.";
@@ -855,6 +830,48 @@ namespace game
 					state.stack.Add() = buffState;
 				}
 				
+				return true;
+			}
+			return false;
+		};
+		arr[MAGIC_IDS::CULL_THE_MEEK].name = "cull the meek";
+		arr[MAGIC_IDS::CULL_THE_MEEK].ruleText = "destroy all friendly tokens to give all allies +4/+2 for each monster destroyed.";
+		arr[MAGIC_IDS::CULL_THE_MEEK].type = MagicCard::Type::all;
+		arr[MAGIC_IDS::CULL_THE_MEEK].cost = 3;
+		arr[MAGIC_IDS::CULL_THE_MEEK].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				ActionState killState{};
+				killState.trigger = ActionState::Trigger::onDeath;
+				killState.source = ActionState::Source::hand;
+
+				const auto& boardState = state.boardState;
+				uint32_t count = 0;
+
+				for (uint32_t i = 0; i < boardState.allyCount; ++i)
+				{
+					if ((info.monsters[boardState.ids[i]].tags & TAG_TOKEN) == 0)
+						continue;
+					killState.dst = i;
+					killState.dstUniqueId = boardState.uniqueIds[i];
+					state.stack.Add() = killState;
+					++count;
+				}
+
+				ActionState buffState{};
+				buffState.trigger = ActionState::Trigger::onBuff;
+				buffState.source = ActionState::Source::hand;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 4 * count;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 2 * count;
+
+				for (uint32_t i = 0; i < boardState.allyCount; ++i)
+				{
+					buffState.dst = i;
+					buffState.dstUniqueId = boardState.uniqueIds[i];
+					state.stack.Add() = buffState;
+				}
+
 				return true;
 			}
 			return false;
