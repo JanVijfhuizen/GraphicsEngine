@@ -23,7 +23,7 @@ namespace game
 			if (state.depth != SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
 				path.boss = state.GetBoss(info);
 			else
-				path.boss = FINAL_BOSS_ID;
+				path.boss = MONSTER_IDS::FINAL_BOSS;
 		}
 		for (auto& metaData : metaDatas)
 			metaData = {};
@@ -284,11 +284,6 @@ namespace game
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = gameState.healths[i];
 			state.stack.Add() = summonState;
 		}
-
-		for (auto& b : artifactsActionPending)
-			b = false;
-		for (auto& b : flawsActionPending)
-			b = false;
 	}
 
 	bool MainLevel::CombatState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -871,7 +866,7 @@ namespace game
 			const auto id = boardState.ids[i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
-				if (monster.onActionEvent(state, actionState, i, metaDatas[META_DATA_ALLY_INDEX + i].actionPending))
+				if (monster.onActionEvent(state, actionState, i))
 					activated = true;
 
 			if (partyId != -1)
@@ -883,7 +878,7 @@ namespace game
 						continue;
 					const auto& artifact = info.artifacts[artifactId];
 					if (artifact.onActionEvent)
-						if (artifact.onActionEvent(state, actionState, i, artifactsActionPending[i * MONSTER_ARTIFACT_CAPACITY + j]))
+						if (artifact.onActionEvent(state, actionState, i))
 							activated = true;
 				}
 				if (i >= PARTY_ACTIVE_CAPACITY)
@@ -893,7 +888,7 @@ namespace game
 				{
 					const auto flaw = info.flaws[flawId];
 					if (flaw.onActionEvent)
-						if (flaw.onActionEvent(state, actionState, i, flawsActionPending[i]))
+						if (flaw.onActionEvent(state, actionState, i))
 							activated = true;
 				}
 			}
@@ -910,7 +905,7 @@ namespace game
 		const auto& path = state.paths[state.GetPrimaryPath()];
 		const auto& room = info.rooms[path.room];
 		if (room.onActionEvent)
-			if(room.onActionEvent(state, actionState, 0, metaDatas[META_DATA_ROOM_INDEX].actionPending))
+			if(room.onActionEvent(state, actionState, 0))
 			{
 				Activation activation{};
 				activation.type = Activation::room;
@@ -924,7 +919,7 @@ namespace game
 				continue;
 			const auto& event = info.events[eventCards[i]];
 			if (event.onActionEvent)
-				if (event.onActionEvent(state, actionState, i, metaDatas[META_DATA_EVENT_INDEX + i].actionPending))
+				if (event.onActionEvent(state, actionState, i))
 				{
 					Activation activation{};
 					activation.type = Activation::event;
@@ -939,7 +934,7 @@ namespace game
 			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
-				if (monster.onActionEvent(state, actionState, i, metaDatas[META_DATA_ENEMY_INDEX + i].actionPending))
+				if (monster.onActionEvent(state, actionState, i))
 				{
 					Activation activation{};
 					activation.id = BOARD_CAPACITY_PER_SIDE + i;
@@ -951,7 +946,7 @@ namespace game
 		{
 			const auto& magic = &info.magics[state.hand[i]];
 			if (magic->onActionEvent)
-				if (magic->onActionEvent(state, actionState, i, metaDatas[META_DATA_HAND_INDEX + i].actionPending))
+				if (magic->onActionEvent(state, actionState, i))
 				{
 					Activation activation{};
 					activation.id = i;
@@ -1062,10 +1057,7 @@ namespace game
 				for (uint32_t j = i; j < c; ++j)
 				{
 					boardState.partyIds[j] = boardState.partyIds[j + 1];
-					flawsActionPending[j] = flawsActionPending[j + 1];
 					tapped[j] = tapped[j + 1];
-					for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
-						artifactsActionPending[j + k] = artifactsActionPending[j + k + MONSTER_ARTIFACT_CAPACITY];
 				}
 				--boardState.allyCount;
 			}

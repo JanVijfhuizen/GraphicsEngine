@@ -589,18 +589,18 @@ namespace game
 
 	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<MonsterCard>(arena, 30);
+		const auto arr = jv::CreateArray<MonsterCard>(arena, 30); // LENGTH
 		uint32_t c = 0;
 		for (auto& card : arr)
 		{
 			card.name = "monster";
 			card.animIndex = c++;
 		}
-		arr[0].name = "mama slime";
-		arr[0].health = 20;
-		arr[0].attack = 2;
-		arr[0].ruleText = "end of turn, take one damage and summon a slime.";
-		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+		arr[MONSTER_IDS::MANA_SLIME].name = "mama slime";
+		arr[MONSTER_IDS::MANA_SLIME].health = 20;
+		arr[MONSTER_IDS::MANA_SLIME].attack = 2;
+		arr[MONSTER_IDS::MANA_SLIME].ruleText = "[end of turn] take one damage and summon a slime.";
+		arr[MONSTER_IDS::MANA_SLIME].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
 				return false;
@@ -623,22 +623,22 @@ namespace game
 
 			return true;
 		};
-		arr[0].animIndex = 2;
-		arr[0].normalAnimIndex = 2 + 30;
-		arr[0].tags = static_cast<uint32_t>(MonsterCard::Tag::slime);
+		arr[MONSTER_IDS::MANA_SLIME].animIndex = 2;
+		arr[MONSTER_IDS::MANA_SLIME].normalAnimIndex = 2 + 30;
+		arr[MONSTER_IDS::MANA_SLIME].tags = static_cast<uint32_t>(MonsterCard::Tag::slime);
 
-		arr[1].name = "slime";
-		arr[1].attack = 1;
-		arr[1].health = 1;
-		arr[1].unique = true;
-		arr[1].tags = static_cast<uint32_t>(MonsterCard::Tag::slime);
-		arr[1].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
+		arr[MONSTER_IDS::SLIME].name = "slime";
+		arr[MONSTER_IDS::SLIME].attack = 1;
+		arr[MONSTER_IDS::SLIME].health = 1;
+		arr[MONSTER_IDS::SLIME].unique = true;
+		arr[MONSTER_IDS::SLIME].tags = static_cast<uint32_t>(MonsterCard::Tag::slime);
+		arr[MONSTER_IDS::SLIME].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
 
-		arr[2].name = "hunted drake";
-		arr[2].attack = 12;
-		arr[2].health = 12;
-		arr[2].ruleText = "whenever this attacks, summon two soldiers for the opponent";
-		arr[2].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+		arr[MONSTER_IDS::HUNTED_DRAKE].name = "hunted drake";
+		arr[MONSTER_IDS::HUNTED_DRAKE].attack = 12;
+		arr[MONSTER_IDS::HUNTED_DRAKE].health = 12;
+		arr[MONSTER_IDS::HUNTED_DRAKE].ruleText = "[attack] summon two soldiers for the opponent.";
+		arr[MONSTER_IDS::HUNTED_DRAKE].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onAttack)
 				return false;
@@ -654,20 +654,20 @@ namespace game
 
 			return true;
 		};
-		arr[2].tags = static_cast<uint32_t>(MonsterCard::Tag::dragon);
+		arr[MONSTER_IDS::HUNTED_DRAKE].tags = static_cast<uint32_t>(MonsterCard::Tag::dragon);
 
-		arr[3].name = "soldier";
-		arr[3].attack = 1;
-		arr[3].health = 1;
-		arr[3].unique = true;
-		arr[3].tags = static_cast<uint32_t>(MonsterCard::Tag::human);
-		arr[3].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
+		arr[MONSTER_IDS::SOLDIER].name = "soldier";
+		arr[MONSTER_IDS::SOLDIER].attack = 1;
+		arr[MONSTER_IDS::SOLDIER].health = 1;
+		arr[MONSTER_IDS::SOLDIER].unique = true;
+		arr[MONSTER_IDS::SOLDIER].tags = static_cast<uint32_t>(MonsterCard::Tag::human);
+		arr[MONSTER_IDS::SOLDIER].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
 
-		arr[4].name = "arbor elf";
-		arr[4].attack = 4;
-		arr[4].health = 6;
-		arr[4].ruleText = "start of turn, get one additional mana.";
-		arr[4].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+		arr[MONSTER_IDS::ARBOR_ELF].name = "arbor elf";
+		arr[MONSTER_IDS::ARBOR_ELF].attack = 4;
+		arr[MONSTER_IDS::ARBOR_ELF].health = 6;
+		arr[MONSTER_IDS::ARBOR_ELF].ruleText = "[start of turn] gain one mana.";
+		arr[MONSTER_IDS::ARBOR_ELF].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
 				return false;
@@ -675,12 +675,12 @@ namespace game
 			++state.maxMana;
 			return true;
 		};
-		arr[4].tags = static_cast<uint32_t>(MonsterCard::Tag::elf);
+		arr[MONSTER_IDS::ARBOR_ELF].tags = static_cast<uint32_t>(MonsterCard::Tag::elf);
 
-		arr[FINAL_BOSS_ID].unique = true;
-		arr[FINAL_BOSS_ID].name = "da true final boss";
-		arr[FINAL_BOSS_ID].health = 44;
-		arr[FINAL_BOSS_ID].attack = 104;
+		arr[MONSTER_IDS::FINAL_BOSS].unique = true;
+		arr[MONSTER_IDS::FINAL_BOSS].name = "da true final boss";
+		arr[MONSTER_IDS::FINAL_BOSS].health = 44;
+		arr[MONSTER_IDS::FINAL_BOSS].attack = 104;
 		return arr;
 	}
 
@@ -695,7 +695,7 @@ namespace game
 		for (auto& card : arr)
 		{
 			card.name = "artifact";
-			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onSummon && self == actionState.dst)
 				{
@@ -731,7 +731,7 @@ namespace game
 		{
 			card.name = "retribution";
 			card.ruleText = "whenever a monster is dealt damage, it attacks a random enemy monster.";
-			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
@@ -764,9 +764,9 @@ namespace game
 			card.animIndex = c++;
 
 		arr[0].name = "lightning bolt";
-		arr[0].ruleText = "deals 2 damage";
+		arr[0].ruleText = "deal 2 damage.";
 		arr[0].animIndex = 24;
-		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self, bool& actionPending)
+		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
 			{

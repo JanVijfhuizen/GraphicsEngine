@@ -143,9 +143,7 @@ namespace game
 
 						// Assert if it's a valid character.
 						constexpr uint32_t secondRow = '[' - 5;
-						assert(isInteger ? c >= '0' && c <= '9' : isSymbol ? c >= isSymbol2ndRow ? secondRow : '+' && c <= '/' : c >= 'a' && c <= 'z');
 						auto position = c - (isInteger ? '0' : isSymbol ? isSymbol2ndRow ? secondRow : '+' : 'a');
-
 						auto subTexture = isInteger ? _createInfo.numberAtlasTexture.subTexture : isSymbol ? 
 							_createInfo.symbolAtlasTexture.subTexture : _createInfo.alphabetAtlasTexture.subTexture;
 						subTexture.lTop.x += symbolPctSize * static_cast<float>(position);

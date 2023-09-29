@@ -40,7 +40,6 @@ constexpr uint32_t HAND_HEIGHT = 32;
 constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
 
 constexpr uint32_t EVENT_CARD_MAX_COUNT = 4;
-constexpr uint32_t FINAL_BOSS_ID = 16;
 
 constexpr uint32_t META_DATA_ROOM_INDEX = 0;
 constexpr uint32_t META_DATA_EVENT_INDEX = META_DATA_ROOM_INDEX + 1;
@@ -54,6 +53,20 @@ constexpr float CARD_ANIM_SPEED = .5f;
 
 constexpr float CARD_HORIZONTAL_MOVE_SPEED = 1.f / (ACTION_STATE_DEFAULT_DURATION / 2);
 constexpr float CARD_VERTICAL_MOVE_SPEED = ACTION_STATE_DEFAULT_DURATION / 2;
+
+struct MONSTER_IDS
+{
+	enum
+	{
+		MANA_SLIME,
+		SLIME,
+		HUNTED_DRAKE,
+		SOLDIER,
+		ARBOR_ELF,
+		FINAL_BOSS,
+		LENGTH
+	};
+};
 
 enum class LevelIndex
 {

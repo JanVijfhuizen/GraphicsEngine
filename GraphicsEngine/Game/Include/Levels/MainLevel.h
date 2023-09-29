@@ -75,8 +75,6 @@ namespace game
 			float actionStateDuration;
 			CardDrawMetaData metaDatas[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
 			Activation activationsPtr[BOARD_CAPACITY + HAND_MAX_SIZE + 2];
-			bool artifactsActionPending[PARTY_ACTIVE_CAPACITY * MONSTER_ARTIFACT_CAPACITY];
-			bool flawsActionPending[PARTY_ACTIVE_CAPACITY];
 			jv::Vector<Activation> activations;
 			float activationDuration;
 			float recruitSceneLifetime;
