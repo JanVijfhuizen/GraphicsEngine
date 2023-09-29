@@ -410,8 +410,6 @@ namespace game
 
 			if(drawInfo.combatStats)
 				cardDrawInfo.combatStats = &drawInfo.combatStats[i];
-			if (drawInfo.combatStatModifiers)
-				cardDrawInfo.combatStatModifier = &drawInfo.combatStatModifiers[i];
 			cardDrawInfo.ignoreAnim = stackedSelected != -1;
 			if (drawInfo.costs)
 				cardDrawInfo.cost = drawInfo.costs[i];
@@ -579,15 +577,7 @@ namespace game
 			statsRenderTask.color = drawInfo.fgColor;
 			statsRenderTask.color *= glm::vec4(fadeMod, 1);
 			statsRenderTask.priority = priority;
-
-			int32_t vMods[2]{};
-			if (auto mod = drawInfo.combatStatModifier)
-			{
-				vMods[0] = mod->attack;
-				vMods[1] = mod->health;
-				combatStats = drawInfo.combatStatModifier->GetProcessedCombatStats(combatStats);
-			}
-
+			
 			uint32_t values[2]
 			{
 				combatStats.attack,
@@ -599,15 +589,13 @@ namespace game
 				statsRenderTask.subTexture = statFrames[i];
 				statsRenderTask.position.y -= statsRenderTask.scale.y;
 				info.renderTasks.Push(statsRenderTask);
-
-				const int32_t m = vMods[i];
-
+				
 				TextTask textTask{};
 				textTask.position = statsRenderTask.position + glm::ivec2(2 * drawInfo.scale, -statsRenderTask.scale.y / 2);
 				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
 				textTask.lifetime = textLifeTime;
 				textTask.priority = priority;
-				textTask.color = glm::vec4(m <= 0, m >= 0, m == 0, 1);
+				textTask.color = glm::vec4(1);
 				textTask.scale *= drawInfo.scale;
 				info.textTasks.Push(textTask);
 			}

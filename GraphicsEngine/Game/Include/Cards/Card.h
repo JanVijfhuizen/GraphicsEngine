@@ -11,6 +11,12 @@ namespace game
 			damage
 		};
 
+		enum class VBuff
+		{
+			attack,
+			health
+		};
+
 		enum class VSummon
 		{
 			isAlly,
@@ -25,6 +31,7 @@ namespace game
 			onSummon,
 			onAttack,
 			onDamage,
+			onBuff,
 			onDeath,
 			onCardPlayed,
 			onStartOfTurn,
@@ -54,6 +61,6 @@ namespace game
 		uint32_t animIndex = 0;
 		uint32_t normalAnimIndex = -1;
 
-		bool(*onActionEvent)(State& state, ActionState& actionState, uint32_t self) = nullptr;
+		bool(*onActionEvent)(const struct LevelInfo& info, State& state, const ActionState& actionState, uint32_t self) = nullptr;
 	};
 }

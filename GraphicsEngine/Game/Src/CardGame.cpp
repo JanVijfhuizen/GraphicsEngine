@@ -600,7 +600,7 @@ namespace game
 		arr[MONSTER_IDS::MANA_SLIME].attack = 1;
 		arr[MONSTER_IDS::MANA_SLIME].health = 6;
 		arr[MONSTER_IDS::MANA_SLIME].ruleText = "[end of turn] summon a slime.";
-		arr[MONSTER_IDS::MANA_SLIME].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[MONSTER_IDS::MANA_SLIME].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
 				return false;
@@ -627,7 +627,7 @@ namespace game
 		arr[MONSTER_IDS::HUNTED_DRAKE].attack = 4;
 		arr[MONSTER_IDS::HUNTED_DRAKE].health = 12;
 		arr[MONSTER_IDS::HUNTED_DRAKE].ruleText = "[attack] summon two soldiers for the opponent.";
-		arr[MONSTER_IDS::HUNTED_DRAKE].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[MONSTER_IDS::HUNTED_DRAKE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onAttack)
 				return false;
@@ -656,7 +656,7 @@ namespace game
 		arr[MONSTER_IDS::ARBOR_ELF].attack = 1;
 		arr[MONSTER_IDS::ARBOR_ELF].health = 9;
 		arr[MONSTER_IDS::ARBOR_ELF].ruleText = "[start of turn] gain one mana.";
-		arr[MONSTER_IDS::ARBOR_ELF].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[MONSTER_IDS::ARBOR_ELF].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
 				return false;
@@ -696,7 +696,7 @@ namespace game
 		for (auto& card : arr)
 		{
 			card.name = "artifact";
-			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+			card.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onSummon && self == actionState.dst)
 				{
@@ -730,7 +730,7 @@ namespace game
 			card.animIndex = c++;
 			card.name = "field of carnage";
 			card.ruleText = "[monster is dealt damage] it attacks a random enemy monster.";
-			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+			card.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
@@ -755,7 +755,7 @@ namespace game
 
 		arr[ROOM_IDS::FIELD_OF_CARNAGE].name = "field of carnage";
 		arr[ROOM_IDS::FIELD_OF_CARNAGE].ruleText = "[monster is dealt damage] it attacks a random enemy monster.";
-		arr[ROOM_IDS::FIELD_OF_CARNAGE].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[ROOM_IDS::FIELD_OF_CARNAGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onDamage)
 			{
@@ -789,7 +789,7 @@ namespace game
 		arr[MAGIC_IDS::LIGHTNING_BOLT].name = "lightning bolt";
 		arr[MAGIC_IDS::LIGHTNING_BOLT].ruleText = "deal 3 damage.";
 		arr[MAGIC_IDS::LIGHTNING_BOLT].animIndex = 24;
-		arr[MAGIC_IDS::LIGHTNING_BOLT].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[MAGIC_IDS::LIGHTNING_BOLT].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
 			{
@@ -806,7 +806,8 @@ namespace game
 		};
 		arr[MAGIC_IDS::GATHER_THE_WEAK].name = "gather the weak";
 		arr[MAGIC_IDS::GATHER_THE_WEAK].ruleText = "summon two goblins";
-		arr[MAGIC_IDS::GATHER_THE_WEAK].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[MAGIC_IDS::GATHER_THE_WEAK].type = MagicCard::Type::all;
+		arr[MAGIC_IDS::GATHER_THE_WEAK].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
 			{
@@ -816,10 +817,49 @@ namespace game
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = MONSTER_IDS::GOBLIN;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 1;
 				state.stack.Add() = summonState;
+				state.stack.Add() = summonState;
 				return true;
 			}
 			return false;
 		};
+
+		arr[MAGIC_IDS::GOBLIN_SUPREMACY].name = "goblin supremacy";
+		arr[MAGIC_IDS::GOBLIN_SUPREMACY].ruleText = "give all goblins +3/+3.";
+		arr[MAGIC_IDS::GOBLIN_SUPREMACY].type = MagicCard::Type::all;
+		arr[MAGIC_IDS::GOBLIN_SUPREMACY].cost = 2;
+		arr[MAGIC_IDS::GOBLIN_SUPREMACY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				ActionState buffState{};
+				buffState.trigger = ActionState::Trigger::onBuff;
+				buffState.source = ActionState::Source::hand;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 3;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 3;
+
+				const auto& boardState = state.boardState;
+				for (uint32_t i = 0; i < boardState.allyCount; ++i)
+				{
+					if ((info.monsters[boardState.ids[i]].tags & TAG_GOBLIN) == 0)
+						continue;
+					buffState.dst = i;
+					buffState.dstUniqueId = boardState.uniqueIds[i];
+					state.stack.Add() = buffState;
+				}
+				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+				{
+					if ((info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]].tags & TAG_GOBLIN) == 0)
+						continue;
+					buffState.dst = BOARD_CAPACITY_PER_SIDE + i;
+					buffState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+					state.stack.Add() = buffState;
+				}
+				
+				return true;
+			}
+			return false;
+		};
+
 		return arr;
 	}
 

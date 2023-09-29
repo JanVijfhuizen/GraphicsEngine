@@ -607,7 +607,6 @@ namespace game
 		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
-		enemySelectionDrawInfo.combatStatModifiers = &boardState.combatStatModifiers[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
 		enemySelectionDrawInfo.offsetMod = 16;
 		enemySelectionDrawInfo.mirrorHorizontal = true;
@@ -615,6 +614,7 @@ namespace game
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		DrawDamageAnimation(info, *level, enemySelectionDrawInfo, false);
 		DrawSummonAnimation(info, *level, enemySelectionDrawInfo, false);
+		DrawBuffAnimation(info, *level, enemySelectionDrawInfo, false);
 		DrawDeathAnimation(*level, enemySelectionDrawInfo, false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
 		selectedArr = nullptr;
@@ -722,13 +722,13 @@ namespace game
 		playerCardSelectionDrawInfo.lifeTime = level->GetTime();
 		playerCardSelectionDrawInfo.greyedOutArr = tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
-		playerCardSelectionDrawInfo.combatStatModifiers = boardState.combatStatModifiers;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
 		playerCardSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ALLY_INDEX];
 		playerCardSelectionDrawInfo.offsetMod = 16;
 		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(info, *level, playerCardSelectionDrawInfo, true);
+		DrawBuffAnimation(info, *level, playerCardSelectionDrawInfo, true);
 		DrawSummonAnimation(info, *level, playerCardSelectionDrawInfo, true);
 		DrawDeathAnimation(*level, playerCardSelectionDrawInfo, true);
 
@@ -773,7 +773,7 @@ namespace game
 			else if(selectionState == SelectionState::hand)
 			{
 				// Do something with the target.
-				const auto& card = info.magics[selectedId];
+				const auto& card = info.magics[state.hand[selectedId]];
 				const bool validAll = card.type == MagicCard::Type::all && info.inputState.mousePos.y > SIMULATED_RESOLUTION.y / 4;
 				const bool validTarget = card.type == MagicCard::Type::target && (enemyResult != -1 || allyResult != -1);
 				const bool validPlay = validAll || validTarget;
@@ -787,8 +787,8 @@ namespace game
 					ActionState cardPlayActionState{};
 					cardPlayActionState.trigger = ActionState::Trigger::onCardPlayed;
 					cardPlayActionState.src = selectedId;
-					cardPlayActionState.dst = target + (enemyResult != -1) * BOARD_CAPACITY_PER_SIDE;
-					cardPlayActionState.dstUniqueId = boardState.uniqueIds[cardPlayActionState.dst];
+					cardPlayActionState.dst = card.type == MagicCard::Type::all ? -1 : target + (enemyResult != -1) * BOARD_CAPACITY_PER_SIDE;
+					cardPlayActionState.dstUniqueId = cardPlayActionState.dst == -1 ? -1 : boardState.uniqueIds[cardPlayActionState.dst];
 					cardPlayActionState.source = ActionState::Source::hand;
 					state.stack.Add() = cardPlayActionState;
 				}
@@ -871,7 +871,7 @@ namespace game
 			const auto id = boardState.ids[i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
-				if (monster.onActionEvent(state, actionState, i))
+				if (monster.onActionEvent(info, state, actionState, i))
 					activated = true;
 
 			if (partyId != -1)
@@ -883,7 +883,7 @@ namespace game
 						continue;
 					const auto& artifact = info.artifacts[artifactId];
 					if (artifact.onActionEvent)
-						if (artifact.onActionEvent(state, actionState, i))
+						if (artifact.onActionEvent(info, state, actionState, i))
 							activated = true;
 				}
 				if (i >= PARTY_ACTIVE_CAPACITY)
@@ -893,7 +893,7 @@ namespace game
 				{
 					const auto flaw = info.flaws[flawId];
 					if (flaw.onActionEvent)
-						if (flaw.onActionEvent(state, actionState, i))
+						if (flaw.onActionEvent(info, state, actionState, i))
 							activated = true;
 				}
 			}
@@ -910,7 +910,7 @@ namespace game
 		const auto& path = state.paths[state.GetPrimaryPath()];
 		const auto& room = info.rooms[path.room];
 		if (room.onActionEvent)
-			if(room.onActionEvent(state, actionState, 0))
+			if(room.onActionEvent(info, state, actionState, 0))
 			{
 				Activation activation{};
 				activation.type = Activation::room;
@@ -924,7 +924,7 @@ namespace game
 				continue;
 			const auto& event = info.events[eventCards[i]];
 			if (event.onActionEvent)
-				if (event.onActionEvent(state, actionState, i))
+				if (event.onActionEvent(info, state, actionState, i))
 				{
 					Activation activation{};
 					activation.type = Activation::event;
@@ -939,7 +939,7 @@ namespace game
 			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
-				if (monster.onActionEvent(state, actionState, i))
+				if (monster.onActionEvent(info, state, actionState, i))
 				{
 					Activation activation{};
 					activation.id = BOARD_CAPACITY_PER_SIDE + i;
@@ -951,7 +951,7 @@ namespace game
 		{
 			const auto& magic = &info.magics[state.hand[i]];
 			if (magic->onActionEvent)
-				if (magic->onActionEvent(state, actionState, i))
+				if (magic->onActionEvent(info, state, actionState, i))
 				{
 					Activation activation{};
 					activation.id = i;
@@ -988,7 +988,7 @@ namespace game
 		}
 		else if (actionState.trigger == ActionState::Trigger::onAttack)
 		{
-			const auto srcCombatStats = boardState.combatStatModifiers[actionState.src].GetProcessedCombatStats(boardState.combatStats[actionState.src]);
+			const auto& srcCombatStats = boardState.combatStats[actionState.src];
 
 			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
 			{
@@ -1027,6 +1027,15 @@ namespace game
 				}
 			}
 		}
+		else if (actionState.trigger == ActionState::Trigger::onBuff)
+		{
+			auto& combatStats = boardState.combatStats[actionState.dst];
+			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VBuff::attack);
+			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VBuff::health);
+			combatStats.attack += actionState.values[vAtk];
+			combatStats.health += actionState.values[vHlt];
+			metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
+		}
 		else if (actionState.trigger == ActionState::Trigger::onDeath)
 		{
 			uint32_t i = actionState.dst;
@@ -1059,7 +1068,6 @@ namespace game
 			{
 				boardState.ids[j + mod] = boardState.ids[j + 1 + mod];
 				boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
-				boardState.combatStatModifiers[j + mod] = boardState.combatStatModifiers[j + 1 + mod];
 				boardState.uniqueIds[j + mod] = boardState.uniqueIds[j + 1 + mod];
 				metaDatas[META_DATA_ALLY_INDEX + j + mod] = metaDatas[META_DATA_ALLY_INDEX + j + mod + 1];
 			}
@@ -1224,6 +1232,42 @@ namespace game
 		textTask.position.y += eval * 24;
 		info.textTasks.Push(textTask);
 		Shake(info);
+	}
+
+	void MainLevel::CombatState::DrawBuffAnimation(const LevelUpdateInfo& info, const Level& level,
+		CardSelectionDrawInfo& drawInfo, bool allied) const
+	{
+		if (!activeStateValid)
+			return;
+		if (allied && activeState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState.dst < BOARD_CAPACITY_PER_SIDE)
+			return;
+
+		if (activeState.trigger != ActionState::Trigger::onBuff)
+			return;
+
+		const auto pos = GetCardPosition(info, drawInfo, activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
+
+		TextTask textTask{};
+		textTask.center = true;
+		textTask.position = pos;
+		textTask.priority = true;
+
+		const uint32_t atkBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		textTask.text = TextInterpreter::IntToConstCharPtr(atkBuff, info.frameArena);
+		textTask.color = glm::vec4(0, 1, 0, 1);
+		textTask.text = TextInterpreter::Concat("+", textTask.text, info.frameArena);
+
+		textTask.text = TextInterpreter::Concat(textTask.text, "/+", info.frameArena);
+
+		const uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		const char* t = TextInterpreter::IntToConstCharPtr(hltBuff, info.frameArena);
+		textTask.text = TextInterpreter::Concat(textTask.text, t, info.frameArena);
+		
+		const auto curve = je::CreateCurveOvershooting();
+		const float eval = curve.Evaluate(GetActionStateLerp(level));
+
+		textTask.position.y += eval * 24;
+		info.textTasks.Push(textTask);
 	}
 
 	void MainLevel::CombatState::DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level,
