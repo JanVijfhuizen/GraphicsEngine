@@ -1067,27 +1067,18 @@ namespace game
 			// Modify states as to ensure other events can go through.
 			for (auto& as : state.stack)
 			{
-				// Invalidate everything that attacks this.
-				if (as.src == i || as.dst == i)
+				if (as.source == ActionState::Source::board)
 				{
-					as.src = -1;
-					as.dst = -1;
+					if(isEnemy && as.src > i + BOARD_CAPACITY_PER_SIDE)
+						--as.src;
+					if(!isEnemy && as.src > i)
+						--as.src;
 				}
 
-				if (isEnemy)
-				{
-					if (as.src != -1 && as.source == ActionState::Source::board && as.src > actionState.src)
-						--as.src;
-					if (as.dst != -1 && as.dst > actionState.dst)
-						--as.dst;
-				}
-				else
-				{
-					if (as.src != -1 && as.source == ActionState::Source::board && as.src > actionState.src && as.src < BOARD_CAPACITY_PER_SIDE)
-						--as.src;
-					if (as.dst != -1 && as.dst > actionState.dst && as.dst < BOARD_CAPACITY_PER_SIDE)
-						--as.dst;
-				}
+				if (isEnemy && as.dst > i)
+					--as.dst;
+				if (!isEnemy && as.dst > i + BOARD_CAPACITY_PER_SIDE)
+					--as.dst;
 			}
 		}
 		else if (actionState.trigger == ActionState::Trigger::onCardPlayed)
