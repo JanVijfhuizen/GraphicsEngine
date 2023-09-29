@@ -214,6 +214,9 @@ namespace game
 		for (auto& metaData : metaDatas)
 			metaData = {};
 
+		state.mana = 0;
+		state.maxMana = 0;
+
 		activations = {};
 		activations.ptr = activationsPtr;
 		activations.length = 2 + HAND_MAX_SIZE + BOARD_CAPACITY;
@@ -1042,11 +1045,10 @@ namespace game
 			}
 			else
 			{
-				for (uint32_t j = i; j < c; ++j)
-				{
+				for (uint32_t j = i; j < 3; ++j)
 					boardState.partyIds[j] = boardState.partyIds[j + 1];
+				for (uint32_t j = i; j < c; ++j)
 					tapped[j] = tapped[j + 1];
-				}
 				--boardState.allyCount;
 			}
 
@@ -1126,7 +1128,7 @@ namespace game
 		default:
 			validActionState = true;
 		}
-
+		
 		return validActionState;
 	}
 

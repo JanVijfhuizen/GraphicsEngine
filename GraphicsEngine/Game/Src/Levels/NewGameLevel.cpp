@@ -163,7 +163,7 @@ namespace game
 		const char* text = "daisy joins you on your adventure.";
 		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
 
-		const auto monster = &info.monsters[0];
+		const auto monster = &info.monsters[MONSTER_IDS::DAISY];
 		auto combatStats = GetCombatStat(*monster);
 
 		CardDrawInfo cardDrawInfo{};
@@ -183,7 +183,7 @@ namespace game
 		{
 			auto& playerState = info.playerState = PlayerState::Create();
 			playerState.AddMonster(state.monsterId);
-			playerState.AddMonster(MONSTER_STARTING_COMPANION_ID);
+			playerState.AddMonster(MONSTER_IDS::DAISY);
 			playerState.AddArtifact(0, state.artifactId);
 			SaveData(playerState);
 			loadLevelIndex = LevelIndex::partySelect;

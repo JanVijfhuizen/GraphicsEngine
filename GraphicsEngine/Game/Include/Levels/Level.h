@@ -119,7 +119,6 @@ namespace game
 			bool ignoreAnim = false;
 			float activationLerp = -1;
 			CardDrawMetaData* metaData = nullptr;
-			bool mirrorHorizontal = false;
 			bool priority = false;
 			uint32_t scale = 1;
 		};

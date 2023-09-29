@@ -597,8 +597,8 @@ namespace game
 			card.animIndex = c++;
 		}
 		arr[MONSTER_IDS::MANA_SLIME].name = "mama slime";
-		arr[MONSTER_IDS::MANA_SLIME].health = 20;
-		arr[MONSTER_IDS::MANA_SLIME].attack = 2;
+		arr[MONSTER_IDS::MANA_SLIME].health = 10;
+		arr[MONSTER_IDS::MANA_SLIME].attack = 1;
 		arr[MONSTER_IDS::MANA_SLIME].ruleText = "[end of turn] take one damage and summon a slime.";
 		arr[MONSTER_IDS::MANA_SLIME].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
@@ -635,7 +635,7 @@ namespace game
 		arr[MONSTER_IDS::SLIME].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
 
 		arr[MONSTER_IDS::HUNTED_DRAKE].name = "hunted drake";
-		arr[MONSTER_IDS::HUNTED_DRAKE].attack = 12;
+		arr[MONSTER_IDS::HUNTED_DRAKE].attack = 4;
 		arr[MONSTER_IDS::HUNTED_DRAKE].health = 12;
 		arr[MONSTER_IDS::HUNTED_DRAKE].ruleText = "[attack] summon two soldiers for the opponent.";
 		arr[MONSTER_IDS::HUNTED_DRAKE].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
@@ -647,7 +647,7 @@ namespace game
 
 			ActionState summonState{};
 			summonState.trigger = ActionState::Trigger::onSummon;
-			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = self <= BOARD_CAPACITY_PER_SIDE;
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = self >= BOARD_CAPACITY_PER_SIDE;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = 3;
 			state.stack.Add() = summonState;
 			state.stack.Add() = summonState;
@@ -664,7 +664,7 @@ namespace game
 		arr[MONSTER_IDS::SOLDIER].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
 
 		arr[MONSTER_IDS::ARBOR_ELF].name = "arbor elf";
-		arr[MONSTER_IDS::ARBOR_ELF].attack = 4;
+		arr[MONSTER_IDS::ARBOR_ELF].attack = 1;
 		arr[MONSTER_IDS::ARBOR_ELF].health = 6;
 		arr[MONSTER_IDS::ARBOR_ELF].ruleText = "[start of turn] gain one mana.";
 		arr[MONSTER_IDS::ARBOR_ELF].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
@@ -681,6 +681,18 @@ namespace game
 		arr[MONSTER_IDS::FINAL_BOSS].name = "da true final boss";
 		arr[MONSTER_IDS::FINAL_BOSS].health = 44;
 		arr[MONSTER_IDS::FINAL_BOSS].attack = 104;
+
+		arr[MONSTER_IDS::GOBLIN].name = "goblin";
+		arr[MONSTER_IDS::GOBLIN].attack = 1;
+		arr[MONSTER_IDS::GOBLIN].health = 1;
+		arr[MONSTER_IDS::GOBLIN].unique = true;
+		arr[MONSTER_IDS::GOBLIN].tags = static_cast<uint32_t>(MonsterCard::Tag::goblin);
+		arr[MONSTER_IDS::GOBLIN].tags += static_cast<uint32_t>(MonsterCard::Tag::token);
+
+		arr[MONSTER_IDS::DAISY].name = "daisy";
+		arr[MONSTER_IDS::DAISY].attack = 3;
+		arr[MONSTER_IDS::DAISY].health = 4;
+		arr[MONSTER_IDS::DAISY].unique = true;
 		return arr;
 	}
 
@@ -727,33 +739,29 @@ namespace game
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		for (auto& card : arr)
+		arr[ROOM_IDS::FIELD_OF_CARNAGE].name = "field of carnage";
+		arr[ROOM_IDS::FIELD_OF_CARNAGE].ruleText = "[monster is dealt damage] it attacks a random enemy monster.";
+		arr[ROOM_IDS::FIELD_OF_CARNAGE].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
-			continue;
-			card.name = "retribution";
-			card.ruleText = "whenever a monster is dealt damage, it attacks a random enemy monster.";
-			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+			if (actionState.trigger == ActionState::Trigger::onDamage)
 			{
-				if (actionState.trigger == ActionState::Trigger::onDamage)
-				{
-					const auto& boardState = state.boardState;
-					if (boardState.enemyCount == 0 || boardState.allyCount == 0)
-						return false;
+				const auto& boardState = state.boardState;
+				if (boardState.enemyCount == 0 || boardState.allyCount == 0)
+					return false;
 
-					ActionState attackState = actionState;
-					attackState.trigger = ActionState::Trigger::onAttack;
-					attackState.source = ActionState::Source::board;
-					attackState.src = actionState.dst;
-					attackState.dst = rand() % (actionState.dst < BOARD_CAPACITY_PER_SIDE ? boardState.enemyCount : boardState.allyCount);
-					attackState.dst += (actionState.dst < BOARD_CAPACITY_PER_SIDE) * BOARD_CAPACITY_PER_SIDE;
-					attackState.srcUniqueId = boardState.uniqueIds[attackState.src];
-					attackState.dstUniqueId = boardState.uniqueIds[attackState.dst];
-					state.stack.Add() = attackState;
-					return true;
-				}
-				return false;
-			};
-		}
+				ActionState attackState = actionState;
+				attackState.trigger = ActionState::Trigger::onAttack;
+				attackState.source = ActionState::Source::board;
+				attackState.src = actionState.dst;
+				attackState.dst = rand() % (actionState.dst < BOARD_CAPACITY_PER_SIDE ? boardState.enemyCount : boardState.allyCount);
+				attackState.dst += (actionState.dst < BOARD_CAPACITY_PER_SIDE) * BOARD_CAPACITY_PER_SIDE;
+				attackState.srcUniqueId = boardState.uniqueIds[attackState.src];
+				attackState.dstUniqueId = boardState.uniqueIds[attackState.dst];
+				state.stack.Add() = attackState;
+				return true;
+			}
+			return false;
+		};
 		return arr;
 	}
 
@@ -764,18 +772,36 @@ namespace game
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		arr[0].name = "lightning bolt";
-		arr[0].ruleText = "deal 2 damage.";
-		arr[0].animIndex = 24;
-		arr[0].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		arr[MAGIC_IDS::LIGHTNING_BOLT].name = "lightning bolt";
+		arr[MAGIC_IDS::LIGHTNING_BOLT].ruleText = "deal 3 damage.";
+		arr[MAGIC_IDS::LIGHTNING_BOLT].animIndex = 24;
+		arr[MAGIC_IDS::LIGHTNING_BOLT].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
 			{
-				ActionState damageState = actionState;
+				ActionState damageState{};
 				damageState.trigger = ActionState::Trigger::onDamage;
 				damageState.source = ActionState::Source::hand;
-				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
+				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 3;
+				damageState.dst = actionState.dst;
+				damageState.dstUniqueId = actionState.dstUniqueId;
 				state.stack.Add() = damageState;
+				return true;
+			}
+			return false;
+		};
+		arr[MAGIC_IDS::GATHER_THE_WEAK].name = "gather the weak";
+		arr[MAGIC_IDS::GATHER_THE_WEAK].ruleText = "summon two goblins";
+		arr[MAGIC_IDS::GATHER_THE_WEAK].onActionEvent = [](State& state, ActionState& actionState, uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				ActionState summonState{};
+				summonState.trigger = ActionState::Trigger::onSummon;
+				summonState.source = ActionState::Source::hand;
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = MONSTER_IDS::GOBLIN;
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 1;
+				state.stack.Add() = summonState;
 				return true;
 			}
 			return false;

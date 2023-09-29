@@ -93,7 +93,9 @@ namespace game
 				uint32_t lineLength = 0;
 				uint32_t nextLineStart = 0;
 				uint32_t xStart = 0;
-				
+
+				bool isInBrackets = false;
+
 				for (uint32_t i = 0; i < len; ++i)
 				{
 					if (i == maxLen)
@@ -135,6 +137,9 @@ namespace game
 
 					auto c = job.text[i];
 
+					if (c == ']')
+						isInBrackets = false;
+
 					if (c != ' ')
 					{
 						const bool isSymbol2ndRow = c > '9' && c < 'a';
@@ -164,8 +169,13 @@ namespace game
 						PixelPerfectRenderTask cpyTask = task;
 						cpyTask.priority = job.priority;
 						cpyTask.position.y += static_cast<int32_t>(yMod * _createInfo.bounceHeight);
+						if (isInBrackets)
+							cpyTask.color = { 0, 1, 0, 1 };
 						_createInfo.renderTasks->Push(cpyTask);
 					}
+
+					if (c == '[')
+						isInBrackets = true;
 
 					task.position.x += static_cast<int32_t>(spacing);
 					lineLength++;

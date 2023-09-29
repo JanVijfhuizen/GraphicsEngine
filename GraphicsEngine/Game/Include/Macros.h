@@ -27,7 +27,6 @@ constexpr uint32_t HAND_MAX_SIZE = 5;
 constexpr uint32_t MAX_MANA = 7;
 constexpr uint32_t STACK_MAX_SIZE = 128;
 
-constexpr uint32_t MONSTER_STARTING_COMPANION_ID = 0;
 constexpr float ACTION_STATE_DEFAULT_DURATION = .4f;
 constexpr float START_OF_TURN_ACTION_STATE_DURATION = 2;
 constexpr float CARD_ACTIVATION_DURATION = .25f;
@@ -64,6 +63,51 @@ struct MONSTER_IDS
 		SOLDIER,
 		ARBOR_ELF,
 		FINAL_BOSS,
+		GOBLIN,
+		DAISY,
+		LENGTH
+	};
+};
+
+struct MAGIC_IDS
+{
+	enum
+	{
+		LIGHTNING_BOLT,
+		GATHER_THE_WEAK,
+		LENGTH
+	};
+};
+
+struct ROOM_IDS
+{
+	enum
+	{
+		FIELD_OF_CARNAGE,
+		LENGTH
+	};
+};
+
+struct ARTIFACT_IDS
+{
+	enum
+	{
+		LENGTH
+	};
+};
+
+struct FLAW_IDS
+{
+	enum
+	{
+		LENGTH
+	};
+};
+
+struct EVENT_IDS
+{
+	enum
+	{
 		LENGTH
 	};
 };
