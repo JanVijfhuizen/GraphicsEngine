@@ -542,8 +542,8 @@ namespace game
 
 		const bool priority = drawInfo.priority || !info.inputState.rMouse.pressed;
 		const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
-		jv::ge::SubTexture statFrames[5];
-		Divide(statsTexture.subTexture, statFrames, 5);
+		jv::ge::SubTexture statFrames[3];
+		Divide(statsTexture.subTexture, statFrames, 3);
 
 		float textLifeTime = drawInfo.lifeTime;
 		if (drawInfo.metaData && drawInfo.metaData->timeSinceStatsChanged > 0)
@@ -553,13 +553,13 @@ namespace game
 		{
 			PixelPerfectRenderTask costRenderTask{};
 			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
-			costRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
+			costRenderTask.scale = statsTexture.resolution / glm::ivec2(3, 1);
 			costRenderTask.scale *= drawInfo.scale;
 			costRenderTask.xCenter = drawInfo.center;
 			costRenderTask.yCenter = drawInfo.center;
 			costRenderTask.color = drawInfo.fgColor;
 			costRenderTask.color *= glm::vec4(fadeMod, 1);
-			costRenderTask.subTexture = statFrames[4];
+			costRenderTask.subTexture = statFrames[2];
 			costRenderTask.priority = priority;
 			info.renderTasks.Push(costRenderTask);
 
@@ -582,7 +582,7 @@ namespace game
 			PixelPerfectRenderTask statsRenderTask{};
 			statsRenderTask.position = origin + bgRenderTask.scale / 2;
 			statsRenderTask.position.x -= 2 * drawInfo.scale;
-			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(5, 1);
+			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(3, 1);
 			statsRenderTask.scale *= drawInfo.scale;
 			statsRenderTask.xCenter = drawInfo.center;
 			statsRenderTask.yCenter = drawInfo.center;
@@ -590,26 +590,23 @@ namespace game
 			statsRenderTask.color *= glm::vec4(fadeMod, 1);
 			statsRenderTask.priority = priority;
 
-			int32_t vMods[3]{};
+			int32_t vMods[2]{};
 			if (auto mod = drawInfo.combatStatModifier)
 			{
-				vMods[0] = mod->armorClass;
+				vMods[0] = mod->attack;
 				vMods[1] = mod->health;
-				vMods[2] = mod->attack;
-
 				combatStats = drawInfo.combatStatModifier->GetProcessedCombatStats(combatStats);
 			}
 
-			uint32_t values[3]
+			uint32_t values[2]
 			{
-				combatStats.armorClass,
-				combatStats.health,
-				combatStats.attack
+				combatStats.attack,
+				combatStats.health
 			};
 
-			for (uint32_t i = 0; i < 3; ++i)
+			for (uint32_t i = 0; i < 2; ++i)
 			{
-				statsRenderTask.subTexture = statFrames[i + 1];
+				statsRenderTask.subTexture = statFrames[i];
 				statsRenderTask.position.y -= statsRenderTask.scale.y;
 				info.renderTasks.Push(statsRenderTask);
 
@@ -752,7 +749,6 @@ namespace game
 		CombatStats info{};
 		info.attack = card.attack;
 		info.health = card.health;
-		info.armorClass = card.armorClass;
 		return info;
 	}
 

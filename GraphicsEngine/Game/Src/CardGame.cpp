@@ -729,6 +729,7 @@ namespace game
 
 		for (auto& card : arr)
 		{
+			continue;
 			card.name = "retribution";
 			card.ruleText = "whenever a monster is dealt damage, it attacks a random enemy monster.";
 			card.onActionEvent = [](State& state, ActionState& actionState, uint32_t self)

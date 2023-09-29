@@ -4,10 +4,10 @@
 namespace game
 {
 	constexpr uint32_t TAG_ELF = 0x1;
-	constexpr uint32_t TAG_DRAGON = 0x1;
-	constexpr uint32_t TAG_HUMAN = 0x10;
-	constexpr uint32_t TAG_SLIME = 0x100;
-	constexpr uint32_t TAG_TOKEN = 0x1000;
+	constexpr uint32_t TAG_DRAGON = 0b1;
+	constexpr uint32_t TAG_HUMAN = 0b10;
+	constexpr uint32_t TAG_SLIME = 0b100;
+	constexpr uint32_t TAG_TOKEN = 0b1000;
 
 	struct MonsterCard final : Card
 	{
@@ -21,7 +21,6 @@ namespace game
 		};
 
 		uint32_t attack = 1;
-		uint32_t armorClass = 2;
 		uint32_t health = 2;
 		uint32_t tags = 0;
 	};

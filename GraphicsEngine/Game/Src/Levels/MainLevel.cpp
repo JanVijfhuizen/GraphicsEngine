@@ -984,7 +984,6 @@ namespace game
 		else if (actionState.trigger == ActionState::Trigger::onAttack)
 		{
 			const auto srcCombatStats = boardState.combatStatModifiers[actionState.src].GetProcessedCombatStats(boardState.combatStats[actionState.src]);
-			const auto dstCombatStats = boardState.combatStatModifiers[actionState.dst].GetProcessedCombatStats(boardState.combatStats[actionState.dst]);
 
 			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
 			{
@@ -998,22 +997,11 @@ namespace game
 				}
 			}
 
-			const uint32_t roll = rand() % 6;
-
-			if (roll == 6 || roll >= dstCombatStats.armorClass)
-			{
-				ActionState damageState = actionState;
-				damageState.trigger = ActionState::Trigger::onDamage;
-				constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
-				damageState.values[vDamage] = srcCombatStats.attack;
-				state.stack.Add() = damageState;
-			}
-			else
-			{
-				ActionState missState = actionState;
-				missState.trigger = ActionState::Trigger::onMiss;
-				state.stack.Add() = missState;
-			}
+			constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
+			ActionState damageState = actionState;
+			damageState.trigger = ActionState::Trigger::onDamage;
+			damageState.values[vDamage] = srcCombatStats.attack;
+			state.stack.Add() = damageState;
 		}
 		else if (actionState.trigger == ActionState::Trigger::onDamage)
 		{
@@ -1119,7 +1107,6 @@ namespace game
 		{
 		case ActionState::Trigger::onDamage:
 		case ActionState::Trigger::onAttack:
-		case ActionState::Trigger::onMiss:
 		case ActionState::Trigger::onDeath:
 			validSrc = handSrc || actionState.src != -1 && state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId;
 			validDst = actionState.dst != -1 && state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
@@ -1218,9 +1205,8 @@ namespace game
 			return;
 		if (allied && activeState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState.dst < BOARD_CAPACITY_PER_SIDE)
 			return;
-		const auto damageTrigger = activeState.trigger == ActionState::Trigger::onDamage;
-		const auto missTrigger = activeState.trigger == ActionState::Trigger::onMiss;
-		if (!damageTrigger && !missTrigger)
+
+		if (activeState.trigger != ActionState::Trigger::onDamage)
 			return;
 
 		const auto pos = GetCardPosition(info, drawInfo, activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
@@ -1228,18 +1214,14 @@ namespace game
 		TextTask textTask{};
 		textTask.center = true;
 		textTask.position = pos;
-		textTask.text = "miss";
 		textTask.priority = true;
 
-		if(damageTrigger)
-		{
-			const uint32_t dmg = activeState.values[static_cast<uint32_t>(ActionState::VDamage::damage)];
-			textTask.text = TextInterpreter::IntToConstCharPtr(dmg, info.frameArena);
-			textTask.color = glm::vec4(1, 0, 0, 1);
-			textTask.text = TextInterpreter::Concat("-", textTask.text, info.frameArena);
+		const uint32_t dmg = activeState.values[static_cast<uint32_t>(ActionState::VDamage::damage)];
+		textTask.text = TextInterpreter::IntToConstCharPtr(dmg, info.frameArena);
+		textTask.color = glm::vec4(1, 0, 0, 1);
+		textTask.text = TextInterpreter::Concat("-", textTask.text, info.frameArena);
 
-			drawInfo.damagedIndex = activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE;
-		}
+		drawInfo.damagedIndex = activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE;
 		
 		const auto curve = je::CreateCurveOvershooting();
 		const float eval = curve.Evaluate(GetActionStateLerp(level));

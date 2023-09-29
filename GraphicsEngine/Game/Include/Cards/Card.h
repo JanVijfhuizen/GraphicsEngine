@@ -24,7 +24,6 @@ namespace game
 			draw,
 			onSummon,
 			onAttack,
-			onMiss,
 			onDamage,
 			onDeath,
 			onCardPlayed,
