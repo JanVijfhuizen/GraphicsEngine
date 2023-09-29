@@ -129,16 +129,9 @@ namespace game
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
 
-				if(_fullCardType == FullCardType::magic)
-				{
-					const auto c = static_cast<MagicCard*>(_fullCard);
-					cardDrawInfo.cost = c->cost;
-				}
-				else if (_fullCardType == FullCardType::monster)
+				if (_fullCardType == FullCardType::monster)
 				{
 					const auto c = static_cast<MonsterCard*>(_fullCard);
-					auto stats = GetCombatStat(*c);
-					cardDrawInfo.combatStats = &stats;
 
 					if (c->tags & TAG_TOKEN)
 						Add(info.frameArena, tags) = "token";
@@ -580,8 +573,8 @@ namespace game
 			auto combatStats = *drawInfo.combatStats;
 
 			PixelPerfectRenderTask statsRenderTask{};
-			statsRenderTask.position = origin + bgRenderTask.scale / 2;
-			statsRenderTask.position.x -= 2 * drawInfo.scale;
+			statsRenderTask.position = origin;
+			statsRenderTask.position.x -= bgRenderTask.scale.x / 2;
 			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(3, 1);
 			statsRenderTask.scale *= drawInfo.scale;
 			statsRenderTask.xCenter = drawInfo.center;
@@ -628,8 +621,6 @@ namespace game
 			FullCardType type{};
 			if (drawInfo.combatStats)
 				type = FullCardType::monster;
-			else if (drawInfo.cost)
-				type = FullCardType::magic;
 			DrawFullCard(drawInfo.card, type);
 		}
 		return collided;

@@ -78,8 +78,7 @@ namespace game
 		enum class FullCardType
 		{
 			other,
-			monster,
-			magic
+			monster
 		};
 
 		struct HeaderDrawInfo final
