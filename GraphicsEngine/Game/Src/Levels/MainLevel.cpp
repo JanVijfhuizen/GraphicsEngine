@@ -239,7 +239,7 @@ namespace game
 		state.hand.Clear();
 		state.stack.Clear();
 		state.ResetDeck(info);
-		for (bool& b : tapped)
+		for (bool& b : state.tapped)
 			b = false;
 
 		ActionState startOfTurnActionState{};
@@ -562,7 +562,7 @@ namespace game
 
 				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				{
-					const uint32_t target = targets[i];
+					const uint32_t target = state.targets[i];
 					if (boardState.allyCount >= target)
 					{
 						ActionState attackActionState{};
@@ -575,7 +575,7 @@ namespace game
 					}
 				}
 
-				for (bool& b : tapped)
+				for (bool& b : state.tapped)
 					b = true;
 			}
 		}
@@ -604,7 +604,7 @@ namespace game
 		enemySelectionDrawInfo.cards = cards;
 		enemySelectionDrawInfo.length = boardState.enemyCount;
 		enemySelectionDrawInfo.height = ENEMY_HEIGHT;
-		enemySelectionDrawInfo.costs = targets;
+		enemySelectionDrawInfo.costs = state.targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
@@ -720,7 +720,7 @@ namespace game
 		playerCardSelectionDrawInfo.stacks = stacks;
 		playerCardSelectionDrawInfo.stackCounts = stacksCount;
 		playerCardSelectionDrawInfo.lifeTime = level->GetTime();
-		playerCardSelectionDrawInfo.greyedOutArr = tapped;
+		playerCardSelectionDrawInfo.greyedOutArr = state.tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
 		playerCardSelectionDrawInfo.selectedArr = selectedArr;
 		playerCardSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ALLY_INDEX];
@@ -757,7 +757,7 @@ namespace game
 			// If player tried to attack an enemy.
 			if (selectionState == SelectionState::ally)
 			{
-				auto& isTapped = tapped[selectedId];
+				auto& isTapped = state.tapped[selectedId];
 				if (!isTapped && enemyResult != -1)
 				{
 					ActionState attackActionState{};
@@ -767,7 +767,7 @@ namespace game
 					attackActionState.srcUniqueId = boardState.uniqueIds[selectedId];
 					attackActionState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + enemyResult];
 					state.stack.Add() = attackActionState;
-					tapped[selectedId] = true;
+					state.tapped[selectedId] = true;
 				}
 			}
 			else if(selectionState == SelectionState::hand)
@@ -789,7 +789,7 @@ namespace game
 					cardPlayActionState.src = selectedId;
 					cardPlayActionState.dst = card.type == MagicCard::Type::all ? -1 : target + (enemyResult != -1) * BOARD_CAPACITY_PER_SIDE;
 					cardPlayActionState.dstUniqueId = cardPlayActionState.dst == -1 ? -1 : boardState.uniqueIds[cardPlayActionState.dst];
-					cardPlayActionState.source = ActionState::Source::hand;
+					cardPlayActionState.source = ActionState::Source::other;
 					state.stack.Add() = cardPlayActionState;
 				}
 			}
@@ -837,7 +837,7 @@ namespace game
 			if(isAlly && targetId < PARTY_ACTIVE_CAPACITY)
 				boardState.partyIds[targetId] = partyId;
 			else if(!isAlly)
-				targets[boardState.enemyCount] = rand() % boardState.allyCount;
+				state.targets[boardState.enemyCount] = rand() % boardState.allyCount;
 			if (health != -1)
 				boardState.combatStats[targetId].health = health;
 			if (isAlly)
@@ -939,7 +939,7 @@ namespace game
 			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
-				if (monster.onActionEvent(info, state, actionState, i))
+				if (monster.onActionEvent(info, state, actionState, BOARD_CAPACITY_PER_SIDE + i))
 				{
 					Activation activation{};
 					activation.id = BOARD_CAPACITY_PER_SIDE + i;
@@ -970,12 +970,12 @@ namespace game
 			// Set new random enemy targets.
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			{
-				targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
+				state.targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
 				metaDatas[i + META_DATA_ENEMY_INDEX].timeSinceStatsChanged = level->GetTime();
 			}
 
 			// Untap.
-			for (auto& b : tapped)
+			for (auto& b : state.tapped)
 				b = false;
 
 			if (state.maxMana < MAX_MANA)
@@ -992,7 +992,7 @@ namespace game
 
 			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
 			{
-				auto& target = targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
+				auto& target = state.targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
 				const auto oldTarget = target;
 				if (boardState.allyCount > 1)
 				{
@@ -1050,7 +1050,7 @@ namespace game
 			if (isEnemy)
 			{
 				for (uint32_t j = i; j < c; ++j)
-					targets[j] = targets[j + 1];
+					state.targets[j] = state.targets[j + 1];
 				lastEnemyDefeatedId = boardState.ids[i + mod];
 				--boardState.enemyCount;
 			}
@@ -1059,7 +1059,7 @@ namespace game
 				for (uint32_t j = i; j < 3; ++j)
 					boardState.partyIds[j] = boardState.partyIds[j + 1];
 				for (uint32_t j = i; j < c; ++j)
-					tapped[j] = tapped[j + 1];
+					state.tapped[j] = state.tapped[j + 1];
 				--boardState.allyCount;
 			}
 
@@ -1097,11 +1097,11 @@ namespace game
 		}
 	}
 
-	bool MainLevel::CombatState::ValidateActionState(const State& state, ActionState& actionState)
+	bool MainLevel::CombatState::ValidateActionState(const State& state, const ActionState& actionState)
 	{
 		const auto& boardState = state.boardState;
 
-		const bool handSrc = actionState.source == ActionState::Source::hand;
+		const bool handSrc = actionState.source == ActionState::Source::other;
 		bool validActionState;
 		bool validSrc;
 		bool validDst;

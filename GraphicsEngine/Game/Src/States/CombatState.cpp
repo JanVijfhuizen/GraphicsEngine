@@ -100,10 +100,6 @@ namespace game
 			decks.bosses.count = decks.bosses.length;
 			RemoveDuplicates(info, bosses, &Path::boss);
 			Shuffle(decks.bosses.ptr, decks.bosses.count);
-
-			for (int32_t i = static_cast<int32_t>(decks.bosses.count) - 1; i >= 0; --i)
-				if(info.monsters[decks.bosses[i]].unique)
-					decks.bosses.RemoveAt(i);
 		}
 		return bosses.Pop();
 	}
@@ -118,8 +114,12 @@ namespace game
 			Shuffle(decks.rooms.ptr, decks.rooms.count);
 
 			for (int32_t i = static_cast<int32_t>(decks.rooms.count) - 1; i >= 0; --i)
-				if (info.rooms[decks.rooms[i]].unique)
+			{
+				const auto id = decks.rooms[i];
+				const auto& room = info.rooms[id];
+				if (room.unique)
 					decks.rooms.RemoveAt(i);
+			}
 		}
 		return rooms.Pop();
 	}

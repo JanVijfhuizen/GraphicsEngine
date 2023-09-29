@@ -64,8 +64,6 @@ namespace game
 			float time;
 			uint32_t eventCards[EVENT_CARD_MAX_COUNT];
 			uint32_t previousEventCards[EVENT_CARD_MAX_COUNT];
-			uint32_t targets[BOARD_CAPACITY_PER_SIDE];
-			bool tapped[BOARD_CAPACITY_PER_SIDE];
 			uint32_t selectedId;
 			uint32_t lastEnemyDefeatedId;
 			uint32_t uniqueId;
@@ -84,7 +82,7 @@ namespace game
 			[[nodiscard]] bool PreHandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
 			void CollectActivatedCards(State& state, const LevelUpdateInfo& info, ActionState& actionState);
 			void PostHandleActionState(State& state, Level* level, const ActionState& actionState);
-			[[nodiscard]] static bool ValidateActionState(const State& state, ActionState& actionState);
+			[[nodiscard]] static bool ValidateActionState(const State& state, const ActionState& actionState);
 			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawDamageAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawBuffAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;

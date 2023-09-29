@@ -40,7 +40,7 @@ namespace game
 		enum class Source
 		{
 			board,
-			hand
+			other
 		} source = Source::board;
 
 		uint32_t src = UINT32_MAX;

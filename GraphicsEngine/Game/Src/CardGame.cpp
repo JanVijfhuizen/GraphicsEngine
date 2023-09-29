@@ -589,7 +589,7 @@ namespace game
 
 	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<MonsterCard>(arena, 30); // LENGTH
+		const auto arr = jv::CreateArray<MonsterCard>(arena, MONSTER_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
 		{
@@ -687,35 +687,72 @@ namespace game
 
 	jv::Array<ArtifactCard> CardGame::GetArtifactCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<ArtifactCard>(arena, 10);
+		const auto arr = jv::CreateArray<ArtifactCard>(arena, ARTIFACT_IDS::LENGTH);
 
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		for (auto& card : arr)
+		arr[ARTIFACT_IDS::CROWN_OF_MALICE].name = "crown of malice";
+		arr[ARTIFACT_IDS::CROWN_OF_MALICE].ruleText = "[on any death] gain +1/+1.";
+		arr[ARTIFACT_IDS::CROWN_OF_MALICE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			card.name = "artifact";
-			card.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			if (actionState.trigger == ActionState::Trigger::onDeath)
 			{
-				if (actionState.trigger == ActionState::Trigger::onSummon && self == actionState.dst)
-				{
-					std::cout << "on summoned" << std::endl;
-					return true;
-				}
-				return false;
-			};
-		}
-		arr[0].unique = true;
-		arr[0].name = "sword of a thousand truths";
-		arr[0].ruleText = "whenever you attack, win the game.";
+				ActionState buffState{};
+				buffState.trigger = ActionState::Trigger::onBuff;
+				buffState.source = ActionState::Source::board;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 1;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 1;
+				buffState.dst = self;
+				buffState.dstUniqueId = state.boardState.uniqueIds[self];
+				return true;
+			}
+			return false;
+		};
+		arr[ARTIFACT_IDS::BOOK_OF_KNOWLEDGE].name = "book of knowledge";
+		arr[ARTIFACT_IDS::BOOK_OF_KNOWLEDGE].ruleText = "[on card played] gain +1/+1.";
+		arr[ARTIFACT_IDS::BOOK_OF_KNOWLEDGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed)
+			{
+				ActionState buffState{};
+				buffState.trigger = ActionState::Trigger::onBuff;
+				buffState.source = ActionState::Source::board;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 1;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 1;
+				buffState.dst = self;
+				buffState.dstUniqueId = state.boardState.uniqueIds[self];
+				return true;
+			}
+			return false;
+		};
+		arr[ARTIFACT_IDS::ARMOR_OF_THORNS].name = "armor of thorns";
+		arr[ARTIFACT_IDS::ARMOR_OF_THORNS].ruleText = "[on attacked] deal 2 damage to the attacker.";
+		arr[ARTIFACT_IDS::ARMOR_OF_THORNS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onAttack && actionState.dst == self)
+			{
+				ActionState damageState{};
+				damageState.trigger = ActionState::Trigger::onDamage;
+				damageState.source = ActionState::Source::board;
+				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
+				damageState.dst = actionState.src;
+				damageState.dstUniqueId = actionState.srcUniqueId;
+				damageState.src = actionState.dst;
+				damageState.srcUniqueId = actionState.dstUniqueId;
+				state.stack.Add() = damageState;
+				return true;
+			}
+			return false;
+		};
 		return arr;
 	}
 
 	jv::Array<uint32_t> CardGame::GetBossCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<uint32_t>(arena, 10);
-		uint32_t i = 1;
+		const auto arr = jv::CreateArray<uint32_t>(arena, BOSS_IDS::LENGTH);
+		uint32_t i = 0;
 		for (auto& card : arr)
 			card = i++;
 		return arr;
@@ -723,7 +760,7 @@ namespace game
 
 	jv::Array<RoomCard> CardGame::GetRoomCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<RoomCard>(arena, 10);
+		const auto arr = jv::CreateArray<RoomCard>(arena, ROOM_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
@@ -756,13 +793,13 @@ namespace game
 
 	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<MagicCard>(arena, 24);
+		const auto arr = jv::CreateArray<MagicCard>(arena, MAGIC_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
 
 		arr[MAGIC_IDS::LIGHTNING_BOLT].name = "lightning bolt";
-		arr[MAGIC_IDS::LIGHTNING_BOLT].ruleText = "deal 3 damage.";
+		arr[MAGIC_IDS::LIGHTNING_BOLT].ruleText = "deal 2 damage.";
 		arr[MAGIC_IDS::LIGHTNING_BOLT].animIndex = 24;
 		arr[MAGIC_IDS::LIGHTNING_BOLT].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
@@ -770,8 +807,8 @@ namespace game
 			{
 				ActionState damageState{};
 				damageState.trigger = ActionState::Trigger::onDamage;
-				damageState.source = ActionState::Source::hand;
-				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 3;
+				damageState.source = ActionState::Source::other;
+				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
 				damageState.dst = actionState.dst;
 				damageState.dstUniqueId = actionState.dstUniqueId;
 				state.stack.Add() = damageState;
@@ -788,7 +825,7 @@ namespace game
 			{
 				ActionState summonState{};
 				summonState.trigger = ActionState::Trigger::onSummon;
-				summonState.source = ActionState::Source::hand;
+				summonState.source = ActionState::Source::other;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = MONSTER_IDS::GOBLIN;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 1;
 				state.stack.Add() = summonState;
@@ -799,7 +836,7 @@ namespace game
 		};
 
 		arr[MAGIC_IDS::GOBLIN_SUPREMACY].name = "goblin supremacy";
-		arr[MAGIC_IDS::GOBLIN_SUPREMACY].ruleText = "give all goblins +3/+3.";
+		arr[MAGIC_IDS::GOBLIN_SUPREMACY].ruleText = "give all goblins +2/+1.";
 		arr[MAGIC_IDS::GOBLIN_SUPREMACY].type = MagicCard::Type::all;
 		arr[MAGIC_IDS::GOBLIN_SUPREMACY].cost = 2;
 		arr[MAGIC_IDS::GOBLIN_SUPREMACY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -808,9 +845,9 @@ namespace game
 			{
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onBuff;
-				buffState.source = ActionState::Source::hand;
-				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 3;
-				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 3;
+				buffState.source = ActionState::Source::other;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 2;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 1;
 
 				const auto& boardState = state.boardState;
 				for (uint32_t i = 0; i < boardState.allyCount; ++i)
@@ -835,7 +872,7 @@ namespace game
 			return false;
 		};
 		arr[MAGIC_IDS::CULL_THE_MEEK].name = "cull the meek";
-		arr[MAGIC_IDS::CULL_THE_MEEK].ruleText = "destroy all friendly tokens to give all allies +4/+2 for each monster destroyed.";
+		arr[MAGIC_IDS::CULL_THE_MEEK].ruleText = "destroy all friendly tokens to give all allies +2/+2 for each monster destroyed.";
 		arr[MAGIC_IDS::CULL_THE_MEEK].type = MagicCard::Type::all;
 		arr[MAGIC_IDS::CULL_THE_MEEK].cost = 3;
 		arr[MAGIC_IDS::CULL_THE_MEEK].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -844,7 +881,7 @@ namespace game
 			{
 				ActionState killState{};
 				killState.trigger = ActionState::Trigger::onDeath;
-				killState.source = ActionState::Source::hand;
+				killState.source = ActionState::Source::other;
 
 				const auto& boardState = state.boardState;
 				uint32_t count = 0;
@@ -861,8 +898,8 @@ namespace game
 
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onBuff;
-				buffState.source = ActionState::Source::hand;
-				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 4 * count;
+				buffState.source = ActionState::Source::other;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 2 * count;
 				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 2 * count;
 
 				for (uint32_t i = 0; i < boardState.allyCount; ++i)
@@ -876,13 +913,40 @@ namespace game
 			}
 			return false;
 		};
+		arr[MAGIC_IDS::SECOND_WIND].name = "second wind";
+		arr[MAGIC_IDS::SECOND_WIND].ruleText = "ready all monsters.";
+		arr[MAGIC_IDS::SECOND_WIND].type = MagicCard::Type::all;
+		arr[MAGIC_IDS::SECOND_WIND].cost = 5;
+		arr[MAGIC_IDS::SECOND_WIND].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				for (auto& t : state.tapped)
+					t = false;
+				return true;
+			}
+			return false;
+		};
+		arr[MAGIC_IDS::PARIAH].name = "pariah";
+		arr[MAGIC_IDS::PARIAH].ruleText = "change all enemy targets to this monster.";
+		arr[MAGIC_IDS::PARIAH].cost = 3;
+		arr[MAGIC_IDS::PARIAH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				for (auto& t : state.targets)
+					t = actionState.dst;
+				return true;
+			}
+			return false;
+		};
 
 		return arr;
 	}
 
 	jv::Array<FlawCard> CardGame::GetFlawCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<FlawCard>(arena, 24);
+		const auto arr = jv::CreateArray<FlawCard>(arena, FLAW_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
@@ -894,7 +958,7 @@ namespace game
 
 	jv::Array<EventCard> CardGame::GetEventCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<EventCard>(arena, 24);
+		const auto arr = jv::CreateArray<EventCard>(arena, EVENT_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;

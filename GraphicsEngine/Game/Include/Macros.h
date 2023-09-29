@@ -77,6 +77,8 @@ struct MAGIC_IDS
 		GATHER_THE_WEAK,
 		GOBLIN_SUPREMACY,
 		CULL_THE_MEEK,
+		SECOND_WIND,
+		PARIAH,
 		LENGTH
 	};
 };
@@ -85,7 +87,17 @@ struct ROOM_IDS
 {
 	enum
 	{
+		A, B, C, D, E,
 		FIELD_OF_CARNAGE,
+		LENGTH
+	};
+};
+
+struct BOSS_IDS
+{
+	enum
+	{
+		A, B, C,
 		LENGTH
 	};
 };
@@ -94,6 +106,9 @@ struct ARTIFACT_IDS
 {
 	enum
 	{
+		CROWN_OF_MALICE,
+		BOOK_OF_KNOWLEDGE,
+		ARMOR_OF_THORNS,
 		LENGTH
 	};
 };
@@ -102,6 +117,7 @@ struct FLAW_IDS
 {
 	enum
 	{
+		A, B, C, D,
 		LENGTH
 	};
 };
@@ -110,6 +126,7 @@ struct EVENT_IDS
 {
 	enum
 	{
+		A, B, C, D, E, F, G, H,
 		LENGTH
 	};
 };
