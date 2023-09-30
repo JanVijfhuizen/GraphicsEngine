@@ -174,7 +174,8 @@ namespace game
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
 					titleTextTask.priority = true;
-					titleTextTask.scale = 2;
+					titleTextTask.scale = 1;
+					titleTextTask.color = glm::vec4(0, 1, 1, 1);
 					info.textTasks.Push(titleTextTask);
 
 					auto ruleTextTask = titleTextTask;
@@ -185,6 +186,7 @@ namespace game
 					ruleTextTask.position.y -= alphabetTexture.resolution.y / 2;
 					ruleTextTask.scale = 1;
 					ruleTextTask.lineLength = FULL_CARD_LINE_LENGTH;
+					ruleTextTask.color = glm::vec4(1);
 					info.textTasks.Push(ruleTextTask);
 				}
 

@@ -93,8 +93,9 @@ struct ROOM_IDS
 {
 	enum
 	{
-		A, B, C, D, E,
+		A, B, C, D,
 		FIELD_OF_CARNAGE,
+		VALLEY_OF_CONFUSION,
 		LENGTH
 	};
 };
@@ -132,7 +133,11 @@ struct EVENT_IDS
 {
 	enum
 	{
-		A, B, C, D, E, F, G, H,
+		RALLY,
+		REINFORCEMENT,
+		KARMA,
+		MANA_SEVERANCE,
+		CHASE_THE_DRAGON,
 		LENGTH
 	};
 };
