@@ -80,7 +80,7 @@ namespace game
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
 			[[nodiscard]] bool PreHandleActionState(State& state, const LevelUpdateInfo& info, ActionState& actionState);
-			void CollectActivatedCards(State& state, const LevelUpdateInfo& info, ActionState& actionState);
+			void CollectActivatedCards(State& state, const LevelUpdateInfo& info, const ActionState& actionState);
 			void PostHandleActionState(State& state, Level* level, const ActionState& actionState);
 			[[nodiscard]] static bool ValidateActionState(const State& state, const ActionState& actionState);
 			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;

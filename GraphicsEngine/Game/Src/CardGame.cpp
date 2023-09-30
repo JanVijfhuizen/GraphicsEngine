@@ -951,7 +951,7 @@ namespace game
 			return false;
 		};
 		arr[MAGIC_IDS::CULL_THE_MEEK].name = "cull the meek";
-		arr[MAGIC_IDS::CULL_THE_MEEK].ruleText = "destroy all friendly tokens to give all allies +2/+2 for each monster destroyed.";
+		arr[MAGIC_IDS::CULL_THE_MEEK].ruleText = "destroy all tokens to give all allies +1/+1 for each monster destroyed.";
 		arr[MAGIC_IDS::CULL_THE_MEEK].type = MagicCard::Type::all;
 		arr[MAGIC_IDS::CULL_THE_MEEK].cost = 3;
 		arr[MAGIC_IDS::CULL_THE_MEEK].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -965,13 +965,13 @@ namespace game
 				const auto& boardState = state.boardState;
 				uint32_t count = 0;
 
-				TargetOfType(info, state, killState, self, TAG_TOKEN, BuffTypeTarget::allies);
+				TargetOfType(info, state, killState, self, TAG_TOKEN, BuffTypeTarget::all);
 
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onBuff;
 				buffState.source = ActionState::Source::other;
-				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 2 * count;
-				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 2 * count;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = count;
+				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = count;
 				TargetOfType(info, state, buffState, self, -1, BuffTypeTarget::allies);
 				return true;
 			}
@@ -992,7 +992,7 @@ namespace game
 			return false;
 		};
 		arr[MAGIC_IDS::PARIAH].name = "pariah";
-		arr[MAGIC_IDS::PARIAH].ruleText = "change all enemy targets to this monster.";
+		arr[MAGIC_IDS::PARIAH].ruleText = "change all enemy targets to this.";
 		arr[MAGIC_IDS::PARIAH].cost = 3;
 		arr[MAGIC_IDS::PARIAH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
@@ -1000,6 +1000,50 @@ namespace game
 			{
 				for (auto& t : state.targets)
 					t = actionState.dst;
+				return true;
+			}
+			return false;
+		};
+		arr[MAGIC_IDS::MIRROR_IMAGE].name = "mind mirror";
+		arr[MAGIC_IDS::MIRROR_IMAGE].ruleText = "summon a copy.";
+		arr[MAGIC_IDS::MIRROR_IMAGE].cost = 5;
+		arr[MAGIC_IDS::MIRROR_IMAGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				ActionState summonState{};
+				summonState.trigger = ActionState::Trigger::onSummon;
+				summonState.source = ActionState::Source::other;
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.boardState.ids[actionState.dst];
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 1;
+				state.stack.Add() = summonState;
+				return true;
+			}
+			return false;
+		};
+		arr[MAGIC_IDS::MANA_SURGE].name = "mana surge";
+		arr[MAGIC_IDS::MANA_SURGE].ruleText = "gain mana equal to its attack.";
+		arr[MAGIC_IDS::MANA_SURGE].cost = 5;
+		arr[MAGIC_IDS::MANA_SURGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				state.mana += state.boardState.combatStats[actionState.dst].attack;
+				return true;
+			}
+			return false;
+		};
+		arr[MAGIC_IDS::POT_OF_WEED].name = "pot of weed";
+		arr[MAGIC_IDS::POT_OF_WEED].ruleText = "draw two cards.";
+		arr[MAGIC_IDS::POT_OF_WEED].cost = 3;
+		arr[MAGIC_IDS::POT_OF_WEED].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			{
+				ActionState drawState{};
+				drawState.trigger = ActionState::Trigger::draw;
+				drawState.source = ActionState::Source::other;
+				state.stack.Add() = drawState;
 				return true;
 			}
 			return false;

@@ -853,7 +853,7 @@ namespace game
 	}
 
 	void MainLevel::CombatState::CollectActivatedCards(State& state, const LevelUpdateInfo& info,
-		ActionState& actionState)
+		const ActionState& actionState)
 	{
 		activations.Clear();
 		if (!ValidateActionState(state, actionState))
@@ -867,7 +867,7 @@ namespace game
 		{
 			bool activated = false;
 
-			const auto partyId = boardState.partyIds[i];
+			const auto partyId = i < PARTY_ACTIVE_CAPACITY ? boardState.partyIds[i] : -1;
 			const auto id = boardState.ids[i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
@@ -1884,7 +1884,6 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 16;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
