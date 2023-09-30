@@ -9,6 +9,7 @@ namespace game
 	constexpr uint32_t TAG_SLIME = 0b1000;
 	constexpr uint32_t TAG_TOKEN = 0b10000;
 	constexpr uint32_t TAG_GOBLIN = 0b100000;
+	constexpr uint32_t TAG_ELEMENTAL = 0b1000000;
 
 	struct MonsterCard final : Card
 	{
@@ -19,7 +20,8 @@ namespace game
 			human = TAG_HUMAN,
 			slime = TAG_SLIME,
 			token = TAG_TOKEN,
-			goblin = TAG_GOBLIN
+			goblin = TAG_GOBLIN,
+			elemental = TAG_ELEMENTAL
 		};
 
 		uint32_t attack = 1;

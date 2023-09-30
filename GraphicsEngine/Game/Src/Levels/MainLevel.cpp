@@ -836,7 +836,7 @@ namespace game
 			boardState.uniqueIds[targetId] = uniqueId++;
 			if(isAlly && targetId < PARTY_ACTIVE_CAPACITY)
 				boardState.partyIds[targetId] = partyId;
-			else if(!isAlly)
+			else if(!isAlly && boardState.allyCount > 0)
 				state.targets[boardState.enemyCount] = rand() % boardState.allyCount;
 			if (health != -1)
 				boardState.combatStats[targetId].health = health;
@@ -1884,6 +1884,7 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+		stateMachine.state.depth = 16;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

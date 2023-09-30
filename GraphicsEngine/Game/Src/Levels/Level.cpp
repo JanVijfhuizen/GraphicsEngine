@@ -143,6 +143,10 @@ namespace game
 						Add(info.frameArena, tags) = "human";
 					if (c->tags & TAG_ELF)
 						Add(info.frameArena, tags) = "elf";
+					if (c->tags & TAG_GOBLIN)
+						Add(info.frameArena, tags) = "goblin";
+					if (c->tags & TAG_ELEMENTAL)
+						Add(info.frameArena, tags) = "elemental";
 
 					const uint32_t tagCount = tags.GetCount();
 					if(tagCount > 0)

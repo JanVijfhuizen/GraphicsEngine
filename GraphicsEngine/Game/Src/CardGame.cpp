@@ -587,6 +587,40 @@ namespace game
 		return arr;
 	}
 
+	enum class BuffTypeTarget
+	{
+		allies,
+		enemies,
+		all
+	};
+
+	void TargetOfType(const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self, const uint32_t tags, const BuffTypeTarget target)
+	{
+		ActionState cpyState = actionState;
+
+		const auto& boardState = state.boardState;
+		if(target == BuffTypeTarget::all || self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
+			self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies)
+			for (uint32_t i = 0; i < boardState.allyCount; ++i)
+			{
+				if (tags != -1 && (info.monsters[boardState.ids[i]].tags & tags) == 0)
+					continue;
+				cpyState.dst = i;
+				cpyState.dstUniqueId = boardState.uniqueIds[i];
+				state.stack.Add() = cpyState;
+			}
+		if (target == BuffTypeTarget::all || self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
+			self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies)
+			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+			{
+				if (tags != -1 && (info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]].tags & tags) == 0)
+					continue;
+				cpyState.dst = BOARD_CAPACITY_PER_SIDE + i;
+				cpyState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+				state.stack.Add() = cpyState;
+			}
+	}
+
 	jv::Array<MonsterCard> CardGame::GetMonsterCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<MonsterCard>(arena, MONSTER_IDS::LENGTH);
@@ -654,7 +688,7 @@ namespace game
 
 		arr[MONSTER_IDS::ARBOR_ELF].name = "arbor elf";
 		arr[MONSTER_IDS::ARBOR_ELF].attack = 1;
-		arr[MONSTER_IDS::ARBOR_ELF].health = 9;
+		arr[MONSTER_IDS::ARBOR_ELF].health = 3;
 		arr[MONSTER_IDS::ARBOR_ELF].ruleText = "[start of turn] gain one mana.";
 		arr[MONSTER_IDS::ARBOR_ELF].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
@@ -682,6 +716,49 @@ namespace game
 		arr[MONSTER_IDS::DAISY].attack = 4;
 		arr[MONSTER_IDS::DAISY].health = 4;
 		arr[MONSTER_IDS::DAISY].unique = true;
+
+		arr[MONSTER_IDS::GOBLIN_KING].name = "goblin king";
+		arr[MONSTER_IDS::GOBLIN_KING].ruleText = "[on kill] give all friendly goblins +2/+1.";
+		arr[MONSTER_IDS::GOBLIN_KING].attack = 3;
+		arr[MONSTER_IDS::GOBLIN_KING].health = 6;
+		arr[MONSTER_IDS::GOBLIN_KING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger != ActionState::Trigger::onDeath)
+				return false;
+			if (actionState.source != ActionState::Source::board)
+				return false;
+			if (actionState.src != self)
+				return false;
+
+			ActionState buffState{};
+			buffState.trigger = ActionState::Trigger::onBuff;
+			buffState.source = ActionState::Source::board;
+			buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 2;
+			buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 1;
+			TargetOfType(info, state, buffState, self, TAG_GOBLIN, BuffTypeTarget::allies);
+			return true;
+		};
+		arr[MONSTER_IDS::GOBLIN_KING].tags = static_cast<uint32_t>(MonsterCard::Tag::goblin);
+
+		arr[MONSTER_IDS::MANA_CYCLONE].name = "mana cyclone";
+		arr[MONSTER_IDS::MANA_CYCLONE].attack = 0;
+		arr[MONSTER_IDS::MANA_CYCLONE].health = 1;
+		arr[MONSTER_IDS::MANA_CYCLONE].ruleText = "[start of turn] gain +x+x where x is your maximum mana.";
+		arr[MONSTER_IDS::MANA_CYCLONE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
+				return false;
+
+			ActionState buffState{};
+			buffState.trigger = ActionState::Trigger::onBuff;
+			buffState.source = ActionState::Source::board;
+			buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = state.maxMana;
+			buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = state.maxMana;
+			buffState.dst = self;
+			buffState.dstUniqueId = state.boardState.uniqueIds[self];
+			state.stack.Add() = buffState;
+			return true;
+		};
 		return arr;
 	}
 
@@ -849,24 +926,7 @@ namespace game
 				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 2;
 				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 1;
 
-				const auto& boardState = state.boardState;
-				for (uint32_t i = 0; i < boardState.allyCount; ++i)
-				{
-					if ((info.monsters[boardState.ids[i]].tags & TAG_GOBLIN) == 0)
-						continue;
-					buffState.dst = i;
-					buffState.dstUniqueId = boardState.uniqueIds[i];
-					state.stack.Add() = buffState;
-				}
-				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-				{
-					if ((info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]].tags & TAG_GOBLIN) == 0)
-						continue;
-					buffState.dst = BOARD_CAPACITY_PER_SIDE + i;
-					buffState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-					state.stack.Add() = buffState;
-				}
-				
+				TargetOfType(info, state, buffState, self, TAG_GOBLIN, BuffTypeTarget::all);
 				return true;
 			}
 			return false;
@@ -886,29 +946,14 @@ namespace game
 				const auto& boardState = state.boardState;
 				uint32_t count = 0;
 
-				for (uint32_t i = 0; i < boardState.allyCount; ++i)
-				{
-					if ((info.monsters[boardState.ids[i]].tags & TAG_TOKEN) == 0)
-						continue;
-					killState.dst = i;
-					killState.dstUniqueId = boardState.uniqueIds[i];
-					state.stack.Add() = killState;
-					++count;
-				}
+				TargetOfType(info, state, killState, self, TAG_TOKEN, BuffTypeTarget::allies);
 
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onBuff;
 				buffState.source = ActionState::Source::other;
 				buffState.values[static_cast<uint32_t>(ActionState::VBuff::attack)] = 2 * count;
 				buffState.values[static_cast<uint32_t>(ActionState::VBuff::health)] = 2 * count;
-
-				for (uint32_t i = 0; i < boardState.allyCount; ++i)
-				{
-					buffState.dst = i;
-					buffState.dstUniqueId = boardState.uniqueIds[i];
-					state.stack.Add() = buffState;
-				}
-
+				TargetOfType(info, state, buffState, self, -1, BuffTypeTarget::allies);
 				return true;
 			}
 			return false;
