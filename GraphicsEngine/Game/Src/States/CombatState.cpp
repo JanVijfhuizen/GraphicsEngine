@@ -47,9 +47,57 @@ namespace game
 		if (monsters.count == 0)
 		{
 			GetDeck(&monsters, nullptr, info.monsters);
+
+			for (int32_t i = static_cast<int32_t>(monsters.count) - 1; i >= 0; --i)
+			{
+				bool removed = false;
+
+				for (uint32_t j = 0; j < boardState.allyCount; ++j)
+					if (monsters[i] == boardState.ids[j])
+					{
+						monsters.RemoveAt(i);
+						removed = true;
+						break;
+					}
+				if (removed)
+					continue;
+
+				for (uint32_t j = 0; j < boardState.enemyCount; ++j)
+					if (monsters[i] == boardState.ids[BOARD_CAPACITY_PER_SIDE + j])
+					{
+						monsters.RemoveAt(i);
+						removed = true;
+						break;
+					}
+				if (removed)
+					continue;
+
+				for (uint32_t j = 0; j < info.playerState.partySize; ++j)
+					if (monsters[i] == info.playerState.monsterIds[j])
+					{
+						monsters.RemoveAt(i);
+						removed = true;
+						break;
+					}
+
+				if (removed)
+					continue;
+
+				for (auto& as: stack)
+				{
+					if (as.trigger != ActionState::Trigger::onSummon)
+						continue;
+					if(as.values[static_cast<uint32_t>(ActionState::VSummon::id)] == monsters[i])
+					{
+						monsters.RemoveAt(i);
+						break;
+					}
+				}
+			}
+
 			Shuffle(decks.monsters.ptr, decks.monsters.count);
 		}
-		return monsters[rand() % monsters.count];
+		return monsters.Pop();
 	}
 
 	uint32_t State::GetBoss(const LevelInfo& info)

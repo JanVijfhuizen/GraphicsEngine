@@ -718,7 +718,7 @@ namespace game
 		arr[MONSTER_IDS::DAISY].unique = true;
 
 		arr[MONSTER_IDS::GOBLIN_KING].name = "goblin king";
-		arr[MONSTER_IDS::GOBLIN_KING].ruleText = "[on kill] give all friendly goblins +2/+1.";
+		arr[MONSTER_IDS::GOBLIN_KING].ruleText = "[kill] give all friendly goblins +2/+1.";
 		arr[MONSTER_IDS::GOBLIN_KING].attack = 3;
 		arr[MONSTER_IDS::GOBLIN_KING].health = 6;
 		arr[MONSTER_IDS::GOBLIN_KING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -759,6 +759,25 @@ namespace game
 			state.stack.Add() = buffState;
 			return true;
 		};
+		arr[MONSTER_IDS::MAD_PYROMANCER].name = "mad pyromancer";
+		arr[MONSTER_IDS::MAD_PYROMANCER].attack = 0;
+		arr[MONSTER_IDS::MAD_PYROMANCER].health = 5;
+		arr[MONSTER_IDS::MAD_PYROMANCER].ruleText = "[buffed] deal damage to all enemies equal to the attack buff.";
+		arr[MONSTER_IDS::MAD_PYROMANCER].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
+				return false;
+			
+			ActionState damageState{};
+			damageState.trigger = ActionState::Trigger::onDamage;
+			damageState.source = ActionState::Source::board;
+			damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 1;
+			damageState.src = self;
+			damageState.srcUniqueId = state.boardState.uniqueIds[self];
+			TargetOfType(info, state, damageState, self, -1, BuffTypeTarget::enemies);
+			return true;
+		};
+		arr[MONSTER_IDS::MAD_PYROMANCER].tags = TAG_HUMAN;
 		return arr;
 	}
 
