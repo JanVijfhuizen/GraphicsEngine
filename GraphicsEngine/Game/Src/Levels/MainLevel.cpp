@@ -861,8 +861,6 @@ namespace game
 		const ActionState& actionState)
 	{
 		activations.Clear();
-		if (!ValidateActionState(state, actionState))
-			return;
 
 		const auto& boardState = state.boardState;
 		const auto& playerState = info.playerState;
@@ -1084,13 +1082,13 @@ namespace game
 				{
 					if(isEnemy && as.src > i + BOARD_CAPACITY_PER_SIDE)
 						--as.src;
-					if(!isEnemy && as.src > i)
+					else if(!isEnemy && as.src > i && as.src < BOARD_CAPACITY_PER_SIDE)
 						--as.src;
 				}
 
-				if (isEnemy && as.dst > i)
+				if (isEnemy && as.dst > i && as.dst < BOARD_CAPACITY_PER_SIDE)
 					--as.dst;
-				if (!isEnemy && as.dst > i + BOARD_CAPACITY_PER_SIDE)
+				else if (!isEnemy && as.dst > i + BOARD_CAPACITY_PER_SIDE)
 					--as.dst;
 			}
 		}

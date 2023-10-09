@@ -599,8 +599,8 @@ namespace game
 		ActionState cpyState = actionState;
 
 		const auto& boardState = state.boardState;
-		if(target == BuffTypeTarget::all || (self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
-			self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies))
+		if(target == BuffTypeTarget::all || (self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
+			self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies))
 			for (uint32_t i = 0; i < boardState.allyCount; ++i)
 			{
 				if (tags != -1 && (info.monsters[boardState.ids[i]].tags & tags) == 0)
