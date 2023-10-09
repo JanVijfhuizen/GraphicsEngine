@@ -172,21 +172,52 @@ namespace game
 		return flaws.Pop();
 	}
 
-	uint32_t State::GetEvent(const LevelInfo& info)
+	uint32_t State::GetEvent(const LevelInfo& info, const uint32_t* ignore, const uint32_t ignoreCount)
 	{
 		auto& events = decks.events;
 		if (events.count == 0)
 		{
-			GetDeck(&events, nullptr, info.flaws);
+			GetDeck(&events, nullptr, info.events);
+			for (auto i = static_cast<int32_t>(events.count) - 1; i >= 0; --i)
+			{
+				bool ignored = false;
+				for (uint32_t j = 0; j < ignoreCount; ++j)
+				{
+					if (events[i] == ignore[j])
+					{
+						ignored = true;
+						break;
+					}
+				}
+				if(ignored)
+					events.RemoveAt(i);
+			}
+
 			Shuffle(decks.events.ptr, decks.events.count);
 		}
 		return events.Pop();
 	}
 
-	uint32_t State::Draw(const LevelInfo& info)
+	uint32_t State::Draw(const LevelInfo& info, const uint32_t* ignore, const uint32_t ignoreCount)
 	{
 		if (magicDeck.count == 0)
+		{
 			ResetDeck(info);
+			for (auto i = static_cast<int32_t>(magicDeck.count) - 1; i >= 0; --i)
+			{
+				bool ignored = false;
+				for (uint32_t j = 0; j < ignoreCount; ++j)
+				{
+					if (magicDeck[i] == ignore[j])
+					{
+						ignored = true;
+						break;
+					}
+				}
+				if (ignored)
+					magicDeck.RemoveAt(i);
+			}
+		}
 		return magicDeck.Pop();
 	}
 

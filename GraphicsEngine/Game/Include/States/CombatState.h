@@ -57,8 +57,8 @@ namespace game
 		[[nodiscard]] uint32_t GetMagic(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetArtifact(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetFlaw(const LevelInfo& info);
-		[[nodiscard]] uint32_t GetEvent(const LevelInfo& info);
-		[[nodiscard]] uint32_t Draw(const LevelInfo& info);
+		[[nodiscard]] uint32_t GetEvent(const LevelInfo& info, const uint32_t* ignore, uint32_t ignoreCount);
+		[[nodiscard]] uint32_t Draw(const LevelInfo& info, const uint32_t* ignore, uint32_t ignoreCount);
 		void ResetDeck(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetPrimaryPath() const;
 

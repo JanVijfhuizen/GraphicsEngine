@@ -821,7 +821,7 @@ namespace game
 			for (uint32_t i = 0; i < EVENT_CARD_MAX_COUNT; ++i)
 				previousEventCards[i] = eventCards[i];
 			for (auto& eventCard : eventCards)
-				eventCard = state.GetEvent(info);
+				eventCard = state.GetEvent(info, eventCards, EVENT_CARD_MAX_COUNT);
 		}
 		else if (actionState.trigger == ActionState::Trigger::onSummon)
 		{
@@ -852,7 +852,7 @@ namespace game
 			actionState.dst = targetId;
 		}
 		else if (actionState.trigger == ActionState::Trigger::draw)
-			state.hand.Add() = state.Draw(info);
+			state.hand.Add() = state.Draw(info, state.hand.ptr, state.hand.count);
 
 		return true;
 	}
