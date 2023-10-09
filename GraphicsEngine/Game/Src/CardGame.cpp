@@ -599,8 +599,8 @@ namespace game
 		ActionState cpyState = actionState;
 
 		const auto& boardState = state.boardState;
-		if(target == BuffTypeTarget::all || self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
-			self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies)
+		if(target == BuffTypeTarget::all || (self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
+			self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies))
 			for (uint32_t i = 0; i < boardState.allyCount; ++i)
 			{
 				if (tags != -1 && (info.monsters[boardState.ids[i]].tags & tags) == 0)
@@ -609,8 +609,8 @@ namespace game
 				cpyState.dstUniqueId = boardState.uniqueIds[i];
 				state.stack.Add() = cpyState;
 			}
-		if (target == BuffTypeTarget::all || self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
-			self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies)
+		if (target == BuffTypeTarget::all || (self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
+			self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies))
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			{
 				if (tags != -1 && (info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]].tags & tags) == 0)
@@ -1114,17 +1114,17 @@ namespace game
 		arr[EVENT_IDS::REINFORCEMENT].ruleText = "[end of turn] summon two goblins.";
 		arr[EVENT_IDS::REINFORCEMENT].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
-			{
-				ActionState summonState{};
-				summonState.trigger = ActionState::Trigger::onSummon;
-				summonState.source = ActionState::Source::other;
-				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = MONSTER_IDS::GOBLIN;
-				state.stack.Add() = summonState;
-				state.stack.Add() = summonState;
-				return true;
-			}
-			return false;
+			if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
+				return false;
+			
+			ActionState summonState{};
+			summonState.trigger = ActionState::Trigger::onSummon;
+			summonState.source = ActionState::Source::other;
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = MONSTER_IDS::GOBLIN;
+			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
+			state.stack.Add() = summonState;
+			state.stack.Add() = summonState;
+			return true;
 		};
 		arr[EVENT_IDS::KARMA].name = "karma";
 		arr[EVENT_IDS::KARMA].ruleText = "[ally attack] deal 1 damage to the attacker.";

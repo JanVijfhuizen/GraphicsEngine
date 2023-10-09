@@ -598,13 +598,18 @@ namespace game
 			selectedArr[selectedId] = true;
 		}
 
+		uint32_t targets[BOARD_CAPACITY_PER_SIDE];
+		memcpy(targets, state.targets, sizeof(uint32_t) * BOARD_CAPACITY_PER_SIDE);
+		for (auto& target : targets)
+			++target;
+
 		// Draw enemies.
 		CardSelectionDrawInfo enemySelectionDrawInfo{};
 		enemySelectionDrawInfo.lifeTime = level->GetTime();
 		enemySelectionDrawInfo.cards = cards;
 		enemySelectionDrawInfo.length = boardState.enemyCount;
 		enemySelectionDrawInfo.height = ENEMY_HEIGHT;
-		enemySelectionDrawInfo.costs = state.targets;
+		enemySelectionDrawInfo.costs = targets;
 		enemySelectionDrawInfo.selectedArr = selectedArr;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
@@ -901,8 +906,8 @@ namespace game
 			if (activated)
 			{
 				Activation activation{};
-				activation.id = i;
 				activation.type = Activation::monster;
+				activation.id = i;
 				activations.Add() = activation;
 			}
 		}
@@ -961,7 +966,7 @@ namespace game
 		}
 	}
 
-	void MainLevel::CombatState::PostHandleActionState(State& state, Level* level, const ActionState& actionState)
+	void MainLevel::CombatState::PostHandleActionState(State& state, const Level* level, const ActionState& actionState)
 	{
 		auto& boardState = state.boardState;
 
@@ -1056,7 +1061,7 @@ namespace game
 			}
 			else
 			{
-				for (uint32_t j = i; j < 3; ++j)
+				for (uint32_t j = i; j < PARTY_ACTIVE_CAPACITY - 1; ++j)
 					boardState.partyIds[j] = boardState.partyIds[j + 1];
 				for (uint32_t j = i; j < c; ++j)
 					state.tapped[j] = state.tapped[j + 1];
@@ -1067,8 +1072,8 @@ namespace game
 			for (uint32_t j = i; j < c; ++j)
 			{
 				boardState.ids[j + mod] = boardState.ids[j + 1 + mod];
-				boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
 				boardState.uniqueIds[j + mod] = boardState.uniqueIds[j + 1 + mod];
+				boardState.combatStats[j + mod] = boardState.combatStats[j + 1 + mod];
 				metaDatas[META_DATA_ALLY_INDEX + j + mod] = metaDatas[META_DATA_ALLY_INDEX + j + mod + 1];
 			}
 
