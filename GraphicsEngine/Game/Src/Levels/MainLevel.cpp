@@ -414,7 +414,7 @@ namespace game
 			// Check for room victory.
 			if (boardState.enemyCount == 0)
 			{
-				if (boardState.allyCount < PARTY_ACTIVE_CAPACITY)
+				if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
 				{
 					const auto monster = &info.monsters[lastEnemyDefeatedId];
 					if (!monster->unique)
@@ -1678,6 +1678,20 @@ namespace game
 		for (auto& b : selected)
 			b = false;
 		timeSincePartySelected = -1;
+
+		const auto& gameState = info.gameState;
+		auto& playerState = info.playerState;
+
+		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		{
+			const auto partyId = gameState.partyIds[i];
+			if (partyId == -1)
+				continue;
+			playerState.monsterIds[partyId] = gameState.monsterIds[i];
+			playerState.artifactSlotCounts[partyId] = gameState.artifactSlotCounts[i];
+			memcpy(&playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
+				sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
+		}
 	}
 
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -1755,12 +1769,10 @@ namespace game
 					{
 						if (!selected[i])
 						{
-							for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
-							{
-								playerState.artifacts[j + d * MONSTER_ARTIFACT_CAPACITY] = playerState.artifacts[j * i * MONSTER_ARTIFACT_CAPACITY];
-								playerState.artifactSlotCounts[d] = playerState.artifactSlotCounts[i];
-							}
+							memcpy(&playerState.artifacts[d * MONSTER_ARTIFACT_CAPACITY], &playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
+								sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 							playerState.monsterIds[d++] = playerState.monsterIds[i];
+							playerState.artifactSlotCounts[d] = playerState.artifactSlotCounts[i];
 						}
 						else
 							playerState.artifactSlotCounts[i] = 0;
@@ -1768,8 +1780,16 @@ namespace game
 					
 					for (uint32_t i = 0; i < gameState.partyCount; ++i)
 					{
-						if (gameState.partyIds[i] == -1 && !selected[playerState.partySize + i])
-							playerState.monsterIds[d++] = gameState.monsterIds[i];
+						const auto partyId = gameState.partyIds[i];
+						if (partyId != -1)
+							continue;
+						const auto id = playerState.partySize + i;
+						if (!selected[id])
+							continue;
+						playerState.monsterIds[id] = gameState.monsterIds[i];
+						playerState.artifactSlotCounts[id] = gameState.artifactSlotCounts[i];
+						memcpy(&playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
+							sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 					}
 
 					playerState.partySize = remaining;

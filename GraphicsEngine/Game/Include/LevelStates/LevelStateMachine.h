@@ -56,10 +56,8 @@ namespace game
 		stateMachine.length = states.length;
 		
 		for (auto& levelState : states)
-		{
 			levelState->Create(stateMachine.state, info);
-			levelState->Reset(stateMachine.state, info);
-		}
+		states[0]->Reset(stateMachine.state, info);
 		return stateMachine;
 	}
 }
