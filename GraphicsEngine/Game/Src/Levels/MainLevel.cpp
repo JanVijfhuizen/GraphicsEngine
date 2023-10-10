@@ -68,8 +68,7 @@ namespace game
 	{
 		discoverOption = -1;
 
-		const bool addFlaw = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW - 1;
-		const bool addArtifact = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1;
+		const bool addFlaw = state.depth % 2 == 1;
 
 		for (auto& path : state.paths)
 		{
@@ -77,7 +76,7 @@ namespace game
 			path.magic = state.GetMagic(info);
 			if (addFlaw)
 				path.flaw = state.GetFlaw(info);
-			if (addArtifact)
+			else
 				path.artifact = state.GetArtifact(info);
 		}
 		for (auto& metaData : metaDatas)
@@ -87,7 +86,7 @@ namespace game
 	bool MainLevel::PathSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		const bool flawPresent = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW - 1;
+		const bool flawPresent = state.depth % 2 == 1;
 		const bool bossPresent = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1;
 
 		TextTask depthTextTask{};
@@ -121,7 +120,7 @@ namespace game
 
 		uint32_t stacksCounts[DISCOVER_LENGTH]{};
 		for (auto& c : stacksCounts)
-			c = 2 + flawPresent;
+			c = 3;
 
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
@@ -132,6 +131,8 @@ namespace game
 			stack[1] = &info.magics[path.magic];
 			if (flawPresent)
 				stack[2] = &info.flaws[path.flaw];
+			else
+				stack[2] = &info.artifacts[path.artifact];
 		}
 
 		const char* texts[DISCOVER_LENGTH]{};
@@ -468,7 +469,10 @@ namespace game
 					gameState.healths[i] = jv::Min(boardState.combatStats[i].health, info.monsters[gameState.monsterIds[i]].health);
 				}
 
-				stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
+				if(state.depth % 2 == 0)
+					stateIndex = static_cast<uint32_t>(StateNames::rewardArtifact);
+				else
+					stateIndex = static_cast<uint32_t>(StateNames::rewardFlaw);
 				return true;
 			}
 		}
@@ -522,10 +526,11 @@ namespace game
 			// Draw additional events.
 			Card* addCards[EVENT_CARD_MAX_COUNT * 2 - 2];
 			Card** stacks[2]{ addCards, &addCards[EVENT_CARD_MAX_COUNT - 1] };
-			uint32_t stacksCounts[2]{GetEventCardCount(state) - 1, GetEventCardCount(state) - 1};
+			const uint32_t c = GetEventCardCount(state);
+			uint32_t stacksCounts[2]{c - 1, c - 1};
 
 			if (eventCards[0] != -1)
-				for (uint32_t i = 0; i < EVENT_CARD_MAX_COUNT - 1; ++i)
+				for (uint32_t i = 0; i < c - 1; ++i)
 				{
 					addCards[i] = &info.events[eventCards[i + 1]];
 					if (isStartOfTurn && previousEventCards[0] != -1)
@@ -818,10 +823,11 @@ namespace game
 		auto& boardState = state.boardState;
 		if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
 		{
-			for (uint32_t i = 0; i < EVENT_CARD_MAX_COUNT; ++i)
+			const auto c = GetEventCardCount(state);
+			for (uint32_t i = 0; i < c; ++i)
 				previousEventCards[i] = eventCards[i];
 			for (auto& eventCard : eventCards)
-				eventCard = state.GetEvent(info, eventCards, EVENT_CARD_MAX_COUNT);
+				eventCard = state.GetEvent(info, eventCards, c);
 		}
 		else if (actionState.trigger == ActionState::Trigger::onSummon)
 		{
@@ -1465,10 +1471,8 @@ namespace game
 			if (discoverOption != -1)
 				info.gameState.magics[discoverOption] = path.magic;
 
-			if (state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_FLAW)
-				stateIndex = static_cast<uint32_t>(StateNames::rewardFlaw);
-			else if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
-				stateIndex = static_cast<uint32_t>(StateNames::rewardArtifact);
+			if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
+				stateIndex = static_cast<uint32_t>(StateNames::exitFound);
 			else
 				stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		}
@@ -1584,7 +1588,7 @@ namespace game
 			info.gameState.flaws[discoverOption] = path.flaw;
 		}
 
-		stateIndex = static_cast<uint32_t>(StateNames::exitFound);
+		stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 		return true;
 	}
 
@@ -1618,7 +1622,7 @@ namespace game
 		auto& playerState = info.playerState;
 		const auto& gameState = info.gameState;
 
-		const char* text = "you have the chance to equip this new artifact, and swap your artifacts around.";
+		const char* text = "you may swap artifacts.";
 		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text, 1);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if (f >= 0)
@@ -1695,7 +1699,7 @@ namespace game
 		}
 
 		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
-			stateIndex = static_cast<uint32_t>(StateNames::exitFound);
+			stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 
 		return true;
 	}

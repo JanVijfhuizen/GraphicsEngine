@@ -785,7 +785,7 @@ namespace game
 
 	jv::Array<ArtifactCard> CardGame::GetArtifactCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<ArtifactCard>(arena, ARTIFACT_IDS::LENGTH);
+		const auto arr = jv::CreateArray<ArtifactCard>(arena, ARTIFACT_IDS::LENGTH + 20);
 
 		uint32_t c = 0;
 		for (auto& card : arr)
@@ -851,7 +851,7 @@ namespace game
 
 	jv::Array<uint32_t> CardGame::GetBossCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<uint32_t>(arena, BOSS_IDS::LENGTH);
+		const auto arr = jv::CreateArray<uint32_t>(arena, BOSS_IDS::LENGTH + 10);
 		uint32_t i = 0;
 		for (auto& card : arr)
 			card = i++;
@@ -860,7 +860,7 @@ namespace game
 
 	jv::Array<RoomCard> CardGame::GetRoomCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<RoomCard>(arena, ROOM_IDS::LENGTH);
+		const auto arr = jv::CreateArray<RoomCard>(arena, ROOM_IDS::LENGTH + 10);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
@@ -1077,7 +1077,7 @@ namespace game
 
 	jv::Array<FlawCard> CardGame::GetFlawCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<FlawCard>(arena, FLAW_IDS::LENGTH);
+		const auto arr = jv::CreateArray<FlawCard>(arena, FLAW_IDS::LENGTH + 20);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
