@@ -14,7 +14,9 @@ namespace game
 		enum class VBuff
 		{
 			attack,
-			health
+			health,
+			tempAttack,
+			tempHealth
 		};
 
 		enum class VSummon

@@ -716,6 +716,20 @@ namespace game
 		arr[MONSTER_IDS::DAISY].attack = 4;
 		arr[MONSTER_IDS::DAISY].health = 4;
 		arr[MONSTER_IDS::DAISY].unique = true;
+		arr[MONSTER_IDS::DAISY].ruleText = "[start of turn] gain 3 temporary hit points.";
+		arr[MONSTER_IDS::DAISY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		{
+			if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
+				return false;
+			ActionState buffState{};
+			buffState.trigger = ActionState::Trigger::onBuff;
+			buffState.source = ActionState::Source::board;
+			buffState.values[static_cast<uint32_t>(ActionState::VBuff::tempHealth)] = 3;
+			buffState.dst = self;
+			buffState.dstUniqueId = state.boardState.uniqueIds[self];
+			state.stack.Add() = buffState;
+			return true;
+		};
 
 		arr[MONSTER_IDS::GOBLIN_KING].name = "goblin king";
 		arr[MONSTER_IDS::GOBLIN_KING].ruleText = "[kill] give all friendly goblins +2/+1.";

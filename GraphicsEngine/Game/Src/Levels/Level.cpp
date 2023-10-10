@@ -590,6 +590,12 @@ namespace game
 				combatStats.health
 			};
 
+			uint32_t tempValues[2]
+			{
+				combatStats.tempAttack,
+				combatStats.tempHealth
+			};
+
 			for (uint32_t i = 0; i < 2; ++i)
 			{
 				statsRenderTask.subTexture = statFrames[i];
@@ -599,6 +605,13 @@ namespace game
 				TextTask textTask{};
 				textTask.position = statsRenderTask.position + glm::ivec2(2 * drawInfo.scale, -statsRenderTask.scale.y / 2);
 				textTask.text = TextInterpreter::IntToConstCharPtr(values[i], info.frameArena);
+				if(tempValues[i] != 0)
+				{
+					textTask.text = TextInterpreter::Concat(textTask.text, "+", info.frameArena);
+					const auto c = TextInterpreter::IntToConstCharPtr(tempValues[i], info.frameArena);
+					textTask.text = TextInterpreter::Concat(textTask.text, c, info.frameArena);
+				}
+
 				textTask.lifetime = textLifeTime;
 				textTask.priority = priority;
 				textTask.color = glm::vec4(1);

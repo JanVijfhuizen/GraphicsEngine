@@ -303,8 +303,7 @@ namespace game
 			timeSinceLastActionState = level->GetTime();
 			actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
 			activeState = state.stack.Pop();
-
-			// Temp.
+			
 			switch (activeState.trigger)
 			{
 			case ActionState::Trigger::onAttack:
@@ -963,10 +962,7 @@ namespace game
 		{
 			// Set new random enemy targets.
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-			{
 				state.targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
-				metaDatas[i + META_DATA_ENEMY_INDEX].timeSinceStatsChanged = level->GetTime();
-			}
 
 			// Untap.
 			for (auto& b : state.tapped)
@@ -979,6 +975,12 @@ namespace game
 			ActionState drawState{};
 			drawState.trigger = ActionState::Trigger::draw;
 			state.stack.Add() = drawState;
+
+			for (auto& combatStat : boardState.combatStats)
+			{
+				combatStat.tempAttack = 0;
+				combatStat.tempHealth = 0;
+			}
 		}
 		else if (actionState.trigger == ActionState::Trigger::onAttack)
 		{
@@ -992,7 +994,6 @@ namespace game
 				{
 					while (target == oldTarget)
 						target = rand() % boardState.allyCount;
-					metaDatas[actionState.dst + META_DATA_ENEMY_INDEX - BOARD_CAPACITY_PER_SIDE].timeSinceStatsChanged = level->GetTime();
 				}
 			}
 
@@ -1006,11 +1007,21 @@ namespace game
 		{
 			auto& combatStats = boardState.combatStats[actionState.dst];
 			auto& health = combatStats.health;
+			auto& tempHealth = combatStats.tempHealth;
 
 			if (health > 0)
 			{
 				constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
-				health = health < actionState.values[vDamage] ? 0 : health - actionState.values[vDamage];
+				auto damage = actionState.values[vDamage];
+
+				const auto th = tempHealth;
+				if (damage <= tempHealth)
+					tempHealth -= damage;
+				else
+					tempHealth = 0;
+				damage -= th;
+
+				health = health < damage ? 0 : health - damage;
 				metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
 
 				if (health == 0)
@@ -1026,8 +1037,18 @@ namespace game
 			auto& combatStats = boardState.combatStats[actionState.dst];
 			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VBuff::attack);
 			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VBuff::health);
-			combatStats.attack += actionState.values[vAtk];
-			combatStats.health += actionState.values[vHlt];
+			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VBuff::tempAttack);
+			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VBuff::tempHealth);
+
+			if(actionState.values[vAtk] != -1)
+				combatStats.attack += actionState.values[vAtk];
+			if (actionState.values[vHlt] != -1)
+				combatStats.health += actionState.values[vHlt];
+			if (actionState.values[vTAtk] != -1)
+				combatStats.tempAttack += actionState.values[vTAtk];
+			if (actionState.values[vTHlt] != -1)
+				combatStats.tempHealth += actionState.values[vTHlt];
+
 			metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
 		}
 		else if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1252,14 +1273,19 @@ namespace game
 		textTask.position = pos;
 		textTask.priority = true;
 
-		const uint32_t atkBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		uint32_t atkBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		if (atkBuff == -1)
+			atkBuff = 0;
+
 		textTask.text = TextInterpreter::IntToConstCharPtr(atkBuff, info.frameArena);
 		textTask.color = glm::vec4(0, 1, 0, 1);
 		textTask.text = TextInterpreter::Concat("+", textTask.text, info.frameArena);
-
 		textTask.text = TextInterpreter::Concat(textTask.text, "/+", info.frameArena);
 
-		const uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		if (hltBuff == -1)
+			hltBuff = 0;
+
 		const char* t = TextInterpreter::IntToConstCharPtr(hltBuff, info.frameArena);
 		textTask.text = TextInterpreter::Concat(textTask.text, t, info.frameArena);
 		
@@ -1267,7 +1293,9 @@ namespace game
 		const float eval = curve.Evaluate(GetActionStateLerp(level));
 
 		textTask.position.y += eval * 24;
-		info.textTasks.Push(textTask);
+
+		if(atkBuff != 0 || hltBuff != 0)
+			info.textTasks.Push(textTask);
 	}
 
 	void MainLevel::CombatState::DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level,
