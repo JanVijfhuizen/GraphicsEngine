@@ -344,7 +344,7 @@ namespace game
 				}
 				else
 				{
-					PostHandleActionState(state, level, activeState);
+					PostHandleActionState(state, info, level, activeState);
 					activeStateValid = false;
 				}
 			}
@@ -446,7 +446,7 @@ namespace game
 							// Add to party.
 							boardState.ids[boardState.allyCount] = lastEnemyDefeatedId;
 							boardState.combatStats[boardState.allyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
-							boardState.partyIds[boardState.allyCount++] = -1;
+							gameState.partyIds[boardState.allyCount++] = -1;
 							recruitScreenActive = false;
 						}
 						ButtonDrawInfo buttonDeclineDrawInfo{};
@@ -464,7 +464,6 @@ namespace game
 				gameState.partyCount = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);
 				for (uint32_t i = 0; i < gameState.partyCount; ++i)
 				{
-					gameState.partyIds[i] = boardState.partyIds[i];
 					gameState.monsterIds[i] = boardState.ids[i];
 					gameState.healths[i] = jv::Min(boardState.combatStats[i].health, info.monsters[gameState.monsterIds[i]].health);
 				}
@@ -687,8 +686,6 @@ namespace game
 		}
 
 		// Draw allies.
-		const auto& playerState = info.playerState;
-
 		Card* playerCards[PARTY_CAPACITY]{};
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 			playerCards[i] = &info.monsters[boardState.ids[i]];
@@ -698,16 +695,8 @@ namespace game
 
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
-			const auto partyId = boardState.partyIds[i];
-
-			if(i >= PARTY_ACTIVE_CAPACITY || boardState.partyIds[i] == -1)
-			{
-				stacksCount[i] = 0;
-				continue;
-			}
-
 			const uint32_t flaw = gameState.flaws[i];
-			const uint32_t artifactCount = playerState.artifactSlotCounts[partyId];
+			const uint32_t artifactCount = gameState.artifactSlotCounts[i];
 			const uint32_t count = stacksCount[i] = (flaw != -1) + artifactCount;
 
 			if (count == 0)
@@ -716,7 +705,7 @@ namespace game
 			stacks[i] = arr.ptr;
 			for (uint32_t j = 0; j < artifactCount; ++j)
 			{
-				const uint32_t index = playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY + j];
+				const uint32_t index = gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
 				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 			}
 			if(flaw != -1)
@@ -846,7 +835,7 @@ namespace game
 			boardState.combatStats[targetId] = GetCombatStat(info.monsters[monsterId]);
 			boardState.uniqueIds[targetId] = uniqueId++;
 			if(isAlly && targetId < PARTY_ACTIVE_CAPACITY)
-				boardState.partyIds[targetId] = partyId;
+				info.gameState.partyIds[targetId] = partyId;
 			else if(!isAlly && boardState.allyCount > 0)
 				state.targets[boardState.enemyCount] = rand() % boardState.allyCount;
 			if (health != -1)
@@ -869,42 +858,37 @@ namespace game
 		activations.Clear();
 
 		const auto& boardState = state.boardState;
-		const auto& playerState = info.playerState;
+		const auto& gameState = info.gameState;
 
 		const uint32_t allyCount = boardState.allyCount;
 		for (uint32_t i = 0; i < allyCount; ++i)
 		{
 			bool activated = false;
-
-			const auto partyId = i < PARTY_ACTIVE_CAPACITY ? boardState.partyIds[i] : -1;
+			
 			const auto id = boardState.ids[i];
 			const auto& monster = info.monsters[id];
 			if (monster.onActionEvent)
 				if (monster.onActionEvent(info, state, actionState, i))
 					activated = true;
 
-			if (partyId != -1)
+			for (uint32_t j = 0; j < gameState.artifactSlotCounts[i]; ++j)
 			{
-				for (uint32_t j = 0; j < playerState.artifactSlotCounts[partyId]; ++j)
-				{
-					const uint32_t artifactId = info.playerState.artifacts[partyId];
-					if (artifactId == -1)
-						continue;
-					const auto& artifact = info.artifacts[artifactId];
-					if (artifact.onActionEvent)
-						if (artifact.onActionEvent(info, state, actionState, i))
-							activated = true;
-				}
-				if (i >= PARTY_ACTIVE_CAPACITY)
+				const uint32_t artifactId = gameState.artifacts[i];
+				if (artifactId == -1)
 					continue;
-				const auto flawId = info.gameState.flaws[i];
-				if (flawId != -1)
-				{
-					const auto flaw = info.flaws[flawId];
-					if (flaw.onActionEvent)
-						if (flaw.onActionEvent(info, state, actionState, i))
-							activated = true;
-				}
+				const auto& artifact = info.artifacts[artifactId];
+				if (artifact.onActionEvent)
+					if (artifact.onActionEvent(info, state, actionState, i))
+						activated = true;
+			}
+
+			const auto flawId = info.gameState.flaws[i];
+			if (flawId != -1)
+			{
+				const auto flaw = info.flaws[flawId];
+				if (flaw.onActionEvent)
+					if (flaw.onActionEvent(info, state, actionState, i))
+						activated = true;
 			}
 
 			if (activated)
@@ -970,7 +954,8 @@ namespace game
 		}
 	}
 
-	void MainLevel::CombatState::PostHandleActionState(State& state, const Level* level, const ActionState& actionState)
+	void MainLevel::CombatState::PostHandleActionState(State& state, const LevelUpdateInfo& info, 
+		const Level* level, const ActionState& actionState)
 	{
 		auto& boardState = state.boardState;
 
@@ -1065,10 +1050,16 @@ namespace game
 			}
 			else
 			{
-				for (uint32_t j = i; j < PARTY_ACTIVE_CAPACITY - 1; ++j)
-					boardState.partyIds[j] = boardState.partyIds[j + 1];
+				auto& gameState = info.gameState;
 				for (uint32_t j = i; j < c; ++j)
+				{
 					state.tapped[j] = state.tapped[j + 1];
+					gameState.partyIds[j] = gameState.partyIds[j + 1];
+					gameState.artifactSlotCounts[j] = gameState.artifactSlotCounts[j + 1];
+					memcpy(&gameState.artifacts[j * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[(j + 1) * MONSTER_ARTIFACT_CAPACITY], 
+						sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
+					gameState.flaws[j] = gameState.flaws[j + 1];
+				}
 				--boardState.allyCount;
 			}
 
@@ -1491,7 +1482,6 @@ namespace game
 		LevelIndex& loadLevelIndex)
 	{
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
-		const auto& playerState = info.playerState;
 		const auto& gameState = info.gameState;
 
 		bool greyedOut[PARTY_ACTIVE_CAPACITY];
@@ -1500,7 +1490,7 @@ namespace game
 		for (uint32_t i = 0; i < gameState.partyCount; ++i)
 		{
 			const auto& flaw = info.gameState.flaws[i];
-			greyedOut[i] = flaw != -1 || gameState.partyIds[i] == -1;
+			greyedOut[i] = flaw != -1;
 			flawSlotAvailable = flawSlotAvailable ? true : flaw == -1;
 		}
 
@@ -1519,16 +1509,10 @@ namespace game
 
 			Card** stacks[PARTY_CAPACITY]{};
 			uint32_t stackCounts[PARTY_CAPACITY]{};
-
-			uint32_t ogPartyCount = 0;
+			
 			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
-				const auto partyId = gameState.partyIds[i];
-				if (partyId == -1)
-					break;
-				++ogPartyCount;
-
-				const uint32_t count = stackCounts[i] = playerState.artifactSlotCounts[partyId];
+				const uint32_t count = stackCounts[i] = gameState.artifactSlotCounts[i];
 				if (count == 0)
 					continue;
 
@@ -1536,7 +1520,7 @@ namespace game
 				stacks[i] = arr.ptr;
 				for (uint32_t j = 0; j < count; ++j)
 				{
-					const uint32_t index = playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY + j];
+					const uint32_t index = gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
 					arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 				}
 
@@ -1550,7 +1534,7 @@ namespace game
 
 			CardSelectionDrawInfo cardSelectionDrawInfo{};
 			cardSelectionDrawInfo.cards = cards;
-			cardSelectionDrawInfo.length = ogPartyCount;
+			cardSelectionDrawInfo.length = gameState.partyCount;
 			cardSelectionDrawInfo.greyedOutArr = greyedOut;
 			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 			cardSelectionDrawInfo.stacks = stacks;
@@ -1598,16 +1582,12 @@ namespace game
 			metaData = {};
 		if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
 		{
-			auto& playerState = info.playerState;
-			const auto& gameState = info.gameState;
+			auto& gameState = info.gameState;
 
 			for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			{
-				if (gameState.partyIds[i] == -1)
-					break;
-
 				const uint32_t id = gameState.partyIds[i];
-				auto& slotCount = playerState.artifactSlotCounts[id];
+				auto& slotCount = gameState.artifactSlotCounts[id];
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
 			}
 		}
@@ -1619,8 +1599,7 @@ namespace game
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
 		Card* cards[PARTY_ACTIVE_CAPACITY]{};
 		
-		auto& playerState = info.playerState;
-		const auto& gameState = info.gameState;
+		auto& gameState = info.gameState;
 
 		const char* text = "you may swap artifacts.";
 		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text, 1);
@@ -1629,36 +1608,26 @@ namespace game
 			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
 
 		for (uint32_t i = 0; i < gameState.partyCount; ++i)
-		{
-			if (gameState.partyIds[i] == -1)
-				break;
-			cards[i] = &info.monsters[playerState.monsterIds[gameState.partyIds[i]]];
-		}
-		
+			cards[i] = &info.monsters[gameState.monsterIds[i]];
+
 		Card** artifacts[PARTY_ACTIVE_CAPACITY]{};
 		CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
 		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
-
-		uint32_t ogPartyCount = 0;
+		
 		for (uint32_t i = 0; i < gameState.partyCount; ++i)
 		{
-			const auto partyId = gameState.partyIds[i];
-			if (partyId == -1)
-				break;
-			++ogPartyCount;
-			
-			const auto monster = &info.monsters[playerState.monsterIds[partyId]];
+			const auto monster = &info.monsters[gameState.monsterIds[i]];
 			cards[i] = monster;
 			combatStats[i] = GetCombatStat(*monster);
 			combatStats[i].health = gameState.healths[i];
 
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[partyId];
+			const uint32_t count = artifactCounts[i] = gameState.artifactSlotCounts[i];
 			if (count == 0)
 				continue;
 			const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
 			for (uint32_t j = 0; j < count; ++j)
 			{
-				const uint32_t index = playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY + j];
+				const uint32_t index = gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
 				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 			}
 		}
@@ -1666,7 +1635,7 @@ namespace game
 		uint32_t outStackSelected;
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = ogPartyCount;
+		cardSelectionDrawInfo.length = gameState.partyCount;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
@@ -1688,13 +1657,11 @@ namespace game
 		
 		if(choice != -1 && outStackSelected != -1)
 		{
-			const uint32_t id = gameState.partyIds[choice];
-
 			if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
 			{
 				const uint32_t swappable = path.artifact;
-				path.artifact = playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY + outStackSelected];
-				playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY + outStackSelected] = swappable;
+				path.artifact = gameState.artifacts[choice * MONSTER_ARTIFACT_CAPACITY + outStackSelected];
+				gameState.artifacts[choice * MONSTER_ARTIFACT_CAPACITY + outStackSelected] = swappable;
 			}
 		}
 
@@ -1711,24 +1678,6 @@ namespace game
 		for (auto& b : selected)
 			b = false;
 		timeSincePartySelected = -1;
-
-		auto& gameState = info.gameState;
-
-		// Move flaws.
-		for (int32_t i = static_cast<int32_t>(state.boardState.allyCount) - 1; i >= 0; --i)
-		{
-			if (i >= PARTY_ACTIVE_CAPACITY)
-				continue;
-			const auto partyId = state.boardState.partyIds[i];
-			if (partyId == -1)
-				gameState.flaws[i] = -1;
-			if (partyId != gameState.partyIds[i])
-			{
-				for (uint32_t j = i; j < state.boardState.allyCount - 1; ++j)
-					gameState.flaws[j] = gameState.flaws[j + 1];
-				++i;
-			}
-		}
 	}
 
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,

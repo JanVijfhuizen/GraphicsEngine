@@ -48,6 +48,8 @@ namespace game
 				auto& gameState = info.gameState;
 				gameState.partyCount = selectedAmount;
 
+				const auto& playerState = info.playerState;
+
 				uint32_t j = 0;
 				for (uint32_t i = 0; i < PARTY_ACTIVE_INITIAL_CAPACITY; ++i)
 				{
@@ -55,6 +57,9 @@ namespace game
 						continue;
 					gameState.partyIds[j] = i;
 					gameState.monsterIds[j] = info.playerState.monsterIds[i];
+					memcpy(&gameState.artifacts[j * MONSTER_ARTIFACT_CAPACITY], &playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY], 
+						sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
+					gameState.artifactSlotCounts[j] = playerState.artifactSlotCounts[i];
 
 					const auto& monster = info.monsters[info.playerState.monsterIds[i]];
 					gameState.healths[j++] = monster.health;

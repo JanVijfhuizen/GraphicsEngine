@@ -13,7 +13,6 @@ namespace game
 	struct BoardState final
 	{
 		uint32_t ids[BOARD_CAPACITY]{};
-		uint32_t partyIds[PARTY_ACTIVE_CAPACITY];
 		uint32_t uniqueIds[BOARD_CAPACITY];
 		CombatStats combatStats[BOARD_CAPACITY];
 		uint32_t allyCount;
