@@ -36,7 +36,7 @@ namespace game
 		for (const auto& b : selected)
 			selectedAmount += 1 * b;
 
-		if (!GetIsLoading() && selectedAmount > 0 && selectedAmount <= PARTY_ACTIVE_CAPACITY)
+		if (!GetIsLoading() && selectedAmount > 0 && selectedAmount <= PARTY_ACTIVE_INITIAL_CAPACITY)
 		{
 			if (timeSincePartySelected < 0)
 				timeSincePartySelected = GetTime();
@@ -49,7 +49,7 @@ namespace game
 				gameState.partyCount = selectedAmount;
 
 				uint32_t j = 0;
-				for (uint32_t i = 0; i < PARTY_CAPACITY; ++i)
+				for (uint32_t i = 0; i < PARTY_ACTIVE_INITIAL_CAPACITY; ++i)
 				{
 					if (!selected[i])
 						continue;
@@ -59,17 +59,7 @@ namespace game
 					const auto& monster = info.monsters[info.playerState.monsterIds[i]];
 					gameState.healths[j++] = monster.health;
 				}
-
-				// temp
-				for (auto& magic : gameState.magics)
-				{
-					magic = MAGIC_IDS::GATHER_THE_WEAK;
-				}
-				for (int i = MAGIC_DECK_SIZE / 2; i < MAGIC_DECK_SIZE; ++i)
-				{
-					gameState.magics[i] = MAGIC_IDS::GOBLIN_SUPREMACY;
-				}
-
+				
 				Load(LevelIndex::main, true);
 			}
 		}
