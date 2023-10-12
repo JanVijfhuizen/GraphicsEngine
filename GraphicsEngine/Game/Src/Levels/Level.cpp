@@ -610,11 +610,11 @@ namespace game
 					textTask.text = TextInterpreter::Concat(textTask.text, "+", info.frameArena);
 					const auto c = TextInterpreter::IntToConstCharPtr(tempValues[i], info.frameArena);
 					textTask.text = TextInterpreter::Concat(textTask.text, c, info.frameArena);
+					textTask.color = glm::vec4(0, 1, 0, 1);
 				}
 
 				textTask.lifetime = textLifeTime;
 				textTask.priority = priority;
-				textTask.color = glm::vec4(1);
 				textTask.scale *= drawInfo.scale;
 				info.textTasks.Push(textTask);
 			}

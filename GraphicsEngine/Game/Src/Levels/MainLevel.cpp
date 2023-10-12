@@ -413,7 +413,26 @@ namespace game
 			// Check for room victory.
 			if (boardState.enemyCount == 0)
 			{
-				if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
+				bool tokensRemaining = false;
+				ActionState killState{};
+				killState.trigger = ActionState::Trigger::onDeath;
+				killState.source = ActionState::Source::other;
+
+				for (uint32_t i = 0; i < boardState.allyCount; ++i)
+				{
+					const auto id = boardState.ids[i];
+					if(info.monsters[id].tags & TAG_TOKEN)
+					{
+						killState.dst = id;
+						killState.dstUniqueId = boardState.uniqueIds[i];
+						state.stack.Add() = killState;
+						tokensRemaining = true;
+					}
+				}
+
+				if(!tokensRemaining)
+				{
+					if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
 				{
 					const auto monster = &info.monsters[lastEnemyDefeatedId];
 					if (!monster->unique)
@@ -471,7 +490,9 @@ namespace game
 					stateIndex = static_cast<uint32_t>(StateNames::rewardArtifact);
 				else
 					stateIndex = static_cast<uint32_t>(StateNames::rewardFlaw);
-				return true;
+				return true;	
+				}
+				
 			}
 		}
 		
@@ -1617,6 +1638,7 @@ namespace game
 				const uint32_t id = gameState.partyIds[i];
 				auto& slotCount = gameState.artifactSlotCounts[id];
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
+				slotCount = jv::Min(slotCount, MONSTER_ARTIFACT_CAPACITY);
 			}
 		}
 	}
