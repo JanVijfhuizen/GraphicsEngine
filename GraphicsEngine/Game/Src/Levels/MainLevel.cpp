@@ -375,14 +375,14 @@ namespace game
 				const float off2 = eval2 * SIMULATED_RESOLUTION.x;
 
 				TextTask textTask{};
-				textTask.text = "new";
+				textTask.text = "turn";
 				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 3);
 				textTask.scale = 2;
 				textTask.center = true;
 				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
-				textTask.text = "turn";
+				textTask.text = TextInterpreter::IntToConstCharPtr(state.turn, info.frameArena);
 				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 19);
 				info.textTasks.Push(textTask);
 
