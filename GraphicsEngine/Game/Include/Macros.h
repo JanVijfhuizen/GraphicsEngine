@@ -21,6 +21,7 @@ constexpr uint32_t MAGIC_DECK_SIZE = 24;
 constexpr uint32_t DISCOVER_LENGTH = 3;
 constexpr uint32_t SUB_BOSS_COUNT = 4;
 constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
+constexpr uint32_t MAGIC_CARD_COPY_COUNT = 4;
 
 constexpr uint32_t HAND_INITIAL_SIZE = 3;
 constexpr uint32_t HAND_MAX_SIZE = 5;
