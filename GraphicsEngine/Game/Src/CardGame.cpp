@@ -633,6 +633,10 @@ namespace game
 		vulture.health = 1;
 		vulture.attack = 1;
 		vulture.tags = TAG_TOKEN;
+		auto& goblin = arr[MONSTER_IDS::GOBLIN];
+		goblin.health = 1;
+		goblin.attack = 1;
+		goblin.tags = TAG_TOKEN | TAG_GOBLIN;
 		return arr;
 	}
 
@@ -1106,12 +1110,99 @@ namespace game
 						return false;
 					ActionState summonState = actionState;
 					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::isAlly] = 1;
+					summonState.values[ActionState::VSummon::isAlly] = 0;
 					state.stack.Add() = summonState;
 					return true;
 				}
 				return false;
 			};
+
+		auto& gatheringStorm = arr[EVENT_IDS::GATHERING_STORM];
+		gatheringStorm.name = "gathering storm";
+		gatheringStorm.ruleText = "[end of turn] give all enemies +1/+1.";
+		gatheringStorm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
+					return false;
+
+				ActionState buffState{};
+				buffState.trigger = ActionState::Trigger::onStatBuff;
+				buffState.source = ActionState::Source::other;
+				buffState.values[ActionState::VStatBuff::attack] = 1;
+				buffState.values[ActionState::VStatBuff::health] = 1;
+				TargetOfType(info, state, buffState, 0, -1, BuffTypeTarget::enemies);
+				return true;
+			};
+
+		auto& noYou = arr[EVENT_IDS::NO_YOU];
+		noYou.name = "no you";
+		noYou.ruleText = "[ally attack] attack back.";
+		noYou.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger != ActionState::Trigger::onAttack)
+					return false;
+				if (actionState.src >= BOARD_CAPACITY_PER_SIDE)
+					return false;
+
+				auto attackState = actionState;
+				attackState.src = actionState.dst;
+				attackState.srcUniqueId = actionState.dstUniqueId;
+				attackState.dst = actionState.src;
+				attackState.dstUniqueId = actionState.srcUniqueId;
+				state.stack.Add() = attackState;
+				return true;
+			};
+		auto& goblinPlague = arr[EVENT_IDS::GOBLIN_PLAGUE];
+		goblinPlague.name = "goblin plague";
+		goblinPlague.ruleText = "[end of turn] summon 2 goblins.";
+		goblinPlague.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
+					return false;
+
+				ActionState summonState{};
+				summonState.trigger = ActionState::Trigger::onSummon;
+				summonState.source = ActionState::Source::other;
+				summonState.values[ActionState::VSummon::isAlly] = 0;
+				summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
+				state.stack.Add() = summonState;
+				state.stack.Add() = summonState;
+				return true;
+			};
+		auto& whirlwind = arr[EVENT_IDS::WHIRLWIND];
+		goblinPlague.name = "whirlwind";
+		goblinPlague.ruleText = "[end of turn] deal 1 damage to all monsters.";
+		goblinPlague.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
+					return false;
+
+				ActionState damageState{};
+				damageState.trigger = ActionState::Trigger::onDamage;
+				damageState.source = ActionState::Source::other;
+				damageState.values[ActionState::VDamage::damage] = 1;
+				TargetOfType(info, state, damageState, 0, -1, BuffTypeTarget::all);
+				return true;
+			};
+
+		auto& healingWord = arr[EVENT_IDS::HEALING_WORD];
+		healingWord.name = "healing word";
+		healingWord.ruleText = "[start of turn] all enemies gain 3 health until end of turn.";
+		healingWord.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
+					return false;
+
+				ActionState buffState{};
+				buffState.trigger = ActionState::Trigger::onDamage;
+				buffState.source = ActionState::Source::other;
+				buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+				TargetOfType(info, state, buffState, 0, -1, BuffTypeTarget::enemies);
+				return true;
+			};
+
+		auto& briefRespite = arr[EVENT_IDS::BRIEF_RESPISE];
+		briefRespite.name = "brief respite";
 
 		auto& chaseTheDragon = arr[EVENT_IDS::CHASE_THE_DRAGON];
 		chaseTheDragon.name = "chase the dragon";
