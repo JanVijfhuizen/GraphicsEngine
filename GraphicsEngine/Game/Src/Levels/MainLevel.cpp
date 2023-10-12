@@ -861,7 +861,7 @@ namespace game
 			if (health != -1)
 				boardState.combatStats[targetId].health = health;
 			if (isAlly)
-				++boardState.allyCount;
+				state.tapped[++boardState.allyCount] = true;
 			else
 				++boardState.enemyCount;
 			actionState.dst = targetId;
