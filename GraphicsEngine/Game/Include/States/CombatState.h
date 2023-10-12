@@ -46,6 +46,7 @@ namespace game
 
 		uint32_t mana;
 		uint32_t maxMana;
+		uint32_t turn;
 
 		uint32_t targets[BOARD_CAPACITY_PER_SIDE];
 		bool tapped[BOARD_CAPACITY_PER_SIDE];

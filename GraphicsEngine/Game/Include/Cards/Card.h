@@ -6,25 +6,45 @@ namespace game
 
 	struct ActionState final
 	{
-		enum class VDamage
+		struct VDamage
 		{
-			damage
+			enum
+			{
+				damage
+			};
 		};
 
-		enum class VBuff
+		struct VStatBuff
 		{
-			attack,
-			health,
-			tempAttack,
-			tempHealth
+			enum
+			{
+				attack,
+				health,
+				tempAttack,
+				tempHealth
+			};
 		};
 
-		enum class VSummon
+		struct VStatSet
 		{
-			isAlly,
-			id,
-			partyId,
-			health
+			enum
+			{
+				attack,
+				health,
+				tempAttack,
+				tempHealth
+			};
+		};
+
+		struct VSummon
+		{
+			enum
+			{
+				isAlly,
+				id,
+				partyId,
+				health
+			};
 		};
 
 		enum class Trigger
@@ -33,12 +53,14 @@ namespace game
 			onSummon,
 			onAttack,
 			onDamage,
-			onBuff,
+			onStatBuff,
+			onStatSet,
 			onDeath,
 			onCardPlayed,
 			onStartOfTurn,
 			onEndOfTurn
 		} trigger;
+
 		enum class Source
 		{
 			board,

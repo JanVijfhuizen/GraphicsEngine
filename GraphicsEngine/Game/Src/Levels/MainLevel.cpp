@@ -217,6 +217,7 @@ namespace game
 
 		state.mana = 0;
 		state.maxMana = 0;
+		state.turn = 0;
 
 		activations = {};
 		activations.ptr = activationsPtr;
@@ -837,6 +838,7 @@ namespace game
 				previousEventCards[i] = eventCards[i];
 			for (auto& eventCard : eventCards)
 				eventCard = state.GetEvent(info, eventCards, c);
+			++state.turn;
 		}
 		else if (actionState.trigger == ActionState::Trigger::onSummon)
 		{
@@ -1053,13 +1055,13 @@ namespace game
 				}
 			}
 		}
-		else if (actionState.trigger == ActionState::Trigger::onBuff)
+		else if (actionState.trigger == ActionState::Trigger::onStatBuff)
 		{
 			auto& combatStats = boardState.combatStats[actionState.dst];
-			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VBuff::attack);
-			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VBuff::health);
-			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VBuff::tempAttack);
-			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VBuff::tempHealth);
+			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VStatBuff::attack);
+			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VStatBuff::health);
+			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VStatBuff::tempAttack);
+			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VStatBuff::tempHealth);
 
 			if(actionState.values[vAtk] != -1)
 				combatStats.attack += actionState.values[vAtk];
@@ -1069,6 +1071,25 @@ namespace game
 				combatStats.tempAttack += actionState.values[vTAtk];
 			if (actionState.values[vTHlt] != -1)
 				combatStats.tempHealth += actionState.values[vTHlt];
+
+			metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
+		}
+		else if (actionState.trigger == ActionState::Trigger::onStatSet)
+		{
+			auto& combatStats = boardState.combatStats[actionState.dst];
+			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VStatBuff::attack);
+			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VStatBuff::health);
+			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VStatBuff::tempAttack);
+			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VStatBuff::tempHealth);
+
+			if (actionState.values[vAtk] != -1)
+				combatStats.attack = actionState.values[vAtk];
+			if (actionState.values[vHlt] != -1)
+				combatStats.health = actionState.values[vHlt];
+			if (actionState.values[vTAtk] != -1)
+				combatStats.tempAttack = actionState.values[vTAtk];
+			if (actionState.values[vTHlt] != -1)
+				combatStats.tempHealth = actionState.values[vTHlt];
 
 			metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
 		}
@@ -1284,7 +1305,7 @@ namespace game
 		if (allied && activeState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState.dst < BOARD_CAPACITY_PER_SIDE)
 			return;
 
-		if (activeState.trigger != ActionState::Trigger::onBuff)
+		if (activeState.trigger != ActionState::Trigger::onStatBuff)
 			return;
 
 		const auto pos = GetCardPosition(info, drawInfo, activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
@@ -1294,7 +1315,7 @@ namespace game
 		textTask.position = pos;
 		textTask.priority = true;
 
-		uint32_t atkBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		uint32_t atkBuff = activeState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)];
 		if (atkBuff == -1)
 			atkBuff = 0;
 
@@ -1303,7 +1324,7 @@ namespace game
 		textTask.text = TextInterpreter::Concat("+", textTask.text, info.frameArena);
 		textTask.text = TextInterpreter::Concat(textTask.text, "/+", info.frameArena);
 
-		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)];
 		if (hltBuff == -1)
 			hltBuff = 0;
 
