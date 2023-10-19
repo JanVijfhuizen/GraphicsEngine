@@ -56,7 +56,7 @@ namespace game
 			onStatBuff,
 			onStatSet,
 			onDeath,
-			onCardPlayed,
+			onCast,
 			onStartOfTurn,
 			onEndOfTurn
 		} trigger;

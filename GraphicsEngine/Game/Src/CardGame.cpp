@@ -649,61 +649,59 @@ namespace game
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		arr[ARTIFACT_IDS::CROWN_OF_MALICE].name = "crown of malice";
-		arr[ARTIFACT_IDS::CROWN_OF_MALICE].ruleText = "[on any death] gain +3/+3.";
-		arr[ARTIFACT_IDS::CROWN_OF_MALICE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].name = "amulet of arcane acuity";
+		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].ruleText = "[start of Turn] gain one mana.";
+		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onDeath)
+			if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 			{
-				ActionState buffState{};
-				buffState.trigger = ActionState::Trigger::onStatBuff;
-				buffState.source = ActionState::Source::board;
-				buffState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)] = 3;
-				buffState.values[static_cast<uint32_t>(ActionState::VStatBuff::health)] = 3;
-				buffState.dst = self;
-				buffState.dstUniqueId = state.boardState.uniqueIds[self];
-				state.stack.Add() = buffState;
+				++state.mana;
 				return true;
 			}
 			return false;
 		};
-		arr[ARTIFACT_IDS::BOOK_OF_KNOWLEDGE].name = "book of knowledge";
-		arr[ARTIFACT_IDS::BOOK_OF_KNOWLEDGE].ruleText = "[on card played] gain +1/+1.";
-		arr[ARTIFACT_IDS::BOOK_OF_KNOWLEDGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed)
+		arr[ARTIFACT_IDS::THORNMAIL].name = "thornmail";
+		arr[ARTIFACT_IDS::THORNMAIL].ruleText = "[attacked] deal 1 damage to the attacker.";
+		arr[ARTIFACT_IDS::THORNMAIL].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				ActionState buffState{};
-				buffState.trigger = ActionState::Trigger::onStatBuff;
-				buffState.source = ActionState::Source::board;
-				buffState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)] = 1;
-				buffState.values[static_cast<uint32_t>(ActionState::VStatBuff::health)] = 1;
-				buffState.dst = self;
-				buffState.dstUniqueId = state.boardState.uniqueIds[self];
-				state.stack.Add() = buffState;
-				return true;
-			}
-			return false;
-		};
-		arr[ARTIFACT_IDS::ARMOR_OF_THORNS].name = "armor of thorns";
-		arr[ARTIFACT_IDS::ARMOR_OF_THORNS].ruleText = "[on attacked] deal 2 damage to the attacker.";
-		arr[ARTIFACT_IDS::ARMOR_OF_THORNS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onAttack && actionState.dst == self)
+				if (actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					const auto& boardState = state.boardState;
+					if (actionState.dst != self || actionState.dstUniqueId != boardState.uniqueIds[self])
+						return false;
+
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::board;
+					damageState.src = self;
+					damageState.srcUniqueId = boardState.uniqueIds[self];
+					damageState.dst = actionState.src;
+					damageState.dstUniqueId = actionState.srcUniqueId;
+					state.stack.Add() = damageState;
+					return true;
+				}
+				return false;
+			};
+		arr[ARTIFACT_IDS::MAGE_ARMOR].name = "mage armor";
+		arr[ARTIFACT_IDS::MAGE_ARMOR].ruleText = "[cast] gain 2 temporary health.";
+		arr[ARTIFACT_IDS::MAGE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				ActionState damageState{};
-				damageState.trigger = ActionState::Trigger::onDamage;
-				damageState.source = ActionState::Source::board;
-				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
-				damageState.dst = actionState.src;
-				damageState.dstUniqueId = actionState.srcUniqueId;
-				damageState.src = actionState.dst;
-				damageState.srcUniqueId = actionState.dstUniqueId;
-				state.stack.Add() = damageState;
-				return true;
-			}
-			return false;
-		};
+				if (actionState.trigger == ActionState::Trigger::onCast)
+				{
+					const auto& boardState = state.boardState;
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::board;
+					buffState.src = self;
+					buffState.srcUniqueId = boardState.uniqueIds[self];
+					buffState.dst = buffState.src;
+					buffState.dstUniqueId = buffState.srcUniqueId;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
+					state.stack.Add() = buffState;
+					return true;
+				}
+				return false;
+			};
 		return arr;
 	}
 
@@ -911,7 +909,7 @@ namespace game
 		arr[MAGIC_IDS::LIGHTNING_BOLT].animIndex = 24;
 		arr[MAGIC_IDS::LIGHTNING_BOLT].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				ActionState damageState{};
 				damageState.trigger = ActionState::Trigger::onDamage;
@@ -929,7 +927,7 @@ namespace game
 		arr[MAGIC_IDS::GATHER_THE_WEAK].type = MagicCard::Type::all;
 		arr[MAGIC_IDS::GATHER_THE_WEAK].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				ActionState summonState{};
 				summonState.trigger = ActionState::Trigger::onSummon;
@@ -949,7 +947,7 @@ namespace game
 		arr[MAGIC_IDS::GOBLIN_SUPREMACY].cost = 2;
 		arr[MAGIC_IDS::GOBLIN_SUPREMACY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onStatBuff;
@@ -968,7 +966,7 @@ namespace game
 		arr[MAGIC_IDS::CULL_THE_MEEK].cost = 3;
 		arr[MAGIC_IDS::CULL_THE_MEEK].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				ActionState killState{};
 				killState.trigger = ActionState::Trigger::onDeath;
@@ -995,7 +993,7 @@ namespace game
 		arr[MAGIC_IDS::SECOND_WIND].cost = 5;
 		arr[MAGIC_IDS::SECOND_WIND].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				for (auto& t : state.tapped)
 					t = false;
@@ -1008,7 +1006,7 @@ namespace game
 		arr[MAGIC_IDS::PARIAH].cost = 3;
 		arr[MAGIC_IDS::PARIAH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				for (auto& t : state.targets)
 					t = actionState.dst;
@@ -1021,7 +1019,7 @@ namespace game
 		arr[MAGIC_IDS::MIRROR_IMAGE].cost = 5;
 		arr[MAGIC_IDS::MIRROR_IMAGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				ActionState summonState{};
 				summonState.trigger = ActionState::Trigger::onSummon;
@@ -1038,7 +1036,7 @@ namespace game
 		arr[MAGIC_IDS::MANA_SURGE].cost = 5;
 		arr[MAGIC_IDS::MANA_SURGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				state.mana += state.boardState.combatStats[actionState.dst].attack;
 				return true;
@@ -1050,7 +1048,7 @@ namespace game
 		arr[MAGIC_IDS::POT_OF_WEED].cost = 3;
 		arr[MAGIC_IDS::POT_OF_WEED].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed && self == actionState.src)
+			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
 				ActionState drawState{};
 				drawState.trigger = ActionState::Trigger::draw;
@@ -1210,7 +1208,7 @@ namespace game
 		aetherSurge.ruleText = "[card played] all enemies gain +1/+1.";
 		aetherSurge.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
-			if (actionState.trigger == ActionState::Trigger::onCardPlayed)
+			if (actionState.trigger == ActionState::Trigger::onCast)
 			{
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onStatBuff;

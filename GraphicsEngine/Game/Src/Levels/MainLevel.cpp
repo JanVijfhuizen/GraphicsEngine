@@ -805,7 +805,7 @@ namespace game
 					const uint32_t target = enemyResult == -1 ? allyResult : enemyResult;
 
 					ActionState cardPlayActionState{};
-					cardPlayActionState.trigger = ActionState::Trigger::onCardPlayed;
+					cardPlayActionState.trigger = ActionState::Trigger::onCast;
 					cardPlayActionState.src = selectedId;
 					cardPlayActionState.dst = card.type == MagicCard::Type::all ? -1 : target + (enemyResult != -1) * BOARD_CAPACITY_PER_SIDE;
 					cardPlayActionState.dstUniqueId = cardPlayActionState.dst == -1 ? -1 : boardState.uniqueIds[cardPlayActionState.dst];
@@ -1152,7 +1152,7 @@ namespace game
 					--as.dst;
 			}
 		}
-		else if (actionState.trigger == ActionState::Trigger::onCardPlayed)
+		else if (actionState.trigger == ActionState::Trigger::onCast)
 		{
 			state.hand.RemoveAtOrdered(actionState.src);
 			for (uint32_t i = 0; i < HAND_MAX_SIZE - 1; ++i)
@@ -1399,7 +1399,7 @@ namespace game
 	{
 		if (!activeStateValid)
 			return;
-		if (activeState.trigger != ActionState::Trigger::onCardPlayed)
+		if (activeState.trigger != ActionState::Trigger::onCast)
 			return;
 		DrawFadeAnimation(level, drawInfo, activeState.src);
 	}
