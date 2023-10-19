@@ -251,7 +251,7 @@ namespace game
 		for (uint32_t i = 0; i < HAND_INITIAL_SIZE; ++i)
 		{
 			ActionState drawState{};
-			drawState.trigger = ActionState::Trigger::draw;
+			drawState.trigger = ActionState::Trigger::onDraw;
 			state.stack.Add() = drawState;
 		}
 
@@ -313,7 +313,7 @@ namespace game
 			case ActionState::Trigger::onStartOfTurn:
 				actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
 				break;
-			case ActionState::Trigger::draw:
+			case ActionState::Trigger::onDraw:
 				actionStateDuration = CARD_DRAW_DURATION;
 			default:
 				break;
@@ -688,7 +688,7 @@ namespace game
 		handSelectionDrawInfo.offsetMod = 4;
 		DrawActivationAnimation(handSelectionDrawInfo, Activation::magic, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
-		if(activeStateValid && activeState.trigger == ActionState::Trigger::draw)
+		if(activeStateValid && activeState.trigger == ActionState::Trigger::onDraw)
 			DrawDrawAnimation(*level, handSelectionDrawInfo);
 
 		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
@@ -868,7 +868,7 @@ namespace game
 				++boardState.enemyCount;
 			actionState.dst = targetId;
 		}
-		else if (actionState.trigger == ActionState::Trigger::draw)
+		else if (actionState.trigger == ActionState::Trigger::onDraw)
 			state.hand.Add() = state.Draw(info, state.hand.ptr, state.hand.count);
 
 		return true;
@@ -996,7 +996,7 @@ namespace game
 			state.mana = state.maxMana;
 
 			ActionState drawState{};
-			drawState.trigger = ActionState::Trigger::draw;
+			drawState.trigger = ActionState::Trigger::onDraw;
 			state.stack.Add() = drawState;
 
 			for (auto& combatStat : boardState.combatStats)
@@ -1186,7 +1186,7 @@ namespace game
 			validActionState = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] == 1 ?
 				boardState.allyCount < BOARD_CAPACITY_PER_SIDE : boardState.enemyCount < BOARD_CAPACITY_PER_SIDE;
 			break;
-		case ActionState::Trigger::draw:
+		case ActionState::Trigger::onDraw:
 			validActionState = state.hand.count < state.hand.length;
 			break;
 		default:

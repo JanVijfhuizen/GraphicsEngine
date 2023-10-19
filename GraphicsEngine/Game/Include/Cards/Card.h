@@ -49,7 +49,7 @@ namespace game
 
 		enum class Trigger
 		{
-			draw,
+			onDraw,
 			onSummon,
 			onAttack,
 			onDamage,
