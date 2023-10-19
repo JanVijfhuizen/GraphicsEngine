@@ -61,6 +61,7 @@ struct MONSTER_IDS
 		VULTURE,
 		GOBLIN,
 		DEMON,
+		ELF,
 		LENGTH
 	};
 };
