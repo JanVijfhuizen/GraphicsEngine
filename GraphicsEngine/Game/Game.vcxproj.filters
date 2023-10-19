@@ -134,7 +134,7 @@
     <ClInclude Include="Include\Cards\ArtifactCard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Cards\FlawCard.h">
+    <ClInclude Include="Include\Cards\CurseCard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Cards\RoomCard.h">

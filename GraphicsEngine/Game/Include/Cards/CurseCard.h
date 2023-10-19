@@ -3,7 +3,7 @@
 
 namespace game
 {
-	struct FlawCard final : Card
+	struct CurseCard final : Card
 	{
 
 	};

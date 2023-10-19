@@ -170,7 +170,7 @@
     <ClInclude Include="Include\Cards\ArtifactCard.h" />
     <ClInclude Include="Include\Cards\Card.h" />
     <ClInclude Include="Include\Cards\EventCard.h" />
-    <ClInclude Include="Include\Cards\FlawCard.h" />
+    <ClInclude Include="Include\Cards\CurseCard.h" />
     <ClInclude Include="Include\Cards\MagicCard.h" />
     <ClInclude Include="Include\Cards\MonsterCard.h" />
     <ClInclude Include="Include\Cards\RoomCard.h" />

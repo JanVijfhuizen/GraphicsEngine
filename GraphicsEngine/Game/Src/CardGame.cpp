@@ -28,6 +28,7 @@
 #include "States/PlayerState.h"
 #include <time.h>
 
+#include "JLib/Math.h"
 #include "RenderGraph/RenderGraph.h"
 
 namespace game 
@@ -119,7 +120,7 @@ namespace game
 		jv::Array<uint32_t> bosses;
 		jv::Array<RoomCard> rooms;
 		jv::Array<MagicCard> magic;
-		jv::Array<FlawCard> flaws;
+		jv::Array<CurseCard> curses;
 		jv::Array<EventCard> events;
 
 		std::chrono::high_resolution_clock timer{};
@@ -139,7 +140,7 @@ namespace game
 		[[nodiscard]] static jv::Array<uint32_t> GetBossCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<RoomCard> GetRoomCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<MagicCard> GetMagicCards(jv::Arena& arena);
-		[[nodiscard]] static jv::Array<FlawCard> GetFlawCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<CurseCard> GetCurseCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<EventCard> GetEventCards(jv::Arena& arena);
 		
 		void UpdateInput();
@@ -178,7 +179,7 @@ namespace game
 				bosses,
 				rooms,
 				magic,
-				flaws,
+				curses,
 				events
 			};
 			
@@ -209,7 +210,7 @@ namespace game
 			bosses,
 			rooms,
 			magic,
-			flaws,
+			curses,
 			events,
 			RESOLUTION,
 			inputState,
@@ -491,7 +492,7 @@ namespace game
 			outCardGame->bosses = cardGame.GetBossCards(outCardGame->arena);
 			outCardGame->rooms = cardGame.GetRoomCards(outCardGame->arena);
 			outCardGame->magic = cardGame.GetMagicCards(outCardGame->arena);
-			outCardGame->flaws = cardGame.GetFlawCards(outCardGame->arena);
+			outCardGame->curses = cardGame.GetCurseCards(outCardGame->arena);
 			outCardGame->events = cardGame.GetEventCards(outCardGame->arena);
 		}
 
@@ -1063,15 +1064,137 @@ namespace game
 		return arr;
 	}
 
-	jv::Array<FlawCard> CardGame::GetFlawCards(jv::Arena& arena)
+	jv::Array<CurseCard> CardGame::GetCurseCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<FlawCard>(arena, FLAW_IDS::LENGTH + 20);
+		const auto arr = jv::CreateArray<CurseCard>(arena, CURSE_IDS::LENGTH + 20);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		for (auto& card : arr)
-			card.name = "curse";
+		arr[CURSE_IDS::FADING].name = "curse of fading";
+		arr[CURSE_IDS::FADING].ruleText = "[start of Turn] take one damage.";
+		arr[CURSE_IDS::FADING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.dst = self;
+					damageState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.stack.Add() = damageState;
+					return true;
+				}
+				return false;
+			};
+		arr[CURSE_IDS::WEAKNESS].name = "curse of weakness";
+		arr[CURSE_IDS::WEAKNESS].ruleText = "[start of Turn] set your attack to 1.";
+		arr[CURSE_IDS::WEAKNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					ActionState setState{};
+					setState.trigger = ActionState::Trigger::onStatSet;
+					setState.source = ActionState::Source::other;
+					setState.dst = self;
+					setState.dstUniqueId = state.boardState.uniqueIds[self];
+					setState.values[ActionState::VStatSet::attack] = 1;
+					state.stack.Add() = setState;
+					return true;
+				}
+				return false;
+			};
+		arr[CURSE_IDS::COWARDICE].name = "curse of cowardice";
+		arr[CURSE_IDS::COWARDICE].ruleText = "[any attack] tap.";
+		arr[CURSE_IDS::COWARDICE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					state.tapped[self] = true;
+					return true;
+				}
+				return false;
+			};
+		arr[CURSE_IDS::DUM_DUM].name = "curse of dum dum";
+		arr[CURSE_IDS::DUM_DUM].ruleText = "[start of turn] set your maximum mana to 5 if it is higher than that.";
+		arr[CURSE_IDS::DUM_DUM].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					if (state.maxMana <= 5)
+						return false;
+					state.maxMana = 5;
+					return true;
+				}
+				return false;
+			};
+		arr[CURSE_IDS::HATE].name = "curse of hate";
+		arr[CURSE_IDS::HATE].ruleText = "[start of Turn] gain 2 attack, take 2 damage.";
+		arr[CURSE_IDS::HATE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					ActionState dmgState{};
+					dmgState.trigger = ActionState::Trigger::onDamage;
+					dmgState.source = ActionState::Source::other;
+					dmgState.dst = self;
+					dmgState.dstUniqueId = state.boardState.uniqueIds[self];
+					dmgState.values[ActionState::VDamage::damage] = 2;
+					state.stack.Add() = dmgState;
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = state.boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::attack] = 2;
+					state.stack.Add() = buffState;
+					return true;
+				}
+				return false;
+			};
+		arr[CURSE_IDS::HAUNTING].name = "curse of haunting";
+		arr[CURSE_IDS::HAUNTING].ruleText = "[attack] summon an amount of goblins equal to the damage dealt for the opponent.";
+		arr[CURSE_IDS::HAUNTING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDamage)
+				{
+					if (actionState.src != self || actionState.srcUniqueId != state.boardState.uniqueIds[self])
+						return false;
+
+					ActionState summonState{};
+					summonState.trigger = ActionState::Trigger::onSummon;
+					summonState.source = ActionState::Source::other;
+					summonState.values[ActionState::VSummon::isAlly] = 0;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
+
+					auto dmg = actionState.values[ActionState::VDamage::damage];
+					dmg = jv::Min(dmg, BOARD_CAPACITY_PER_SIDE);
+					for (uint32_t i = 0; i < dmg; ++i)
+						state.stack.Add() = summonState;
+					return true;
+				}
+				return false;
+			};
+		arr[CURSE_IDS::TIME].name = "curse of time";
+		arr[CURSE_IDS::TIME].ruleText = "[start of turn 7] dies.";
+		arr[CURSE_IDS::TIME].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					if (state.turn != 7)
+						return false;
+
+					ActionState deathState{};
+					deathState.trigger = ActionState::Trigger::onDeath;
+					deathState.source = ActionState::Source::other;
+					deathState.dst = self;
+					deathState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.stack.Add() = deathState;
+					return true;
+				}
+				return false;
+			};
 		return arr;
 	}
 

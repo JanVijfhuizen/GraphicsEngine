@@ -116,10 +116,17 @@ struct ARTIFACT_IDS
 	};
 };
 
-struct FLAW_IDS
+struct CURSE_IDS
 {
 	enum
 	{
+		FADING,
+		WEAKNESS,
+		COWARDICE,
+		DUM_DUM,
+		HATE,
+		HAUNTING,
+		TIME,
 		LENGTH
 	};
 };
@@ -135,8 +142,8 @@ struct EVENT_IDS
 		GOBLIN_PLAGUE,
 		WHIRLWIND,
 		HEALING_WORD,
-		CHASE_THE_DRAGON,
 		BRIEF_RESPISE,
+		CHASE_THE_DRAGON,
 		LENGTH
 	};
 };
