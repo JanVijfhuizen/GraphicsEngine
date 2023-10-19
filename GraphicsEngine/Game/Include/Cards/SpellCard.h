@@ -3,7 +3,7 @@
 
 namespace game
 {
-	struct MagicCard final : Card
+	struct SpellCard final : Card
 	{
 		enum class Type
 		{

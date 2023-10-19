@@ -46,7 +46,7 @@ namespace game
 				enum Type
 				{
 					monster,
-					magic,
+					spell,
 					room,
 					event
 				} type;
@@ -102,7 +102,7 @@ namespace game
 
 		struct RewardMagicCardState final : LevelState<State>
 		{
-			CardDrawMetaData metaDatas[MAGIC_DECK_SIZE + 1];
+			CardDrawMetaData metaDatas[SPELL_DECK_SIZE + 1];
 			uint32_t discoverOption;
 
 			void Reset(State& state, const LevelInfo& info) override;

@@ -2,7 +2,7 @@
 #include "Cards/ArtifactCard.h"
 #include "Cards/EventCard.h"
 #include "Cards/CurseCard.h"
-#include "Cards/MagicCard.h"
+#include "Cards/SpellCard.h"
 #include "Cards/MonsterCard.h"
 #include "Cards/RoomCard.h"
 #include "Engine/TaskSystem.h"
@@ -40,8 +40,8 @@ namespace game
 		const jv::Array<ArtifactCard>& artifacts;
 		const jv::Array<uint32_t>& bosses;
 		const jv::Array<RoomCard>& rooms;
-		const jv::Array<MagicCard>& magics;
-		const jv::Array<CurseCard>& flaws;
+		const jv::Array<SpellCard>& spells;
+		const jv::Array<CurseCard>& curses;
 		const jv::Array<EventCard>& events;
 	};
 

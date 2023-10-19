@@ -16,10 +16,10 @@ namespace game
 		decks.bosses = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
 		GetDeck(nullptr, &count, info.rooms);
 		decks.rooms = jv::CreateVector<uint32_t>(info.arena, count);
-		GetDeck(nullptr, &count, info.magics);
-		decks.magics = jv::CreateVector<uint32_t>(info.arena, count * MAGIC_CARD_COPY_COUNT);
-		GetDeck(nullptr, &count, info.flaws);
-		decks.flaws = jv::CreateVector<uint32_t>(info.arena, count);
+		GetDeck(nullptr, &count, info.spells);
+		decks.spells = jv::CreateVector<uint32_t>(info.arena, count * SPELL_CARD_COPY_COUNT);
+		GetDeck(nullptr, &count, info.curses);
+		decks.curses = jv::CreateVector<uint32_t>(info.arena, count);
 		GetDeck(nullptr, &count, info.events);
 		decks.events = jv::CreateVector<uint32_t>(info.arena, count);
 		GetDeck(nullptr, &count, info.monsters);
@@ -133,19 +133,19 @@ namespace game
 		return rooms.Pop();
 	}
 
-	uint32_t State::GetMagic(const LevelInfo& info)
+	uint32_t State::GetSpell(const LevelInfo& info)
 	{
-		auto& magics = decks.magics;
+		auto& magics = decks.spells;
 		if (magics.count == 0)
 		{
-			GetDeck(&magics, nullptr, info.magics);
+			GetDeck(&magics, nullptr, info.spells);
 			const uint32_t c = magics.count;
 			for (uint32_t i = 0; i < c; ++i)
 				for (uint32_t j = 0; j < 3; ++j)
 					magics.Add() = magics[i];
 
-			RemoveDuplicates(info, magics, &Path::magic);
-			Shuffle(decks.magics.ptr, decks.magics.count);
+			RemoveDuplicates(info, magics, &Path::spell);
+			Shuffle(decks.spells.ptr, decks.spells.count);
 		}
 		RemoveMagicsInParty(magics, info.gameState);
 		return magics.Pop();
@@ -164,14 +164,14 @@ namespace game
 		return artifacts.Pop();
 	}
 
-	uint32_t State::GetFlaw(const LevelInfo& info)
+	uint32_t State::GetCurse(const LevelInfo& info)
 	{
-		auto& flaws = decks.flaws;
+		auto& flaws = decks.curses;
 		if (flaws.count == 0)
 		{
-			GetDeck(&flaws, nullptr, info.flaws);
-			RemoveDuplicates(info, flaws, &Path::flaw);
-			Shuffle(decks.flaws.ptr, decks.flaws.count);
+			GetDeck(&flaws, nullptr, info.curses);
+			RemoveDuplicates(info, flaws, &Path::curse);
+			Shuffle(decks.curses.ptr, decks.curses.count);
 		}
 		RemoveFlawsInParty(flaws, info.gameState);
 		return flaws.Pop();
@@ -229,7 +229,7 @@ namespace game
 	void State::ResetDeck(const LevelInfo& info)
 	{
 		magicDeck.Clear();
-		for (const auto& magic : info.gameState.magics)
+		for (const auto& magic : info.gameState.spells)
 			magicDeck.Add() = magic;
 		for (int32_t i = static_cast<int32_t>(magicDeck.count) - 1; i >= 0; --i)
 			for (const auto& card : hand)
@@ -265,7 +265,7 @@ namespace game
 		State state{};
 		state.decks = Decks::Create(info);
 		state.paths = jv::CreateArray<Path>(info.arena, DISCOVER_LENGTH);
-		state.magicDeck = jv::CreateVector<uint32_t>(info.arena, MAGIC_DECK_SIZE);
+		state.magicDeck = jv::CreateVector<uint32_t>(info.arena, SPELL_DECK_SIZE);
 		state.hand = jv::CreateVector<uint32_t>(info.arena, HAND_MAX_SIZE);
 		state.stack = jv::CreateVector<ActionState>(info.arena, STACK_MAX_SIZE);
 		state.mana = 0;

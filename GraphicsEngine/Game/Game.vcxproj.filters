@@ -140,7 +140,7 @@
     <ClInclude Include="Include\Cards\RoomCard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Cards\MagicCard.h">
+    <ClInclude Include="Include\Cards\SpellCard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Utils\SubTextureUtils.h">

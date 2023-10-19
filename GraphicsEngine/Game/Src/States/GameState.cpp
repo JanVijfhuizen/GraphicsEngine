@@ -6,8 +6,8 @@ namespace game
 	GameState GameState::Create()
 	{
 		GameState gameState{};
-		for (auto& flaw : gameState.flaws)
-			flaw = -1;
+		for (auto& curse : gameState.curses)
+			curse = -1;
 		return gameState;
 	}
 }

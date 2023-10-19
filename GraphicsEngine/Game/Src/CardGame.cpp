@@ -6,7 +6,7 @@
 #include <stb_image.h>
 #include <Engine/Engine.h>
 #include "Cards/ArtifactCard.h"
-#include "Cards/MagicCard.h"
+#include "Cards/SpellCard.h"
 #include "Cards/MonsterCard.h"
 #include "Cards/RoomCard.h"
 #include "Engine/TextureStreamer.h"
@@ -119,7 +119,7 @@ namespace game
 		jv::Array<ArtifactCard> artifacts;
 		jv::Array<uint32_t> bosses;
 		jv::Array<RoomCard> rooms;
-		jv::Array<MagicCard> magic;
+		jv::Array<SpellCard> spells;
 		jv::Array<CurseCard> curses;
 		jv::Array<EventCard> events;
 
@@ -139,7 +139,7 @@ namespace game
 		[[nodiscard]] static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<uint32_t> GetBossCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<RoomCard> GetRoomCards(jv::Arena& arena);
-		[[nodiscard]] static jv::Array<MagicCard> GetMagicCards(jv::Arena& arena);
+		[[nodiscard]] static jv::Array<SpellCard> GetSpellCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<CurseCard> GetCurseCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<EventCard> GetEventCards(jv::Arena& arena);
 		
@@ -178,7 +178,7 @@ namespace game
 				artifacts,
 				bosses,
 				rooms,
-				magic,
+				spells,
 				curses,
 				events
 			};
@@ -209,7 +209,7 @@ namespace game
 			artifacts,
 			bosses,
 			rooms,
-			magic,
+			spells,
 			curses,
 			events,
 			RESOLUTION,
@@ -491,7 +491,7 @@ namespace game
 			outCardGame->artifacts = cardGame.GetArtifactCards(outCardGame->arena);
 			outCardGame->bosses = cardGame.GetBossCards(outCardGame->arena);
 			outCardGame->rooms = cardGame.GetRoomCards(outCardGame->arena);
-			outCardGame->magic = cardGame.GetMagicCards(outCardGame->arena);
+			outCardGame->spells = cardGame.GetSpellCards(outCardGame->arena);
 			outCardGame->curses = cardGame.GetCurseCards(outCardGame->arena);
 			outCardGame->events = cardGame.GetEventCards(outCardGame->arena);
 		}
@@ -588,20 +588,20 @@ namespace game
 		return arr;
 	}
 
-	enum class BuffTypeTarget
+	enum class TypeTarget
 	{
 		allies,
 		enemies,
 		all
 	};
 
-	void TargetOfType(const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self, const uint32_t tags, const BuffTypeTarget target)
+	void TargetOfType(const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self, const uint32_t tags, const TypeTarget target)
 	{
 		ActionState cpyState = actionState;
 
 		const auto& boardState = state.boardState;
-		if(target == BuffTypeTarget::all || (self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
-			self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies))
+		if(target == TypeTarget::all || (self < BOARD_CAPACITY_PER_SIDE && target == TypeTarget::allies || 
+			self >= BOARD_CAPACITY_PER_SIDE && target == TypeTarget::enemies))
 			for (uint32_t i = 0; i < boardState.allyCount; ++i)
 			{
 				if (tags != -1 && (info.monsters[boardState.ids[i]].tags & tags) == 0)
@@ -610,8 +610,8 @@ namespace game
 				cpyState.dstUniqueId = boardState.uniqueIds[i];
 				state.stack.Add() = cpyState;
 			}
-		if (target == BuffTypeTarget::all || (self >= BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::allies || 
-			self < BOARD_CAPACITY_PER_SIDE && target == BuffTypeTarget::enemies))
+		if (target == TypeTarget::all || (self >= BOARD_CAPACITY_PER_SIDE && target == TypeTarget::allies || 
+			self < BOARD_CAPACITY_PER_SIDE && target == TypeTarget::enemies))
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			{
 				if (tags != -1 && (info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]].tags & tags) == 0)
@@ -638,6 +638,10 @@ namespace game
 		goblin.health = 1;
 		goblin.attack = 1;
 		goblin.tags = TAG_TOKEN | TAG_GOBLIN;
+		auto& demon = arr[MONSTER_IDS::DEMON];
+		demon.health = 0;
+		demon.attack = 0;
+		demon.tags = TAG_TOKEN;
 		return arr;
 	}
 
@@ -780,7 +784,7 @@ namespace game
 					buffState.src = self;
 					buffState.srcUniqueId = boardState.uniqueIds[self];
 					buffState.values[ActionState::VStatBuff::health] = boardState.combatStats[self].health;
-					TargetOfType(info, state, buffState, self, -1, BuffTypeTarget::allies);
+					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
 				return false;
@@ -931,7 +935,7 @@ namespace game
 					damageState.src = self;
 					damageState.srcUniqueId = boardState.uniqueIds[self];
 					damageState.values[ActionState::VDamage::damage] = 1;
-					TargetOfType(info, state, damageState, self, -1, BuffTypeTarget::enemies);
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
 					return true;
 				}
 				return false;
@@ -952,7 +956,7 @@ namespace game
 					buffState.src = self;
 					buffState.srcUniqueId = boardState.uniqueIds[self];
 					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
-					TargetOfType(info, state, buffState, self, -1, BuffTypeTarget::allies);
+					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
 				return false;
@@ -1071,7 +1075,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.values[ActionState::VStatBuff::tempHealth] = 1;
 
-					TargetOfType(info, state, buffState, 0, -1, BuffTypeTarget::enemies);
+					TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);
 					return true;
 				}
 				return false;
@@ -1088,7 +1092,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 1;
 
-					TargetOfType(info, state, damageState, 0, -1, BuffTypeTarget::all);
+					TargetOfType(info, state, damageState, 0, -1, TypeTarget::all);
 					return true;
 				}
 				return false;
@@ -1160,7 +1164,7 @@ namespace game
 					setState.source = ActionState::Source::other;
 					setState.values[ActionState::VStatSet::attack] = 1;
 
-					TargetOfType(info, state, setState, 0, -1, BuffTypeTarget::all);
+					TargetOfType(info, state, setState, 0, -1, TypeTarget::all);
 					return true;
 				}
 				return false;
@@ -1182,7 +1186,7 @@ namespace game
 					killState.trigger = ActionState::Trigger::onDeath;
 					killState.source = ActionState::Source::other;
 
-					TargetOfType(info, state, killState, 0, -1, BuffTypeTarget::all);
+					TargetOfType(info, state, killState, 0, -1, TypeTarget::all);
 					return true;
 				}
 				return false;
@@ -1190,156 +1194,18 @@ namespace game
 		return arr;
 	}
 
-	jv::Array<MagicCard> CardGame::GetMagicCards(jv::Arena& arena)
+	jv::Array<SpellCard> CardGame::GetSpellCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<MagicCard>(arena, MAGIC_IDS::LENGTH);
+		const auto arr = jv::CreateArray<SpellCard>(arena, SPELL_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		arr[MAGIC_IDS::LIGHTNING_BOLT].name = "lightning bolt";
-		arr[MAGIC_IDS::LIGHTNING_BOLT].ruleText = "deal 2 damage.";
-		arr[MAGIC_IDS::LIGHTNING_BOLT].animIndex = 24;
-		arr[MAGIC_IDS::LIGHTNING_BOLT].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-			{
-				ActionState damageState{};
-				damageState.trigger = ActionState::Trigger::onDamage;
-				damageState.source = ActionState::Source::other;
-				damageState.values[static_cast<uint32_t>(ActionState::VDamage::damage)] = 2;
-				damageState.dst = actionState.dst;
-				damageState.dstUniqueId = actionState.dstUniqueId;
-				state.stack.Add() = damageState;
-				return true;
-			}
-			return false;
-		};
-		arr[MAGIC_IDS::GATHER_THE_WEAK].name = "gather the weak";
-		arr[MAGIC_IDS::GATHER_THE_WEAK].ruleText = "summon two goblins.";
-		arr[MAGIC_IDS::GATHER_THE_WEAK].type = MagicCard::Type::all;
-		arr[MAGIC_IDS::GATHER_THE_WEAK].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-			{
-				ActionState summonState{};
-				summonState.trigger = ActionState::Trigger::onSummon;
-				summonState.source = ActionState::Source::other;
-				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = MONSTER_IDS::GOBLIN;
-				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 1;
-				state.stack.Add() = summonState;
-				state.stack.Add() = summonState;
-				return true;
-			}
-			return false;
-		};
-
-		arr[MAGIC_IDS::GOBLIN_SUPREMACY].name = "goblin supremacy";
-		arr[MAGIC_IDS::GOBLIN_SUPREMACY].ruleText = "give all goblins +2/+1.";
-		arr[MAGIC_IDS::GOBLIN_SUPREMACY].type = MagicCard::Type::all;
-		arr[MAGIC_IDS::GOBLIN_SUPREMACY].cost = 2;
-		arr[MAGIC_IDS::GOBLIN_SUPREMACY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-			{
-				ActionState buffState{};
-				buffState.trigger = ActionState::Trigger::onStatBuff;
-				buffState.source = ActionState::Source::other;
-				buffState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)] = 2;
-				buffState.values[static_cast<uint32_t>(ActionState::VStatBuff::health)] = 1;
-
-				TargetOfType(info, state, buffState, self, TAG_GOBLIN, BuffTypeTarget::all);
-				return true;
-			}
-			return false;
-		};
-		arr[MAGIC_IDS::CULL_THE_MEEK].name = "cull the meek";
-		arr[MAGIC_IDS::CULL_THE_MEEK].ruleText = "destroy all tokens to give all allies +1/+1 for each monster destroyed.";
-		arr[MAGIC_IDS::CULL_THE_MEEK].type = MagicCard::Type::all;
-		arr[MAGIC_IDS::CULL_THE_MEEK].cost = 3;
-		arr[MAGIC_IDS::CULL_THE_MEEK].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-			{
-				ActionState killState{};
-				killState.trigger = ActionState::Trigger::onDeath;
-				killState.source = ActionState::Source::other;
-
-				const auto& boardState = state.boardState;
-				uint32_t count = 0;
-
-				TargetOfType(info, state, killState, self, TAG_TOKEN, BuffTypeTarget::all);
-
-				ActionState buffState{};
-				buffState.trigger = ActionState::Trigger::onStatBuff;
-				buffState.source = ActionState::Source::other;
-				buffState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)] = count;
-				buffState.values[static_cast<uint32_t>(ActionState::VStatBuff::health)] = count;
-				TargetOfType(info, state, buffState, self, -1, BuffTypeTarget::allies);
-				return true;
-			}
-			return false;
-		};
-		arr[MAGIC_IDS::SECOND_WIND].name = "second wind";
-		arr[MAGIC_IDS::SECOND_WIND].ruleText = "ready all monsters.";
-		arr[MAGIC_IDS::SECOND_WIND].type = MagicCard::Type::all;
-		arr[MAGIC_IDS::SECOND_WIND].cost = 5;
-		arr[MAGIC_IDS::SECOND_WIND].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-			{
-				for (auto& t : state.tapped)
-					t = false;
-				return true;
-			}
-			return false;
-		};
-		arr[MAGIC_IDS::PARIAH].name = "pariah";
-		arr[MAGIC_IDS::PARIAH].ruleText = "change all enemy targets to this.";
-		arr[MAGIC_IDS::PARIAH].cost = 3;
-		arr[MAGIC_IDS::PARIAH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-			{
-				for (auto& t : state.targets)
-					t = actionState.dst;
-				return true;
-			}
-			return false;
-		};
-		arr[MAGIC_IDS::MIRROR_IMAGE].name = "mind mirror";
-		arr[MAGIC_IDS::MIRROR_IMAGE].ruleText = "summon a copy.";
-		arr[MAGIC_IDS::MIRROR_IMAGE].cost = 5;
-		arr[MAGIC_IDS::MIRROR_IMAGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-			{
-				ActionState summonState{};
-				summonState.trigger = ActionState::Trigger::onSummon;
-				summonState.source = ActionState::Source::other;
-				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.boardState.ids[actionState.dst];
-				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 1;
-				state.stack.Add() = summonState;
-				return true;
-			}
-			return false;
-		};
-		arr[MAGIC_IDS::MANA_SURGE].name = "mana surge";
-		arr[MAGIC_IDS::MANA_SURGE].ruleText = "gain mana equal to its attack.";
-		arr[MAGIC_IDS::MANA_SURGE].cost = 5;
-		arr[MAGIC_IDS::MANA_SURGE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-		{
-			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-			{
-				state.mana += state.boardState.combatStats[actionState.dst].attack;
-				return true;
-			}
-			return false;
-		};
-		arr[MAGIC_IDS::POT_OF_WEED].name = "pot of weed";
-		arr[MAGIC_IDS::POT_OF_WEED].ruleText = "draw two cards.";
-		arr[MAGIC_IDS::POT_OF_WEED].cost = 3;
-		arr[MAGIC_IDS::POT_OF_WEED].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& arcaneIntellect = arr[SPELL_IDS::ARCANE_INTELLECT];
+		arcaneIntellect.name = "arcane intellect";
+		arcaneIntellect.ruleText = "draw 2.";
+		arcaneIntellect.cost = 3;
+		arcaneIntellect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 			{
@@ -1347,10 +1213,52 @@ namespace game
 				drawState.trigger = ActionState::Trigger::onDraw;
 				drawState.source = ActionState::Source::other;
 				state.stack.Add() = drawState;
+				state.stack.Add() = drawState;
 				return true;
 			}
 			return false;
 		};
+		auto& dreadSummon = arr[SPELL_IDS::ARCANE_INTELLECT];
+		dreadSummon.name = "dread summon";
+		dreadSummon.ruleText = "destroy all tokens and summon a x/x demon where x is the amount of tokens destroyed.";
+		dreadSummon.cost = 5;
+		dreadSummon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					ActionState killState{};
+					killState.trigger = ActionState::Trigger::onDraw;
+					killState.source = ActionState::Source::other;
+					TargetOfType(info, state, killState, -1, TAG_TOKEN, TypeTarget::all);
+
+					const auto& boardState = state.boardState;
+
+					uint32_t c = 0;
+					for (uint32_t i = 0; i < boardState.allyCount; ++i)
+					{
+						if ((info.monsters[boardState.ids[i]].tags & TAG_TOKEN) == 0)
+							continue;
+						++c;
+					}
+					for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+					{
+						if ((info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]].tags & TAG_TOKEN) == 0)
+							continue;
+						++c;
+					}
+
+					ActionState summonState{};
+					summonState.trigger = ActionState::Trigger::onSummon;
+					summonState.source = ActionState::Source::other;
+					summonState.values[ActionState::VSummon::isAlly] = 1;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
+					summonState.values[ActionState::VSummon::attack] = c;
+					summonState.values[ActionState::VSummon::health] = c;
+					state.stack.Add() = summonState;
+					return true;
+				}
+				return false;
+			};
 
 		return arr;
 	}
@@ -1508,7 +1416,7 @@ namespace game
 				buffState.source = ActionState::Source::other;
 				buffState.values[ActionState::VStatBuff::attack] = 1;
 				buffState.values[ActionState::VStatBuff::health] = 1;
-				TargetOfType(info, state, buffState, 0, -1, BuffTypeTarget::enemies);
+				TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);
 				return true;
 			}
 			return false;
@@ -1544,7 +1452,7 @@ namespace game
 				buffState.source = ActionState::Source::other;
 				buffState.values[ActionState::VStatBuff::attack] = 1;
 				buffState.values[ActionState::VStatBuff::health] = 1;
-				TargetOfType(info, state, buffState, 0, -1, BuffTypeTarget::enemies);
+				TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);
 				return true;
 			};
 
@@ -1595,7 +1503,7 @@ namespace game
 				damageState.trigger = ActionState::Trigger::onDamage;
 				damageState.source = ActionState::Source::other;
 				damageState.values[ActionState::VDamage::damage] = 1;
-				TargetOfType(info, state, damageState, 0, -1, BuffTypeTarget::all);
+				TargetOfType(info, state, damageState, 0, -1, TypeTarget::all);
 				return true;
 			};
 
@@ -1611,7 +1519,7 @@ namespace game
 				buffState.trigger = ActionState::Trigger::onDamage;
 				buffState.source = ActionState::Source::other;
 				buffState.values[ActionState::VStatBuff::tempHealth] = 3;
-				TargetOfType(info, state, buffState, 0, -1, BuffTypeTarget::enemies);
+				TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);
 				return true;
 			};
 

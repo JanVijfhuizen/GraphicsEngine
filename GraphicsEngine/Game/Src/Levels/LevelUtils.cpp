@@ -29,7 +29,7 @@ namespace game
 	{
 		for (uint32_t i = 0; i < gameState.partyCount; ++i)
 			for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
-				if (gameState.flaws[k] == deck[k])
+				if (gameState.curses[k] == deck[k])
 				{
 					deck.RemoveAt(k);
 					break;
@@ -38,7 +38,7 @@ namespace game
 
 	void RemoveMagicsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState)
 	{
-		for (auto& magic : gameState.magics)
+		for (auto& magic : gameState.spells)
 			for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
 				if (deck[k] == magic)
 				{
