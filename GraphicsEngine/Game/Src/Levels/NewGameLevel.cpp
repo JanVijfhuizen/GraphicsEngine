@@ -184,7 +184,7 @@ namespace game
 			auto& playerState = info.playerState = PlayerState::Create();
 			playerState.AddMonster(state.monsterId);
 			playerState.AddMonster(MONSTER_IDS::DAISY);
-			playerState.AddArtifact(0, state.artifactId);
+			playerState.artifacts[0] = state.artifactId;
 			SaveData(playerState);
 			loadLevelIndex = LevelIndex::partySelect;
 		}

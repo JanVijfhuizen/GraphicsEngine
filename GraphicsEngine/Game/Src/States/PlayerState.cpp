@@ -6,6 +6,9 @@ namespace game
 	void PlayerState::AddMonster(const uint32_t id)
 	{
 		assert(partySize < PARTY_CAPACITY);
+		artifactSlotCounts[partySize] = 1;
+		for (uint32_t i = 0; i < MONSTER_ARTIFACT_CAPACITY; ++i)
+			artifacts[partySize * MONSTER_ARTIFACT_CAPACITY + i] = -1;
 		monsterIds[partySize++] = id;
 	}
 

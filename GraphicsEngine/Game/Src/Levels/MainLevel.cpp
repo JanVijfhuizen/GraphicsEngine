@@ -455,7 +455,7 @@ namespace game
 					const auto id = boardState.ids[i];
 					if(info.monsters[id].tags & TAG_TOKEN)
 					{
-						killState.dst = id;
+						killState.dst = i;
 						killState.dstUniqueId = boardState.uniqueIds[i];
 						state.stack.Add() = killState;
 						tokensRemaining = true;
@@ -1072,10 +1072,15 @@ namespace game
 
 				const auto th = tempHealth;
 				if (damage <= tempHealth)
+				{
 					tempHealth -= damage;
+					damage = 0;
+				}
 				else
+				{
 					tempHealth = 0;
-				damage -= th;
+					damage -= th;
+				}
 
 				health = health < damage ? 0 : health - damage;
 				metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();

@@ -693,32 +693,32 @@ namespace game
 		god.unique = true;
 		auto& ogre = arr[MONSTER_IDS::OGRE];
 		ogre.name = "ogre";
-		ogre.health = 7;
-		ogre.attack = 6;
+		ogre.attack = 2;
+		ogre.health = 20;
 		auto& wolf = arr[MONSTER_IDS::WOLF];
 		wolf.name = "wolf";
-		wolf.health = 14;
 		wolf.attack = 3;
+		wolf.health = 14;
 		auto& spirit = arr[MONSTER_IDS::SPIRIT];
 		spirit.name = "spirit";
-		spirit.health = 1;
 		spirit.attack = 7;
+		spirit.health = 1;
 		auto& dwarf = arr[MONSTER_IDS::DWARF];
 		dwarf.name = "dwarf";
-		dwarf.health = 26;
 		dwarf.attack = 1;
+		dwarf.health = 26;
 		auto& gorilla = arr[MONSTER_IDS::GORILLA];
 		gorilla.name = "gorilla";
-		gorilla.health = 11;
 		gorilla.attack = 4;
+		gorilla.health = 11;
 		auto& fairy = arr[MONSTER_IDS::FAIRY];
 		fairy.name = "fairy";
+		fairy.attack = 5;
 		fairy.health = 5;
-		fairy.attack = 4;
 		auto& bob = arr[MONSTER_IDS::BOB];
 		bob.name = "bob";
-		bob.health = 1;
 		bob.attack = 1;
+		bob.health = 1;
 		bob.ruleText = "bob.";
 		return arr;
 	}
@@ -732,7 +732,7 @@ namespace game
 			card.animIndex = c++;
 
 		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].name = "amulet of arcane acuity";
-		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].ruleText = "[start of Turn] gain one mana.";
+		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].ruleText = "[start of turn] gain one mana.";
 		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -790,8 +790,7 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					if(actionState.dst >= BOARD_CAPACITY_PER_SIDE && self < BOARD_CAPACITY_PER_SIDE ||
-						actionState.dst < BOARD_CAPACITY_PER_SIDE && self >= BOARD_CAPACITY_PER_SIDE)
+					if(actionState.dst >= BOARD_CAPACITY_PER_SIDE)
 					{
 						const auto& boardState = state.boardState;
 						ActionState buffState{};
@@ -809,7 +808,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::CORRUPTING_KNIFE].name = "corrupting knife";
-		arr[ARTIFACT_IDS::CORRUPTING_KNIFE].ruleText = "[end of Turn] gain 2 attack and take one damage.";
+		arr[ARTIFACT_IDS::CORRUPTING_KNIFE].ruleText = "[end of turn] gain 2 attack and take one damage.";
 		arr[ARTIFACT_IDS::CORRUPTING_KNIFE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -840,7 +839,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].name = "sacrificial altar";
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die to heal all allies to full health.";
+		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die to give all allies +0/x where x is your health.";
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -868,7 +867,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLOOD_AXE].name = "blood axe";
-		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] heal 3.";
+		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] gain 3 health.";
 		arr[ARTIFACT_IDS::BLOOD_AXE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -953,16 +952,17 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLESSED_RING].name = "blessed ring";
-		arr[ARTIFACT_IDS::BLESSED_RING].ruleText = "[summon] heal 4.";
+		arr[ARTIFACT_IDS::BLESSED_RING].ruleText = "[summoned] gain +0/3.";
 		arr[ARTIFACT_IDS::BLESSED_RING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onSummon)
 				{
 					const auto& boardState = state.boardState;
 					const bool isAlly = actionState.values[ActionState::VSummon::isAlly];
+					if (!isAlly)
+						return false;
 
-					if(self == boardState.allyCount - 1 && isAlly ||
-						self == boardState.enemyCount - 1 && !isAlly)
+					if(self == boardState.allyCount - 1)
 					{
 						ActionState buffState{};
 						buffState.trigger = ActionState::Trigger::onStatBuff;
@@ -971,7 +971,7 @@ namespace game
 						buffState.srcUniqueId = boardState.uniqueIds[self];
 						buffState.dst = buffState.src;
 						buffState.dstUniqueId = buffState.srcUniqueId;
-						buffState.values[ActionState::VStatBuff::health] = 4;
+						buffState.values[ActionState::VStatBuff::health] = 3;
 						state.stack.Add() = buffState;
 						return true;
 					}
@@ -1003,18 +1003,20 @@ namespace game
 		arr[ARTIFACT_IDS::THORN_WHIP].ruleText = "[attack] deal 1 damage to all enemies.";
 		arr[ARTIFACT_IDS::THORN_WHIP].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onCast)
+				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
 					const auto& boardState = state.boardState;
-
-					ActionState damageState{};
-					damageState.trigger = ActionState::Trigger::onDamage;
-					damageState.source = ActionState::Source::board;
-					damageState.src = self;
-					damageState.srcUniqueId = boardState.uniqueIds[self];
-					damageState.values[ActionState::VDamage::damage] = 1;
-					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
-					return true;
+					if(actionState.src == self && actionState.srcUniqueId == boardState.uniqueIds[self])
+					{
+						ActionState damageState{};
+						damageState.trigger = ActionState::Trigger::onDamage;
+						damageState.source = ActionState::Source::board;
+						damageState.src = self;
+						damageState.srcUniqueId = boardState.uniqueIds[self];
+						damageState.values[ActionState::VDamage::damage] = 1;
+						TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+						return true;
+					}
 				}
 				return false;
 			};
@@ -1125,7 +1127,7 @@ namespace game
 		};
 		auto& forsakenBattlefield = arr[ROOM_IDS::FORSAKEN_BATTLEFIELD];
 		forsakenBattlefield.name = "forsaken battlefield";
-		forsakenBattlefield.ruleText = "[any non token death] fill the opponents board with vultures.";
+		forsakenBattlefield.ruleText = "[any non token death] fill the opposite board with vultures.";
 		forsakenBattlefield.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1258,7 +1260,7 @@ namespace game
 
 		auto& prisonOfEternity = arr[ROOM_IDS::PRISON_OF_ETERNITY];
 		prisonOfEternity.name = "prison of eternity";
-		prisonOfEternity.ruleText = "on turn 7, kill all creatures.";
+		prisonOfEternity.ruleText = "on turn 7, kill all monsters.";
 		prisonOfEternity.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -1792,7 +1794,7 @@ namespace game
 			};
 		auto& betrayal = arr[SPELL_IDS::BETRAYAL];
 		betrayal.name = "betrayal";
-		betrayal.ruleText = "kill target allied monster. if it was a non a token, gain 5 mana.";
+		betrayal.ruleText = "kill target allied monster. if it was not a token, gain 5 mana.";
 		betrayal.cost = 1;
 		betrayal.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2107,7 +2109,7 @@ namespace game
 
 		auto& chaseTheDragon = arr[EVENT_IDS::CHASE_THE_DRAGON];
 		chaseTheDragon.name = "chase the dragon";
-		chaseTheDragon.ruleText = "[ally attack] change all targets to the attacker.";
+		chaseTheDragon.ruleText = "[ally attack] change all other targets to the attacker.";
 		chaseTheDragon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onAttack)
