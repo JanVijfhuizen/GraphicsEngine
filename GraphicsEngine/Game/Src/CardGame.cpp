@@ -631,21 +631,29 @@ namespace game
 			card.animIndex = c++;
 
 		auto& vulture = arr[MONSTER_IDS::VULTURE];
+		vulture.name = "vulture";
 		vulture.health = 1;
 		vulture.attack = 1;
 		vulture.tags = TAG_TOKEN;
+		vulture.unique = true;
 		auto& goblin = arr[MONSTER_IDS::GOBLIN];
+		goblin.name = "goblin";
 		goblin.health = 1;
 		goblin.attack = 1;
 		goblin.tags = TAG_TOKEN | TAG_GOBLIN;
+		goblin.unique = true;
 		auto& demon = arr[MONSTER_IDS::DEMON];
+		demon.name = "demon";
 		demon.health = 0;
 		demon.attack = 0;
 		demon.tags = TAG_TOKEN;
+		demon.unique = true;
 		auto& elf = arr[MONSTER_IDS::ELF];
-		elf.health = 0;
-		elf.attack = 1;
+		elf.name = "elf";
+		elf.health = 1;
+		elf.attack = 0;
 		elf.tags = TAG_TOKEN | TAG_ELF;
+		elf.unique = true;
 		elf.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -656,9 +664,11 @@ namespace game
 				return false;
 			};
 		auto& treasure = arr[MONSTER_IDS::TREASURE];
-		treasure.health = 0;
-		treasure.attack = 1;
+		treasure.name = "treasure";
+		treasure.health = 1;
+		treasure.attack = 0;
 		treasure.tags = TAG_TOKEN;
+		treasure.unique = true;
 		treasure.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -670,12 +680,52 @@ namespace game
 				}
 				return false;
 			};
+		auto& daisy = arr[MONSTER_IDS::DAISY];
+		daisy.name = "daisy";
+		daisy.health = 6;
+		daisy.attack = 4;
+		daisy.unique = true;
+		daisy.ruleText = "loves you unconditionally.";
+		auto& god = arr[MONSTER_IDS::GOD];
+		god.name = "god";
+		god.health = 99;
+		god.attack = 99;
+		god.unique = true;
+		auto& ogre = arr[MONSTER_IDS::OGRE];
+		ogre.name = "ogre";
+		ogre.health = 7;
+		ogre.attack = 6;
+		auto& wolf = arr[MONSTER_IDS::WOLF];
+		wolf.name = "wolf";
+		wolf.health = 14;
+		wolf.attack = 3;
+		auto& spirit = arr[MONSTER_IDS::SPIRIT];
+		spirit.name = "spirit";
+		spirit.health = 1;
+		spirit.attack = 7;
+		auto& dwarf = arr[MONSTER_IDS::DWARF];
+		dwarf.name = "dwarf";
+		dwarf.health = 26;
+		dwarf.attack = 1;
+		auto& gorilla = arr[MONSTER_IDS::GORILLA];
+		gorilla.name = "gorilla";
+		gorilla.health = 11;
+		gorilla.attack = 4;
+		auto& fairy = arr[MONSTER_IDS::FAIRY];
+		fairy.name = "fairy";
+		fairy.health = 5;
+		fairy.attack = 4;
+		auto& bob = arr[MONSTER_IDS::BOB];
+		bob.name = "bob";
+		bob.health = 1;
+		bob.attack = 1;
+		bob.ruleText = "bob.";
 		return arr;
 	}
 
 	jv::Array<ArtifactCard> CardGame::GetArtifactCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<ArtifactCard>(arena, ARTIFACT_IDS::LENGTH + 20);
+		const auto arr = jv::CreateArray<ArtifactCard>(arena, ARTIFACT_IDS::LENGTH);
 
 		uint32_t c = 0;
 		for (auto& card : arr)
@@ -1032,7 +1082,7 @@ namespace game
 
 	jv::Array<uint32_t> CardGame::GetBossCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<uint32_t>(arena, BOSS_IDS::LENGTH + 10);
+		const auto arr = jv::CreateArray<uint32_t>(arena, BOSS_IDS::LENGTH + 3);
 		uint32_t i = 0;
 		for (auto& card : arr)
 			card = i++;
@@ -1075,11 +1125,17 @@ namespace game
 		};
 		auto& forsakenBattlefield = arr[ROOM_IDS::FORSAKEN_BATTLEFIELD];
 		forsakenBattlefield.name = "forsaken battlefield";
-		forsakenBattlefield.ruleText = "[any death] fill the opponents board with vultures.";
+		forsakenBattlefield.ruleText = "[any non token death] fill the opponents board with vultures.";
 		forsakenBattlefield.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
+					if (actionState.dstUniqueId != state.boardState.uniqueIds[actionState.dst])
+						return false;
+					const auto& monster = info.monsters[state.boardState.ids[actionState.dst]];
+					if (monster.tags & TAG_TOKEN)
+						return false;
+
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
@@ -1501,8 +1557,27 @@ namespace game
 				}
 				return false;
 			};
+		auto& protect = arr[SPELL_IDS::PROTECT];
+		protect.name = "protect";
+		protect.ruleText = "gain 2 temporary health.";
+		protect.cost = 1;
+		protect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
+					buffState.dst = actionState.dst;
+					buffState.dstUniqueId = actionState.dstUniqueId;
+					state.stack.Add() = buffState;
+					return true;
+				}
+				return false;
+			};
 		auto& infuriate = arr[SPELL_IDS::INFURIATE];
-		infuriate.name = "enrage";
+		infuriate.name = "infuriate";
 		infuriate.ruleText = "gain 5 temporary attack.";
 		infuriate.cost = 2;
 		infuriate.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1769,7 +1844,7 @@ namespace game
 
 	jv::Array<CurseCard> CardGame::GetCurseCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<CurseCard>(arena, CURSE_IDS::LENGTH + 20);
+		const auto arr = jv::CreateArray<CurseCard>(arena, CURSE_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = c++;
@@ -1996,9 +2071,9 @@ namespace game
 				return true;
 			};
 		auto& whirlwind = arr[EVENT_IDS::WHIRLWIND];
-		goblinPlague.name = "whirlwind";
-		goblinPlague.ruleText = "[end of turn] deal 1 damage to all monsters.";
-		goblinPlague.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		whirlwind.name = "whirlwind";
+		whirlwind.ruleText = "[end of turn] deal 1 damage to all monsters.";
+		whirlwind.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
 					return false;
@@ -2020,7 +2095,7 @@ namespace game
 					return false;
 
 				ActionState buffState{};
-				buffState.trigger = ActionState::Trigger::onDamage;
+				buffState.trigger = ActionState::Trigger::onStatBuff;
 				buffState.source = ActionState::Source::other;
 				buffState.values[ActionState::VStatBuff::tempHealth] = 3;
 				TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);

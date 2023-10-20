@@ -64,6 +64,12 @@ namespace game
 					const auto& monster = info.monsters[info.playerState.monsterIds[i]];
 					gameState.healths[j++] = monster.health;
 				}
+
+				for (uint32_t i = 0; i < SPELL_DECK_SIZE / 2; ++i)
+				{
+					gameState.spells[i] = SPELL_IDS::ENRAGE;
+					gameState.spells[i + SPELL_DECK_SIZE / 2] = SPELL_IDS::PROTECT;
+				}
 				
 				Load(LevelIndex::main, true);
 			}
