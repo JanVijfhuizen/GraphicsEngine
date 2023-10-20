@@ -272,4 +272,10 @@ namespace game
 		state.maxMana = 0;
 		return state;
 	}
+
+	void State::TryAddToStack(const ActionState& actionState)
+	{
+		if(stack.count < stack.length)
+			stack.Add() = actionState;
+	}
 }

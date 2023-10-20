@@ -608,7 +608,7 @@ namespace game
 					continue;
 				cpyState.dst = i;
 				cpyState.dstUniqueId = boardState.uniqueIds[i];
-				state.stack.Add() = cpyState;
+				state.TryAddToStack(cpyState);
 			}
 		if (target == TypeTarget::all || (self >= BOARD_CAPACITY_PER_SIDE && target == TypeTarget::allies || 
 			self < BOARD_CAPACITY_PER_SIDE && target == TypeTarget::enemies))
@@ -618,7 +618,7 @@ namespace game
 					continue;
 				cpyState.dst = BOARD_CAPACITY_PER_SIDE + i;
 				cpyState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-				state.stack.Add() = cpyState;
+				state.TryAddToStack(cpyState);
 			}
 	}
 
@@ -759,7 +759,7 @@ namespace game
 					damageState.srcUniqueId = boardState.uniqueIds[self];
 					damageState.dst = actionState.src;
 					damageState.dstUniqueId = actionState.srcUniqueId;
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				return false;
@@ -779,7 +779,7 @@ namespace game
 					buffState.dst = buffState.src;
 					buffState.dstUniqueId = buffState.srcUniqueId;
 					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -801,7 +801,7 @@ namespace game
 						buffState.dst = buffState.src;
 						buffState.dstUniqueId = buffState.srcUniqueId;
 						buffState.values[ActionState::VStatBuff::health] = 1;
-						state.stack.Add() = buffState;
+						state.TryAddToStack(buffState);
 						return true;
 					}
 				}
@@ -823,7 +823,7 @@ namespace game
 					buffState.dst = buffState.src;
 					buffState.dstUniqueId = buffState.srcUniqueId;
 					buffState.values[ActionState::VStatBuff::attack] = 2;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
@@ -833,7 +833,7 @@ namespace game
 					damageState.dst = buffState.src;
 					damageState.dstUniqueId = buffState.srcUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 1;
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				return false;
@@ -853,7 +853,7 @@ namespace game
 					deathState.srcUniqueId = boardState.uniqueIds[self];
 					deathState.dst = deathState.src;
 					deathState.dstUniqueId = deathState.srcUniqueId;
-					state.stack.Add() = deathState;
+					state.TryAddToStack(deathState);
 
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
@@ -887,7 +887,7 @@ namespace game
 					buffState.dst = buffState.src;
 					buffState.dstUniqueId = buffState.srcUniqueId;
 					buffState.values[ActionState::VStatBuff::health] = 3;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -910,7 +910,7 @@ namespace game
 					drawState.src = self;
 					drawState.srcUniqueId = boardState.uniqueIds[self];
 					for (uint32_t i = 0; i < 3; ++i)
-						state.stack.Add() = drawState;
+						state.TryAddToStack(drawState);
 					return true;
 				}
 				return false;
@@ -931,7 +931,7 @@ namespace game
 					buffState.dst = buffState.src;
 					buffState.dstUniqueId = buffState.srcUniqueId;
 					buffState.values[ActionState::VStatBuff::tempAttack] = 3;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -972,7 +972,7 @@ namespace game
 						buffState.dst = buffState.src;
 						buffState.dstUniqueId = buffState.srcUniqueId;
 						buffState.values[ActionState::VStatBuff::health] = 3;
-						state.stack.Add() = buffState;
+						state.TryAddToStack(buffState);
 						return true;
 					}
 				}
@@ -994,7 +994,7 @@ namespace game
 					buffState.dst = buffState.src;
 					buffState.dstUniqueId = buffState.srcUniqueId;
 					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -1074,7 +1074,7 @@ namespace game
 					drawState.src = self;
 					drawState.srcUniqueId = boardState.uniqueIds[self];
 					for (uint32_t i = 0; i < 5; ++i)
-						state.stack.Add() = drawState;
+						state.TryAddToStack(drawState);
 					return true;
 				}
 				return false;
@@ -1120,7 +1120,7 @@ namespace game
 				attackState.dst += (actionState.dst < BOARD_CAPACITY_PER_SIDE) * BOARD_CAPACITY_PER_SIDE;
 				attackState.srcUniqueId = boardState.uniqueIds[attackState.src];
 				attackState.dstUniqueId = boardState.uniqueIds[attackState.dst];
-				state.stack.Add() = attackState;
+				state.TryAddToStack(attackState);
 				return true;
 			}
 			return false;
@@ -1144,7 +1144,7 @@ namespace game
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::VULTURE;
 					summonState.values[ActionState::VSummon::isAlly] = actionState.dst >= BOARD_CAPACITY_PER_SIDE;
 					for (uint32_t i = 0; i < BOARD_CAPACITY_PER_SIDE; ++i)
-						state.stack.Add() = summonState;
+						state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1219,7 +1219,7 @@ namespace game
 						{
 							killState.dst = i;
 							killState.dstUniqueId = boardState.uniqueIds[i];
-							state.stack.Add() = killState;
+							state.TryAddToStack(killState);
 						}
 					}
 
@@ -1230,7 +1230,7 @@ namespace game
 						{
 							killState.dst = BOARD_CAPACITY_PER_SIDE + i;
 							killState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-							state.stack.Add() = killState;
+							state.TryAddToStack(killState);
 						}
 					}
 
@@ -1298,8 +1298,8 @@ namespace game
 				ActionState drawState{};
 				drawState.trigger = ActionState::Trigger::onDraw;
 				drawState.source = ActionState::Source::other;
-				state.stack.Add() = drawState;
-				state.stack.Add() = drawState;
+				for (uint32_t i = 0; i < 2; ++i)
+					state.TryAddToStack(drawState);
 				return true;
 			}
 			return false;
@@ -1340,7 +1340,7 @@ namespace game
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
 					summonState.values[ActionState::VSummon::attack] = c;
 					summonState.values[ActionState::VSummon::health] = c;
-					state.stack.Add() = summonState;
+					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1359,7 +1359,7 @@ namespace game
 					setState.dst = actionState.dst;
 					setState.dstUniqueId = actionState.dstUniqueId;
 					setState.values[ActionState::VStatSet::attack] = 1;
-					state.stack.Add() = setState;
+					state.TryAddToStack(setState);
 					return true;
 				}
 				return false;
@@ -1377,8 +1377,8 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
-					state.stack.Add() = summonState;
-					state.stack.Add() = summonState;
+					for (uint32_t i = 0; i < 2; ++i)
+						state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1398,7 +1398,7 @@ namespace game
 					drawState.trigger = ActionState::Trigger::onDraw;
 					drawState.source = ActionState::Source::other;
 					for (uint32_t i = 0; i < count; ++i)
-						state.stack.Add() = drawState;
+						state.TryAddToStack(drawState);
 					return true;
 				}
 				return false;
@@ -1462,7 +1462,7 @@ namespace game
 					drawState.trigger = ActionState::Trigger::onDraw;
 					drawState.source = ActionState::Source::other;
 					for (uint32_t i = 0; i < HAND_MAX_SIZE - state.hand.count; ++i)
-						state.stack.Add() = drawState;
+						state.TryAddToStack(drawState);
 					return true;
 				}
 				return false;
@@ -1480,8 +1480,8 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::ELF;
-					state.stack.Add() = summonState;
-					state.stack.Add() = summonState;
+					for (uint32_t i = 0; i < 2; ++i)
+						state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1501,7 +1501,7 @@ namespace game
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					buffState.values[ActionState::VStatBuff::attack] = 4;
 					buffState.values[ActionState::VStatBuff::health] = 4;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -1554,7 +1554,7 @@ namespace game
 					buffState.values[ActionState::VStatBuff::tempAttack] = 3;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -1573,7 +1573,7 @@ namespace game
 					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -1592,7 +1592,7 @@ namespace game
 					buffState.values[ActionState::VStatBuff::tempAttack] = 5;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -1631,7 +1631,7 @@ namespace game
 					summonState.values[ActionState::VSummon::isAlly] = 0;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::TREASURE;
 					for (uint32_t i = 0; i < 3; ++i)
-						state.stack.Add() = summonState;
+						state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1690,7 +1690,7 @@ namespace game
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 7;
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				return false;
@@ -1709,7 +1709,7 @@ namespace game
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 10;
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				return false;
@@ -1732,7 +1732,7 @@ namespace game
 					summonState.values[ActionState::VSummon::isAlly] = 1;
 					summonState.values[ActionState::VSummon::health] = 1;
 					summonState.values[ActionState::VSummon::id] = boardState.ids[actionState.dst];
-					state.stack.Add() = summonState;
+					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1758,7 +1758,7 @@ namespace game
 					summonState.values[ActionState::VSummon::health] = stats.health;
 					summonState.values[ActionState::VSummon::attack] = stats.attack;
 					summonState.values[ActionState::VSummon::id] = boardState.ids[actionState.dst];
-					state.stack.Add() = summonState;
+					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1777,7 +1777,7 @@ namespace game
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 3;
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 
 					if(actionState.dst < BOARD_CAPACITY_PER_SIDE)
 					{
@@ -1785,7 +1785,7 @@ namespace game
 						drawState.trigger = ActionState::Trigger::onDraw;
 						drawState.source = ActionState::Source::other;
 						for (uint32_t i = 0; i < 3; ++i)
-							state.stack.Add() = drawState;
+							state.TryAddToStack(drawState);
 					}
 					
 					return true;
@@ -1812,7 +1812,7 @@ namespace game
 						deathState.source = ActionState::Source::other;
 						deathState.dst = actionState.dst;
 						deathState.dstUniqueId = actionState.dstUniqueId;
-						state.stack.Add() = deathState;
+						state.TryAddToStack(deathState);
 
 						const auto& monster = info.monsters[boardState.ids[actionState.dst]];
 						if((monster.tags & TAG_TOKEN) == 0)
@@ -1862,7 +1862,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = self;
 					damageState.dstUniqueId = state.boardState.uniqueIds[self];
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				return false;
@@ -1879,7 +1879,7 @@ namespace game
 					setState.dst = self;
 					setState.dstUniqueId = state.boardState.uniqueIds[self];
 					setState.values[ActionState::VStatSet::attack] = 1;
-					state.stack.Add() = setState;
+					state.TryAddToStack(setState);
 					return true;
 				}
 				return false;
@@ -1920,7 +1920,7 @@ namespace game
 					dmgState.dst = self;
 					dmgState.dstUniqueId = state.boardState.uniqueIds[self];
 					dmgState.values[ActionState::VDamage::damage] = 2;
-					state.stack.Add() = dmgState;
+					state.TryAddToStack(dmgState);
 
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
@@ -1928,7 +1928,7 @@ namespace game
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					buffState.values[ActionState::VStatBuff::attack] = 2;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -1951,7 +1951,7 @@ namespace game
 					auto dmg = actionState.values[ActionState::VDamage::damage];
 					dmg = jv::Min(dmg, BOARD_CAPACITY_PER_SIDE);
 					for (uint32_t i = 0; i < dmg; ++i)
-						state.stack.Add() = summonState;
+						state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1970,7 +1970,7 @@ namespace game
 					deathState.source = ActionState::Source::other;
 					deathState.dst = self;
 					deathState.dstUniqueId = state.boardState.uniqueIds[self];
-					state.stack.Add() = deathState;
+					state.TryAddToStack(deathState);
 					return true;
 				}
 				return false;
@@ -2014,7 +2014,7 @@ namespace game
 					ActionState summonState = actionState;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::isAlly] = 0;
-					state.stack.Add() = summonState;
+					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -2052,7 +2052,7 @@ namespace game
 				attackState.srcUniqueId = actionState.dstUniqueId;
 				attackState.dst = actionState.src;
 				attackState.dstUniqueId = actionState.srcUniqueId;
-				state.stack.Add() = attackState;
+				state.TryAddToStack(attackState);
 				return true;
 			};
 		auto& goblinPlague = arr[EVENT_IDS::GOBLIN_PLAGUE];
@@ -2068,8 +2068,8 @@ namespace game
 				summonState.source = ActionState::Source::other;
 				summonState.values[ActionState::VSummon::isAlly] = 0;
 				summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
-				state.stack.Add() = summonState;
-				state.stack.Add() = summonState;
+				for (uint32_t i = 0; i < 2; ++i)
+					state.TryAddToStack(summonState);
 				return true;
 			};
 		auto& whirlwind = arr[EVENT_IDS::WHIRLWIND];

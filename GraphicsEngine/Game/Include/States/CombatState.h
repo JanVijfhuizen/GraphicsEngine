@@ -64,5 +64,6 @@ namespace game
 		[[nodiscard]] uint32_t GetPrimaryPath() const;
 
 		[[nodiscard]] static State Create(const LevelCreateInfo& info);
+		void TryAddToStack(const ActionState& actionState);
 	};
 }

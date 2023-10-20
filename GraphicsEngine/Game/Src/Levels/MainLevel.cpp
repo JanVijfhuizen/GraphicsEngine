@@ -248,13 +248,13 @@ namespace game
 
 		ActionState startOfTurnActionState{};
 		startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
-		state.stack.Add() = startOfTurnActionState;
+		state.TryAddToStack(startOfTurnActionState);
 
 		for (uint32_t i = 0; i < HAND_INITIAL_SIZE; ++i)
 		{
 			ActionState drawState{};
 			drawState.trigger = ActionState::Trigger::onDraw;
-			state.stack.Add() = drawState;
+			state.TryAddToStack(drawState);
 		}
 
 		if (!bossPresent)
@@ -266,7 +266,7 @@ namespace game
 				summonState.trigger = ActionState::Trigger::onSummon;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.GetMonster(info); 
-				state.stack.Add() = summonState;
+				state.TryAddToStack(summonState);
 			}
 		}
 		else
@@ -275,7 +275,7 @@ namespace game
 			summonState.trigger = ActionState::Trigger::onSummon;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.paths[state.GetPrimaryPath()].boss;
-			state.stack.Add() = summonState;
+			state.TryAddToStack(summonState);
 		}
 		
 		for (int32_t i = static_cast<int32_t>(gameState.partyCount) - 1; i >= 0; --i)
@@ -289,7 +289,7 @@ namespace game
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = monsterId;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::partyId)] = partyId;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = gameState.healths[i];
-			state.stack.Add() = summonState;
+			state.TryAddToStack(summonState);
 		}
 	}
 
@@ -301,9 +301,10 @@ namespace game
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
 
+		const bool stackOverloaded = state.stack.count == state.stack.length;
 		if (state.stack.count == 0)
 			comboCounter = 0;
-		while(!activeStateValid && state.stack.count > 0)
+		while(!stackOverloaded && !activeStateValid && state.stack.count > 0)
 		{
 			timeSinceLastActionState = level->GetTime();
 			actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
@@ -328,7 +329,7 @@ namespace game
 			++comboCounter;
 		}
 
-		if(comboCounter > 50)
+		if(stackOverloaded || comboCounter > STACK_OVERLOAD_THRESHOLD)
 		{
 			state.stack.Clear();
 			activeStateValid = false;
@@ -457,7 +458,7 @@ namespace game
 					{
 						killState.dst = i;
 						killState.dstUniqueId = boardState.uniqueIds[i];
-						state.stack.Add() = killState;
+						state.TryAddToStack(killState);
 						tokensRemaining = true;
 					}
 				}
@@ -616,11 +617,11 @@ namespace game
 			{
 				ActionState startOfTurnActionState{};
 				startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
-				state.stack.Add() = startOfTurnActionState;
+				state.TryAddToStack(startOfTurnActionState);
 
 				ActionState endOfTurnActionState{};
 				endOfTurnActionState.trigger = ActionState::Trigger::onEndOfTurn;
-				state.stack.Add() = endOfTurnActionState;
+				state.TryAddToStack(endOfTurnActionState);
 
 				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				{
@@ -633,7 +634,7 @@ namespace game
 						attackActionState.dst = target;
 						attackActionState.srcUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
 						attackActionState.dstUniqueId = boardState.uniqueIds[target];
-						state.stack.Add() = attackActionState;
+						state.TryAddToStack(attackActionState);
 					}
 				}
 
@@ -823,7 +824,7 @@ namespace game
 					attackActionState.dst = BOARD_CAPACITY_PER_SIDE + enemyResult;
 					attackActionState.srcUniqueId = boardState.uniqueIds[selectedId];
 					attackActionState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + enemyResult];
-					state.stack.Add() = attackActionState;
+					state.TryAddToStack(attackActionState);
 					state.tapped[selectedId] = true;
 				}
 			}
@@ -847,7 +848,7 @@ namespace game
 					cardPlayActionState.dst = card.type == SpellCard::Type::all ? -1 : target + (enemyResult != -1) * BOARD_CAPACITY_PER_SIDE;
 					cardPlayActionState.dstUniqueId = cardPlayActionState.dst == -1 ? -1 : boardState.uniqueIds[cardPlayActionState.dst];
 					cardPlayActionState.source = ActionState::Source::other;
-					state.stack.Add() = cardPlayActionState;
+					state.TryAddToStack(cardPlayActionState);
 				}
 			}
 
@@ -1032,7 +1033,7 @@ namespace game
 
 			ActionState drawState{};
 			drawState.trigger = ActionState::Trigger::onDraw;
-			state.stack.Add() = drawState;
+			state.TryAddToStack(drawState);
 
 			for (auto& combatStat : boardState.combatStats)
 			{
@@ -1059,7 +1060,7 @@ namespace game
 			ActionState damageState = actionState;
 			damageState.trigger = ActionState::Trigger::onDamage;
 			damageState.values[vDamage] = srcCombatStats.attack + srcCombatStats.tempAttack;
-			state.stack.Add() = damageState;
+			state.TryAddToStack(damageState);
 		}
 		else if (actionState.trigger == ActionState::Trigger::onDamage)
 		{
@@ -1091,7 +1092,7 @@ namespace game
 				{
 					ActionState deathActionState = actionState;
 					deathActionState.trigger = ActionState::Trigger::onDeath;
-					state.stack.Add() = deathActionState;
+					state.TryAddToStack(deathActionState);
 				}
 			}
 		}
