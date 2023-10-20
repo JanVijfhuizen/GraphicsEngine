@@ -1852,7 +1852,7 @@ namespace game
 			card.animIndex = c++;
 
 		arr[CURSE_IDS::FADING].name = "curse of fading";
-		arr[CURSE_IDS::FADING].ruleText = "[start of Turn] take one damage.";
+		arr[CURSE_IDS::FADING].ruleText = "[start of turn] take one damage.";
 		arr[CURSE_IDS::FADING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)

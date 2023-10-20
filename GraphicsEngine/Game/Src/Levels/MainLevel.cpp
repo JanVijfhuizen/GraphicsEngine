@@ -561,7 +561,9 @@ namespace game
 			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
 
 			// Draws room.
-			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
+			const auto& path = state.paths[state.GetPrimaryPath()];
+
+			cards.Add() = &info.rooms[path.room];
 			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
 			level->DrawCardSelection(info, eventSelectionDrawInfo);
 
