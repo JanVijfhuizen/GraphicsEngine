@@ -14,7 +14,7 @@
 namespace game
 {
 	constexpr uint32_t CARD_FRAME_COUNT = 2;
-	constexpr uint32_t CARD_STACKED_SPACING = 6;
+	constexpr uint32_t CARD_STACKED_SPACING = 8;
 
 	bool LevelUpdateInfo::ScreenShakeInfo::IsInTimeOut() const
 	{
@@ -397,6 +397,7 @@ namespace game
 					{
 						auto stackedDrawInfo = cardDrawInfo;
 						stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (j + 1));
+						stackedDrawInfo.origin.x += 4 * ((stackedCount - j - 1) % 2 == 0);
 						if(CollidesCard(info, stackedDrawInfo))
 						{
 							stackedSelected = stackedCount - j - 1;
@@ -409,6 +410,7 @@ namespace game
 					auto stackedDrawInfo = cardDrawInfo;
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
+					stackedDrawInfo.origin.x += 4 * ((stackedCount - j - 1) % 2 == 0);
 					stackedDrawInfo.selectable = !collides && stackedSelected == j;
 					DrawCard(info, stackedDrawInfo);
 				}
@@ -433,6 +435,7 @@ namespace game
 				stackedDrawInfo.selectable = true;
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
+				stackedDrawInfo.origin.x += 4 * ((stackedCount - stackedSelected - 1) % 2 == 0);
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -491,7 +494,7 @@ namespace game
 
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
-		bgRenderTask.color = drawInfo.card ? drawInfo.bgColor : glm::vec4(1);
+		bgRenderTask.color = drawInfo.card ? drawInfo.bgColor : drawInfo.fgColor;
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 
 		if (drawInfo.metaData)
@@ -547,7 +550,7 @@ namespace game
 		if(drawInfo.cost != -1)
 		{
 			PixelPerfectRenderTask costRenderTask{};
-			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
+			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2 + 5 * drawInfo.scale);
 			costRenderTask.scale = statsTexture.resolution / glm::ivec2(3, 1);
 			costRenderTask.scale *= drawInfo.scale;
 			costRenderTask.xCenter = drawInfo.center;
@@ -556,7 +559,7 @@ namespace game
 			costRenderTask.color *= glm::vec4(fadeMod, 1);
 			costRenderTask.subTexture = statFrames[2];
 			costRenderTask.priority = priority;
-			info.renderTasks.Push(costRenderTask);
+			//info.renderTasks.Push(costRenderTask);
 
 			TextTask textTask{};
 			textTask.position = costRenderTask.position;

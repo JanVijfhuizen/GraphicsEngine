@@ -1450,7 +1450,7 @@ namespace game
 				}
 				return false;
 			};
-		auto& enlightenment = arr[SPELL_IDS::RAMPANT_GROWTH];
+		auto& enlightenment = arr[SPELL_IDS::ENLIGHTENMENT];
 		enlightenment.name = "enlightenment";
 		enlightenment.ruleText = "draw until your hand is full.";
 		enlightenment.cost = 6;
@@ -1716,7 +1716,7 @@ namespace game
 			};
 		auto& unstableCopy = arr[SPELL_IDS::UNSTABLE_COPY];
 		unstableCopy.name = "unstable copy";
-		unstableCopy.ruleText = "summon a copy of target monster with 1 health remaining.";
+		unstableCopy.ruleText = "summon an x/1 demon, where x is the attack of target monster.";
 		unstableCopy.cost = 4;
 		unstableCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1726,12 +1726,15 @@ namespace game
 					if (boardState.uniqueIds[actionState.dst] != actionState.dstUniqueId)
 						return false;
 
+					const auto& stats = boardState.combatStats[actionState.dst];
+
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
 					summonState.values[ActionState::VSummon::health] = 1;
-					summonState.values[ActionState::VSummon::id] = boardState.ids[actionState.dst];
+					summonState.values[ActionState::VSummon::attack] = stats.attack;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
 					state.TryAddToStack(summonState);
 					return true;
 				}
@@ -1739,7 +1742,7 @@ namespace game
 			};
 		auto& perfectCopy = arr[SPELL_IDS::PERFECT_COPY];
 		perfectCopy.name = "perfect copy";
-		perfectCopy.ruleText = "summon a copy of target monster.";
+		perfectCopy.ruleText = "summon a demon with the same stats as target monster.";
 		perfectCopy.cost = 8;
 		perfectCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1757,7 +1760,7 @@ namespace game
 					summonState.values[ActionState::VSummon::isAlly] = 1;
 					summonState.values[ActionState::VSummon::health] = stats.health;
 					summonState.values[ActionState::VSummon::attack] = stats.attack;
-					summonState.values[ActionState::VSummon::id] = boardState.ids[actionState.dst];
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
 					state.TryAddToStack(summonState);
 					return true;
 				}
@@ -2109,7 +2112,7 @@ namespace game
 
 		auto& chaseTheDragon = arr[EVENT_IDS::CHASE_THE_DRAGON];
 		chaseTheDragon.name = "chase the dragon";
-		chaseTheDragon.ruleText = "[ally attack] change all other targets to the attacker.";
+		chaseTheDragon.ruleText = "[ally attack] change all targets to the attacker.";
 		chaseTheDragon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger != ActionState::Trigger::onAttack)

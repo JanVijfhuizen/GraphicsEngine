@@ -47,7 +47,7 @@ namespace game
 			if (info.inputState.enter.PressEvent())
 			{
 				auto& gameState = info.gameState;
-				gameState.partyCount = selectedAmount;
+				gameState.partySize = selectedAmount;
 
 				const auto& playerState = info.playerState;
 

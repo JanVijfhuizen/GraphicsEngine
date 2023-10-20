@@ -150,9 +150,10 @@ namespace game
 		cardSelectionDrawInfo.stacks = stacks;
 		cardSelectionDrawInfo.stackCounts = stacksCounts;
 		cardSelectionDrawInfo.texts = bossPresent ? nullptr : texts;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - 16;
 		cardSelectionDrawInfo.highlighted = discoverOption;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
+		cardSelectionDrawInfo.offsetMod += 12;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		if (!bossPresent)
 			cardSelectionDrawInfo.combatStats = combatStats;
@@ -173,6 +174,7 @@ namespace game
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
 			cardDrawInfo.origin.x += (shape.x + cardSelectionDrawInfo.offsetMod) * (finalBoss ? 2 : 4) / 2;
+			cardDrawInfo.origin.y = cardSelectionDrawInfo.height;
 			cardDrawInfo.lifeTime = level->GetTime();
 			level->DrawCard(info, cardDrawInfo);
 		}
@@ -801,7 +803,7 @@ namespace game
 		// Draw mana.
 		{
 			TextTask manaTextTask{};
-			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, HAND_HEIGHT + 32);
+			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x - 32, HAND_HEIGHT + 21);
 			manaTextTask.text = TextInterpreter::IntToConstCharPtr(state.mana, info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(state.maxMana, info.frameArena), info.frameArena);
@@ -877,6 +879,27 @@ namespace game
 			for (auto& eventCard : eventCards)
 				eventCard = state.GetEvent(info, eventCards, c);
 			++state.turn;
+
+			// Untap.
+			for (auto& b : state.tapped)
+				b = false;
+
+			if (state.maxMana < MAX_MANA)
+				++state.maxMana;
+			state.mana = state.maxMana;
+		}
+		else if(actionState.trigger == ActionState::Trigger::onAttack)
+		{
+			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
+			{
+				auto& target = state.targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
+				const auto oldTarget = target;
+				if (boardState.allyCount > 1)
+				{
+					while (target == oldTarget)
+						target = rand() % boardState.allyCount;
+				}
+			}
 		}
 		else if (actionState.trigger == ActionState::Trigger::onSummon)
 		{
@@ -1023,14 +1046,6 @@ namespace game
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				state.targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
 
-			// Untap.
-			for (auto& b : state.tapped)
-				b = false;
-
-			if (state.maxMana < MAX_MANA)
-				++state.maxMana;
-			state.mana = state.maxMana;
-
 			ActionState drawState{};
 			drawState.trigger = ActionState::Trigger::onDraw;
 			state.TryAddToStack(drawState);
@@ -1044,17 +1059,6 @@ namespace game
 		else if (actionState.trigger == ActionState::Trigger::onAttack)
 		{
 			const auto& srcCombatStats = boardState.combatStats[actionState.src];
-
-			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
-			{
-				auto& target = state.targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
-				const auto oldTarget = target;
-				if (boardState.allyCount > 1)
-				{
-					while (target == oldTarget)
-						target = rand() % boardState.allyCount;
-				}
-			}
 
 			constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
 			ActionState damageState = actionState;
