@@ -23,7 +23,7 @@ namespace game
 			if (state.depth != SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
 				path.boss = state.GetBoss(info);
 			else
-				path.boss = MONSTER_IDS::FINAL_BOSS;
+				path.boss = MONSTER_IDS::GOD;
 		}
 		for (auto& metaData : metaDatas)
 			metaData = {};
@@ -73,9 +73,9 @@ namespace game
 		for (auto& path : state.paths)
 		{
 			path.room = state.GetRoom(info);
-			path.magic = state.GetMagic(info);
+			path.spell = state.GetSpell(info);
 			if (addFlaw)
-				path.flaw = state.GetFlaw(info);
+				path.curse = state.GetCurse(info);
 			else
 				path.artifact = state.GetArtifact(info);
 		}
@@ -128,9 +128,9 @@ namespace game
 			const auto& path = state.paths[i];
 
 			stack[0] = &info.rooms[path.room];
-			stack[1] = &info.magics[path.magic];
+			stack[1] = &info.spells[path.spell];
 			if (flawPresent)
-				stack[2] = &info.flaws[path.flaw];
+				stack[2] = &info.curses[path.curse];
 			else
 				stack[2] = &info.artifacts[path.artifact];
 		}
@@ -217,6 +217,7 @@ namespace game
 
 		state.mana = 0;
 		state.maxMana = 0;
+		state.turn = 0;
 
 		activations = {};
 		activations.ptr = activationsPtr;
@@ -230,6 +231,8 @@ namespace game
 		timeSinceLastActionState = 0;
 		activeState = {};
 		activeStateValid = false;
+		comboCounter = 0;
+		timeSinceStackOverloaded = -1;
 
 		for (auto& card : eventCards)
 			card = -1;
@@ -245,25 +248,25 @@ namespace game
 
 		ActionState startOfTurnActionState{};
 		startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
-		state.stack.Add() = startOfTurnActionState;
+		state.TryAddToStack(startOfTurnActionState);
 
 		for (uint32_t i = 0; i < HAND_INITIAL_SIZE; ++i)
 		{
 			ActionState drawState{};
-			drawState.trigger = ActionState::Trigger::draw;
-			state.stack.Add() = drawState;
+			drawState.trigger = ActionState::Trigger::onDraw;
+			state.TryAddToStack(drawState);
 		}
 
 		if (!bossPresent)
 		{
-			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(3 + state.depth / 10, BOARD_CAPACITY_PER_SIDE), state.depth + 1);
+			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(3 + state.depth / ROOM_COUNT_BEFORE_BOSS, BOARD_CAPACITY_PER_SIDE), state.depth + 1);
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				ActionState summonState{};
 				summonState.trigger = ActionState::Trigger::onSummon;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.GetMonster(info); 
-				state.stack.Add() = summonState;
+				state.TryAddToStack(summonState);
 			}
 		}
 		else
@@ -272,7 +275,7 @@ namespace game
 			summonState.trigger = ActionState::Trigger::onSummon;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.paths[state.GetPrimaryPath()].boss;
-			state.stack.Add() = summonState;
+			state.TryAddToStack(summonState);
 		}
 		
 		for (int32_t i = static_cast<int32_t>(gameState.partyCount) - 1; i >= 0; --i)
@@ -286,7 +289,7 @@ namespace game
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = monsterId;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::partyId)] = partyId;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = gameState.healths[i];
-			state.stack.Add() = summonState;
+			state.TryAddToStack(summonState);
 		}
 	}
 
@@ -298,7 +301,10 @@ namespace game
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
 
-		if(!activeStateValid && state.stack.count > 0)
+		const bool stackOverloaded = state.stack.count == state.stack.length;
+		if (state.stack.count == 0)
+			comboCounter = 0;
+		while(!stackOverloaded && !activeStateValid && state.stack.count > 0)
 		{
 			timeSinceLastActionState = level->GetTime();
 			actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
@@ -312,7 +318,7 @@ namespace game
 			case ActionState::Trigger::onStartOfTurn:
 				actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
 				break;
-			case ActionState::Trigger::draw:
+			case ActionState::Trigger::onDraw:
 				actionStateDuration = CARD_DRAW_DURATION;
 			default:
 				break;
@@ -320,6 +326,33 @@ namespace game
 
 			activeStateValid = PreHandleActionState(state, info, activeState);
 			activationDuration = -1;
+			++comboCounter;
+		}
+
+		if(stackOverloaded || comboCounter > STACK_OVERLOAD_THRESHOLD)
+		{
+			state.stack.Clear();
+			activeStateValid = false;
+			comboCounter = 0;
+			timeSinceStackOverloaded = level->GetTime();
+		}
+
+		if(timeSinceStackOverloaded > 0 && level->GetTime() - timeSinceStackOverloaded < STACK_OVERLOAD_DURATION)
+		{
+			TextTask textTask{};
+			textTask.position = SIMULATED_RESOLUTION / 2;
+			textTask.center = true;
+			textTask.text = "stack overloaded";
+			textTask.priority = true;
+			textTask.color = glm::vec4(1, 0, 0, 1);
+			textTask.lifetime = level->GetTime() - timeSinceStackOverloaded;
+			textTask.scale = 2;
+			info.textTasks.Push(textTask);
+
+			info.screenShakeInfo.fallOfThreshold = 1;
+			info.screenShakeInfo.intensity = 2;
+			info.screenShakeInfo.remaining = STACK_OVERLOAD_DURATION;
+			info.screenShakeInfo.timeOut = 1e4;
 		}
 
 		if (activeStateValid)
@@ -374,14 +407,14 @@ namespace game
 				const float off2 = eval2 * SIMULATED_RESOLUTION.x;
 
 				TextTask textTask{};
-				textTask.text = "new";
+				textTask.text = "turn";
 				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 3);
 				textTask.scale = 2;
 				textTask.center = true;
 				textTask.priority = true;
 
 				info.textTasks.Push(textTask);
-				textTask.text = "turn";
+				textTask.text = TextInterpreter::IntToConstCharPtr(state.turn, info.frameArena);
 				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 19);
 				info.textTasks.Push(textTask);
 
@@ -423,9 +456,9 @@ namespace game
 					const auto id = boardState.ids[i];
 					if(info.monsters[id].tags & TAG_TOKEN)
 					{
-						killState.dst = id;
+						killState.dst = i;
 						killState.dstUniqueId = boardState.uniqueIds[i];
-						state.stack.Add() = killState;
+						state.TryAddToStack(killState);
 						tokensRemaining = true;
 					}
 				}
@@ -433,50 +466,53 @@ namespace game
 				if(!tokensRemaining)
 				{
 					if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
-				{
-					const auto monster = &info.monsters[lastEnemyDefeatedId];
-					if (!monster->unique)
 					{
-						if (recruitSceneLifetime < -1e-5f)
-							recruitSceneLifetime = 0;
-						else
-							recruitSceneLifetime += info.deltaTime;
-
-						// Recruitment.
-						level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.", 1, recruitSceneLifetime);
-						bool recruitScreenActive = true;
-						auto combatStats = GetCombatStat(*monster);
-
-						CardDrawInfo cardDrawInfo{};
-						cardDrawInfo.card = monster;
-						cardDrawInfo.center = true;
-						cardDrawInfo.combatStats = &combatStats;
-						cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
-						cardDrawInfo.lifeTime = recruitSceneLifetime;
-						level->DrawCard(info, cardDrawInfo);
-
-						ButtonDrawInfo buttonAcceptDrawInfo{};
-						buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 28);
-						buttonAcceptDrawInfo.text = "accept";
-						buttonAcceptDrawInfo.center = true;
-						if (level->DrawButton(info, buttonAcceptDrawInfo))
+						const auto monster = &info.monsters[lastEnemyDefeatedId];
+						if (!monster->unique)
 						{
-							// Add to party.
-							boardState.ids[boardState.allyCount] = lastEnemyDefeatedId;
-							boardState.combatStats[boardState.allyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
-							gameState.partyIds[boardState.allyCount++] = -1;
-							recruitScreenActive = false;
-						}
-						ButtonDrawInfo buttonDeclineDrawInfo{};
-						buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
-						buttonDeclineDrawInfo.text = "decline";
-						buttonDeclineDrawInfo.center = true;
-						if (level->DrawButton(info, buttonDeclineDrawInfo))
-							recruitScreenActive = false;
+							if (recruitSceneLifetime < -1e-5f)
+								recruitSceneLifetime = 0;
+							else
+								recruitSceneLifetime += info.deltaTime;
 
-						if (recruitScreenActive)
-							return true;
-					}
+							// Recruitment.
+							level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.", 1, recruitSceneLifetime);
+							bool recruitScreenActive = true;
+							auto combatStats = GetCombatStat(*monster);
+
+							CardDrawInfo cardDrawInfo{};
+							cardDrawInfo.card = monster;
+							cardDrawInfo.center = true;
+							cardDrawInfo.combatStats = &combatStats;
+							cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
+							cardDrawInfo.lifeTime = recruitSceneLifetime;
+							level->DrawCard(info, cardDrawInfo);
+
+							ButtonDrawInfo buttonAcceptDrawInfo{};
+							buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 28);
+							buttonAcceptDrawInfo.text = "accept";
+							buttonAcceptDrawInfo.center = true;
+							if (level->DrawButton(info, buttonAcceptDrawInfo))
+							{
+								// Add to party.
+								boardState.ids[boardState.allyCount] = lastEnemyDefeatedId;
+								boardState.combatStats[boardState.allyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
+								gameState.partyIds[boardState.allyCount] = -1;
+								for (uint32_t i = 0; i < MONSTER_ARTIFACT_CAPACITY; ++i)
+									gameState.artifacts[boardState.allyCount * MONSTER_ARTIFACT_CAPACITY + i] = -1;
+								++boardState.allyCount;
+								recruitScreenActive = false;
+							}
+							ButtonDrawInfo buttonDeclineDrawInfo{};
+							buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
+							buttonDeclineDrawInfo.text = "decline";
+							buttonDeclineDrawInfo.center = true;
+							if (level->DrawButton(info, buttonDeclineDrawInfo))
+								recruitScreenActive = false;
+
+							if (recruitScreenActive)
+								return true;
+						}
 				}
 
 				gameState.partyCount = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);
@@ -484,6 +520,8 @@ namespace game
 				{
 					gameState.monsterIds[i] = boardState.ids[i];
 					gameState.healths[i] = jv::Min(boardState.combatStats[i].health, info.monsters[gameState.monsterIds[i]].health);
+					gameState.artifactSlotCounts[i] = jv::Max(gameState.artifactSlotCounts[i], 1 + (state.depth + 1) / ROOM_COUNT_BEFORE_BOSS);
+					gameState.artifactSlotCounts[i] = jv::Min(gameState.artifactSlotCounts[i], MONSTER_ARTIFACT_CAPACITY);
 				}
 
 				if(state.depth % 2 == 0)
@@ -492,7 +530,6 @@ namespace game
 					stateIndex = static_cast<uint32_t>(StateNames::rewardFlaw);
 				return true;	
 				}
-				
 			}
 		}
 		
@@ -525,7 +562,9 @@ namespace game
 			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
 
 			// Draws room.
-			cards.Add() = &info.rooms[state.paths[state.chosenPath].room];
+			const auto& path = state.paths[state.GetPrimaryPath()];
+
+			cards.Add() = &info.rooms[path.room];
 			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
 			level->DrawCardSelection(info, eventSelectionDrawInfo);
 
@@ -578,11 +617,11 @@ namespace game
 			{
 				ActionState startOfTurnActionState{};
 				startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
-				state.stack.Add() = startOfTurnActionState;
+				state.TryAddToStack(startOfTurnActionState);
 
 				ActionState endOfTurnActionState{};
 				endOfTurnActionState.trigger = ActionState::Trigger::onEndOfTurn;
-				state.stack.Add() = endOfTurnActionState;
+				state.TryAddToStack(endOfTurnActionState);
 
 				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				{
@@ -595,7 +634,7 @@ namespace game
 						attackActionState.dst = target;
 						attackActionState.srcUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
 						attackActionState.dstUniqueId = boardState.uniqueIds[target];
-						state.stack.Add() = attackActionState;
+						state.TryAddToStack(attackActionState);
 					}
 				}
 
@@ -662,15 +701,15 @@ namespace game
 
 		bool greyedOutArr[HAND_MAX_SIZE];
 		for (uint32_t i = 0; i < state.hand.count; ++i)
-			greyedOutArr[i] = info.magics[state.hand[i]].cost > state.mana;
+			greyedOutArr[i] = info.spells[state.hand[i]].cost > state.mana;
 
 		// Draw hand.
 		uint32_t costs[HAND_MAX_SIZE];
 		for (uint32_t i = 0; i < state.hand.count; ++i)
 		{
-			const auto magic = &info.magics[state.hand[i]];
-			cards[i] = magic;
-			costs[i] = magic->cost;
+			const auto spell = &info.spells[state.hand[i]];
+			cards[i] = spell;
+			costs[i] = spell->cost;
 		}
 
 		CardSelectionDrawInfo handSelectionDrawInfo{};
@@ -685,9 +724,9 @@ namespace game
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_HAND_INDEX];
 		handSelectionDrawInfo.offsetMod = 4;
-		DrawActivationAnimation(handSelectionDrawInfo, Activation::magic, 0);
+		DrawActivationAnimation(handSelectionDrawInfo, Activation::spell, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
-		if(activeStateValid && activeState.trigger == ActionState::Trigger::draw)
+		if(activeStateValid && activeState.trigger == ActionState::Trigger::onDraw)
 			DrawDrawAnimation(*level, handSelectionDrawInfo);
 
 		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
@@ -715,9 +754,9 @@ namespace game
 
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
-			const uint32_t flaw = gameState.flaws[i];
+			const uint32_t curse = gameState.curses[i];
 			const uint32_t artifactCount = gameState.artifactSlotCounts[i];
-			const uint32_t count = stacksCount[i] = (flaw != -1) + artifactCount;
+			const uint32_t count = stacksCount[i] = (curse != -1) + artifactCount;
 
 			if (count == 0)
 				continue;
@@ -728,8 +767,8 @@ namespace game
 				const uint32_t index = gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
 				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 			}
-			if(flaw != -1)
-				stacks[i][artifactCount] = &info.flaws[flaw];
+			if(curse != -1)
+				stacks[i][artifactCount] = &info.curses[curse];
 		}
 		
 		CardSelectionDrawInfo playerCardSelectionDrawInfo{};
@@ -785,16 +824,16 @@ namespace game
 					attackActionState.dst = BOARD_CAPACITY_PER_SIDE + enemyResult;
 					attackActionState.srcUniqueId = boardState.uniqueIds[selectedId];
 					attackActionState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + enemyResult];
-					state.stack.Add() = attackActionState;
+					state.TryAddToStack(attackActionState);
 					state.tapped[selectedId] = true;
 				}
 			}
 			else if(selectionState == SelectionState::hand)
 			{
 				// Do something with the target.
-				const auto& card = info.magics[state.hand[selectedId]];
-				const bool validAll = card.type == MagicCard::Type::all && info.inputState.mousePos.y > SIMULATED_RESOLUTION.y / 4;
-				const bool validTarget = card.type == MagicCard::Type::target && (enemyResult != -1 || allyResult != -1);
+				const auto& card = info.spells[state.hand[selectedId]];
+				const bool validAll = card.type == SpellCard::Type::all && info.inputState.mousePos.y > SIMULATED_RESOLUTION.y / 4;
+				const bool validTarget = card.type == SpellCard::Type::target && (enemyResult != -1 || allyResult != -1);
 				const bool validPlay = validAll || validTarget;
 
 				if(validPlay && card.cost <= state.mana)
@@ -804,12 +843,12 @@ namespace game
 					const uint32_t target = enemyResult == -1 ? allyResult : enemyResult;
 
 					ActionState cardPlayActionState{};
-					cardPlayActionState.trigger = ActionState::Trigger::onCardPlayed;
+					cardPlayActionState.trigger = ActionState::Trigger::onCast;
 					cardPlayActionState.src = selectedId;
-					cardPlayActionState.dst = card.type == MagicCard::Type::all ? -1 : target + (enemyResult != -1) * BOARD_CAPACITY_PER_SIDE;
+					cardPlayActionState.dst = card.type == SpellCard::Type::all ? -1 : target + (enemyResult != -1) * BOARD_CAPACITY_PER_SIDE;
 					cardPlayActionState.dstUniqueId = cardPlayActionState.dst == -1 ? -1 : boardState.uniqueIds[cardPlayActionState.dst];
 					cardPlayActionState.source = ActionState::Source::other;
-					state.stack.Add() = cardPlayActionState;
+					state.TryAddToStack(cardPlayActionState);
 				}
 			}
 
@@ -837,18 +876,15 @@ namespace game
 				previousEventCards[i] = eventCards[i];
 			for (auto& eventCard : eventCards)
 				eventCard = state.GetEvent(info, eventCards, c);
+			++state.turn;
 		}
 		else if (actionState.trigger == ActionState::Trigger::onSummon)
 		{
-			constexpr auto vIsAlly = static_cast<uint32_t>(ActionState::VSummon::isAlly);
-			constexpr auto vId = static_cast<uint32_t>(ActionState::VSummon::id);
-			constexpr auto vPartyId = static_cast<uint32_t>(ActionState::VSummon::partyId);
-			constexpr auto vHealth = static_cast<uint32_t>(ActionState::VSummon::health);
-
-			const bool isAlly = actionState.values[vIsAlly] == 1;
-			const auto monsterId = actionState.values[vId];
-			const auto partyId = isAlly ? actionState.values[vPartyId] : -1;
-			const auto health = actionState.values[vHealth];
+			const bool isAlly = actionState.values[ActionState::VSummon::isAlly] == 1;
+			const auto monsterId = actionState.values[ActionState::VSummon::id];
+			const auto partyId = isAlly ? actionState.values[ActionState::VSummon::partyId] : -1;
+			const auto attack = actionState.values[ActionState::VSummon::attack];
+			const auto health = actionState.values[ActionState::VSummon::health];
 
 			const uint32_t targetId = isAlly ? boardState.allyCount : BOARD_CAPACITY_PER_SIDE + boardState.enemyCount;
 			boardState.ids[targetId] = monsterId;
@@ -858,15 +894,17 @@ namespace game
 				info.gameState.partyIds[targetId] = partyId;
 			else if(!isAlly && boardState.allyCount > 0)
 				state.targets[boardState.enemyCount] = rand() % boardState.allyCount;
+			if (attack != -1)
+				boardState.combatStats[targetId].attack = attack;
 			if (health != -1)
 				boardState.combatStats[targetId].health = health;
 			if (isAlly)
-				++boardState.allyCount;
+				state.tapped[boardState.allyCount++] = true;
 			else
 				++boardState.enemyCount;
 			actionState.dst = targetId;
 		}
-		else if (actionState.trigger == ActionState::Trigger::draw)
+		else if (actionState.trigger == ActionState::Trigger::onDraw)
 			state.hand.Add() = state.Draw(info, state.hand.ptr, state.hand.count);
 
 		return true;
@@ -902,12 +940,12 @@ namespace game
 						activated = true;
 			}
 
-			const auto flawId = info.gameState.flaws[i];
+			const auto flawId = info.gameState.curses[i];
 			if (flawId != -1)
 			{
-				const auto flaw = info.flaws[flawId];
-				if (flaw.onActionEvent)
-					if (flaw.onActionEvent(info, state, actionState, i))
+				const auto curse = info.curses[flawId];
+				if (curse.onActionEvent)
+					if (curse.onActionEvent(info, state, actionState, i))
 						activated = true;
 			}
 
@@ -962,13 +1000,13 @@ namespace game
 		}
 		for (uint32_t i = 0; i < state.hand.count; ++i)
 		{
-			const auto& magic = &info.magics[state.hand[i]];
-			if (magic->onActionEvent)
-				if (magic->onActionEvent(info, state, actionState, i))
+			const auto& spell = &info.spells[state.hand[i]];
+			if (spell->onActionEvent)
+				if (spell->onActionEvent(info, state, actionState, i))
 				{
 					Activation activation{};
 					activation.id = i;
-					activation.type = Activation::magic;
+					activation.type = Activation::spell;
 					activations.Add() = activation;
 				}
 		}
@@ -994,8 +1032,8 @@ namespace game
 			state.mana = state.maxMana;
 
 			ActionState drawState{};
-			drawState.trigger = ActionState::Trigger::draw;
-			state.stack.Add() = drawState;
+			drawState.trigger = ActionState::Trigger::onDraw;
+			state.TryAddToStack(drawState);
 
 			for (auto& combatStat : boardState.combatStats)
 			{
@@ -1021,8 +1059,8 @@ namespace game
 			constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
 			ActionState damageState = actionState;
 			damageState.trigger = ActionState::Trigger::onDamage;
-			damageState.values[vDamage] = srcCombatStats.attack;
-			state.stack.Add() = damageState;
+			damageState.values[vDamage] = srcCombatStats.attack + srcCombatStats.tempAttack;
+			state.TryAddToStack(damageState);
 		}
 		else if (actionState.trigger == ActionState::Trigger::onDamage)
 		{
@@ -1037,10 +1075,15 @@ namespace game
 
 				const auto th = tempHealth;
 				if (damage <= tempHealth)
+				{
 					tempHealth -= damage;
+					damage = 0;
+				}
 				else
+				{
 					tempHealth = 0;
-				damage -= th;
+					damage -= th;
+				}
 
 				health = health < damage ? 0 : health - damage;
 				metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
@@ -1049,17 +1092,17 @@ namespace game
 				{
 					ActionState deathActionState = actionState;
 					deathActionState.trigger = ActionState::Trigger::onDeath;
-					state.stack.Add() = deathActionState;
+					state.TryAddToStack(deathActionState);
 				}
 			}
 		}
-		else if (actionState.trigger == ActionState::Trigger::onBuff)
+		else if (actionState.trigger == ActionState::Trigger::onStatBuff)
 		{
 			auto& combatStats = boardState.combatStats[actionState.dst];
-			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VBuff::attack);
-			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VBuff::health);
-			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VBuff::tempAttack);
-			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VBuff::tempHealth);
+			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VStatBuff::attack);
+			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VStatBuff::health);
+			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VStatBuff::tempAttack);
+			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VStatBuff::tempHealth);
 
 			if(actionState.values[vAtk] != -1)
 				combatStats.attack += actionState.values[vAtk];
@@ -1069,6 +1112,25 @@ namespace game
 				combatStats.tempAttack += actionState.values[vTAtk];
 			if (actionState.values[vTHlt] != -1)
 				combatStats.tempHealth += actionState.values[vTHlt];
+
+			metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
+		}
+		else if (actionState.trigger == ActionState::Trigger::onStatSet)
+		{
+			auto& combatStats = boardState.combatStats[actionState.dst];
+			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VStatBuff::attack);
+			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VStatBuff::health);
+			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VStatBuff::tempAttack);
+			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VStatBuff::tempHealth);
+
+			if (actionState.values[vAtk] != -1)
+				combatStats.attack = actionState.values[vAtk];
+			if (actionState.values[vHlt] != -1)
+				combatStats.health = actionState.values[vHlt];
+			if (actionState.values[vTAtk] != -1)
+				combatStats.tempAttack = actionState.values[vTAtk];
+			if (actionState.values[vTHlt] != -1)
+				combatStats.tempHealth = actionState.values[vTHlt];
 
 			metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
 		}
@@ -1100,7 +1162,7 @@ namespace game
 					gameState.artifactSlotCounts[j] = gameState.artifactSlotCounts[j + 1];
 					memcpy(&gameState.artifacts[j * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[(j + 1) * MONSTER_ARTIFACT_CAPACITY], 
 						sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
-					gameState.flaws[j] = gameState.flaws[j + 1];
+					gameState.curses[j] = gameState.curses[j + 1];
 				}
 				--boardState.allyCount;
 			}
@@ -1131,7 +1193,7 @@ namespace game
 					--as.dst;
 			}
 		}
-		else if (actionState.trigger == ActionState::Trigger::onCardPlayed)
+		else if (actionState.trigger == ActionState::Trigger::onCast)
 		{
 			state.hand.RemoveAtOrdered(actionState.src);
 			for (uint32_t i = 0; i < HAND_MAX_SIZE - 1; ++i)
@@ -1165,7 +1227,7 @@ namespace game
 			validActionState = actionState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] == 1 ?
 				boardState.allyCount < BOARD_CAPACITY_PER_SIDE : boardState.enemyCount < BOARD_CAPACITY_PER_SIDE;
 			break;
-		case ActionState::Trigger::draw:
+		case ActionState::Trigger::onDraw:
 			validActionState = state.hand.count < state.hand.length;
 			break;
 		default:
@@ -1284,7 +1346,7 @@ namespace game
 		if (allied && activeState.dst >= BOARD_CAPACITY_PER_SIDE || !allied && activeState.dst < BOARD_CAPACITY_PER_SIDE)
 			return;
 
-		if (activeState.trigger != ActionState::Trigger::onBuff)
+		if (activeState.trigger != ActionState::Trigger::onStatBuff)
 			return;
 
 		const auto pos = GetCardPosition(info, drawInfo, activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
@@ -1294,7 +1356,7 @@ namespace game
 		textTask.position = pos;
 		textTask.priority = true;
 
-		uint32_t atkBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		uint32_t atkBuff = activeState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)];
 		if (atkBuff == -1)
 			atkBuff = 0;
 
@@ -1303,7 +1365,7 @@ namespace game
 		textTask.text = TextInterpreter::Concat("+", textTask.text, info.frameArena);
 		textTask.text = TextInterpreter::Concat(textTask.text, "/+", info.frameArena);
 
-		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VBuff::attack)];
+		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)];
 		if (hltBuff == -1)
 			hltBuff = 0;
 
@@ -1378,7 +1440,7 @@ namespace game
 	{
 		if (!activeStateValid)
 			return;
-		if (activeState.trigger != ActionState::Trigger::onCardPlayed)
+		if (activeState.trigger != ActionState::Trigger::onCast)
 			return;
 		DrawFadeAnimation(level, drawInfo, activeState.src);
 	}
@@ -1434,7 +1496,7 @@ namespace game
 
 	uint32_t MainLevel::CombatState::GetEventCardCount(const State& state)
 	{
-		return jv::Min(1 + (state.depth + 5) / 10, EVENT_CARD_MAX_COUNT);
+		return jv::Min(1 + (state.depth + 5) / ROOM_COUNT_BEFORE_BOSS, EVENT_CARD_MAX_COUNT);
 	}
 
 	void MainLevel::CombatState::Shake(const LevelUpdateInfo& info)
@@ -1464,11 +1526,11 @@ namespace game
 	bool MainLevel::RewardMagicCardState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		Card* cards[MAGIC_DECK_SIZE];
-		uint32_t costs[MAGIC_DECK_SIZE];
-		for (uint32_t i = 0; i < MAGIC_DECK_SIZE; ++i)
+		Card* cards[SPELL_DECK_SIZE];
+		uint32_t costs[SPELL_DECK_SIZE];
+		for (uint32_t i = 0; i < SPELL_DECK_SIZE; ++i)
 		{
-			const auto c = &info.magics[info.gameState.magics[i]];
+			const auto c = &info.spells[info.gameState.spells[i]];
 			cards[i] = c;
 			costs[i] = c->cost;
 		}
@@ -1479,7 +1541,7 @@ namespace game
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2 + 40;
 		cardSelectionDrawInfo.highlighted = discoverOption;
-		cardSelectionDrawInfo.length = MAGIC_DECK_SIZE;
+		cardSelectionDrawInfo.length = SPELL_DECK_SIZE;
 		cardSelectionDrawInfo.costs = costs;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
@@ -1487,14 +1549,14 @@ namespace game
 		
 		const auto& path = state.paths[state.chosenPath];
 
-		const auto rewardCard = &info.magics[path.magic];
+		const auto rewardCard = &info.spells[path.spell];
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = rewardCard;
 		cardDrawInfo.center = true;
 		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 44 };
 		cardDrawInfo.lifeTime = level->GetTime();
 		cardDrawInfo.cost = rewardCard->cost;
-		cardDrawInfo.metaData = &metaDatas[MAGIC_DECK_SIZE];
+		cardDrawInfo.metaData = &metaDatas[SPELL_DECK_SIZE];
 		level->DrawCard(info, cardDrawInfo);
 
 		if (info.inputState.lMouse.PressEvent())
@@ -1509,7 +1571,7 @@ namespace game
 		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 		{
 			if (discoverOption != -1)
-				info.gameState.magics[discoverOption] = path.magic;
+				info.gameState.spells[discoverOption] = path.spell;
 
 			if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
 				stateIndex = static_cast<uint32_t>(StateNames::exitFound);
@@ -1538,9 +1600,9 @@ namespace game
 
 		for (uint32_t i = 0; i < gameState.partyCount; ++i)
 		{
-			const auto& flaw = info.gameState.flaws[i];
-			greyedOut[i] = flaw != -1;
-			flawSlotAvailable = flawSlotAvailable ? true : flaw == -1;
+			const auto& curse = info.gameState.curses[i];
+			greyedOut[i] = curse != -1;
+			flawSlotAvailable = flawSlotAvailable ? true : curse == -1;
 		}
 
 		if (flawSlotAvailable)
@@ -1573,11 +1635,11 @@ namespace game
 					arr[j] = index == -1 ? nullptr : &info.artifacts[index];
 				}
 
-				const uint32_t flaw = info.gameState.flaws[i];
-				if (flaw != -1)
+				const uint32_t curse = info.gameState.curses[i];
+				if (curse != -1)
 				{
 					++stackCounts[i];
-					stacks[i][count] = &info.flaws[flaw];
+					stacks[i][count] = &info.curses[curse];
 				}
 			}
 
@@ -1597,7 +1659,7 @@ namespace game
 			const auto& path = state.paths[state.chosenPath];
 
 			CardDrawInfo cardDrawInfo{};
-			cardDrawInfo.card = &info.flaws[path.flaw];
+			cardDrawInfo.card = &info.curses[path.curse];
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
 			cardDrawInfo.lifeTime = level->GetTime();
@@ -1618,7 +1680,7 @@ namespace game
 			if (level->GetIsLoading() || !info.inputState.enter.PressEvent())
 				return true;
 
-			info.gameState.flaws[discoverOption] = path.flaw;
+			info.gameState.curses[discoverOption] = path.curse;
 		}
 
 		stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
@@ -1824,8 +1886,6 @@ namespace game
 							playerState.monsterIds[d++] = playerState.monsterIds[i];
 							playerState.artifactSlotCounts[d] = playerState.artifactSlotCounts[i];
 						}
-						else
-							playerState.artifactSlotCounts[i] = 0;
 					}
 					
 					for (uint32_t i = 0; i < gameState.partyCount; ++i)

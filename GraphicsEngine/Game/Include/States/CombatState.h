@@ -18,8 +18,8 @@ namespace game
 			jv::Vector<uint32_t> artifacts;
 			jv::Vector<uint32_t> bosses;
 			jv::Vector<uint32_t> rooms;
-			jv::Vector<uint32_t> magics;
-			jv::Vector<uint32_t> flaws;
+			jv::Vector<uint32_t> spells;
+			jv::Vector<uint32_t> curses;
 			jv::Vector<uint32_t> events;
 
 			[[nodiscard]] static Decks Create(const LevelCreateInfo& info);
@@ -29,9 +29,9 @@ namespace game
 		{
 			uint32_t boss = UINT32_MAX;
 			uint32_t room = UINT32_MAX;
-			uint32_t magic = UINT32_MAX;
+			uint32_t spell = UINT32_MAX;
 			uint32_t artifact = UINT32_MAX;
-			uint32_t flaw = UINT32_MAX;
+			uint32_t curse = UINT32_MAX;
 			uint32_t counters = 0;
 		};
 
@@ -46,6 +46,7 @@ namespace game
 
 		uint32_t mana;
 		uint32_t maxMana;
+		uint32_t turn;
 
 		uint32_t targets[BOARD_CAPACITY_PER_SIDE];
 		bool tapped[BOARD_CAPACITY_PER_SIDE];
@@ -54,14 +55,15 @@ namespace game
 		[[nodiscard]] uint32_t GetMonster(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetBoss(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetRoom(const LevelInfo& info);
-		[[nodiscard]] uint32_t GetMagic(const LevelInfo& info);
+		[[nodiscard]] uint32_t GetSpell(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetArtifact(const LevelInfo& info);
-		[[nodiscard]] uint32_t GetFlaw(const LevelInfo& info);
+		[[nodiscard]] uint32_t GetCurse(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetEvent(const LevelInfo& info, const uint32_t* ignore, uint32_t ignoreCount);
 		[[nodiscard]] uint32_t Draw(const LevelInfo& info, const uint32_t* ignore, uint32_t ignoreCount);
 		void ResetDeck(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetPrimaryPath() const;
 
 		[[nodiscard]] static State Create(const LevelCreateInfo& info);
+		void TryAddToStack(const ActionState& actionState);
 	};
 }
