@@ -785,7 +785,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].name = "mask of eternal youth";
-		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[enemy death] gain 1 health.";
+		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[enemy death] gain 3 temporary health.";
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -800,7 +800,7 @@ namespace game
 						buffState.srcUniqueId = boardState.uniqueIds[self];
 						buffState.dst = buffState.src;
 						buffState.dstUniqueId = buffState.srcUniqueId;
-						buffState.values[ActionState::VStatBuff::health] = 1;
+						buffState.values[ActionState::VStatBuff::tempHealth] = 3;
 						state.TryAddToStack(buffState);
 						return true;
 					}
@@ -808,7 +808,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::CORRUPTING_KNIFE].name = "corrupting knife";
-		arr[ARTIFACT_IDS::CORRUPTING_KNIFE].ruleText = "[end of turn] gain 2 attack and take one damage.";
+		arr[ARTIFACT_IDS::CORRUPTING_KNIFE].ruleText = "[end of turn] gain 4 attack and take one damage.";
 		arr[ARTIFACT_IDS::CORRUPTING_KNIFE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -822,7 +822,7 @@ namespace game
 					buffState.srcUniqueId = boardState.uniqueIds[self];
 					buffState.dst = buffState.src;
 					buffState.dstUniqueId = buffState.srcUniqueId;
-					buffState.values[ActionState::VStatBuff::attack] = 2;
+					buffState.values[ActionState::VStatBuff::attack] = 4;
 					state.TryAddToStack(buffState);
 
 					ActionState damageState{};
@@ -839,7 +839,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].name = "sacrificial altar";
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die to give all allies +0/x where x is your health.";
+		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die to give all allies x attack where x is your attack.";
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -860,14 +860,14 @@ namespace game
 					buffState.source = ActionState::Source::board;
 					buffState.src = self;
 					buffState.srcUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::health] = boardState.combatStats[self].health;
+					buffState.values[ActionState::VStatBuff::attack] = boardState.combatStats[self].attack;
 					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLOOD_AXE].name = "blood axe";
-		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] gain 3 health.";
+		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] gain 5 attack.";
 		arr[ARTIFACT_IDS::BLOOD_AXE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -886,7 +886,7 @@ namespace game
 					buffState.srcUniqueId = boardState.uniqueIds[self];
 					buffState.dst = buffState.src;
 					buffState.dstUniqueId = buffState.srcUniqueId;
-					buffState.values[ActionState::VStatBuff::health] = 3;
+					buffState.values[ActionState::VStatBuff::attack] = 5;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -952,7 +952,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLESSED_RING].name = "blessed ring";
-		arr[ARTIFACT_IDS::BLESSED_RING].ruleText = "[summoned] gain +0/3.";
+		arr[ARTIFACT_IDS::BLESSED_RING].ruleText = "[summoned] gain 3 health.";
 		arr[ARTIFACT_IDS::BLESSED_RING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onSummon)
@@ -1151,7 +1151,7 @@ namespace game
 			};
 		auto& blessedHalls = arr[ROOM_IDS::BLESSED_HALLS];
 		blessedHalls.name = "blessed halls";
-		blessedHalls.ruleText = "[start of turn] all enemy monsters gain +0/1 until end of turn.";
+		blessedHalls.ruleText = "[start of turn] all enemy monsters gain 1 temporary health.";
 		blessedHalls.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -1488,19 +1488,19 @@ namespace game
 			};
 		auto& ascension = arr[SPELL_IDS::ASCENSION];
 		ascension.name = "ascension";
-		ascension.ruleText = "give a token +4/4.";
+		ascension.ruleText = "set a token their stats to 9/9.";
 		ascension.cost = 5;
 		ascension.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 				{
 					ActionState buffState{};
-					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.trigger = ActionState::Trigger::onStatSet;
 					buffState.source = ActionState::Source::other;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					buffState.values[ActionState::VStatBuff::attack] = 4;
-					buffState.values[ActionState::VStatBuff::health] = 4;
+					buffState.values[ActionState::VStatSet::attack] = 9;
+					buffState.values[ActionState::VStatSet::health] = 9;
 					state.TryAddToStack(buffState);
 					return true;
 				}

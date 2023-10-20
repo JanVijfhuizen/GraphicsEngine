@@ -160,7 +160,7 @@ namespace game
 			RemoveDuplicates(info, artifacts, &Path::artifact);
 			Shuffle(decks.artifacts.ptr, decks.artifacts.count);
 		}
-		RemoveArtifactsInParty(artifacts, info.playerState);
+		RemoveArtifactsInParty(artifacts, info.playerState, info.gameState);
 		return artifacts.Pop();
 	}
 

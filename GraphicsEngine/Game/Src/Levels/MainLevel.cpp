@@ -278,7 +278,7 @@ namespace game
 			state.TryAddToStack(summonState);
 		}
 		
-		for (int32_t i = static_cast<int32_t>(gameState.partyCount) - 1; i >= 0; --i)
+		for (int32_t i = static_cast<int32_t>(gameState.partySize) - 1; i >= 0; --i)
 		{
 			const auto partyId = gameState.partyIds[i];
 			const auto monsterId = gameState.monsterIds[i];
@@ -515,8 +515,8 @@ namespace game
 						}
 				}
 
-				gameState.partyCount = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);
-				for (uint32_t i = 0; i < gameState.partyCount; ++i)
+				gameState.partySize = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);
+				for (uint32_t i = 0; i < gameState.partySize; ++i)
 				{
 					gameState.monsterIds[i] = boardState.ids[i];
 					gameState.healths[i] = jv::Min(boardState.combatStats[i].health, info.monsters[gameState.monsterIds[i]].health);
@@ -1598,7 +1598,7 @@ namespace game
 		bool greyedOut[PARTY_ACTIVE_CAPACITY];
 		bool flawSlotAvailable = false;
 
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
 			const auto& curse = info.gameState.curses[i];
 			greyedOut[i] = curse != -1;
@@ -1611,7 +1611,7 @@ namespace game
 
 			Card* cards[PARTY_ACTIVE_CAPACITY];
 			CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const auto monster = &info.monsters[gameState.monsterIds[i]];
 				cards[i] = monster;
@@ -1621,7 +1621,7 @@ namespace game
 			Card** stacks[PARTY_CAPACITY]{};
 			uint32_t stackCounts[PARTY_CAPACITY]{};
 			
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const uint32_t count = stackCounts[i] = gameState.artifactSlotCounts[i];
 				if (count == 0)
@@ -1645,7 +1645,7 @@ namespace game
 
 			CardSelectionDrawInfo cardSelectionDrawInfo{};
 			cardSelectionDrawInfo.cards = cards;
-			cardSelectionDrawInfo.length = gameState.partyCount;
+			cardSelectionDrawInfo.length = gameState.partySize;
 			cardSelectionDrawInfo.greyedOutArr = greyedOut;
 			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 			cardSelectionDrawInfo.stacks = stacks;
@@ -1695,7 +1695,7 @@ namespace game
 		{
 			auto& gameState = info.gameState;
 
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const uint32_t id = gameState.partyIds[i];
 				auto& slotCount = gameState.artifactSlotCounts[id];
@@ -1719,14 +1719,14 @@ namespace game
 		if (f >= 0)
 			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
 
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			cards[i] = &info.monsters[gameState.monsterIds[i]];
 
 		Card** artifacts[PARTY_ACTIVE_CAPACITY]{};
 		CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
 		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
 		
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
 			const auto monster = &info.monsters[gameState.monsterIds[i]];
 			cards[i] = monster;
@@ -1747,7 +1747,7 @@ namespace game
 		uint32_t outStackSelected;
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = gameState.partyCount;
+		cardSelectionDrawInfo.length = gameState.partySize;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
@@ -1794,7 +1794,7 @@ namespace game
 		const auto& gameState = info.gameState;
 		auto& playerState = info.playerState;
 
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
 			const auto partyId = gameState.partyIds[i];
 			if (partyId == -1)
@@ -1840,7 +1840,7 @@ namespace game
 			}
 
 			uint32_t c = playerState.partySize;
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				if (gameState.partyIds[i] != -1)
 					continue;
@@ -1888,7 +1888,7 @@ namespace game
 						}
 					}
 					
-					for (uint32_t i = 0; i < gameState.partyCount; ++i)
+					for (uint32_t i = 0; i < gameState.partySize; ++i)
 					{
 						const auto partyId = gameState.partyIds[i];
 						if (partyId != -1)
@@ -1931,7 +1931,7 @@ namespace game
 		buttonDrawInfo.text = "quit";
 		if (level->DrawButton(info, buttonDrawInfo))
 		{
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const auto partyId = gameState.partyIds[i];
 				if (partyId == -1)
