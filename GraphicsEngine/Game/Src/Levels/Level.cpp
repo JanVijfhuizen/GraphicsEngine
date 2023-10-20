@@ -77,7 +77,39 @@ namespace game
 		jv::ge::SubTexture subTextures[2];
 		Divide(atlasTexture.subTexture, subTextures, sizeof subTextures / sizeof(jv::ge::SubTexture));
 
-		if(_fullCard)
+		const auto mouseScale = atlasTexture.resolution / glm::ivec2(2, 1);
+		const auto mousePos = info.inputState.mousePos - glm::ivec2(0, mouseScale.y);
+
+		if(_selectedCard && !_fullCard)
+		{
+			if (info.inputState.lMouse.pressed)
+			{
+				_selectedCardLifeTime += info.deltaTime;
+
+				jv::ge::SubTexture animFrames[CARD_ART_LENGTH];
+				Divide({}, animFrames, CARD_ART_LENGTH);
+
+				auto i = static_cast<uint32_t>(GetTime() / CARD_ANIM_SPEED);
+				i %= CARD_ART_LENGTH;
+
+				PixelPerfectRenderTask imageRenderTask{};
+				imageRenderTask.position = mousePos;
+				imageRenderTask.position.x -= mouseScale.x / 2;
+				imageRenderTask.position.y += mouseScale.y / 2;
+				imageRenderTask.normalImage = info.textureStreamer.Get(_selectedCard->normalAnimIndex);
+				imageRenderTask.image = info.textureStreamer.Get(_selectedCard->animIndex);
+				imageRenderTask.scale = CARD_ART_SHAPE;
+				imageRenderTask.xCenter = false;
+				imageRenderTask.yCenter = false;
+				imageRenderTask.subTexture = animFrames[i];
+				imageRenderTask.color *= glm::vec4(glm::vec3(jv::Min(_selectedCardLifeTime, 1.f)), 1);
+				info.renderTasks.Push(imageRenderTask);
+			}
+			else
+				_selectedCard = nullptr;
+		}
+
+		if(_fullCard && !_selectedCard)
 		{
 			constexpr float FULL_CARD_OPEN_DURATION = .1f;
 			constexpr float FULL_CARD_TOTAL_DURATION = .2f;
@@ -116,7 +148,7 @@ namespace game
 				}
 
 				const float l = _fullCardLifeTime - FULL_CARD_OPEN_DURATION;
-				const uint32_t textOffsetX = SIMULATED_RESOLUTION.x / 8;
+				constexpr uint32_t textOffsetX = SIMULATED_RESOLUTION.x / 8;
 
 				CardDrawInfo cardDrawInfo{};
 				cardDrawInfo.card = _fullCard;
@@ -129,7 +161,7 @@ namespace game
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
 
-				if (_fullCardType == FullCardType::monster)
+				if (_fullCardType == CardType::monster)
 				{
 					const auto c = static_cast<MonsterCard*>(_fullCard);
 
@@ -199,8 +231,8 @@ namespace game
 
 		// Mouse.
 		PixelPerfectRenderTask renderTask{};
-		renderTask.scale = atlasTexture.resolution / glm::ivec2(2, 1);
-		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
+		renderTask.scale = mouseScale;
+		renderTask.position = mousePos;
 		renderTask.priority = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
 		info.renderTasks.Push(renderTask);
@@ -626,9 +658,9 @@ namespace game
 
 		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
 		{
-			FullCardType type{};
+			CardType type{};
 			if (drawInfo.combatStats)
-				type = FullCardType::monster;
+				type = CardType::monster;
 			DrawFullCard(drawInfo.card, type);
 		}
 		return collided;
@@ -646,7 +678,7 @@ namespace game
 		return collided;
 	}
 
-	void Level::DrawFullCard(Card* card, const FullCardType cardType)
+	void Level::DrawFullCard(Card* card, const CardType cardType)
 	{
 		if (card == nullptr)
 			_fullCard = nullptr;
@@ -657,8 +689,19 @@ namespace game
 		_fullCardLifeTime = 0;
 	}
 
+	void Level::DrawSelectedCard(Card* card, const CardType cardType)
+	{
+		if (card == nullptr)
+			_selectedCard = nullptr;
+		if (_selectedCard)
+			return;
+		_selectedCardType = cardType;
+		_selectedCard = card;
+		_selectedCardLifeTime = 0;
+	}
+
 	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const HeaderSpacing spacing, 
-		const char* text, const uint32_t scale, const float overrideLifeTime) const
+	                                const char* text, const uint32_t scale, const float overrideLifeTime) const
 	{
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - GetSpacing(spacing)};

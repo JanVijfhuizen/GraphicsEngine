@@ -812,6 +812,18 @@ namespace game
 			info.textTasks.Push(manaTextTask);
 		}
 
+		if(state.stack.count == 0)
+		{
+			if(selectionState == SelectionState::ally)
+			{
+				auto& isTapped = state.tapped[selectedId];
+				if (!isTapped)
+					level->DrawSelectedCard(&info.monsters[boardState.ids[selectedId]], CardType::monster);
+			}
+			else if(selectionState == SelectionState::hand)
+				level->DrawSelectedCard(&info.spells[state.hand[selectedId]], CardType::other);
+		}
+
 		if (state.stack.count == 0 && lMouseReleased)
 		{
 			// If player tried to attack an enemy.
@@ -858,7 +870,7 @@ namespace game
 		}
 
 		if (activeStateValid || state.stack.count != 0)
-			level->DrawFullCard(nullptr, FullCardType::other);
+			level->DrawFullCard(nullptr, CardType::other);
 			
 		return true;
 	}
