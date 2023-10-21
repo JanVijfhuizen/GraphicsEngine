@@ -59,7 +59,8 @@ namespace game
 			onDeath,
 			onCast,
 			onStartOfTurn,
-			onEndOfTurn
+			onEndOfTurn,
+			onGameEnd
 		} trigger;
 
 		enum class Source

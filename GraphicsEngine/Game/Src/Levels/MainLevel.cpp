@@ -235,6 +235,7 @@ namespace game
 		activeStateValid = false;
 		comboCounter = 0;
 		timeSinceStackOverloaded = -1;
+		addedGameOverState = false;
 
 		for (auto& card : eventCards)
 			card = -1;
@@ -467,6 +468,15 @@ namespace game
 
 				if(!tokensRemaining)
 				{
+					if(!addedGameOverState)
+					{
+						ActionState actionState{};
+						actionState.trigger = ActionState::Trigger::onGameEnd;
+						actionState.source = ActionState::Source::other;
+						state.stack.Add() = actionState;
+						addedGameOverState = true;
+					}
+
 					if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
 					{
 						const auto monster = &info.monsters[lastEnemyDefeatedId];
