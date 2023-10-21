@@ -717,12 +717,80 @@ namespace game
 		auto& fairy = arr[MONSTER_IDS::FAIRY];
 		fairy.name = "fairy";
 		fairy.attack = 5;
-		fairy.health = 5;
+		fairy.health = 6;
 		auto& bob = arr[MONSTER_IDS::BOB];
 		bob.name = "bob";
 		bob.attack = 1;
 		bob.health = 1;
 		bob.ruleText = "bob.";
+		auto& greatTroll = arr[MONSTER_IDS::GREAT_TROLL];
+		greatTroll.name = "great troll";
+		greatTroll.attack = 2;
+		greatTroll.health = 75;
+		greatTroll.ruleText = "[ally attack, cast] gain 1 temporary attack.";
+		greatTroll.unique = true;
+		greatTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast || actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					if (actionState.trigger == ActionState::Trigger::onAttack && actionState.dst != self)
+						return false;
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::board;
+					buffState.src = self;
+					buffState.srcUniqueId = state.boardState.uniqueIds[self];
+					buffState.dst = buffState.src;
+					buffState.dstUniqueId = buffState.srcUniqueId;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
+		auto& slimeQueen = arr[MONSTER_IDS::SLIME_QUEEN];
+		slimeQueen.name = "slime queen";
+		slimeQueen.attack = 3;
+		slimeQueen.health = 50;
+		slimeQueen.ruleText = "[end of turn] summon an exact copy.";
+		slimeQueen.unique = true;
+		slimeQueen.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				{
+					ActionState summonState{};
+					summonState.trigger = ActionState::Trigger::onSummon;
+					summonState.source = ActionState::Source::other;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_QUEEN;
+					summonState.values[ActionState::VSummon::isAlly] = 0;
+					state.TryAddToStack(summonState);
+					return true;
+				}
+				return false;
+			};
+		auto& lichKing = arr[MONSTER_IDS::LICH_KING];
+		lichKing.name = "lich king";
+		lichKing.attack = 0;
+		lichKing.health = 100;
+		lichKing.ruleText = "[start of turn] gain 2 attack and gain 5 temporary health.";
+		lichKing.unique = true;
+		lichKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::attack] = 2;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 5;
+					buffState.dst = self;
+					buffState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
 		return arr;
 	}
 
@@ -1104,10 +1172,10 @@ namespace game
 
 	jv::Array<uint32_t> CardGame::GetBossCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<uint32_t>(arena, BOSS_IDS::LENGTH + 3);
-		uint32_t i = 0;
-		for (auto& card : arr)
-			card = i++;
+		const auto arr = jv::CreateArray<uint32_t>(arena, 3);
+		arr[0] = MONSTER_IDS::GREAT_TROLL;
+		arr[1] = MONSTER_IDS::SLIME_QUEEN;
+		arr[2] = MONSTER_IDS::LICH_KING;
 		return arr;
 	}
 

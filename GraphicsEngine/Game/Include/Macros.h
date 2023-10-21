@@ -74,6 +74,9 @@ struct MONSTER_IDS
 		GORILLA,
 		FAIRY,
 		BOB,
+		GREAT_TROLL,
+		SLIME_QUEEN,
+		LICH_KING,
 		LENGTH
 	};
 };
@@ -126,14 +129,6 @@ struct ROOM_IDS
 		TRANQUIL_WATERS,
 		PLAIN_MEADOWS,
 		PRISON_OF_ETERNITY,
-		LENGTH
-	};
-};
-
-struct BOSS_IDS
-{
-	enum
-	{
 		LENGTH
 	};
 };
