@@ -25,7 +25,7 @@ namespace game
 		{
 			bool valid = true;
 			if (src)
-				valid = uniqueIds[actionState.src] == actionState.srcUniqueId;
+				valid = actionState.source == ActionState::Source::other ? true : uniqueIds[actionState.src] == actionState.srcUniqueId;
 			if (dst)
 				valid = valid ? uniqueIds[actionState.dst] == actionState.dstUniqueId : false;
 			return valid;

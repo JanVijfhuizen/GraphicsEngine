@@ -252,13 +252,6 @@ namespace game
 		startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
 		state.TryAddToStack(startOfTurnActionState);
 
-		for (uint32_t i = 0; i < HAND_INITIAL_SIZE; ++i)
-		{
-			ActionState drawState{};
-			drawState.trigger = ActionState::Trigger::onDraw;
-			state.TryAddToStack(drawState);
-		}
-
 		if (!bossPresent)
 		{
 			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(3 + state.depth / ROOM_COUNT_BEFORE_BOSS, BOARD_CAPACITY_PER_SIDE), state.depth + 1);
@@ -292,6 +285,13 @@ namespace game
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::partyId)] = partyId;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = gameState.healths[i];
 			state.TryAddToStack(summonState);
+		}
+
+		for (uint32_t i = 0; i < HAND_INITIAL_SIZE; ++i)
+		{
+			ActionState drawState{};
+			drawState.trigger = ActionState::Trigger::onDraw;
+			state.TryAddToStack(drawState);
 		}
 	}
 
