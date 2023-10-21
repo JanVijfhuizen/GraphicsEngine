@@ -16,9 +16,7 @@ namespace game
 		enum class Tag
 		{
 			elf = TAG_ELF,
-			dragon = TAG_DRAGON,
 			human = TAG_HUMAN,
-			slime = TAG_SLIME,
 			token = TAG_TOKEN,
 			goblin = TAG_GOBLIN,
 			elemental = TAG_ELEMENTAL

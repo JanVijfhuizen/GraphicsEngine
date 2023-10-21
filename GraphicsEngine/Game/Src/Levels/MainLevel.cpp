@@ -449,11 +449,12 @@ namespace game
 			// Check for room victory.
 			if (boardState.enemyCount == 0)
 			{
-				bool tokensRemaining = false;
+				bool actionsRemaining = false;
 				ActionState killState{};
 				killState.trigger = ActionState::Trigger::onDeath;
 				killState.source = ActionState::Source::other;
 
+				// Destroy tokens.
 				for (uint32_t i = 0; i < boardState.allyCount; ++i)
 				{
 					const auto id = boardState.ids[i];
@@ -462,11 +463,27 @@ namespace game
 						killState.dst = i;
 						killState.dstUniqueId = boardState.uniqueIds[i];
 						state.TryAddToStack(killState);
-						tokensRemaining = true;
+						actionsRemaining = true;
 					}
 				}
 
-				if(!tokensRemaining)
+				// Destroy copies.
+				for (uint32_t i = 0; i < boardState.allyCount - 1; ++i)
+				{
+					const uint32_t id = boardState.ids[i];
+					for (uint32_t j = 0; j < boardState.allyCount; ++j)
+					{
+						if(boardState.ids[j] == id)
+						{
+							killState.dst = j;
+							killState.dstUniqueId = boardState.uniqueIds[j];
+							state.TryAddToStack(killState);
+							actionsRemaining = true;
+						}
+					}
+				}
+
+				if(!actionsRemaining)
 				{
 					if(!addedGameOverState)
 					{
