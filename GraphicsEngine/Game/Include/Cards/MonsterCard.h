@@ -27,5 +27,10 @@ namespace game
 		uint32_t attack = 1;
 		uint32_t health = 2;
 		uint32_t tags = 0;
+
+		[[nodiscard]] Type GetType() override
+		{
+			return Type::monster;
+		}
 	};
 }

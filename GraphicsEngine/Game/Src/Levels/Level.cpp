@@ -161,7 +161,40 @@ namespace game
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
 
-				if (_fullCardType == CardType::monster)
+				const auto type = _fullCard->GetType();
+				const char* cardName = "";
+				switch (type)
+				{
+					case Card::Type::artifact:
+						cardName = "[artifact] ";
+						break;
+					case Card::Type::curse:
+						cardName = "[curse] ";
+						break;
+					case Card::Type::event:
+						cardName = "[event] ";
+						break;
+					case Card::Type::monster:
+						cardName = "[monster] ";
+						break;
+					case Card::Type::room:
+						cardName = "[room] ";
+						break;
+					case Card::Type::spell:
+						cardName = "[spell] ";
+						break;
+					default: 
+						;
+				}
+				
+				cardName = TextInterpreter::Concat(cardName, _fullCard->name, info.frameArena);
+
+				if(type == Card::Type::spell)
+				{
+					const auto c = static_cast<SpellCard*>(_fullCard);
+					cardDrawInfo.cost = c->cost;
+				}
+				else if (type == Card::Type::monster)
 				{
 					const auto c = static_cast<MonsterCard*>(_fullCard);
 
@@ -202,12 +235,11 @@ namespace game
 					titleTextTask.position = bgRenderTask.position;
 					titleTextTask.position.x += textOffsetX;
 					titleTextTask.position.y += bgRenderTask.scale.y / 2 + alphabetTexture.resolution.y / 2;
-					titleTextTask.text = _fullCard->name;
+					titleTextTask.text = cardName;
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
 					titleTextTask.priority = true;
 					titleTextTask.scale = 1;
-					titleTextTask.color = glm::vec4(0, 1, 1, 1);
 					info.textTasks.Push(titleTextTask);
 
 					auto ruleTextTask = titleTextTask;
@@ -657,12 +689,7 @@ namespace game
 		}
 
 		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
-		{
-			CardType type{};
-			if (drawInfo.combatStats)
-				type = CardType::monster;
-			DrawFullCard(drawInfo.card, type);
-		}
+			DrawFullCard(drawInfo.card);
 		return collided;
 	}
 
@@ -678,24 +705,22 @@ namespace game
 		return collided;
 	}
 
-	void Level::DrawFullCard(Card* card, const CardType cardType)
+	void Level::DrawFullCard(Card* card)
 	{
 		if (card == nullptr)
 			_fullCard = nullptr;
 		if (_fullCard)
 			return;
-		_fullCardType = cardType;
 		_fullCard = card;
 		_fullCardLifeTime = 0;
 	}
 
-	void Level::DrawSelectedCard(Card* card, const CardType cardType)
+	void Level::DrawSelectedCard(Card* card)
 	{
 		if (card == nullptr)
 			_selectedCard = nullptr;
 		if (_selectedCard)
 			return;
-		_selectedCardType = cardType;
 		_selectedCard = card;
 		_selectedCardLifeTime = 0;
 	}

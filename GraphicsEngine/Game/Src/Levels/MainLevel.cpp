@@ -818,10 +818,10 @@ namespace game
 			{
 				auto& isTapped = state.tapped[selectedId];
 				if (!isTapped)
-					level->DrawSelectedCard(&info.monsters[boardState.ids[selectedId]], CardType::monster);
+					level->DrawSelectedCard(&info.monsters[boardState.ids[selectedId]]);
 			}
 			else if(selectionState == SelectionState::hand)
-				level->DrawSelectedCard(&info.spells[state.hand[selectedId]], CardType::other);
+				level->DrawSelectedCard(&info.spells[state.hand[selectedId]]);
 		}
 
 		if (state.stack.count == 0 && lMouseReleased)
@@ -870,8 +870,7 @@ namespace game
 		}
 
 		if (activeStateValid || state.stack.count != 0)
-			level->DrawFullCard(nullptr, CardType::other);
-			
+			level->DrawFullCard(nullptr);
 		return true;
 	}
 
@@ -966,7 +965,7 @@ namespace game
 
 			for (uint32_t j = 0; j < gameState.artifactSlotCounts[i]; ++j)
 			{
-				const uint32_t artifactId = gameState.artifacts[i];
+				const uint32_t artifactId = gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
 				if (artifactId == -1)
 					continue;
 				const auto& artifact = info.artifacts[artifactId];
