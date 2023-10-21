@@ -673,7 +673,10 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					if (actionState.dst != self || actionState.dstUniqueId != state.boardState.uniqueIds[self])
+					if (actionState.dst != self)
+						return false;
+					const auto& boardState = state.boardState;
+					if (!boardState.Validate(actionState, false, true))
 						return false;
 					++state.mana;
 					return true;
@@ -749,7 +752,9 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
 					const auto& boardState = state.boardState;
-					if (actionState.dst != self || actionState.dstUniqueId != boardState.uniqueIds[self])
+					if (actionState.dst != self)
+						return false;
+					if (!boardState.Validate(actionState, false, true))
 						return false;
 
 					ActionState damageState{};
@@ -876,7 +881,9 @@ namespace game
 
 					if (actionState.source != ActionState::Source::board)
 						return false;
-					if (actionState.src != self || actionState.srcUniqueId != boardState.uniqueIds[self])
+					if (actionState.src != self)
+						return false;
+					if (!boardState.Validate(actionState, true, false))
 						return false;
 
 					ActionState buffState{};
@@ -901,7 +908,9 @@ namespace game
 					const auto& boardState = state.boardState;
 					if (actionState.source != ActionState::Source::board)
 						return false;
-					if (actionState.src != self || actionState.srcUniqueId != boardState.uniqueIds[self])
+					if (actionState.src != self)
+						return false;
+					if (!boardState.Validate(actionState, true, false))
 						return false;
 
 					ActionState drawState{};
@@ -943,7 +952,9 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
 					const auto& boardState = state.boardState;
-					if (actionState.dst != self || actionState.dstUniqueId != boardState.uniqueIds[self])
+					if (actionState.dst != self)
+						return false;
+					if (!boardState.Validate(actionState, false, true))
 						return false;
 
 					state.tapped[self] = false;
@@ -1006,17 +1017,20 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
 					const auto& boardState = state.boardState;
-					if(actionState.src == self && actionState.srcUniqueId == boardState.uniqueIds[self])
-					{
-						ActionState damageState{};
-						damageState.trigger = ActionState::Trigger::onDamage;
-						damageState.source = ActionState::Source::board;
-						damageState.src = self;
-						damageState.srcUniqueId = boardState.uniqueIds[self];
-						damageState.values[ActionState::VDamage::damage] = 1;
-						TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
-						return true;
-					}
+
+					if (actionState.src != self)
+						return false;
+					if (!boardState.Validate(actionState, true, false))
+						return false;
+
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::board;
+					damageState.src = self;
+					damageState.srcUniqueId = boardState.uniqueIds[self];
+					damageState.values[ActionState::VDamage::damage] = 1;
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+					return true;
 				}
 				return false;
 			};
@@ -1027,7 +1041,9 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
 					const auto& boardState = state.boardState;
-					if (actionState.src != self || actionState.srcUniqueId != boardState.uniqueIds[self])
+					if (actionState.src != self)
+						return false;
+					if (!boardState.Validate(actionState, true, false))
 						return false;
 
 					ActionState buffState{};
@@ -1050,7 +1066,9 @@ namespace game
 					const auto& boardState = state.boardState;
 					if (actionState.source != ActionState::Source::board)
 						return false;
-					if (actionState.src != self || actionState.srcUniqueId != boardState.uniqueIds[self])
+					if (actionState.src != self)
+						return false;
+					if (!boardState.Validate(actionState, true, false))
 						return false;
 
 					state.mana += 3;
@@ -1065,7 +1083,9 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
 					const auto& boardState = state.boardState;
-					if (actionState.dst != self || actionState.dstUniqueId != boardState.uniqueIds[self])
+					if (actionState.src != self)
+						return false;
+					if (!boardState.Validate(actionState, true, false))
 						return false;
 
 					ActionState drawState{};
@@ -1132,7 +1152,8 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					if (actionState.dstUniqueId != state.boardState.uniqueIds[actionState.dst])
+					const auto& boardState = state.boardState;
+					if (!boardState.Validate(actionState, false, true))
 						return false;
 					const auto& monster = info.monsters[state.boardState.ids[actionState.dst]];
 					if (monster.tags & TAG_TOKEN)

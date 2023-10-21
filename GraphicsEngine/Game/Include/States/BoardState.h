@@ -1,4 +1,5 @@
 #pragma once
+#include "Cards/Card.h"
 
 namespace game
 {
@@ -19,5 +20,15 @@ namespace game
 		CombatStats combatStats[BOARD_CAPACITY];
 		uint32_t allyCount;
 		uint32_t enemyCount;
+
+		[[nodiscard]] bool Validate(const ActionState& actionState, const bool src, const bool dst) const
+		{
+			bool valid = true;
+			if (src)
+				valid = uniqueIds[actionState.src] == actionState.srcUniqueId;
+			if (dst)
+				valid = valid ? uniqueIds[actionState.dst] == actionState.dstUniqueId : false;
+			return valid;
+		}
 	};
 }
