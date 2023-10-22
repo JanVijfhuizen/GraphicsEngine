@@ -182,9 +182,13 @@ namespace game
 		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 		{
 			auto& playerState = info.playerState = PlayerState::Create();
-			playerState.AddMonster(state.monsterId);
-			playerState.AddMonster(MONSTER_IDS::DAISY);
+			for (auto& artifact : playerState.artifacts)
+				artifact = -1;
+			playerState.monsterIds[0] = state.monsterId;
+			playerState.monsterIds[1] = MONSTER_IDS::DAISY;
 			playerState.artifacts[0] = state.artifactId;
+			playerState.partySize = 2;
+			playerState.artifactSlotCount = 1;
 			SaveData(playerState);
 			loadLevelIndex = LevelIndex::partySelect;
 		}

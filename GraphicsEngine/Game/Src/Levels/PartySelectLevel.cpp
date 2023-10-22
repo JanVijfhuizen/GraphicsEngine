@@ -60,20 +60,19 @@ namespace game
 					gameState.monsterIds[j] = info.playerState.monsterIds[i];
 					memcpy(&gameState.artifacts[j * MONSTER_ARTIFACT_CAPACITY], &playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY], 
 						sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
-					gameState.artifactSlotCounts[j] = playerState.artifactSlotCounts[i];
 
 					const auto& monster = info.monsters[info.playerState.monsterIds[i]];
 					gameState.healths[j++] = monster.health;
-					gameState.artifactSlotCounts[i] = jv::Max<uint32_t>(gameState.artifactSlotCounts[i], 1);
 				}
+				gameState.artifactSlotCount = playerState.artifactSlotCount;
 
-				for (uint32_t i = 0; i < 10; ++i)
+				for (uint32_t i = 0; i < 7; ++i)
 				{
 					gameState.spells[i] = SPELL_IDS::ENRAGE;
 				}
-				for (uint32_t i = 10; i < 18; ++i)
+				for (uint32_t i = 7; i < 15; ++i)
 					gameState.spells[i] = SPELL_IDS::PROTECT;
-				for (uint32_t i = 18; i < 24; ++i)
+				for (uint32_t i = 15; i < 18; ++i)
 					gameState.spells[i] = SPELL_IDS::ARCANE_INTELLECT;
 				
 				Load(LevelIndex::main, true);

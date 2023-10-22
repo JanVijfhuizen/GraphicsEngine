@@ -760,9 +760,7 @@ namespace game
 
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 		{
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
-			if (count == 0)
-				continue;
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCount;
 			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
 			artifacts[i] = arr.ptr;
 			for (uint32_t j = 0; j < count; ++j)

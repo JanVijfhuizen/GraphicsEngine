@@ -740,11 +740,15 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
+					const auto& boardState = state.boardState;
+					
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_QUEEN;
 					summonState.values[ActionState::VSummon::isAlly] = 0;
+					summonState.values[ActionState::VSummon::health] = boardState.combatStats[self].attack;
+					summonState.values[ActionState::VSummon::attack] = boardState.combatStats[self].health;
 					state.TryAddToStack(summonState);
 					return true;
 				}
@@ -884,7 +888,7 @@ namespace game
 			};
 		auto& stoneElemental = arr[MONSTER_IDS::STONE_ELEMENTAL];
 		stoneElemental.name = "stone elemental";
-		stoneElemental.attack = 0;
+		stoneElemental.attack = 1;
 		stoneElemental.health = 20;
 		stoneElemental.ruleText = "[cast] gains 1 temporary attack and health.";
 		stoneElemental.tags = TAG_ELEMENTAL;
@@ -1224,7 +1228,7 @@ namespace game
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
-		slimeSoldier.health = 10;
+		slimeSoldier.health = 6;
 		slimeSoldier.ruleText = "[end of turn] summons an exact copy.";
 		slimeSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1546,7 +1550,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of the host";
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] gives all allies 2 temporary attack.";
+		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] gives all allies 1 temporary attack.";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
@@ -1562,7 +1566,7 @@ namespace game
 					buffState.source = ActionState::Source::board;
 					buffState.src = self;
 					buffState.srcUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempAttack] = 2;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
 					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
@@ -1816,7 +1820,7 @@ namespace game
 		auto& arcaneIntellect = arr[SPELL_IDS::ARCANE_INTELLECT];
 		arcaneIntellect.name = "arcane intellect";
 		arcaneIntellect.ruleText = "draw 2.";
-		arcaneIntellect.cost = 3;
+		arcaneIntellect.cost = 2;
 		arcaneIntellect.type = SpellCard::Type::all;
 		arcaneIntellect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
@@ -1863,7 +1867,7 @@ namespace game
 		auto& tranquilize = arr[SPELL_IDS::TRANQUILIZE];
 		tranquilize.name = "tranquilize";
 		tranquilize.ruleText = "set a monsters attack to 1.";
-		tranquilize.cost = 7;
+		tranquilize.cost = 2;
 		tranquilize.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -1923,7 +1927,7 @@ namespace game
 		auto& rally = arr[SPELL_IDS::RALLY];
 		rally.name = "rally";
 		rally.ruleText = "give all allies 2 temporary attack.";
-		rally.cost = 3;
+		rally.cost = 2;
 		rally.type = SpellCard::Type::all;
 		rally.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1940,7 +1944,7 @@ namespace game
 			};
 		auto& holdTheLine = arr[SPELL_IDS::HOLD_THE_LINE];
 		holdTheLine.name = "hold the line";
-		holdTheLine.ruleText = "give all allies 4 temporary health.";
+		holdTheLine.ruleText = "give all allies 3 temporary health.";
 		holdTheLine.cost = 4;
 		holdTheLine.type = SpellCard::Type::all;
 		holdTheLine.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1950,7 +1954,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
 					return true;
 				}
@@ -1973,7 +1977,7 @@ namespace game
 		auto& enlightenment = arr[SPELL_IDS::ENLIGHTENMENT];
 		enlightenment.name = "enlightenment";
 		enlightenment.ruleText = "draw until your hand is full.";
-		enlightenment.cost = 5;
+		enlightenment.cost = 3;
 		enlightenment.type = SpellCard::Type::all;
 		enlightenment.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2011,7 +2015,7 @@ namespace game
 		auto& ascension = arr[SPELL_IDS::ASCENSION];
 		ascension.name = "ascension";
 		ascension.ruleText = "set a token their stats to 9/9.";
-		ascension.cost = 5;
+		ascension.cost = 3;
 		ascension.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2084,7 +2088,7 @@ namespace game
 			};
 		auto& protect = arr[SPELL_IDS::PROTECT];
 		protect.name = "protect";
-		protect.ruleText = "gain 3 temporary health.";
+		protect.ruleText = "gain 4 temporary health.";
 		protect.cost = 1;
 		protect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2093,7 +2097,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2271,7 +2275,7 @@ namespace game
 		auto& perfectCopy = arr[SPELL_IDS::PERFECT_COPY];
 		perfectCopy.name = "perfect copy";
 		perfectCopy.ruleText = "summon a demon with the same stats as target monster.";
-		perfectCopy.cost = 5;
+		perfectCopy.cost = 7;
 		perfectCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2349,7 +2353,7 @@ namespace game
 		auto& incantationOfDoom = arr[SPELL_IDS::INCANTATION_OF_DOOM];
 		incantationOfDoom.name = "incantation of doom";
 		incantationOfDoom.ruleText = "deal 13 damage to all enemies.";
-		incantationOfDoom.cost = 9;
+		incantationOfDoom.cost = 7;
 		incantationOfDoom.type = SpellCard::Type::all;
 		incantationOfDoom.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2362,6 +2366,26 @@ namespace game
 					damageState.dstUniqueId = actionState.dstUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 13;
 					TargetOfType(info, state, damageState, 0, -1, TypeTarget::enemies);
+					return true;
+				}
+				return false;
+			};
+		auto& pariah = arr[SPELL_IDS::PARIAH];
+		pariah.name = "pariah";
+		pariah.ruleText = "target ally becomes the target of all enemies. fizzles when targeting an enemy.";
+		pariah.cost = 1;
+		pariah.type = SpellCard::Type::target;
+		pariah.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					const auto& boardState = state.boardState;
+					if (!boardState.Validate(actionState, false, true))
+						return false;
+					if (actionState.dst >= BOARD_CAPACITY_PER_SIDE)
+						return false;
+					for (auto& target : state.targets)
+						target = actionState.dst;
 					return true;
 				}
 				return false;
@@ -2749,8 +2773,7 @@ namespace game
 			inFile >> monsterId;
 		for (auto& artifact : playerState.artifacts)
 			inFile >> artifact;
-		for (auto &artifactSlotCount : playerState.artifactSlotCounts)
-			inFile >> artifactSlotCount;
+		inFile >> playerState.artifactSlotCount;
 		inFile >> playerState.partySize;
 		inFile >> playerState.ironManMode;
 		inFile.close();
@@ -2767,8 +2790,7 @@ namespace game
 			outFile << monsterId << std::endl;
 		for (const auto& artifact : playerState.artifacts)
 			outFile << artifact << std::endl;
-		for (const auto& artifactSlotCount : playerState.artifactSlotCounts)
-			outFile << artifactSlotCount << std::endl;
+		outFile << playerState.artifactSlotCount << std::endl;
 		outFile << playerState.partySize << std::endl;
 		outFile << playerState.ironManMode << std::endl;
 		outFile.close();

@@ -14,7 +14,7 @@ namespace game
 	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState, const GameState& gameState)
 	{
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			for (uint32_t j = 0; j < playerState.artifactSlotCounts[i]; ++j)
+			for (uint32_t j = 0; j < playerState.artifactSlotCount; ++j)
 				for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
 					if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * i + j] == deck[k])
 					{
@@ -22,7 +22,7 @@ namespace game
 						break;
 					}
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
-			for (uint32_t j = 0; j < gameState.artifactSlotCounts[i]; ++j)
+			for (uint32_t j = 0; j < gameState.artifactSlotCount; ++j)
 				for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
 					if (gameState.artifacts[MONSTER_ARTIFACT_CAPACITY * i + j] == deck[k])
 					{

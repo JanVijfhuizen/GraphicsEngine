@@ -101,42 +101,43 @@ namespace game
 		Card* cards[DISCOVER_LENGTH];
 		CombatStats combatStats[DISCOVER_LENGTH]{};
 
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			const auto& path = state.paths[i];
-			if(!bossPresent)
-			{
-				const auto monster = &info.monsters[state.paths[i].boss];
-				cards[i] = monster;
-				combatStats[i] = GetCombatStat(*monster);
-			}
-			else
-				cards[i] = &info.artifacts[path.artifact];
-		}
-
 		Card** stacks[DISCOVER_LENGTH]{};
 		for (auto& stack : stacks)
 			stack = jv::CreateArray<Card*>(info.frameArena, 3).ptr;
 
 		uint32_t stacksCounts[DISCOVER_LENGTH]{};
 		for (auto& c : stacksCounts)
-			c = 3;
+			c = 2 + !bossPresent;
 
+		const uint32_t count = 1 + (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS) + !bossPresent;
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
 			const auto& stack = stacks[i];
 			const auto& path = state.paths[i];
 
-			stack[0] = &info.rooms[path.room];
-			stack[1] = &info.spells[path.spell];
+			stack[0] = &info.spells[path.spell];
 			if (flawPresent)
-				stack[2] = &info.curses[path.curse];
+				stack[1] = &info.curses[path.curse];
 			else
-				stack[2] = &info.artifacts[path.artifact];
+				stack[1] = &info.artifacts[path.artifact];
+			stack[2] = &info.rooms[path.room];
+			stacksCounts[i] = count;
+		}
 
-			if (state.depth < ROOMS_BEFORE_ROOM_EFFECTS)
-				stacks[i] = &stacks[i][1];
-			--stacksCounts[i];
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+		{
+			if (!bossPresent)
+			{
+				const auto monster = &info.monsters[state.paths[i].boss];
+				cards[i] = monster;
+				combatStats[i] = GetCombatStat(*monster);
+			}
+			else
+			{
+				cards[i] = stacks[i][0];
+				for (uint32_t j = 0; j < count; ++j)
+					stacks[i][j] = stacks[i][j + 1];
+			}
 		}
 
 		const char* texts[DISCOVER_LENGTH]{};
@@ -554,8 +555,8 @@ namespace game
 				{
 					gameState.monsterIds[i] = boardState.ids[i];
 					gameState.healths[i] = jv::Min(boardState.combatStats[i].health, info.monsters[gameState.monsterIds[i]].health);
-					gameState.artifactSlotCounts[i] = jv::Max(gameState.artifactSlotCounts[i], 1 + (state.depth + 1) / ROOM_COUNT_BEFORE_BOSS);
-					gameState.artifactSlotCounts[i] = jv::Min(gameState.artifactSlotCounts[i], MONSTER_ARTIFACT_CAPACITY);
+					gameState.artifactSlotCount = 1 + state.depth / ROOM_COUNT_BEFORE_BOSS;
+					gameState.artifactSlotCount = jv::Min(gameState.artifactSlotCount, MONSTER_ARTIFACT_CAPACITY);
 				}
 
 				if(state.depth % 2 == 0)
@@ -794,7 +795,7 @@ namespace game
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
 			const uint32_t curse = gameState.curses[i];
-			const uint32_t artifactCount = gameState.artifactSlotCounts[i];
+			const uint32_t artifactCount = gameState.artifactSlotCount;
 			const uint32_t count = stacksCount[i] = (curse != -1) + artifactCount;
 
 			if (count == 0)
@@ -1000,7 +1001,7 @@ namespace game
 				if (monster.onActionEvent(info, state, actionState, i))
 					activated = true;
 
-			for (uint32_t j = 0; j < gameState.artifactSlotCounts[i]; ++j)
+			for (uint32_t j = 0; j < gameState.artifactSlotCount; ++j)
 			{
 				const uint32_t artifactId = gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
 				if (artifactId == -1)
@@ -1211,11 +1212,12 @@ namespace game
 				{
 					state.tapped[j] = state.tapped[j + 1];
 					gameState.partyIds[j] = gameState.partyIds[j + 1];
-					gameState.artifactSlotCounts[j] = gameState.artifactSlotCounts[j + 1];
 					memcpy(&gameState.artifacts[j * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[(j + 1) * MONSTER_ARTIFACT_CAPACITY], 
 						sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 					gameState.curses[j] = gameState.curses[j + 1];
 				}
+				for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
+					gameState.artifacts[(boardState.allyCount - 1) * MONSTER_ARTIFACT_CAPACITY + k] = -1;
 				--boardState.allyCount;
 			}
 
@@ -1599,6 +1601,7 @@ namespace game
 		cardSelectionDrawInfo.costs = costs;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
+		cardSelectionDrawInfo.rowCutoff = 6;
 		const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		const auto& path = state.paths[state.chosenPath];
@@ -1677,7 +1680,7 @@ namespace game
 			
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
-				const uint32_t count = stackCounts[i] = gameState.artifactSlotCounts[i];
+				const uint32_t count = stackCounts[i] = gameState.artifactSlotCount;
 				if (count == 0)
 					continue;
 
@@ -1752,7 +1755,7 @@ namespace game
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const uint32_t id = gameState.partyIds[i];
-				auto& slotCount = gameState.artifactSlotCounts[id];
+				auto& slotCount = gameState.artifactSlotCount;
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
 				slotCount = jv::Min(slotCount, MONSTER_ARTIFACT_CAPACITY);
 			}
@@ -1787,9 +1790,7 @@ namespace game
 			combatStats[i] = GetCombatStat(*monster);
 			combatStats[i].health = gameState.healths[i];
 
-			const uint32_t count = artifactCounts[i] = gameState.artifactSlotCounts[i];
-			if (count == 0)
-				continue;
+			const uint32_t count = artifactCounts[i] = gameState.artifactSlotCount;
 			const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
 			for (uint32_t j = 0; j < count; ++j)
 			{
@@ -1854,10 +1855,10 @@ namespace game
 			if (partyId == -1)
 				continue;
 			playerState.monsterIds[partyId] = gameState.monsterIds[i];
-			playerState.artifactSlotCounts[partyId] = gameState.artifactSlotCounts[i];
 			memcpy(&playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
 				sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 		}
+		playerState.artifactSlotCount = gameState.artifactSlotCount;
 	}
 
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -1881,10 +1882,7 @@ namespace game
 				cards[i] = monster;
 				combatStats[i] = GetCombatStat(*monster);
 
-				const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
-				if (count == 0)
-					continue;
-
+				const uint32_t count = artifactCounts[i] = playerState.artifactSlotCount;
 				const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
 				for (uint32_t j = 0; j < count; ++j)
 				{
@@ -1938,7 +1936,6 @@ namespace game
 							memcpy(&playerState.artifacts[d * MONSTER_ARTIFACT_CAPACITY], &playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
 								sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 							playerState.monsterIds[d++] = playerState.monsterIds[i];
-							playerState.artifactSlotCounts[d] = playerState.artifactSlotCounts[i];
 						}
 					}
 					
@@ -1951,7 +1948,6 @@ namespace game
 						if (!selected[id])
 							continue;
 						playerState.monsterIds[id] = gameState.monsterIds[i];
-						playerState.artifactSlotCounts[id] = gameState.artifactSlotCounts[i];
 						memcpy(&playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
 							sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 					}
