@@ -258,7 +258,7 @@ namespace game
 
 		if (!bossPresent)
 		{
-			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(3 + state.depth / ROOM_COUNT_BEFORE_BOSS, BOARD_CAPACITY_PER_SIDE), state.depth + 1);
+			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / ROOM_COUNT_BEFORE_BOSS, BOARD_CAPACITY_PER_SIDE), state.depth + 1);
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				ActionState summonState{};
@@ -491,7 +491,18 @@ namespace game
 					if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
 					{
 						const auto monster = &info.monsters[lastEnemyDefeatedId];
-						if (!monster->unique)
+						bool valid = !monster->unique;
+
+						// Check if you already own this monster.
+						if(valid)
+							for (uint32_t i = 0; i < boardState.allyCount; ++i)
+								if (lastEnemyDefeatedId == boardState.ids[i])
+								{
+									valid = false;
+									break;
+								}
+
+						if (valid)
 						{
 							if (recruitSceneLifetime < -1e-5f)
 								recruitSceneLifetime = 0;
@@ -1470,7 +1481,7 @@ namespace game
 		const auto& activation = activations.Peek();
 		if (activation.type != type)
 			return;
-		if (activation.id + idMod >= drawInfo.length)
+		if (activation.id - idMod >= drawInfo.length)
 			return;
 		drawInfo.activationIndex = activation.id - idMod;
 		const float f = (CARD_ACTIVATION_DURATION - (CARD_ACTIVATION_DURATION - activationDuration)) / CARD_ACTIVATION_DURATION;

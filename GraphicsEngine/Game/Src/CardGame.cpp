@@ -1000,6 +1000,8 @@ namespace game
 					const auto& boardState = state.boardState;
 					if (!boardState.Validate(actionState, false, true))
 						return false;
+					if (actionState.dst != self)
+						return false;
 
 					ActionState attackState{};
 					attackState.trigger = ActionState::Trigger::onAttack;
@@ -1039,7 +1041,7 @@ namespace game
 			};
 		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_TROLL];
 		woundedTroll.name = "wounded troll";
-		woundedTroll.attack = 4;
+		woundedTroll.attack = 5;
 		woundedTroll.health = 20;
 		woundedTroll.ruleText = "[end of turn] take one damage.";
 		woundedTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
