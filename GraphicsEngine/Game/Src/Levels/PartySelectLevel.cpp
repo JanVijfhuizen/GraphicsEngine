@@ -67,11 +67,14 @@ namespace game
 					gameState.artifactSlotCounts[i] = jv::Max<uint32_t>(gameState.artifactSlotCounts[i], 1);
 				}
 
-				for (uint32_t i = 0; i < SPELL_DECK_SIZE / 2; ++i)
+				for (uint32_t i = 0; i < 10; ++i)
 				{
 					gameState.spells[i] = SPELL_IDS::ENRAGE;
-					gameState.spells[i + SPELL_DECK_SIZE / 2] = SPELL_IDS::PROTECT;
 				}
+				for (uint32_t i = 10; i < 18; ++i)
+					gameState.spells[i] = SPELL_IDS::PROTECT;
+				for (uint32_t i = 18; i < 24; ++i)
+					gameState.spells[i] = SPELL_IDS::ARCANE_INTELLECT;
 				
 				Load(LevelIndex::main, true);
 			}

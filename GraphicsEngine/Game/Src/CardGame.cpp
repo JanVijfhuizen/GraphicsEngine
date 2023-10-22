@@ -814,11 +814,9 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onDraw)
 				{
 					ActionState damageState{};
-					damageState.trigger = ActionState::Trigger::onDraw;
-					damageState.source = ActionState::Source::board;
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 1;
-					damageState.src = self;
-					damageState.srcUniqueId = state.boardState.uniqueIds[self];
 					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
 					return true;
 				}
@@ -941,9 +939,9 @@ namespace game
 					uint32_t c = 0;
 					const auto& boardState = state.boardState;
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
-						c += info.monsters[boardState.ids[i]].tags & TAG_GOBLIN;
+						c += (info.monsters[boardState.ids[i]].tags & TAG_GOBLIN) != 0;
 					for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-						c += info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]].tags & TAG_GOBLIN;
+						c += (info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]].tags & TAG_GOBLIN) != 0;
 
 					ActionState setState{};
 					setState.trigger = ActionState::Trigger::onStatSet;
@@ -960,21 +958,8 @@ namespace game
 		unstableGolem.name = "unstable golem";
 		unstableGolem.attack = 6;
 		unstableGolem.health = 20;
-		unstableGolem.ruleText = "[end of combat] die.";
-		unstableGolem.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-			{
-				if (actionState.trigger == ActionState::Trigger::onGameEnd)
-				{
-					ActionState killState{};
-					killState.trigger = ActionState::Trigger::onDeath;
-					killState.source = ActionState::Source::other;
-					killState.dst = self;
-					killState.dstUniqueId = state.boardState.uniqueIds[self];
-					state.TryAddToStack(killState);
-					return true;
-				}
-				return false;
-			};
+		unstableGolem.tags = TAG_TOKEN;
+
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MAIDEN_OF_THE_MOON];
 		maidenOfTheMoon.name = "maiden of the moon";
 		maidenOfTheMoon.attack = 3;
@@ -983,7 +968,7 @@ namespace game
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onGameEnd)
+				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
 					const auto& boardState = state.boardState;
 					if (!boardState.Validate(actionState, false, true))
@@ -1140,7 +1125,7 @@ namespace game
 					ActionState drawState{};
 					drawState.trigger = ActionState::Trigger::onDraw;
 					drawState.source = ActionState::Source::other;
-					for (uint32_t i = 0; i < 3; ++i)
+					for (uint32_t i = 0; i < c; ++i)
 						state.TryAddToStack(drawState);
 					if(self < BOARD_CAPACITY_PER_SIDE)
 						state.TryAddToStack(drawState);
@@ -1647,10 +1632,15 @@ namespace game
 
 	jv::Array<uint32_t> CardGame::GetBossCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<uint32_t>(arena, 3);
+		const auto arr = jv::CreateArray<uint32_t>(arena, 6);
 		arr[0] = MONSTER_IDS::GREAT_TROLL;
 		arr[1] = MONSTER_IDS::SLIME_QUEEN;
 		arr[2] = MONSTER_IDS::LICH_KING;
+
+		// temp.
+		arr[3] = MONSTER_IDS::GREAT_TROLL;
+		arr[4] = MONSTER_IDS::SLIME_QUEEN;
+		arr[5] = MONSTER_IDS::LICH_KING;
 		return arr;
 	}
 

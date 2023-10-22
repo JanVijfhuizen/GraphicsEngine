@@ -78,7 +78,6 @@ namespace game
 			float recruitSceneLifetime;
 			uint32_t comboCounter;
 			float timeSinceStackOverloaded;
-			bool addedGameOverState;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;

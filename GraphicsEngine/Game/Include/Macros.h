@@ -22,6 +22,8 @@ constexpr uint32_t DISCOVER_LENGTH = 3;
 constexpr uint32_t SUB_BOSS_COUNT = 4;
 constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
 constexpr uint32_t SPELL_CARD_COPY_COUNT = 4;
+constexpr uint32_t ROOMS_BEFORE_ROOM_EFFECTS = ROOM_COUNT_BEFORE_BOSS + ROOM_COUNT_BEFORE_BOSS / 2;
+constexpr uint32_t ROOMS_BEFORE_EVENT_EFFECTS = ROOM_COUNT_BEFORE_BOSS * 2 + ROOM_COUNT_BEFORE_BOSS / 2;
 
 constexpr uint32_t HAND_INITIAL_SIZE = 3;
 constexpr uint32_t HAND_MAX_SIZE = 5;
@@ -38,7 +40,7 @@ constexpr uint32_t STACK_OVERLOAD_THRESHOLD = 50;
 
 constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 4;
 constexpr uint32_t ENEMY_HEIGHT = ALLY_HEIGHT + 92;
-constexpr uint32_t HAND_HEIGHT = 32;
+constexpr uint32_t HAND_HEIGHT = 40;
 constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
 
 constexpr uint32_t EVENT_CARD_MAX_COUNT = 4;

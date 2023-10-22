@@ -54,7 +54,7 @@ namespace game
 		}
 
 		const uint32_t a = static_cast<int32_t>(l) - static_cast<int32_t>(lineStart) >= static_cast<int32_t>(lineLength);
-		return lineCount + a + 1;
+		return lineCount + a;
 	}
 
 	void TextInterpreter::OnStart(const TextInterpreterCreateInfo& createInfo, const EngineMemory& memory)

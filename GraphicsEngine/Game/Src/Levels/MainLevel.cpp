@@ -133,6 +133,10 @@ namespace game
 				stack[2] = &info.curses[path.curse];
 			else
 				stack[2] = &info.artifacts[path.artifact];
+
+			if (state.depth < ROOMS_BEFORE_ROOM_EFFECTS)
+				stacks[i] = &stacks[i][1];
+			--stacksCounts[i];
 		}
 
 		const char* texts[DISCOVER_LENGTH]{};
@@ -235,7 +239,6 @@ namespace game
 		activeStateValid = false;
 		comboCounter = 0;
 		timeSinceStackOverloaded = -1;
-		addedGameOverState = false;
 
 		for (auto& card : eventCards)
 			card = -1;
@@ -485,15 +488,6 @@ namespace game
 
 				if(!actionsRemaining)
 				{
-					if(!addedGameOverState)
-					{
-						ActionState actionState{};
-						actionState.trigger = ActionState::Trigger::onGameEnd;
-						actionState.source = ActionState::Source::other;
-						state.stack.Add() = actionState;
-						addedGameOverState = true;
-					}
-
 					if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
 					{
 						const auto monster = &info.monsters[lastEnemyDefeatedId];
@@ -591,51 +585,56 @@ namespace game
 			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
 
 			// Draws room.
-			const auto& path = state.paths[state.GetPrimaryPath()];
-
-			cards.Add() = &info.rooms[path.room];
-			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
-			level->DrawCardSelection(info, eventSelectionDrawInfo);
+			if(state.depth >= ROOMS_BEFORE_ROOM_EFFECTS)
+			{
+				const auto& path = state.paths[state.GetPrimaryPath()];
+				cards.Add() = &info.rooms[path.room];
+				DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
+				level->DrawCardSelection(info, eventSelectionDrawInfo);
+				cards.Clear();
+			}
 
 			// Draws events.
-			cards.Clear();
-			const bool isStartOfTurn = activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn;
-			if(isStartOfTurn && previousEventCards[0] != -1)
-				cards.Add() = &info.events[previousEventCards[0]];
-			if (eventCards[0] != -1)
-				cards.Add() = &info.events[eventCards[0]];
-
-			eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
-			eventSelectionDrawInfo.activationIndex = -1;
-			eventSelectionDrawInfo.centerOffset *= -1;
-			eventSelectionDrawInfo.length = cards.count;
-
-			// Draw additional events.
-			Card* addCards[EVENT_CARD_MAX_COUNT * 2 - 2];
-			Card** stacks[2]{ addCards, &addCards[EVENT_CARD_MAX_COUNT - 1] };
 			const uint32_t c = GetEventCardCount(state);
-			uint32_t stacksCounts[2]{c - 1, c - 1};
+			if (c > 0)
+			{
+				const bool isStartOfTurn = activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn;
+				if(isStartOfTurn && previousEventCards[0] != -1)
+					cards.Add() = &info.events[previousEventCards[0]];
+				if (eventCards[0] != -1)
+					cards.Add() = &info.events[eventCards[0]];
 
-			if (eventCards[0] != -1)
-				for (uint32_t i = 0; i < c - 1; ++i)
+				eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
+				eventSelectionDrawInfo.activationIndex = -1;
+				eventSelectionDrawInfo.centerOffset *= -1;
+				eventSelectionDrawInfo.length = cards.count;
+
+				// Draw additional events.
+				Card* addCards[EVENT_CARD_MAX_COUNT * 2 - 2];
+				Card** stacks[2]{ addCards, &addCards[EVENT_CARD_MAX_COUNT - 1] };
+				uint32_t stacksCounts[2]{ c - 1, c - 1 };
+
+				if (eventCards[0] != -1)
+					for (uint32_t i = 0; i < c - 1; ++i)
+					{
+						addCards[i] = &info.events[eventCards[i + 1]];
+						if (isStartOfTurn && previousEventCards[0] != -1)
+							addCards[i + EVENT_CARD_MAX_COUNT - 1] = &info.events[previousEventCards[i + 1]];
+					}
+
+				eventSelectionDrawInfo.stacks = stacks;
+				eventSelectionDrawInfo.stackCounts = stacksCounts;
+				DrawActivationAnimation(eventSelectionDrawInfo, Activation::event, 0);
+
+				if (isStartOfTurn)
 				{
-					addCards[i] = &info.events[eventCards[i + 1]];
-					if (isStartOfTurn && previousEventCards[0] != -1)
-						addCards[i + EVENT_CARD_MAX_COUNT - 1] = &info.events[previousEventCards[i + 1]];
+					DrawDrawAnimation(*level, eventSelectionDrawInfo);
+					if (cards.count > 1)
+						DrawFadeAnimation(*level, eventSelectionDrawInfo, 0);
 				}
 
-			eventSelectionDrawInfo.stacks = stacks;
-			eventSelectionDrawInfo.stackCounts = stacksCounts;
-			DrawActivationAnimation(eventSelectionDrawInfo, Activation::event, 0);
-
-			if (isStartOfTurn)
-			{
-				DrawDrawAnimation(*level, eventSelectionDrawInfo);
-				if (cards.count > 1)
-					DrawFadeAnimation(*level, eventSelectionDrawInfo, 0);
+				level->DrawCardSelection(info, eventSelectionDrawInfo);
 			}
-			
-			level->DrawCardSelection(info, eventSelectionDrawInfo);
 		}
 
 		// Check for new turn.
@@ -830,7 +829,7 @@ namespace game
 		// Draw mana.
 		{
 			TextTask manaTextTask{};
-			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x - 32, HAND_HEIGHT + 21);
+			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 8);
 			manaTextTask.text = TextInterpreter::IntToConstCharPtr(state.mana, info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(state.maxMana, info.frameArena), info.frameArena);
@@ -1021,7 +1020,7 @@ namespace game
 
 		const auto& path = state.paths[state.GetPrimaryPath()];
 		const auto& room = info.rooms[path.room];
-		if (room.onActionEvent)
+		if (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS && room.onActionEvent)
 			if(room.onActionEvent(info, state, actionState, 0))
 			{
 				Activation activation{};
@@ -1538,7 +1537,9 @@ namespace game
 
 	uint32_t MainLevel::CombatState::GetEventCardCount(const State& state)
 	{
-		return jv::Min(1 + (state.depth + 5) / ROOM_COUNT_BEFORE_BOSS, EVENT_CARD_MAX_COUNT);
+		if (state.depth < ROOMS_BEFORE_EVENT_EFFECTS)
+			return 0;
+		return jv::Min(1 + (state.depth - ROOMS_BEFORE_EVENT_EFFECTS) / ROOM_COUNT_BEFORE_BOSS, EVENT_CARD_MAX_COUNT);
 	}
 
 	void MainLevel::CombatState::Shake(const LevelUpdateInfo& info)
