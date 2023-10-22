@@ -471,7 +471,7 @@ namespace game
 				for (uint32_t i = 0; i < boardState.allyCount - 1; ++i)
 				{
 					const uint32_t id = boardState.ids[i];
-					for (uint32_t j = 0; j < boardState.allyCount; ++j)
+					for (uint32_t j = i + 1; j < boardState.allyCount; ++j)
 					{
 						if(boardState.ids[j] == id)
 						{

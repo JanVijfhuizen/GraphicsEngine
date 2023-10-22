@@ -100,10 +100,10 @@ namespace game
 				imageRenderTask.image = info.textureStreamer.Get(_selectedCard->animIndex);
 				imageRenderTask.scale = CARD_ART_SHAPE;
 				imageRenderTask.xCenter = false;
-				imageRenderTask.yCenter = false;
+				imageRenderTask.yCenter = true;
 				imageRenderTask.subTexture = animFrames[i];
 				imageRenderTask.color *= glm::vec4(glm::vec3(jv::Min(_selectedCardLifeTime, 1.f)), 1);
-				info.renderTasks.Push(imageRenderTask);
+				//info.renderTasks.Push(imageRenderTask);
 			}
 			else
 				_selectedCard = nullptr;

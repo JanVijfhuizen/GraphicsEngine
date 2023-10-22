@@ -575,7 +575,7 @@ namespace game
 
 	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		constexpr uint32_t l = 30;
+		constexpr uint32_t l = 35;
 		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
 		for (uint32_t i = 0; i < l; ++i)
 		{
@@ -1127,23 +1127,23 @@ namespace game
 		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
 		librarian.name = "librarian";
 		librarian.attack = 1;
-		librarian.health = 3;
-		librarian.ruleText = "[end of turn] [ally] draw 3 cards. [enemy] discard your hand.";
+		librarian.health = 6;
+		librarian.ruleText = "[end of turn] discard your hand, then draw that many cards. [ally] draw 1 card.";
 		librarian.tags = TAG_HUMAN;
 		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
+					const uint32_t c = state.hand.count;
+					state.hand.Clear();
+
+					ActionState drawState{};
+					drawState.trigger = ActionState::Trigger::onDraw;
+					drawState.source = ActionState::Source::other;
+					for (uint32_t i = 0; i < 3; ++i)
+						state.TryAddToStack(drawState);
 					if(self < BOARD_CAPACITY_PER_SIDE)
-					{
-						ActionState drawState{};
-						drawState.trigger = ActionState::Trigger::onDraw;
-						drawState.source = ActionState::Source::other;
-						for (uint32_t i = 0; i < 3; ++i)
-							state.TryAddToStack(drawState);
-					}
-					else
-						state.hand.Clear();
+						state.TryAddToStack(drawState);
 					return true;
 				}
 				return false;
@@ -1271,9 +1271,6 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
-					if (self != actionState.dst)
-						return false;
-
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDraw;
 					damageState.source = ActionState::Source::other;
@@ -1314,14 +1311,14 @@ namespace game
 					const auto& boardState = state.boardState;
 					if (actionState.dst != self)
 						return false;
-					if (!boardState.Validate(actionState, false, true))
+					if (!boardState.Validate(actionState, true, true))
 						return false;
 
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.dst = self;
-					damageState.dstUniqueId = boardState.uniqueIds[self];
+					damageState.dst = actionState.src;
+					damageState.dstUniqueId = actionState.srcUniqueId;
 					state.TryAddToStack(damageState);
 					return true;
 				}
@@ -1752,7 +1749,7 @@ namespace game
 			};
 		auto& arenaOfTheDamned = arr[ROOM_IDS::ARENA_OF_THE_DAMNED];
 		arenaOfTheDamned.name = "arena of the damned";
-		arenaOfTheDamned.ruleText = "[end of turn] destroy all monsters with the lowest health.";
+		arenaOfTheDamned.ruleText = "[end of turn] deal 3 damage to all monsters with the lowest health.";
 		arenaOfTheDamned.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -1775,18 +1772,19 @@ namespace game
 							lowestHealth = health;
 					}
 
-					ActionState killState{};
-					killState.trigger = ActionState::Trigger::onDeath;
-					killState.source = ActionState::Source::other;
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = 3;
 
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
 					{
 						const auto health = boardState.combatStats[i].health;
 						if (health == lowestHealth)
 						{
-							killState.dst = i;
-							killState.dstUniqueId = boardState.uniqueIds[i];
-							state.TryAddToStack(killState);
+							damageState.dst = i;
+							damageState.dstUniqueId = boardState.uniqueIds[i];
+							state.TryAddToStack(damageState);
 						}
 					}
 
@@ -1795,9 +1793,9 @@ namespace game
 						const auto health = boardState.combatStats[BOARD_CAPACITY_PER_SIDE + i].health;
 						if (health == lowestHealth)
 						{
-							killState.dst = BOARD_CAPACITY_PER_SIDE + i;
-							killState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-							state.TryAddToStack(killState);
+							damageState.dst = BOARD_CAPACITY_PER_SIDE + i;
+							damageState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+							state.TryAddToStack(damageState);
 						}
 					}
 
@@ -1970,7 +1968,7 @@ namespace game
 				}
 				return false;
 			};
-		auto& rally = arr[SPELL_IDS::WINDFALL];
+		auto& rally = arr[SPELL_IDS::RALLY];
 		rally.name = "rally";
 		rally.ruleText = "give all allies 2 temporary attack.";
 		rally.cost = 5;
@@ -1989,7 +1987,7 @@ namespace game
 			};
 		auto& holdTheLine = arr[SPELL_IDS::HOLD_THE_LINE];
 		holdTheLine.name = "hold the line";
-		holdTheLine.ruleText = "give all allies 3 temporary health.";
+		holdTheLine.ruleText = "give all allies 4 temporary health.";
 		holdTheLine.cost = 6;
 		holdTheLine.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1998,7 +1996,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2128,7 +2126,7 @@ namespace game
 			};
 		auto& protect = arr[SPELL_IDS::PROTECT];
 		protect.name = "protect";
-		protect.ruleText = "gain 2 temporary health.";
+		protect.ruleText = "gain 3 temporary health.";
 		protect.cost = 1;
 		protect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2137,7 +2135,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
