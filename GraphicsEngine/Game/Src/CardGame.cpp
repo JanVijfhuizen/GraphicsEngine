@@ -1404,7 +1404,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLOOD_AXE].name = "blood axe";
-		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] gains 7 attack.";
+		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] gains 4 attack.";
 		arr[ARTIFACT_IDS::BLOOD_AXE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1423,7 +1423,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::attack] = 7;
+					buffState.values[ActionState::VStatBuff::attack] = 4;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -1444,7 +1444,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLOOD_HAMMER].name = "blood hammer";
-		arr[ARTIFACT_IDS::BLOOD_HAMMER].ruleText = "[any death] gains 7 temporary attack.";
+		arr[ARTIFACT_IDS::BLOOD_HAMMER].ruleText = "[any death] gains 4 temporary attack.";
 		arr[ARTIFACT_IDS::BLOOD_HAMMER].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1456,7 +1456,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempAttack] = 7;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 4;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -2418,7 +2418,7 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::WEAKNESS].name = "curse of weakness";
-		arr[CURSE_IDS::WEAKNESS].ruleText = "[start of Turn] set your attack to 1.";
+		arr[CURSE_IDS::WEAKNESS].ruleText = "[start of turn] set your attack to 1.";
 		arr[CURSE_IDS::WEAKNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
