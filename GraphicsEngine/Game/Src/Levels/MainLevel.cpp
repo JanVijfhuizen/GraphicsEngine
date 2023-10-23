@@ -1763,7 +1763,7 @@ namespace game
 			{
 				const uint32_t id = gameState.partyIds[i];
 				auto& slotCount = gameState.artifactSlotCount;
-				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
+				slotCount = jv::Max(slotCount, 1 + state.depth / (ROOM_COUNT_BEFORE_BOSS * 2));
 				slotCount = jv::Min(slotCount, MONSTER_ARTIFACT_CAPACITY);
 			}
 		}
