@@ -1164,7 +1164,7 @@ namespace game
 					if (self == actionState.dst)
 					{
 						ActionState damageState{};
-						damageState.trigger = ActionState::Trigger::onDraw;
+						damageState.trigger = ActionState::Trigger::onDamage;
 						damageState.source = ActionState::Source::other;
 						damageState.values[ActionState::VDamage::damage] = 
 							boardState.combatStats[self].attack + 
@@ -2050,26 +2050,9 @@ namespace game
 				}
 				return false;
 			};
-		auto& unwind = arr[SPELL_IDS::UNWIND];
-		unwind.name = "unwind";
-		unwind.ruleText = "untap target monster.";
-		unwind.cost = 1;
-		unwind.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-			{
-				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
-				{
-					if (actionState.dstUniqueId != state.boardState.uniqueIds[actionState.dst])
-						return false;
-					if(actionState.dst >= BOARD_CAPACITY_PER_SIDE)
-						return true;
-					state.tapped[actionState.dst] = false;
-					return true;
-				}
-				return false;
-			};
 		auto& enrage = arr[SPELL_IDS::ENRAGE];
 		enrage.name = "enrage";
-		enrage.ruleText = "gain 3 temporary attack.";
+		enrage.ruleText = "gain 2 temporary attack.";
 		enrage.cost = 1;
 		enrage.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2078,7 +2061,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 3;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 2;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2088,7 +2071,7 @@ namespace game
 			};
 		auto& protect = arr[SPELL_IDS::PROTECT];
 		protect.name = "protect";
-		protect.ruleText = "gain 4 temporary health.";
+		protect.ruleText = "gain 3 temporary health.";
 		protect.cost = 1;
 		protect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2097,7 +2080,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2107,7 +2090,7 @@ namespace game
 			};
 		auto& infuriate = arr[SPELL_IDS::INFURIATE];
 		infuriate.name = "infuriate";
-		infuriate.ruleText = "gain 5 temporary attack.";
+		infuriate.ruleText = "gain 4 temporary attack.";
 		infuriate.cost = 2;
 		infuriate.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2116,7 +2099,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 5;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 4;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
