@@ -996,12 +996,15 @@ namespace game
 		for (uint32_t i = 0; i < allyCount; ++i)
 		{
 			bool activated = false;
-			
-			const auto id = boardState.ids[i];
-			const auto& monster = info.monsters[id];
-			if (monster.onActionEvent)
-				if (monster.onActionEvent(info, state, actionState, i))
-					activated = true;
+
+			const auto flawId = info.gameState.curses[i];
+			if (flawId != -1)
+			{
+				const auto curse = info.curses[flawId];
+				if (curse.onActionEvent)
+					if (curse.onActionEvent(info, state, actionState, i))
+						activated = true;
+			}
 
 			for (uint32_t j = 0; j < gameState.artifactSlotCount; ++j)
 			{
@@ -1014,14 +1017,11 @@ namespace game
 						activated = true;
 			}
 
-			const auto flawId = info.gameState.curses[i];
-			if (flawId != -1)
-			{
-				const auto curse = info.curses[flawId];
-				if (curse.onActionEvent)
-					if (curse.onActionEvent(info, state, actionState, i))
-						activated = true;
-			}
+			const auto id = boardState.ids[i];
+			const auto& monster = info.monsters[id];
+			if (monster.onActionEvent)
+				if (monster.onActionEvent(info, state, actionState, i))
+					activated = true;
 
 			if (activated)
 			{
@@ -1946,7 +1946,7 @@ namespace game
 					for (uint32_t i = 0; i < gameState.partySize; ++i)
 					{
 						const auto partyId = gameState.partyIds[i];
-						const auto id = partyId != -1 ? partyId : playerState.partySize + d;
+						const auto id = partyId != -1 ? partyId : d;
 						if (!selected[id])
 							continue;
 						if (partyId == -1)

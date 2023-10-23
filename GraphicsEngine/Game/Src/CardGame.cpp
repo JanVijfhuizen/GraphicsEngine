@@ -967,7 +967,7 @@ namespace game
 		maidenOfTheMoon.name = "maiden of the moon";
 		maidenOfTheMoon.attack = 3;
 		maidenOfTheMoon.health = 20;
-		maidenOfTheMoon.ruleText = "[any death] gains 1 attack.";
+		maidenOfTheMoon.ruleText = "[any death] gains 2 attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -978,7 +978,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 1;
+					buffState.values[ActionState::VStatBuff::attack] = 2;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1018,7 +1018,7 @@ namespace game
 		auto& manaCyclone = arr[MONSTER_IDS::MANA_CYCLONE];
 		manaCyclone.name = "mana cyclone";
 		manaCyclone.attack = 1;
-		manaCyclone.health = 20;
+		manaCyclone.health = 10;
 		manaCyclone.ruleText = "[end of turn] gains attack equal to your remaining mana.";
 		manaCyclone.tags = TAG_ELEMENTAL;
 		manaCyclone.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1539,9 +1539,7 @@ namespace game
 
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
-					damageState.source = ActionState::Source::board;
-					damageState.src = self;
-					damageState.srcUniqueId = boardState.uniqueIds[self];
+					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 2;
 					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
 					return true;
@@ -1843,9 +1841,9 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 				{
 					ActionState killState{};
-					killState.trigger = ActionState::Trigger::onDraw;
+					killState.trigger = ActionState::Trigger::onDeath;
 					killState.source = ActionState::Source::other;
-					TargetOfType(info, state, killState, -1, TAG_TOKEN, TypeTarget::all);
+					TargetOfType(info, state, killState, 0, TAG_TOKEN, TypeTarget::all);
 
 					const auto& boardState = state.boardState;
 
@@ -2079,6 +2077,112 @@ namespace game
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
 					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+					buffState.dst = actionState.dst;
+					buffState.dstUniqueId = actionState.dstUniqueId;
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
+		auto& shield = arr[SPELL_IDS::SHIELD];
+		shield.name = "shield";
+		shield.ruleText = "gain 7 temporary health.";
+		shield.cost = 3;
+		shield.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 7;
+					buffState.dst = actionState.dst;
+					buffState.dstUniqueId = actionState.dstUniqueId;
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
+		auto& groupHug = arr[SPELL_IDS::GROUP_HUG];
+		groupHug.name = "group hug";
+		groupHug.ruleText = "all allies gain temporary health equal to target monsters temporary health.";
+		groupHug.cost = 4;
+		groupHug.type = SpellCard::Type::all;
+		groupHug.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					if (!state.boardState.Validate(actionState, false, true))
+						return false;
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::tempHealth] = state.boardState.combatStats[actionState.dst].tempHealth;
+					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
+					return true;
+				}
+				return false;
+			};
+		auto& stall = arr[SPELL_IDS::STALL];
+		stall.name = "stall";
+		stall.ruleText = "all monsters gain 10 temporary health.";
+		stall.cost = 2;
+		stall.type = SpellCard::Type::all;
+		stall.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 10;
+					TargetOfType(info, state, buffState, -1, -1, TypeTarget::all);
+					return true;
+				}
+				return false;
+			};
+		auto& balance = arr[SPELL_IDS::BALANCE];
+		balance.name = "balance";
+		balance.ruleText = "gain temporary health equal to your temporary attack.";
+		balance.cost = 0;
+		balance.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					if (!state.boardState.Validate(actionState, false, true))
+						return false;
+
+					const auto& stats = state.boardState.combatStats[actionState.dst];
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::tempHealth] = stats.tempAttack;
+					buffState.dst = actionState.dst;
+					buffState.dstUniqueId = actionState.dstUniqueId;
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
+		auto& counterBalance = arr[SPELL_IDS::COUNTER_BALANCE];
+		counterBalance.name = "counter balance";
+		counterBalance.ruleText = "gain temporary attack equal to your temporary health.";
+		counterBalance.cost = 0;
+		counterBalance.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					if (!state.boardState.Validate(actionState, false, true))
+						return false;
+
+					const auto& stats = state.boardState.combatStats[actionState.dst];
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::tempAttack] = stats.tempHealth;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
