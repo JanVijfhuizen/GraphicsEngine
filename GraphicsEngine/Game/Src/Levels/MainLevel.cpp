@@ -1274,6 +1274,8 @@ namespace game
 		case ActionState::Trigger::onDamage:
 		case ActionState::Trigger::onAttack:
 		case ActionState::Trigger::onDeath:
+		case ActionState::Trigger::onStatBuff:
+		case ActionState::Trigger::onStatSet:
 			validSrc = handSrc || actionState.src != -1 && state.boardState.uniqueIds[actionState.src] == actionState.srcUniqueId;
 			validDst = actionState.dst != -1 && state.boardState.uniqueIds[actionState.dst] == actionState.dstUniqueId;
 			validSrc = !validSrc ? false : handSrc ? true : actionState.src >= BOARD_CAPACITY_PER_SIDE ? 

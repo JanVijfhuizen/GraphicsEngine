@@ -1323,7 +1323,7 @@ namespace game
 		acolyteOfPain.name = "acolyte of pain";
 		acolyteOfPain.attack = 1;
 		acolyteOfPain.health = 13;
-		acolyteOfPain.ruleText = "[damaged] draw 2.";
+		acolyteOfPain.ruleText = "[damaged] draw.";
 		acolyteOfPain.tags = TAG_HUMAN;
 		acolyteOfPain.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1335,8 +1335,7 @@ namespace game
 					ActionState drawState{};
 					drawState.trigger = ActionState::Trigger::onDraw;
 					drawState.source = ActionState::Source::other;
-					for (uint32_t i = 0; i < 2; ++i)
-						state.TryAddToStack(drawState);
+					state.TryAddToStack(drawState);
 					return true;
 				}
 				return false;
