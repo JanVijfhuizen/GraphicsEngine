@@ -1228,19 +1228,21 @@ namespace game
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
-		slimeSoldier.health = 6;
+		slimeSoldier.health = 4;
 		slimeSoldier.ruleText = "[end of turn] summons an exact copy.";
 		slimeSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
+					const auto& stats = state.boardState.combatStats[self];
+
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_SOLDIER;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
-					summonState.values[ActionState::VSummon::attack] = state.boardState.combatStats[self].attack;
-					summonState.values[ActionState::VSummon::health] = state.boardState.combatStats[self].health;
+					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
+					summonState.values[ActionState::VSummon::health] = stats.health + stats.tempHealth;
 					state.stack.Add() = summonState;
 					return true;
 				}
@@ -2243,8 +2245,8 @@ namespace game
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
-					summonState.values[ActionState::VSummon::health] = stats.attack;
-					summonState.values[ActionState::VSummon::attack] = stats.attack;
+					summonState.values[ActionState::VSummon::health] = stats.attack + stats.tempAttack;
+					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
 					state.TryAddToStack(summonState);
 					return true;
