@@ -1894,6 +1894,7 @@ namespace game
 				}
 			}
 
+			// Find new monsters.
 			uint32_t c = playerState.partySize;
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
@@ -1945,11 +1946,11 @@ namespace game
 					for (uint32_t i = 0; i < gameState.partySize; ++i)
 					{
 						const auto partyId = gameState.partyIds[i];
-						if (partyId != -1)
-							continue;
-						const auto id = playerState.partySize + i;
+						const auto id = partyId != -1 ? partyId : playerState.partySize + d;
 						if (!selected[id])
 							continue;
+						if (partyId == -1)
+							++d;
 						playerState.monsterIds[id] = gameState.monsterIds[i];
 						memcpy(&playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
 							sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
