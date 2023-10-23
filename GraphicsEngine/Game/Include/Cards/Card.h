@@ -82,6 +82,16 @@ namespace game
 
 	struct Card
 	{
+		enum class Type
+		{
+			artifact,
+			curse,
+			event,
+			monster,
+			room,
+			spell
+		};
+
 		bool unique = false;
 		const char* name = "unnamed";
 		const char* ruleText = "...";
@@ -89,5 +99,6 @@ namespace game
 		uint32_t normalAnimIndex = -1;
 
 		bool(*onActionEvent)(const struct LevelInfo& info, State& state, const ActionState& actionState, uint32_t self) = nullptr;
+		[[nodiscard]] virtual Type GetType() = 0;
 	};
 }

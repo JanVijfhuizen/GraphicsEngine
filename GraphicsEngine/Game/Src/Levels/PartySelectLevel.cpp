@@ -47,12 +47,12 @@ namespace game
 			if (info.inputState.enter.PressEvent())
 			{
 				auto& gameState = info.gameState;
-				gameState.partyCount = selectedAmount;
+				gameState.partySize = selectedAmount;
 
 				const auto& playerState = info.playerState;
 
 				uint32_t j = 0;
-				for (uint32_t i = 0; i < PARTY_ACTIVE_INITIAL_CAPACITY; ++i)
+				for (uint32_t i = 0; i < PARTY_CAPACITY; ++i)
 				{
 					if (!selected[i])
 						continue;
@@ -60,18 +60,20 @@ namespace game
 					gameState.monsterIds[j] = info.playerState.monsterIds[i];
 					memcpy(&gameState.artifacts[j * MONSTER_ARTIFACT_CAPACITY], &playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY], 
 						sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
-					gameState.artifactSlotCounts[j] = playerState.artifactSlotCounts[i];
 
 					const auto& monster = info.monsters[info.playerState.monsterIds[i]];
 					gameState.healths[j++] = monster.health;
-					gameState.artifactSlotCounts[i] = jv::Max<uint32_t>(gameState.artifactSlotCounts[i], 1);
 				}
+				gameState.artifactSlotCount = playerState.artifactSlotCount;
 
-				for (uint32_t i = 0; i < SPELL_DECK_SIZE / 2; ++i)
+				for (uint32_t i = 0; i < 7; ++i)
 				{
 					gameState.spells[i] = SPELL_IDS::ENRAGE;
-					gameState.spells[i + SPELL_DECK_SIZE / 2] = SPELL_IDS::PROTECT;
 				}
+				for (uint32_t i = 7; i < 15; ++i)
+					gameState.spells[i] = SPELL_IDS::PROTECT;
+				for (uint32_t i = 15; i < 18; ++i)
+					gameState.spells[i] = SPELL_IDS::ARCANE_INTELLECT;
 				
 				Load(LevelIndex::main, true);
 			}

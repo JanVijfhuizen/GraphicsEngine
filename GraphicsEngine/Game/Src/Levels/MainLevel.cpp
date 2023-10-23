@@ -101,38 +101,43 @@ namespace game
 		Card* cards[DISCOVER_LENGTH];
 		CombatStats combatStats[DISCOVER_LENGTH]{};
 
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			const auto& path = state.paths[i];
-			if(!bossPresent)
-			{
-				const auto monster = &info.monsters[state.paths[i].boss];
-				cards[i] = monster;
-				combatStats[i] = GetCombatStat(*monster);
-			}
-			else
-				cards[i] = &info.artifacts[path.artifact];
-		}
-
 		Card** stacks[DISCOVER_LENGTH]{};
 		for (auto& stack : stacks)
 			stack = jv::CreateArray<Card*>(info.frameArena, 3).ptr;
 
 		uint32_t stacksCounts[DISCOVER_LENGTH]{};
 		for (auto& c : stacksCounts)
-			c = 3;
+			c = 2 + !bossPresent;
 
+		const uint32_t count = 1 + (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS) + !bossPresent;
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
 			const auto& stack = stacks[i];
 			const auto& path = state.paths[i];
 
-			stack[0] = &info.rooms[path.room];
-			stack[1] = &info.spells[path.spell];
+			stack[0] = &info.spells[path.spell];
 			if (flawPresent)
-				stack[2] = &info.curses[path.curse];
+				stack[1] = &info.curses[path.curse];
 			else
-				stack[2] = &info.artifacts[path.artifact];
+				stack[1] = &info.artifacts[path.artifact];
+			stack[2] = &info.rooms[path.room];
+			stacksCounts[i] = count;
+		}
+
+		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
+		{
+			if (!bossPresent)
+			{
+				const auto monster = &info.monsters[state.paths[i].boss];
+				cards[i] = monster;
+				combatStats[i] = GetCombatStat(*monster);
+			}
+			else
+			{
+				cards[i] = stacks[i][0];
+				for (uint32_t j = 0; j < count; ++j)
+					stacks[i][j] = stacks[i][j + 1];
+			}
 		}
 
 		const char* texts[DISCOVER_LENGTH]{};
@@ -150,9 +155,10 @@ namespace game
 		cardSelectionDrawInfo.stacks = stacks;
 		cardSelectionDrawInfo.stackCounts = stacksCounts;
 		cardSelectionDrawInfo.texts = bossPresent ? nullptr : texts;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - 16;
 		cardSelectionDrawInfo.highlighted = discoverOption;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
+		cardSelectionDrawInfo.offsetMod += 12;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		if (!bossPresent)
 			cardSelectionDrawInfo.combatStats = combatStats;
@@ -173,6 +179,7 @@ namespace game
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
 			cardDrawInfo.origin.x += (shape.x + cardSelectionDrawInfo.offsetMod) * (finalBoss ? 2 : 4) / 2;
+			cardDrawInfo.origin.y = cardSelectionDrawInfo.height;
 			cardDrawInfo.lifeTime = level->GetTime();
 			level->DrawCard(info, cardDrawInfo);
 		}
@@ -250,16 +257,9 @@ namespace game
 		startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
 		state.TryAddToStack(startOfTurnActionState);
 
-		for (uint32_t i = 0; i < HAND_INITIAL_SIZE; ++i)
-		{
-			ActionState drawState{};
-			drawState.trigger = ActionState::Trigger::onDraw;
-			state.TryAddToStack(drawState);
-		}
-
 		if (!bossPresent)
 		{
-			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(3 + state.depth / ROOM_COUNT_BEFORE_BOSS, BOARD_CAPACITY_PER_SIDE), state.depth + 1);
+			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / ROOM_COUNT_BEFORE_BOSS, BOARD_CAPACITY_PER_SIDE), state.depth + 1);
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				ActionState summonState{};
@@ -278,7 +278,7 @@ namespace game
 			state.TryAddToStack(summonState);
 		}
 		
-		for (int32_t i = static_cast<int32_t>(gameState.partyCount) - 1; i >= 0; --i)
+		for (int32_t i = static_cast<int32_t>(gameState.partySize) - 1; i >= 0; --i)
 		{
 			const auto partyId = gameState.partyIds[i];
 			const auto monsterId = gameState.monsterIds[i];
@@ -290,6 +290,13 @@ namespace game
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::partyId)] = partyId;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = gameState.healths[i];
 			state.TryAddToStack(summonState);
+		}
+
+		for (uint32_t i = 0; i < HAND_INITIAL_SIZE; ++i)
+		{
+			ActionState drawState{};
+			drawState.trigger = ActionState::Trigger::onDraw;
+			state.TryAddToStack(drawState);
 		}
 	}
 
@@ -446,11 +453,12 @@ namespace game
 			// Check for room victory.
 			if (boardState.enemyCount == 0)
 			{
-				bool tokensRemaining = false;
+				bool actionsRemaining = false;
 				ActionState killState{};
 				killState.trigger = ActionState::Trigger::onDeath;
 				killState.source = ActionState::Source::other;
 
+				// Destroy tokens.
 				for (uint32_t i = 0; i < boardState.allyCount; ++i)
 				{
 					const auto id = boardState.ids[i];
@@ -459,16 +467,43 @@ namespace game
 						killState.dst = i;
 						killState.dstUniqueId = boardState.uniqueIds[i];
 						state.TryAddToStack(killState);
-						tokensRemaining = true;
+						actionsRemaining = true;
 					}
 				}
 
-				if(!tokensRemaining)
+				// Destroy copies.
+				for (uint32_t i = 0; i < boardState.allyCount - 1; ++i)
+				{
+					const uint32_t id = boardState.ids[i];
+					for (uint32_t j = i + 1; j < boardState.allyCount; ++j)
+					{
+						if(boardState.ids[j] == id)
+						{
+							killState.dst = j;
+							killState.dstUniqueId = boardState.uniqueIds[j];
+							state.TryAddToStack(killState);
+							actionsRemaining = true;
+						}
+					}
+				}
+
+				if(!actionsRemaining)
 				{
 					if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
 					{
 						const auto monster = &info.monsters[lastEnemyDefeatedId];
-						if (!monster->unique)
+						bool valid = !monster->unique;
+
+						// Check if you already own this monster.
+						if(valid)
+							for (uint32_t i = 0; i < boardState.allyCount; ++i)
+								if (lastEnemyDefeatedId == boardState.ids[i])
+								{
+									valid = false;
+									break;
+								}
+
+						if (valid)
 						{
 							if (recruitSceneLifetime < -1e-5f)
 								recruitSceneLifetime = 0;
@@ -515,13 +550,13 @@ namespace game
 						}
 				}
 
-				gameState.partyCount = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);
-				for (uint32_t i = 0; i < gameState.partyCount; ++i)
+				gameState.partySize = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);
+				for (uint32_t i = 0; i < gameState.partySize; ++i)
 				{
 					gameState.monsterIds[i] = boardState.ids[i];
 					gameState.healths[i] = jv::Min(boardState.combatStats[i].health, info.monsters[gameState.monsterIds[i]].health);
-					gameState.artifactSlotCounts[i] = jv::Max(gameState.artifactSlotCounts[i], 1 + (state.depth + 1) / ROOM_COUNT_BEFORE_BOSS);
-					gameState.artifactSlotCounts[i] = jv::Min(gameState.artifactSlotCounts[i], MONSTER_ARTIFACT_CAPACITY);
+					gameState.artifactSlotCount = 1 + state.depth / ROOM_COUNT_BEFORE_BOSS;
+					gameState.artifactSlotCount = jv::Min(gameState.artifactSlotCount, MONSTER_ARTIFACT_CAPACITY);
 				}
 
 				if(state.depth % 2 == 0)
@@ -562,51 +597,58 @@ namespace game
 			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
 
 			// Draws room.
-			const auto& path = state.paths[state.GetPrimaryPath()];
-
-			cards.Add() = &info.rooms[path.room];
-			DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
-			level->DrawCardSelection(info, eventSelectionDrawInfo);
+			if(state.depth >= ROOMS_BEFORE_ROOM_EFFECTS)
+			{
+				const auto& path = state.paths[state.GetPrimaryPath()];
+				cards.Add() = &info.rooms[path.room];
+				DrawActivationAnimation(eventSelectionDrawInfo, Activation::room, 0);
+				level->DrawCardSelection(info, eventSelectionDrawInfo);
+				cards.Clear();
+			}
 
 			// Draws events.
-			cards.Clear();
-			const bool isStartOfTurn = activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn;
-			if(isStartOfTurn && previousEventCards[0] != -1)
-				cards.Add() = &info.events[previousEventCards[0]];
-			if (eventCards[0] != -1)
-				cards.Add() = &info.events[eventCards[0]];
-
-			eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
-			eventSelectionDrawInfo.activationIndex = -1;
-			eventSelectionDrawInfo.centerOffset *= -1;
-			eventSelectionDrawInfo.length = cards.count;
-
-			// Draw additional events.
-			Card* addCards[EVENT_CARD_MAX_COUNT * 2 - 2];
-			Card** stacks[2]{ addCards, &addCards[EVENT_CARD_MAX_COUNT - 1] };
 			const uint32_t c = GetEventCardCount(state);
-			uint32_t stacksCounts[2]{c - 1, c - 1};
+			if (c > 0)
+			{
+				const bool isStartOfTurn = activeStateValid && activeState.trigger == ActionState::Trigger::onStartOfTurn;
+				if(isStartOfTurn && previousEventCards[0] != -1)
+					cards.Add() = &info.events[previousEventCards[0]];
+				if (eventCards[0] != -1)
+					cards.Add() = &info.events[eventCards[0]];
 
-			if (eventCards[0] != -1)
-				for (uint32_t i = 0; i < c - 1; ++i)
+				eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
+				eventSelectionDrawInfo.activationIndex = -1;
+				eventSelectionDrawInfo.centerOffset *= -1;
+				eventSelectionDrawInfo.length = cards.count;
+
+				// Draw additional events.
+				/*
+				Card* addCards[EVENT_CARD_MAX_COUNT * 2 - 2];
+				Card** stacks[2]{ addCards, &addCards[EVENT_CARD_MAX_COUNT - 1] };
+				uint32_t stacksCounts[2]{ c - 1, c - 1 };
+
+				if (eventCards[0] != -1)
+					for (uint32_t i = 0; i < c - 1; ++i)
+					{
+						addCards[i] = &info.events[eventCards[i + 1]];
+						if (isStartOfTurn && previousEventCards[0] != -1)
+							addCards[i + EVENT_CARD_MAX_COUNT - 1] = &info.events[previousEventCards[i + 1]];
+					}
+
+				eventSelectionDrawInfo.stacks = stacks;
+				eventSelectionDrawInfo.stackCounts = stacksCounts;
+				*/
+				DrawActivationAnimation(eventSelectionDrawInfo, Activation::event, 0);
+
+				if (isStartOfTurn)
 				{
-					addCards[i] = &info.events[eventCards[i + 1]];
-					if (isStartOfTurn && previousEventCards[0] != -1)
-						addCards[i + EVENT_CARD_MAX_COUNT - 1] = &info.events[previousEventCards[i + 1]];
+					DrawDrawAnimation(*level, eventSelectionDrawInfo);
+					if (cards.count > 1)
+						DrawFadeAnimation(*level, eventSelectionDrawInfo, 0);
 				}
 
-			eventSelectionDrawInfo.stacks = stacks;
-			eventSelectionDrawInfo.stackCounts = stacksCounts;
-			DrawActivationAnimation(eventSelectionDrawInfo, Activation::event, 0);
-
-			if (isStartOfTurn)
-			{
-				DrawDrawAnimation(*level, eventSelectionDrawInfo);
-				if (cards.count > 1)
-					DrawFadeAnimation(*level, eventSelectionDrawInfo, 0);
+				level->DrawCardSelection(info, eventSelectionDrawInfo);
 			}
-			
-			level->DrawCardSelection(info, eventSelectionDrawInfo);
 		}
 
 		// Check for new turn.
@@ -755,7 +797,7 @@ namespace game
 		for (uint32_t i = 0; i < boardState.allyCount; ++i)
 		{
 			const uint32_t curse = gameState.curses[i];
-			const uint32_t artifactCount = gameState.artifactSlotCounts[i];
+			const uint32_t artifactCount = gameState.artifactSlotCount;
 			const uint32_t count = stacksCount[i] = (curse != -1) + artifactCount;
 
 			if (count == 0)
@@ -801,13 +843,25 @@ namespace game
 		// Draw mana.
 		{
 			TextTask manaTextTask{};
-			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, HAND_HEIGHT + 32);
+			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 8);
 			manaTextTask.text = TextInterpreter::IntToConstCharPtr(state.mana, info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(state.maxMana, info.frameArena), info.frameArena);
 			manaTextTask.lifetime = level->GetTime();
 			manaTextTask.center = true;
 			info.textTasks.Push(manaTextTask);
+		}
+
+		if(state.stack.count == 0)
+		{
+			if(selectionState == SelectionState::ally)
+			{
+				auto& isTapped = state.tapped[selectedId];
+				if (!isTapped)
+					level->DrawSelectedCard(&info.monsters[boardState.ids[selectedId]]);
+			}
+			else if(selectionState == SelectionState::hand)
+				level->DrawSelectedCard(&info.spells[state.hand[selectedId]]);
 		}
 
 		if (state.stack.count == 0 && lMouseReleased)
@@ -856,8 +910,7 @@ namespace game
 		}
 
 		if (activeStateValid || state.stack.count != 0)
-			level->DrawFullCard(nullptr, FullCardType::other);
-			
+			level->DrawFullCard(nullptr);
 		return true;
 	}
 
@@ -877,6 +930,27 @@ namespace game
 			for (auto& eventCard : eventCards)
 				eventCard = state.GetEvent(info, eventCards, c);
 			++state.turn;
+
+			// Untap.
+			for (auto& b : state.tapped)
+				b = false;
+
+			if (state.maxMana < MAX_MANA)
+				++state.maxMana;
+			state.mana = state.maxMana;
+		}
+		else if(actionState.trigger == ActionState::Trigger::onAttack)
+		{
+			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
+			{
+				auto& target = state.targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
+				const auto oldTarget = target;
+				if (boardState.allyCount > 1)
+				{
+					while (target == oldTarget)
+						target = rand() % boardState.allyCount;
+				}
+			}
 		}
 		else if (actionState.trigger == ActionState::Trigger::onSummon)
 		{
@@ -929,9 +1003,9 @@ namespace game
 				if (monster.onActionEvent(info, state, actionState, i))
 					activated = true;
 
-			for (uint32_t j = 0; j < gameState.artifactSlotCounts[i]; ++j)
+			for (uint32_t j = 0; j < gameState.artifactSlotCount; ++j)
 			{
-				const uint32_t artifactId = gameState.artifacts[i];
+				const uint32_t artifactId = gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
 				if (artifactId == -1)
 					continue;
 				const auto& artifact = info.artifacts[artifactId];
@@ -960,7 +1034,7 @@ namespace game
 
 		const auto& path = state.paths[state.GetPrimaryPath()];
 		const auto& room = info.rooms[path.room];
-		if (room.onActionEvent)
+		if (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS && room.onActionEvent)
 			if(room.onActionEvent(info, state, actionState, 0))
 			{
 				Activation activation{};
@@ -1023,14 +1097,6 @@ namespace game
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				state.targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
 
-			// Untap.
-			for (auto& b : state.tapped)
-				b = false;
-
-			if (state.maxMana < MAX_MANA)
-				++state.maxMana;
-			state.mana = state.maxMana;
-
 			ActionState drawState{};
 			drawState.trigger = ActionState::Trigger::onDraw;
 			state.TryAddToStack(drawState);
@@ -1044,17 +1110,6 @@ namespace game
 		else if (actionState.trigger == ActionState::Trigger::onAttack)
 		{
 			const auto& srcCombatStats = boardState.combatStats[actionState.src];
-
-			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
-			{
-				auto& target = state.targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];
-				const auto oldTarget = target;
-				if (boardState.allyCount > 1)
-				{
-					while (target == oldTarget)
-						target = rand() % boardState.allyCount;
-				}
-			}
 
 			constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
 			ActionState damageState = actionState;
@@ -1159,11 +1214,13 @@ namespace game
 				{
 					state.tapped[j] = state.tapped[j + 1];
 					gameState.partyIds[j] = gameState.partyIds[j + 1];
-					gameState.artifactSlotCounts[j] = gameState.artifactSlotCounts[j + 1];
 					memcpy(&gameState.artifacts[j * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[(j + 1) * MONSTER_ARTIFACT_CAPACITY], 
 						sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 					gameState.curses[j] = gameState.curses[j + 1];
 				}
+				for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
+					gameState.artifacts[c * MONSTER_ARTIFACT_CAPACITY + k] = -1;
+				gameState.curses[c] = -1;
 				--boardState.allyCount;
 			}
 
@@ -1187,9 +1244,9 @@ namespace game
 						--as.src;
 				}
 
-				if (isEnemy && as.dst > i && as.dst < BOARD_CAPACITY_PER_SIDE)
+				if (isEnemy && as.dst > i + BOARD_CAPACITY_PER_SIDE)
 					--as.dst;
-				else if (!isEnemy && as.dst > i + BOARD_CAPACITY_PER_SIDE)
+				else if (!isEnemy && as.dst > i && as.dst < BOARD_CAPACITY_PER_SIDE)
 					--as.dst;
 			}
 		}
@@ -1365,7 +1422,7 @@ namespace game
 		textTask.text = TextInterpreter::Concat("+", textTask.text, info.frameArena);
 		textTask.text = TextInterpreter::Concat(textTask.text, "/+", info.frameArena);
 
-		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)];
+		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VStatBuff::health)];
 		if (hltBuff == -1)
 			hltBuff = 0;
 
@@ -1429,7 +1486,7 @@ namespace game
 		const auto& activation = activations.Peek();
 		if (activation.type != type)
 			return;
-		if (activation.id + idMod >= drawInfo.length)
+		if (activation.id - idMod >= drawInfo.length)
 			return;
 		drawInfo.activationIndex = activation.id - idMod;
 		const float f = (CARD_ACTIVATION_DURATION - (CARD_ACTIVATION_DURATION - activationDuration)) / CARD_ACTIVATION_DURATION;
@@ -1496,7 +1553,9 @@ namespace game
 
 	uint32_t MainLevel::CombatState::GetEventCardCount(const State& state)
 	{
-		return jv::Min(1 + (state.depth + 5) / ROOM_COUNT_BEFORE_BOSS, EVENT_CARD_MAX_COUNT);
+		if (state.depth < ROOMS_BEFORE_EVENT_EFFECTS)
+			return 0;
+		return jv::Min(1 + (state.depth - ROOMS_BEFORE_EVENT_EFFECTS) / ROOM_COUNT_BEFORE_BOSS, EVENT_CARD_MAX_COUNT);
 	}
 
 	void MainLevel::CombatState::Shake(const LevelUpdateInfo& info)
@@ -1545,6 +1604,7 @@ namespace game
 		cardSelectionDrawInfo.costs = costs;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
+		cardSelectionDrawInfo.rowCutoff = 6;
 		const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		const auto& path = state.paths[state.chosenPath];
@@ -1598,7 +1658,7 @@ namespace game
 		bool greyedOut[PARTY_ACTIVE_CAPACITY];
 		bool flawSlotAvailable = false;
 
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
 			const auto& curse = info.gameState.curses[i];
 			greyedOut[i] = curse != -1;
@@ -1611,7 +1671,7 @@ namespace game
 
 			Card* cards[PARTY_ACTIVE_CAPACITY];
 			CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const auto monster = &info.monsters[gameState.monsterIds[i]];
 				cards[i] = monster;
@@ -1621,9 +1681,9 @@ namespace game
 			Card** stacks[PARTY_CAPACITY]{};
 			uint32_t stackCounts[PARTY_CAPACITY]{};
 			
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
-				const uint32_t count = stackCounts[i] = gameState.artifactSlotCounts[i];
+				const uint32_t count = stackCounts[i] = gameState.artifactSlotCount;
 				if (count == 0)
 					continue;
 
@@ -1645,7 +1705,7 @@ namespace game
 
 			CardSelectionDrawInfo cardSelectionDrawInfo{};
 			cardSelectionDrawInfo.cards = cards;
-			cardSelectionDrawInfo.length = gameState.partyCount;
+			cardSelectionDrawInfo.length = gameState.partySize;
 			cardSelectionDrawInfo.greyedOutArr = greyedOut;
 			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 			cardSelectionDrawInfo.stacks = stacks;
@@ -1695,10 +1755,10 @@ namespace game
 		{
 			auto& gameState = info.gameState;
 
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const uint32_t id = gameState.partyIds[i];
-				auto& slotCount = gameState.artifactSlotCounts[id];
+				auto& slotCount = gameState.artifactSlotCount;
 				slotCount = jv::Max(slotCount, state.depth / ROOM_COUNT_BEFORE_BOSS);
 				slotCount = jv::Min(slotCount, MONSTER_ARTIFACT_CAPACITY);
 			}
@@ -1719,23 +1779,21 @@ namespace game
 		if (f >= 0)
 			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
 
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			cards[i] = &info.monsters[gameState.monsterIds[i]];
 
 		Card** artifacts[PARTY_ACTIVE_CAPACITY]{};
 		CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
 		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
 		
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
 			const auto monster = &info.monsters[gameState.monsterIds[i]];
 			cards[i] = monster;
 			combatStats[i] = GetCombatStat(*monster);
 			combatStats[i].health = gameState.healths[i];
 
-			const uint32_t count = artifactCounts[i] = gameState.artifactSlotCounts[i];
-			if (count == 0)
-				continue;
+			const uint32_t count = artifactCounts[i] = gameState.artifactSlotCount;
 			const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
 			for (uint32_t j = 0; j < count; ++j)
 			{
@@ -1747,7 +1805,7 @@ namespace game
 		uint32_t outStackSelected;
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = gameState.partyCount;
+		cardSelectionDrawInfo.length = gameState.partySize;
 		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
@@ -1794,16 +1852,16 @@ namespace game
 		const auto& gameState = info.gameState;
 		auto& playerState = info.playerState;
 
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
 			const auto partyId = gameState.partyIds[i];
 			if (partyId == -1)
 				continue;
 			playerState.monsterIds[partyId] = gameState.monsterIds[i];
-			playerState.artifactSlotCounts[partyId] = gameState.artifactSlotCounts[i];
 			memcpy(&playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
 				sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 		}
+		playerState.artifactSlotCount = gameState.artifactSlotCount;
 	}
 
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -1827,10 +1885,7 @@ namespace game
 				cards[i] = monster;
 				combatStats[i] = GetCombatStat(*monster);
 
-				const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
-				if (count == 0)
-					continue;
-
+				const uint32_t count = artifactCounts[i] = playerState.artifactSlotCount;
 				const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
 				for (uint32_t j = 0; j < count; ++j)
 				{
@@ -1840,7 +1895,7 @@ namespace game
 			}
 
 			uint32_t c = playerState.partySize;
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				if (gameState.partyIds[i] != -1)
 					continue;
@@ -1884,11 +1939,10 @@ namespace game
 							memcpy(&playerState.artifacts[d * MONSTER_ARTIFACT_CAPACITY], &playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
 								sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 							playerState.monsterIds[d++] = playerState.monsterIds[i];
-							playerState.artifactSlotCounts[d] = playerState.artifactSlotCounts[i];
 						}
 					}
 					
-					for (uint32_t i = 0; i < gameState.partyCount; ++i)
+					for (uint32_t i = 0; i < gameState.partySize; ++i)
 					{
 						const auto partyId = gameState.partyIds[i];
 						if (partyId != -1)
@@ -1897,7 +1951,6 @@ namespace game
 						if (!selected[id])
 							continue;
 						playerState.monsterIds[id] = gameState.monsterIds[i];
-						playerState.artifactSlotCounts[id] = gameState.artifactSlotCounts[i];
 						memcpy(&playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
 							sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 					}
@@ -1931,7 +1984,7 @@ namespace game
 		buttonDrawInfo.text = "quit";
 		if (level->DrawButton(info, buttonDrawInfo))
 		{
-			for (uint32_t i = 0; i < gameState.partyCount; ++i)
+			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const auto partyId = gameState.partyIds[i];
 				if (partyId == -1)

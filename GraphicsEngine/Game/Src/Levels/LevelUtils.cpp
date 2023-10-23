@@ -11,25 +11,31 @@ namespace game
 		RemoveDuplicates(deck, playerState.monsterIds, playerState.partySize);
 	}
 
-	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
+	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState, const GameState& gameState)
 	{
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
-		{
-			for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
+			for (uint32_t j = 0; j < playerState.artifactSlotCount; ++j)
 				for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
 					if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * i + j] == deck[k])
 					{
 						deck.RemoveAt(k);
 						break;
 					}
-		}
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
+			for (uint32_t j = 0; j < gameState.artifactSlotCount; ++j)
+				for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
+					if (gameState.artifacts[MONSTER_ARTIFACT_CAPACITY * i + j] == deck[k])
+					{
+						deck.RemoveAt(k);
+						break;
+					}
 	}
 
 	void RemoveFlawsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState)
 	{
-		for (uint32_t i = 0; i < gameState.partyCount; ++i)
+		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
-				if (gameState.curses[k] == deck[k])
+				if (gameState.curses[i] == deck[k])
 				{
 					deck.RemoveAt(k);
 					break;

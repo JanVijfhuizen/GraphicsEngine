@@ -14,7 +14,7 @@
 namespace game
 {
 	constexpr uint32_t CARD_FRAME_COUNT = 2;
-	constexpr uint32_t CARD_STACKED_SPACING = 6;
+	constexpr uint32_t CARD_STACKED_SPACING = 8;
 
 	bool LevelUpdateInfo::ScreenShakeInfo::IsInTimeOut() const
 	{
@@ -77,7 +77,39 @@ namespace game
 		jv::ge::SubTexture subTextures[2];
 		Divide(atlasTexture.subTexture, subTextures, sizeof subTextures / sizeof(jv::ge::SubTexture));
 
-		if(_fullCard)
+		const auto mouseScale = atlasTexture.resolution / glm::ivec2(2, 1);
+		const auto mousePos = info.inputState.mousePos - glm::ivec2(0, mouseScale.y);
+
+		if(_selectedCard && !_fullCard)
+		{
+			if (info.inputState.lMouse.pressed)
+			{
+				_selectedCardLifeTime += info.deltaTime;
+
+				jv::ge::SubTexture animFrames[CARD_ART_LENGTH];
+				Divide({}, animFrames, CARD_ART_LENGTH);
+
+				auto i = static_cast<uint32_t>(GetTime() / CARD_ANIM_SPEED);
+				i %= CARD_ART_LENGTH;
+
+				PixelPerfectRenderTask imageRenderTask{};
+				imageRenderTask.position = mousePos;
+				imageRenderTask.position.x -= mouseScale.x / 2;
+				imageRenderTask.position.y += mouseScale.y / 2;
+				imageRenderTask.normalImage = info.textureStreamer.Get(_selectedCard->normalAnimIndex);
+				imageRenderTask.image = info.textureStreamer.Get(_selectedCard->animIndex);
+				imageRenderTask.scale = CARD_ART_SHAPE;
+				imageRenderTask.xCenter = false;
+				imageRenderTask.yCenter = true;
+				imageRenderTask.subTexture = animFrames[i];
+				imageRenderTask.color *= glm::vec4(glm::vec3(jv::Min(_selectedCardLifeTime, 1.f)), 1);
+				//info.renderTasks.Push(imageRenderTask);
+			}
+			else
+				_selectedCard = nullptr;
+		}
+
+		if(_fullCard && !_selectedCard)
 		{
 			constexpr float FULL_CARD_OPEN_DURATION = .1f;
 			constexpr float FULL_CARD_TOTAL_DURATION = .2f;
@@ -116,7 +148,7 @@ namespace game
 				}
 
 				const float l = _fullCardLifeTime - FULL_CARD_OPEN_DURATION;
-				const uint32_t textOffsetX = SIMULATED_RESOLUTION.x / 8;
+				constexpr uint32_t textOffsetX = SIMULATED_RESOLUTION.x / 8;
 
 				CardDrawInfo cardDrawInfo{};
 				cardDrawInfo.card = _fullCard;
@@ -129,7 +161,40 @@ namespace game
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
 
-				if (_fullCardType == FullCardType::monster)
+				const auto type = _fullCard->GetType();
+				const char* cardName = "";
+				switch (type)
+				{
+					case Card::Type::artifact:
+						cardName = "[artifact] ";
+						break;
+					case Card::Type::curse:
+						cardName = "[curse] ";
+						break;
+					case Card::Type::event:
+						cardName = "[event] ";
+						break;
+					case Card::Type::monster:
+						cardName = "[monster] ";
+						break;
+					case Card::Type::room:
+						cardName = "[room] ";
+						break;
+					case Card::Type::spell:
+						cardName = "[spell] ";
+						break;
+					default: 
+						;
+				}
+				
+				cardName = TextInterpreter::Concat(cardName, _fullCard->name, info.frameArena);
+
+				if(type == Card::Type::spell)
+				{
+					const auto c = static_cast<SpellCard*>(_fullCard);
+					cardDrawInfo.cost = c->cost;
+				}
+				else if (type == Card::Type::monster)
 				{
 					const auto c = static_cast<MonsterCard*>(_fullCard);
 
@@ -170,12 +235,11 @@ namespace game
 					titleTextTask.position = bgRenderTask.position;
 					titleTextTask.position.x += textOffsetX;
 					titleTextTask.position.y += bgRenderTask.scale.y / 2 + alphabetTexture.resolution.y / 2;
-					titleTextTask.text = _fullCard->name;
+					titleTextTask.text = cardName;
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
 					titleTextTask.priority = true;
 					titleTextTask.scale = 1;
-					titleTextTask.color = glm::vec4(0, 1, 1, 1);
 					info.textTasks.Push(titleTextTask);
 
 					auto ruleTextTask = titleTextTask;
@@ -199,8 +263,8 @@ namespace game
 
 		// Mouse.
 		PixelPerfectRenderTask renderTask{};
-		renderTask.scale = atlasTexture.resolution / glm::ivec2(2, 1);
-		renderTask.position = info.inputState.mousePos - glm::ivec2(0, renderTask.scale.y);
+		renderTask.scale = mouseScale;
+		renderTask.position = mousePos;
 		renderTask.priority = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
 		info.renderTasks.Push(renderTask);
@@ -397,6 +461,7 @@ namespace game
 					{
 						auto stackedDrawInfo = cardDrawInfo;
 						stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (j + 1));
+						stackedDrawInfo.origin.x += 4 * ((stackedCount - j - 1) % 2 == 0);
 						if(CollidesCard(info, stackedDrawInfo))
 						{
 							stackedSelected = stackedCount - j - 1;
@@ -409,6 +474,7 @@ namespace game
 					auto stackedDrawInfo = cardDrawInfo;
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
+					stackedDrawInfo.origin.x += 4 * ((stackedCount - j - 1) % 2 == 0);
 					stackedDrawInfo.selectable = !collides && stackedSelected == j;
 					DrawCard(info, stackedDrawInfo);
 				}
@@ -433,6 +499,7 @@ namespace game
 				stackedDrawInfo.selectable = true;
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
+				stackedDrawInfo.origin.x += 4 * ((stackedCount - stackedSelected - 1) % 2 == 0);
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -491,7 +558,7 @@ namespace game
 
 		const bool collided = CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
-		bgRenderTask.color = drawInfo.card ? drawInfo.bgColor : glm::vec4(1);
+		bgRenderTask.color = drawInfo.card ? drawInfo.bgColor : drawInfo.fgColor;
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 
 		if (drawInfo.metaData)
@@ -547,7 +614,7 @@ namespace game
 		if(drawInfo.cost != -1)
 		{
 			PixelPerfectRenderTask costRenderTask{};
-			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2);
+			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2 + 5 * drawInfo.scale);
 			costRenderTask.scale = statsTexture.resolution / glm::ivec2(3, 1);
 			costRenderTask.scale *= drawInfo.scale;
 			costRenderTask.xCenter = drawInfo.center;
@@ -556,7 +623,7 @@ namespace game
 			costRenderTask.color *= glm::vec4(fadeMod, 1);
 			costRenderTask.subTexture = statFrames[2];
 			costRenderTask.priority = priority;
-			info.renderTasks.Push(costRenderTask);
+			//info.renderTasks.Push(costRenderTask);
 
 			TextTask textTask{};
 			textTask.position = costRenderTask.position;
@@ -622,12 +689,7 @@ namespace game
 		}
 
 		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
-		{
-			FullCardType type{};
-			if (drawInfo.combatStats)
-				type = FullCardType::monster;
-			DrawFullCard(drawInfo.card, type);
-		}
+			DrawFullCard(drawInfo.card);
 		return collided;
 	}
 
@@ -643,19 +705,28 @@ namespace game
 		return collided;
 	}
 
-	void Level::DrawFullCard(Card* card, const FullCardType cardType)
+	void Level::DrawFullCard(Card* card)
 	{
 		if (card == nullptr)
 			_fullCard = nullptr;
 		if (_fullCard)
 			return;
-		_fullCardType = cardType;
 		_fullCard = card;
 		_fullCardLifeTime = 0;
 	}
 
+	void Level::DrawSelectedCard(Card* card)
+	{
+		if (card == nullptr)
+			_selectedCard = nullptr;
+		if (_selectedCard)
+			return;
+		_selectedCard = card;
+		_selectedCardLifeTime = 0;
+	}
+
 	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const HeaderSpacing spacing, 
-		const char* text, const uint32_t scale, const float overrideLifeTime) const
+	                                const char* text, const uint32_t scale, const float overrideLifeTime) const
 	{
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - GetSpacing(spacing)};
@@ -689,9 +760,7 @@ namespace game
 
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 		{
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCounts[i];
-			if (count == 0)
-				continue;
+			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCount;
 			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
 			artifacts[i] = arr.ptr;
 			for (uint32_t j = 0; j < count; ++j)

@@ -16,9 +16,7 @@ namespace game
 		enum class Tag
 		{
 			elf = TAG_ELF,
-			dragon = TAG_DRAGON,
 			human = TAG_HUMAN,
-			slime = TAG_SLIME,
 			token = TAG_TOKEN,
 			goblin = TAG_GOBLIN,
 			elemental = TAG_ELEMENTAL
@@ -27,5 +25,10 @@ namespace game
 		uint32_t attack = 1;
 		uint32_t health = 2;
 		uint32_t tags = 0;
+
+		[[nodiscard]] Type GetType() override
+		{
+			return Type::monster;
+		}
 	};
 }

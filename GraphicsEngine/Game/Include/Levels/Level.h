@@ -75,12 +75,6 @@ namespace game
 
 	struct Level
 	{
-		enum class FullCardType
-		{
-			other,
-			monster
-		};
-
 		struct HeaderDrawInfo final
 		{
 			glm::ivec2 origin;
@@ -179,7 +173,8 @@ namespace game
 		uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
 		bool DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
 		static bool CollidesCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo);
-		void DrawFullCard(Card* card, FullCardType cardType);
+		void DrawFullCard(Card* card);
+		void DrawSelectedCard(Card* card);
 		void DrawTopCenterHeader(const LevelUpdateInfo& info, HeaderSpacing spacing, const char* text, uint32_t scale = 1, float overrideLifeTime = -1) const;
 		void DrawPressEnterToContinue(const LevelUpdateInfo& info, HeaderSpacing spacing, float overrideLifeTime = -1) const;
 		uint32_t DrawParty(const LevelUpdateInfo& info, const PartyDrawInfo& drawInfo);
@@ -197,9 +192,13 @@ namespace game
 		LevelIndex _loadingLevelIndex;
 		bool _animateLoading;
 		float _timeSinceOpened;
+
 		Card* _fullCard;
-		FullCardType _fullCardType;
 		float _fullCardLifeTime;
+
+		Card* _selectedCard;
+		float _selectedCardLifeTime;
+
 		CardDrawMetaData _cardDrawMetaDatas[PARTY_CAPACITY];
 	};
 }
