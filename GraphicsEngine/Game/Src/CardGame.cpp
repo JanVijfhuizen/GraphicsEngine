@@ -723,7 +723,7 @@ namespace game
 		greatTroll.name = "great troll";
 		greatTroll.attack = 3;
 		greatTroll.health = 75;
-		greatTroll.ruleText = "[ally attack, cast] gains 1 temporary attack.";
+		greatTroll.ruleText = "[attacked, cast] gains 1 temporary attack.";
 		greatTroll.unique = true;
 		greatTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -762,7 +762,7 @@ namespace game
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_QUEEN;
-					summonState.values[ActionState::VSummon::isAlly] = 0;
+					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
 					summonState.values[ActionState::VSummon::health] = boardState.combatStats[self].health;
 					summonState.values[ActionState::VSummon::attack] = boardState.combatStats[self].attack;
 					state.TryAddToStack(summonState);
@@ -795,7 +795,7 @@ namespace game
 		auto& copyCat = arr[MONSTER_IDS::COPY_CAT];
 		copyCat.name = "copy cat";
 		copyCat.attack = 3;
-		copyCat.health = 6;
+		copyCat.health = 4;
 		copyCat.ruleText = "[kill] summons a copy of the killed monster with one health remaining.";
 		copyCat.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
