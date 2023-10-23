@@ -795,7 +795,7 @@ namespace game
 		auto& copyCat = arr[MONSTER_IDS::COPY_CAT];
 		copyCat.name = "copy cat";
 		copyCat.attack = 3;
-		copyCat.health = 20;
+		copyCat.health = 6;
 		copyCat.ruleText = "[kill] summons a copy of the killed monster with one health remaining.";
 		copyCat.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1130,11 +1130,11 @@ namespace game
 		goblinBomb.name = "goblin bomb";
 		goblinBomb.attack = 0;
 		goblinBomb.health = 5;
-		goblinBomb.ruleText = "[end of turn] gains 1 attack. [death] deals damage to all enemy monsters equal to its attack.";
+		goblinBomb.ruleText = "[start of turn] gains 1 attack. [death] deals damage to all enemy monsters equal to its attack.";
 		goblinBomb.tags = TAG_GOBLIN;
 		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if(actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
@@ -2705,7 +2705,7 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::HATE].name = "curse of hate";
-		arr[CURSE_IDS::HATE].ruleText = "[start of Turn] gain 6 attack, take 6 damage.";
+		arr[CURSE_IDS::HATE].ruleText = "[start of Turn] gain 3 attack, take 3 damage.";
 		arr[CURSE_IDS::HATE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -2715,7 +2715,7 @@ namespace game
 					dmgState.source = ActionState::Source::other;
 					dmgState.dst = self;
 					dmgState.dstUniqueId = state.boardState.uniqueIds[self];
-					dmgState.values[ActionState::VDamage::damage] = 2;
+					dmgState.values[ActionState::VDamage::damage] = 3;
 					state.TryAddToStack(dmgState);
 
 					ActionState buffState{};
@@ -2723,7 +2723,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::attack] = 2;
+					buffState.values[ActionState::VStatBuff::attack] = 3;
 					state.TryAddToStack(buffState);
 					return true;
 				}
