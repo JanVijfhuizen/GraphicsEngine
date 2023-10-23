@@ -869,7 +869,7 @@ namespace game
 		mossyElemental.name = "mossy elemental";
 		mossyElemental.attack = 1;
 		mossyElemental.health = 20;
-		mossyElemental.ruleText = "[start of turn] gains 3 temporary health.";
+		mossyElemental.ruleText = "[start of turn] gains 2 temporary health.";
 		mossyElemental.tags = TAG_ELEMENTAL;
 		mossyElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -878,7 +878,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1902,7 +1902,7 @@ namespace game
 		auto& windfall = arr[SPELL_IDS::WINDFALL];
 		windfall.name = "windfall";
 		windfall.ruleText = "discard your hand. draw that many cards.";
-		windfall.cost = 1;
+		windfall.cost = 0;
 		windfall.type = SpellCard::Type::all;
 		windfall.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1959,7 +1959,7 @@ namespace game
 		auto& rampantGrowth = arr[SPELL_IDS::RAMPANT_GROWTH];
 		rampantGrowth.name = "rampant growth";
 		rampantGrowth.ruleText = "gain 1 maximum mana.";
-		rampantGrowth.cost = 2;
+		rampantGrowth.cost = 1;
 		rampantGrowth.type = SpellCard::Type::all;
 		rampantGrowth.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2190,7 +2190,7 @@ namespace game
 		auto& flameBolt = arr[SPELL_IDS::FLAME_BOLT];
 		flameBolt.name = "flame bolt";
 		flameBolt.ruleText = "deal 7 damage.";
-		flameBolt.cost = 3;
+		flameBolt.cost = 2;
 		flameBolt.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2209,7 +2209,7 @@ namespace game
 		auto& pyroblast = arr[SPELL_IDS::PYROBlAST];
 		pyroblast.name = "pyroblast";
 		pyroblast.ruleText = "deal 10 damage.";
-		pyroblast.cost = 4;
+		pyroblast.cost = 3;
 		pyroblast.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2228,7 +2228,7 @@ namespace game
 		auto& unstableCopy = arr[SPELL_IDS::UNSTABLE_COPY];
 		unstableCopy.name = "unstable copy";
 		unstableCopy.ruleText = "summon a demon with attack and health equal to target monsters attack.";
-		unstableCopy.cost = 4;
+		unstableCopy.cost = 3;
 		unstableCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2254,7 +2254,7 @@ namespace game
 		auto& perfectCopy = arr[SPELL_IDS::PERFECT_COPY];
 		perfectCopy.name = "perfect copy";
 		perfectCopy.ruleText = "summon a demon with the same stats as target monster.";
-		perfectCopy.cost = 7;
+		perfectCopy.cost = 10;
 		perfectCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2332,7 +2332,7 @@ namespace game
 		auto& incantationOfDoom = arr[SPELL_IDS::INCANTATION_OF_DOOM];
 		incantationOfDoom.name = "incantation of doom";
 		incantationOfDoom.ruleText = "deal 13 damage to all enemies.";
-		incantationOfDoom.cost = 7;
+		incantationOfDoom.cost = 6;
 		incantationOfDoom.type = SpellCard::Type::all;
 		incantationOfDoom.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
