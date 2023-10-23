@@ -575,7 +575,7 @@ namespace game
 
 	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		constexpr uint32_t l = 35;
+		constexpr uint32_t l = 38;
 		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
 		for (uint32_t i = 0; i < l; ++i)
 		{
@@ -638,10 +638,21 @@ namespace game
 		vulture.unique = true;
 		auto& goblin = arr[MONSTER_IDS::GOBLIN];
 		goblin.name = "goblin";
+		goblin.attack = 2;
 		goblin.health = 1;
-		goblin.attack = 1;
 		goblin.tags = TAG_TOKEN | TAG_GOBLIN;
+		goblin.ruleText = "can attack immediately.";
 		goblin.unique = true;
+		goblin.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onSummon)
+				{
+					if (self >= BOARD_CAPACITY_PER_SIDE)
+						return false;
+					state.tapped[self] = false;
+				}
+				return false;
+			};
 		auto& demon = arr[MONSTER_IDS::DEMON];
 		demon.name = "demon";
 		demon.health = 0;
@@ -688,6 +699,12 @@ namespace game
 				}
 				return false;
 			};
+		auto& slime = arr[MONSTER_IDS::SLIME];
+		slime.name = "slime";
+		slime.health = 0;
+		slime.attack = 0;
+		slime.unique = true;
+		slime.tags = TAG_TOKEN | TAG_SLIME;
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
 		daisy.health = 6;
@@ -736,6 +753,7 @@ namespace game
 		slimeQueen.health = 50;
 		slimeQueen.ruleText = "[end of turn] summons an exact copy.";
 		slimeQueen.unique = true;
+		slimeQueen.tags = TAG_SLIME;
 		slimeQueen.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -911,8 +929,8 @@ namespace game
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 0;
-		goblinKing.health = 9;
-		goblinKing.ruleText = "[end of turn] summons three goblins.";
+		goblinKing.health = 7;
+		goblinKing.ruleText = "[end of turn] summons 2 goblins.";
 		goblinKing.tags = TAG_GOBLIN;
 		goblinKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -923,7 +941,7 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
-					for (uint32_t i = 0; i < 3; ++i)
+					for (uint32_t i = 0; i < 2; ++i)
 						state.TryAddToStack(summonState);
 					return true;
 				}
@@ -932,8 +950,8 @@ namespace game
 		auto& goblinChampion = arr[MONSTER_IDS::GOBLIN_CHAMPION];
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 0;
-		goblinChampion.health = 20;
-		goblinChampion.ruleText = "[start of turn] gains attack equal to the amount of goblins on the field.";
+		goblinChampion.health = 9;
+		goblinChampion.ruleText = "[start of turn] all goblins gain attack equal to the amount of goblins on the field.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -950,9 +968,7 @@ namespace game
 					setState.trigger = ActionState::Trigger::onStatBuff;
 					setState.source = ActionState::Source::other;
 					setState.values[ActionState::VStatBuff::attack] = c;
-					setState.dst = self;
-					setState.dstUniqueId = state.boardState.uniqueIds[self];
-					state.TryAddToStack(setState);
+					TargetOfType(info, state, setState, self, TAG_GOBLIN, TypeTarget::all);
 					return true;
 				}
 				return false;
@@ -965,9 +981,9 @@ namespace game
 
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MAIDEN_OF_THE_MOON];
 		maidenOfTheMoon.name = "maiden of the moon";
-		maidenOfTheMoon.attack = 3;
+		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 20;
-		maidenOfTheMoon.ruleText = "[any death] gains 2 attack.";
+		maidenOfTheMoon.ruleText = "[any death] gains 3 attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -978,7 +994,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 2;
+					buffState.values[ActionState::VStatBuff::attack] = 3;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1051,7 +1067,7 @@ namespace game
 					damageState.values[ActionState::VDamage::damage] = 3;
 					damageState.dst = self;
 					damageState.dstUniqueId = state.boardState.uniqueIds[self];
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				return false;
@@ -1086,7 +1102,7 @@ namespace game
 		auto& goblinSlinger = arr[MONSTER_IDS::GOBLIN_SLINGER];
 		goblinSlinger.name = "goblin slinger";
 		goblinSlinger.attack = 0;
-		goblinSlinger.health = 7;
+		goblinSlinger.health = 5;
 		goblinSlinger.ruleText = "[ally attack] deals damage to the attacked monster equal to this monsters attack.";
 		goblinSlinger.tags = TAG_GOBLIN;
 		goblinSlinger.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1106,33 +1122,9 @@ namespace game
 						damageState.values[ActionState::VDamage::damage] = combatStats.attack + combatStats.tempAttack;
 						damageState.dst = actionState.dst;
 						damageState.dstUniqueId = actionState.dstUniqueId;
-						state.stack.Add() = damageState;
+						state.TryAddToStack(damageState);
 						return true;
 					}
-				}
-				return false;
-			};
-		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
-		librarian.name = "librarian";
-		librarian.attack = 1;
-		librarian.health = 6;
-		librarian.ruleText = "[end of turn] discards your hand, then draws that many cards. [ally] draws 1 card extra.";
-		librarian.tags = TAG_HUMAN;
-		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-			{
-				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
-				{
-					const uint32_t c = state.hand.count;
-					state.hand.Clear();
-
-					ActionState drawState{};
-					drawState.trigger = ActionState::Trigger::onDraw;
-					drawState.source = ActionState::Source::other;
-					for (uint32_t i = 0; i < c; ++i)
-						state.TryAddToStack(drawState);
-					if(self < BOARD_CAPACITY_PER_SIDE)
-						state.TryAddToStack(drawState);
-					return true;
 				}
 				return false;
 			};
@@ -1140,11 +1132,11 @@ namespace game
 		goblinBomb.name = "goblin bomb";
 		goblinBomb.attack = 0;
 		goblinBomb.health = 5;
-		goblinBomb.ruleText = "[start of turn] gains 1 attack. [death] deals damage to all enemy monsters equal to its attack.";
+		goblinBomb.ruleText = "[end of turn] gains 1 attack. [death] deals damage to all enemy monsters equal to its attack.";
 		goblinBomb.tags = TAG_GOBLIN;
 		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if(actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
@@ -1220,7 +1212,7 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::OBNOXIOUS_FAN;
 					summonState.values[ActionState::VSummon::isAlly] = self >= BOARD_CAPACITY_PER_SIDE;
-					state.stack.Add() = summonState;
+					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1228,8 +1220,9 @@ namespace game
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
-		slimeSoldier.health = 4;
-		slimeSoldier.ruleText = "[end of turn] summons an exact copy.";
+		slimeSoldier.health = 6;
+		slimeSoldier.ruleText = "[end of turn] summons a slime with the same stats";
+		slimeSoldier.tags = TAG_SLIME;
 		slimeSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -1239,11 +1232,11 @@ namespace game
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_SOLDIER;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
 					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
 					summonState.values[ActionState::VSummon::health] = stats.health + stats.tempHealth;
-					state.stack.Add() = summonState;
+					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -1263,6 +1256,87 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 1;
 					TargetOfType(info, state, damageState, self, -1, TypeTarget::all);
+					return true;
+				}
+				return false;
+			};
+		auto& phantasm = arr[MONSTER_IDS::PHANTASM];
+		phantasm.name = "phantasm";
+		phantasm.attack = 5;
+		phantasm.health = 1;
+		phantasm.ruleText = "[start of turn] gain 7 temporary health. [attack] lose all temporary health.";
+		phantasm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					ActionState setState{};
+					setState.trigger = ActionState::Trigger::onStatBuff;
+					setState.source = ActionState::Source::other;
+					setState.values[ActionState::VStatBuff::tempHealth] = 7;
+					setState.dst = self;
+					setState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.TryAddToStack(setState);
+					return true;
+				}
+				if (actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					if (actionState.src != self)
+						return false;
+
+					ActionState setState{};
+					setState.trigger = ActionState::Trigger::onStatSet;
+					setState.source = ActionState::Source::other;
+					setState.values[ActionState::VStatSet::tempHealth] = 0;
+					setState.dst = self;
+					setState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.TryAddToStack(setState);
+					return true;
+				}
+				return false;
+			};
+		auto& goblinScout = arr[MONSTER_IDS::GOBLIN_SCOUT];
+		goblinScout.name = "goblin scout";
+		goblinScout.attack = 1;
+		goblinScout.health = 16;
+		goblinScout.ruleText = "[attack] all allied tokens gain this monsters attack.";
+		goblinScout.tags = TAG_GOBLIN;
+		goblinScout.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					if (actionState.src != self)
+						return false;
+
+					const auto& boardState = state.boardState;
+					const auto& stats = boardState.combatStats[self];
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::attack] = stats.attack + stats.tempAttack;
+					TargetOfType(info, state, buffState, self, TAG_TOKEN, TypeTarget::allies);
+					return true;
+				}
+				return false;
+			};
+		auto& acolyteOfPain = arr[MONSTER_IDS::ACOLYTE_OF_PAIN];
+		acolyteOfPain.name = "acolyte of pain";
+		acolyteOfPain.attack = 1;
+		acolyteOfPain.health = 13;
+		acolyteOfPain.ruleText = "[damaged] draw 2.";
+		acolyteOfPain.tags = TAG_HUMAN;
+		acolyteOfPain.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDamage)
+				{
+					if (actionState.dst != self)
+						return false;
+					
+					ActionState drawState{};
+					drawState.trigger = ActionState::Trigger::onDraw;
+					drawState.source = ActionState::Source::other;
+					for (uint32_t i = 0; i < 2; ++i)
+						state.TryAddToStack(drawState);
 					return true;
 				}
 				return false;
@@ -1990,7 +2064,7 @@ namespace game
 			};
 		auto& druidicRitual = arr[SPELL_IDS::DRUIDIC_RITUAL];
 		druidicRitual.name = "druidic ritual";
-		druidicRitual.ruleText = "summon two elfs.";
+		druidicRitual.ruleText = "summon two elves.";
 		druidicRitual.cost = 2;
 		druidicRitual.type = SpellCard::Type::all;
 		druidicRitual.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2447,8 +2521,6 @@ namespace game
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.dst = actionState.dst;
-					damageState.dstUniqueId = actionState.dstUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 13;
 					TargetOfType(info, state, damageState, 0, -1, TypeTarget::enemies);
 					return true;
@@ -2472,6 +2544,98 @@ namespace game
 					for (auto& target : state.targets)
 						target = actionState.dst;
 					return true;
+				}
+				return false;
+			};
+		auto& fireStorm = arr[SPELL_IDS::FIRE_STORM];
+		fireStorm.name = "fire storm";
+		fireStorm.ruleText = "deal 3 damage to all enemies.";
+		fireStorm.cost = 3;
+		fireStorm.type = SpellCard::Type::all;
+		fireStorm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = 3;
+					TargetOfType(info, state, damageState, 0, -1, TypeTarget::enemies);
+					return true;
+				}
+				return false;
+			};
+		auto& unity = arr[SPELL_IDS::UNITY];
+		unity.name = "unity";
+		unity.ruleText = "all allies with the same tags as target monster gain its attack as temporary health.";
+		unity.cost = 3;
+		unity.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					const auto& boardState = state.boardState;
+					if (!boardState.Validate(actionState, false, true))
+						return false;
+					const auto& stats = boardState.combatStats[actionState.dst];
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = state.boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::tempHealth] = stats.attack + stats.tempAttack;
+					TargetOfType(info, state, buffState, actionState.dst, info.monsters[boardState.ids[actionState.dst]].tags, TypeTarget::allies);
+				}
+				return false;
+			};
+		auto& tribalism = arr[SPELL_IDS::TRIBALISM];
+		tribalism.name = "tribalism";
+		tribalism.ruleText = "gain 1 mana for every ally that shares a tag with target monster.";
+		tribalism.cost = 1;
+		tribalism.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					const auto& boardState = state.boardState;
+					if (!boardState.Validate(actionState, false, true))
+						return false;
+					const auto tags = info.monsters[boardState.ids[actionState.dst]].tags;
+
+					uint32_t c = 0;
+					for (uint32_t i = 0; i < boardState.allyCount; ++i)
+					{
+						const auto otherTags = info.monsters[boardState.ids[boardState.ids[i]]].tags;
+						if ((otherTags & tags) != 0)
+							++c;
+					}
+					state.mana += c;
+				}
+				return false;
+			};
+		auto& loyalWorkforce = arr[SPELL_IDS::LOYAL_WORKFORCE];
+		loyalWorkforce.name = "loyal workforce";
+		loyalWorkforce.ruleText = "draw 1 card for every allied token.";
+		loyalWorkforce.cost = 0;
+		loyalWorkforce.type = SpellCard::Type::all;
+		loyalWorkforce.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					const auto& boardState = state.boardState;
+
+					uint32_t c = 0;
+					for (uint32_t i = 0; i < boardState.allyCount; ++i)
+					{
+						const auto otherTags = info.monsters[boardState.ids[boardState.ids[i]]].tags;
+						if ((otherTags & TAG_TOKEN) != 0)
+							++c;
+					}
+
+					ActionState drawState{};
+					drawState.trigger = ActionState::Trigger::onDraw;
+					drawState.source = ActionState::Source::other;
+					for (uint32_t i = 0; i < c; ++i)
+						state.TryAddToStack(drawState);
 				}
 				return false;
 			};

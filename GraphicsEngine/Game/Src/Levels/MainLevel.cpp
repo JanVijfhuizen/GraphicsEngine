@@ -959,6 +959,7 @@ namespace game
 			const auto partyId = isAlly ? actionState.values[ActionState::VSummon::partyId] : -1;
 			const auto attack = actionState.values[ActionState::VSummon::attack];
 			const auto health = actionState.values[ActionState::VSummon::health];
+			const auto untapped = actionState.values[ActionState::VSummon::untapped];
 
 			const uint32_t targetId = isAlly ? boardState.allyCount : BOARD_CAPACITY_PER_SIDE + boardState.enemyCount;
 			boardState.ids[targetId] = monsterId;
@@ -973,7 +974,7 @@ namespace game
 			if (health != -1)
 				boardState.combatStats[targetId].health = health;
 			if (isAlly)
-				state.tapped[boardState.allyCount++] = true;
+				state.tapped[boardState.allyCount++] = untapped != 1;
 			else
 				++boardState.enemyCount;
 			actionState.dst = targetId;
@@ -1204,7 +1205,8 @@ namespace game
 			{
 				for (uint32_t j = i; j < c; ++j)
 					state.targets[j] = state.targets[j + 1];
-				lastEnemyDefeatedId = boardState.ids[i + mod];
+				const auto id = boardState.ids[i + mod];
+				lastEnemyDefeatedId = id;
 				--boardState.enemyCount;
 			}
 			else
