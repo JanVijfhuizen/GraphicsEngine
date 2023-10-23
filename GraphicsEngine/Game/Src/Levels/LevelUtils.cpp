@@ -35,7 +35,7 @@ namespace game
 	{
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
-				if (gameState.curses[k] == deck[k])
+				if (gameState.curses[i] == deck[k])
 				{
 					deck.RemoveAt(k);
 					break;
