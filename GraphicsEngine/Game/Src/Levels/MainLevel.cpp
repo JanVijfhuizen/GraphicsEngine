@@ -1220,6 +1220,7 @@ namespace game
 				}
 				for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
 					gameState.artifacts[c * MONSTER_ARTIFACT_CAPACITY + k] = -1;
+				gameState.curses[c] = -1;
 				--boardState.allyCount;
 			}
 

@@ -111,6 +111,19 @@ namespace jv
 			next->Clear();
 	}
 
+	uint32_t Arena::GetTotalUsedMemory() const
+	{
+		uint32_t size = 0;
+
+		const Arena* current = this;
+		while (current)
+		{
+			++size;
+			current = current->next;
+		}
+		return size * info.memorySize;
+	}
+
 	uint64_t Arena::CreateScope() const
 	{
 		const Arena* current = this;

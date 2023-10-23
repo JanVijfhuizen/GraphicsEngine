@@ -911,7 +911,7 @@ namespace game
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 0;
-		goblinKing.health = 11;
+		goblinKing.health = 9;
 		goblinKing.ruleText = "[end of turn] summons three goblins.";
 		goblinKing.tags = TAG_GOBLIN;
 		goblinKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1085,7 +1085,7 @@ namespace game
 			};
 		auto& goblinSlinger = arr[MONSTER_IDS::GOBLIN_SLINGER];
 		goblinSlinger.name = "goblin slinger";
-		goblinSlinger.attack = 1;
+		goblinSlinger.attack = 0;
 		goblinSlinger.health = 7;
 		goblinSlinger.ruleText = "[ally attack] deals damage to the attacked monster equal to this monsters attack.";
 		goblinSlinger.tags = TAG_GOBLIN;

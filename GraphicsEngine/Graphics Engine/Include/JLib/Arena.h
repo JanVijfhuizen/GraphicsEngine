@@ -48,6 +48,7 @@ namespace jv
 		void* Alloc(uint32_t size);
 		void Free(const void* ptr);
 		void Clear();
+		[[nodiscard] ]uint32_t GetTotalUsedMemory() const;
 
 		template <typename T>
 		[[nodiscard]] T* New(size_t count = 1);
