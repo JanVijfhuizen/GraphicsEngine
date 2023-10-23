@@ -757,14 +757,15 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
 					const auto& boardState = state.boardState;
+					const auto& stats = boardState.combatStats[self];
 					
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_QUEEN;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
-					summonState.values[ActionState::VSummon::health] = boardState.combatStats[self].health;
-					summonState.values[ActionState::VSummon::attack] = boardState.combatStats[self].attack;
+					summonState.values[ActionState::VSummon::health] = stats.health + stats.tempHealth;
+					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
 					state.TryAddToStack(summonState);
 					return true;
 				}
@@ -1219,7 +1220,7 @@ namespace game
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
 		slimeSoldier.health = 6;
-		slimeSoldier.ruleText = "[end of turn] summons a slime with the same stats";
+		slimeSoldier.ruleText = "[end of turn] summons a slime with the same stats.";
 		slimeSoldier.tags = TAG_SLIME;
 		slimeSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{

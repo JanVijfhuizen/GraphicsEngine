@@ -555,8 +555,9 @@ namespace game
 				{
 					gameState.monsterIds[i] = boardState.ids[i];
 					gameState.healths[i] = jv::Min(boardState.combatStats[i].health, info.monsters[gameState.monsterIds[i]].health);
-					gameState.artifactSlotCount = 1 + state.depth / ROOM_COUNT_BEFORE_BOSS;
-					gameState.artifactSlotCount = jv::Min(gameState.artifactSlotCount, MONSTER_ARTIFACT_CAPACITY);
+					auto c = 1 + state.depth / ROOM_COUNT_BEFORE_BOSS;
+					c = jv::Min(gameState.artifactSlotCount, MONSTER_ARTIFACT_CAPACITY);
+					gameState.artifactSlotCount = jv::Max(gameState.artifactSlotCount, c);
 				}
 
 				if(state.depth % 2 == 0)
@@ -1852,20 +1853,6 @@ namespace game
 		for (auto& b : selected)
 			b = false;
 		timeSincePartySelected = -1;
-
-		const auto& gameState = info.gameState;
-		auto& playerState = info.playerState;
-
-		for (uint32_t i = 0; i < gameState.partySize; ++i)
-		{
-			const auto partyId = gameState.partyIds[i];
-			if (partyId == -1)
-				continue;
-			playerState.monsterIds[partyId] = gameState.monsterIds[i];
-			memcpy(&playerState.artifacts[partyId * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
-				sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
-		}
-		playerState.artifactSlotCount = gameState.artifactSlotCount;
 	}
 
 	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -1876,7 +1863,7 @@ namespace game
 
 		if(managingParty)
 		{
-			level->DrawTopCenterHeader(info, HeaderSpacing::close, "your party is too big. choose some to say goodbye to.");
+			level->DrawTopCenterHeader(info, HeaderSpacing::close, "select up to 7 monsters that you would like to keep.");
 
 			Card* cards[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
 			Card** artifacts[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY]{};
@@ -1924,11 +1911,11 @@ namespace game
 			if (info.inputState.lMouse.PressEvent() && choice != -1)
 				selected[choice] = !selected[choice];
 
-			uint32_t remaining = c;
+			uint32_t remaining = 0;
 			for (uint32_t i = 0; i < c; ++i)
-				remaining -= selected[i];
+				remaining += selected[i];
 
-			if (remaining > 0 && remaining <= PARTY_CAPACITY)
+			if (remaining > 0)
 			{
 				if (timeSincePartySelected < 0)
 					timeSincePartySelected = level->GetTime();
@@ -1939,7 +1926,7 @@ namespace game
 					uint32_t d = 0;
 					for (uint32_t i = 0; i < playerState.partySize; ++i)
 					{
-						if (!selected[i])
+						if (selected[i])
 						{
 							memcpy(&playerState.artifacts[d * MONSTER_ARTIFACT_CAPACITY], &playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
 								sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
@@ -1951,7 +1938,7 @@ namespace game
 					{
 						const auto partyId = gameState.partyIds[i];
 						const auto id = partyId != -1 ? partyId : d;
-						if (!selected[id])
+						if (selected[id])
 							continue;
 						if (partyId == -1)
 							++d;
@@ -1961,6 +1948,7 @@ namespace game
 					}
 
 					playerState.partySize = remaining;
+					playerState.artifactSlotCount = gameState.artifactSlotCount;
 
 					SaveData(playerState);
 					loadLevelIndex = LevelIndex::mainMenu;
@@ -1989,23 +1977,7 @@ namespace game
 		buttonDrawInfo.text = "quit";
 		if (level->DrawButton(info, buttonDrawInfo))
 		{
-			for (uint32_t i = 0; i < gameState.partySize; ++i)
-			{
-				const auto partyId = gameState.partyIds[i];
-				if (partyId == -1)
-				{
-					if(playerState.partySize < PARTY_CAPACITY)
-						playerState.monsterIds[playerState.partySize++] = gameState.monsterIds[i];
-					else
-					{
-						managingParty = true;
-						return true;
-					}
-				}
-			}
-
-			SaveData(playerState);
-			loadLevelIndex = LevelIndex::mainMenu;
+			managingParty = true;
 			return true;
 		}
 		
@@ -2028,6 +2000,8 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+		stateMachine.state.depth = 8;
+		stateMachine.next = stateMachine.current;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
