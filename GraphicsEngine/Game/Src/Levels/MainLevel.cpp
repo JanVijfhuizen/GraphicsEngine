@@ -1173,10 +1173,10 @@ namespace game
 		else if (actionState.trigger == ActionState::Trigger::onStatSet)
 		{
 			auto& combatStats = boardState.combatStats[actionState.dst];
-			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VStatBuff::attack);
-			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VStatBuff::health);
-			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VStatBuff::tempAttack);
-			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VStatBuff::tempHealth);
+			constexpr auto vAtk = static_cast<uint32_t>(ActionState::VStatSet::attack);
+			constexpr auto vHlt = static_cast<uint32_t>(ActionState::VStatSet::health);
+			constexpr auto vTAtk = static_cast<uint32_t>(ActionState::VStatSet::tempAttack);
+			constexpr auto vTHlt = static_cast<uint32_t>(ActionState::VStatSet::tempHealth);
 
 			if (actionState.values[vAtk] != -1)
 				combatStats.attack = actionState.values[vAtk];

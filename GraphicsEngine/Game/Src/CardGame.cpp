@@ -747,8 +747,8 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_QUEEN;
 					summonState.values[ActionState::VSummon::isAlly] = 0;
-					summonState.values[ActionState::VSummon::health] = boardState.combatStats[self].attack;
-					summonState.values[ActionState::VSummon::attack] = boardState.combatStats[self].health;
+					summonState.values[ActionState::VSummon::health] = boardState.combatStats[self].health;
+					summonState.values[ActionState::VSummon::attack] = boardState.combatStats[self].attack;
 					state.TryAddToStack(summonState);
 					return true;
 				}
@@ -1234,9 +1234,6 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
-					if (self != actionState.dst)
-						return false;
-
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
@@ -1779,7 +1776,6 @@ namespace game
 					setState.trigger = ActionState::Trigger::onStatSet;
 					setState.source = ActionState::Source::other;
 					setState.values[ActionState::VStatSet::attack] = 1;
-
 					TargetOfType(info, state, setState, 0, -1, TypeTarget::all);
 					return true;
 				}
@@ -1893,7 +1889,7 @@ namespace game
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 				{
 					ActionState summonState{};
-					summonState.trigger = ActionState::Trigger::onStatSet;
+					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
