@@ -52,7 +52,7 @@ namespace game
 				const auto& playerState = info.playerState;
 
 				uint32_t j = 0;
-				for (uint32_t i = 0; i < PARTY_ACTIVE_INITIAL_CAPACITY; ++i)
+				for (uint32_t i = 0; i < PARTY_CAPACITY; ++i)
 				{
 					if (!selected[i])
 						continue;

@@ -1217,7 +1217,7 @@ namespace game
 					gameState.curses[j] = gameState.curses[j + 1];
 				}
 				for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
-					gameState.artifacts[(boardState.allyCount - 1) * MONSTER_ARTIFACT_CAPACITY + k] = -1;
+					gameState.artifacts[c * MONSTER_ARTIFACT_CAPACITY + k] = -1;
 				--boardState.allyCount;
 			}
 
