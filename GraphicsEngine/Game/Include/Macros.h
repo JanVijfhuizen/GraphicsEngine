@@ -235,11 +235,9 @@ enum class TextureId
 	symbols,
 	mouse,
 	card,
-	cardLarge,
 	button,
 	stats,
 	fallback,
 	empty,
-	buttonSmall,
 	length
 };

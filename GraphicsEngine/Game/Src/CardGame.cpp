@@ -564,12 +564,10 @@ namespace game
 		arr[2] = "Art/symbols.png";
 		arr[3] = "Art/mouse.png";
 		arr[4] = "Art/card.png";
-		arr[5] = "Art/card-large.png";
-		arr[6] = "Art/button.png";
-		arr[7] = "Art/stats.png";
-		arr[8] = "Art/fallback.png";
-		arr[9] = "Art/empty.png";
-		arr[10] = "Art/button-small.png";
+		arr[5] = "Art/button.png";
+		arr[6] = "Art/stats.png";
+		arr[7] = "Art/fallback.png";
+		arr[8] = "Art/empty.png";
 		return arr;
 	}
 

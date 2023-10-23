@@ -562,7 +562,7 @@ namespace jv::ge
 		samplerInfo.addressModeU = GetAddressMode(info.addressModeU);
 		samplerInfo.addressModeV = GetAddressMode(info.addressModeV);
 		samplerInfo.addressModeW = GetAddressMode(info.addressModeW);
-		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.anisotropyEnable = VK_FALSE;
 		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
