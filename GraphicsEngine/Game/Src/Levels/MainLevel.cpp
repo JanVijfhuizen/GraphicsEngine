@@ -622,6 +622,7 @@ namespace game
 				eventSelectionDrawInfo.length = cards.count;
 
 				// Draw additional events.
+				/*
 				Card* addCards[EVENT_CARD_MAX_COUNT * 2 - 2];
 				Card** stacks[2]{ addCards, &addCards[EVENT_CARD_MAX_COUNT - 1] };
 				uint32_t stacksCounts[2]{ c - 1, c - 1 };
@@ -636,6 +637,7 @@ namespace game
 
 				eventSelectionDrawInfo.stacks = stacks;
 				eventSelectionDrawInfo.stackCounts = stacksCounts;
+				*/
 				DrawActivationAnimation(eventSelectionDrawInfo, Activation::event, 0);
 
 				if (isStartOfTurn)
@@ -1241,9 +1243,9 @@ namespace game
 						--as.src;
 				}
 
-				if (isEnemy && as.dst > i && as.dst < BOARD_CAPACITY_PER_SIDE)
+				if (isEnemy && as.dst > i + BOARD_CAPACITY_PER_SIDE)
 					--as.dst;
-				else if (!isEnemy && as.dst > i + BOARD_CAPACITY_PER_SIDE)
+				else if (!isEnemy && as.dst > i && as.dst < BOARD_CAPACITY_PER_SIDE)
 					--as.dst;
 			}
 		}
@@ -1419,7 +1421,7 @@ namespace game
 		textTask.text = TextInterpreter::Concat("+", textTask.text, info.frameArena);
 		textTask.text = TextInterpreter::Concat(textTask.text, "/+", info.frameArena);
 
-		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VStatBuff::attack)];
+		uint32_t hltBuff = activeState.values[static_cast<uint32_t>(ActionState::VStatBuff::health)];
 		if (hltBuff == -1)
 			hltBuff = 0;
 

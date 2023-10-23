@@ -43,7 +43,7 @@ constexpr uint32_t ENEMY_HEIGHT = ALLY_HEIGHT + 92;
 constexpr uint32_t HAND_HEIGHT = 40;
 constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
 
-constexpr uint32_t EVENT_CARD_MAX_COUNT = 4;
+constexpr uint32_t EVENT_CARD_MAX_COUNT = 1;
 
 constexpr uint32_t META_DATA_ROOM_INDEX = 0;
 constexpr uint32_t META_DATA_EVENT_INDEX = META_DATA_ROOM_INDEX + 1;
