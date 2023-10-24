@@ -73,7 +73,6 @@ namespace game
 		};
 
 		glm::ivec2 resolution;
-		glm::ivec2 snapResolution;
 		bool isFullScreen;
 
 		LevelUpdateInfo::ScreenShakeInfo screenShakeInfo{};
@@ -360,11 +359,7 @@ namespace game
 
 		outCardGame->resolution = res;
 		outCardGame->isFullScreen = fullScreen;
-
-		outCardGame->snapResolution = SIMULATED_RESOLUTION;
-		while (outCardGame->snapResolution.x * 2 <= res.y && outCardGame->snapResolution.y * 2 <= res.y)
-			outCardGame->snapResolution *= 2;
-
+		
 		outCardGame->arena = outCardGame->engine.CreateSubArena(1024);
 		outCardGame->levelArena = outCardGame->engine.CreateSubArena(1024);
 		outCardGame->scene = jv::ge::CreateScene();

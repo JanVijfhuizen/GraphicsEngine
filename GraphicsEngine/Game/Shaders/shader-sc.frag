@@ -46,12 +46,18 @@ vec2 Dist(vec2 pos, vec2 res)
 	return pos;
 }
 
-void main() 
+void main()
 {
-    float m =  pushConstants.resolution.x / pushConstants.resolution.y;
+    vec2 scaledRes = pushConstants.simResolution;
+    while(scaledRes.x * 2 <= pushConstants.resolution.x && scaledRes.y * 2 <= pushConstants.resolution.y)
+        scaledRes *= 2;
+    vec2 scaledV = pushConstants.resolution / scaledRes;
+    vec2 scaledFragPos = fragPos * scaledV;
+
+    float m = pushConstants.simResolution.x / pushConstants.simResolution.y;
     vec2 res = vec2(pushConstants.simResolution.x * m, pushConstants.simResolution.y);
 
-    vec2 uv = fragPos;
+    vec2 uv = scaledFragPos;
     
     vec2 d = Dist(uv, res);
     float b = length(d);
@@ -63,7 +69,7 @@ void main()
     uv += vec2(0.5f / pushConstants.simResolution);
 
     vec2 pixRes = vec2(pushConstants.simResolution.x * m / pushConstants.pixelation, pushConstants.simResolution.y / pushConstants.pixelation);
-    vec2 pixUv = fragPos;
+    vec2 pixUv = scaledFragPos;
     pixUv *= pixRes;
     pixUv = floor(pixUv);
     pixUv /= pixRes;
