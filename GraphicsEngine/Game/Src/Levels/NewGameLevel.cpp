@@ -100,9 +100,9 @@ namespace game
 			if (timeSinceFirstChoicesMade < 0)
 				timeSinceFirstChoicesMade = level->GetTime();
 
-			level->DrawPressSpaceToContinue(info, HeaderSpacing::close, level->GetTime() - timeSinceFirstChoicesMade);
+			level->DrawPressEnterToContinue(info, HeaderSpacing::close, level->GetTime() - timeSinceFirstChoicesMade);
 
-			if (info.inputState.space.PressEvent())
+			if (info.inputState.enter.PressEvent())
 			{
 				state.monsterId = monsterDiscoverOptions[monsterChoice];
 				state.artifactId = artifactDiscoverOptions[artifactChoice];
@@ -177,9 +177,9 @@ namespace game
 		
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if(f >= 0)
-			level->DrawPressSpaceToContinue(info, HeaderSpacing::close, f);
+			level->DrawPressEnterToContinue(info, HeaderSpacing::close, f);
 
-		if (!level->GetIsLoading() && info.inputState.space.PressEvent())
+		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 		{
 			auto& playerState = info.playerState = PlayerState::Create();
 			for (auto& artifact : playerState.artifacts)

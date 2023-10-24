@@ -18,9 +18,9 @@ namespace game
 
 		const float f = GetTime() - static_cast<float>(strlen(headerDrawInfo.text)) / TEXT_DRAW_SPEED;
 		if (f >= 0)
-			DrawPressSpaceToContinue(info, HeaderSpacing::close, f);
+			DrawPressEnterToContinue(info, HeaderSpacing::close, f);
 
-		if (info.inputState.space.PressEvent())
+		if (info.inputState.enter.PressEvent())
 			loadLevelIndex = LevelIndex::mainMenu;
 		return true;
 	}

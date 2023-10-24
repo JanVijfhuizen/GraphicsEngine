@@ -42,9 +42,9 @@ namespace game
 			if (timeSincePartySelected < 0)
 				timeSincePartySelected = GetTime();
 
-			DrawPressSpaceToContinue(info, HeaderSpacing::close, GetTime() - timeSincePartySelected);
+			DrawPressEnterToContinue(info, HeaderSpacing::close, GetTime() - timeSincePartySelected);
 
-			if (info.inputState.space.PressEvent())
+			if (info.inputState.enter.PressEvent())
 			{
 				auto& gameState = info.gameState;
 				gameState.partySize = selectedAmount;
