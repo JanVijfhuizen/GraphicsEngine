@@ -306,8 +306,8 @@ namespace game
 			
 			std::ofstream outFile;
 			outFile.open(RESOLUTIONS_DATA_PATH);
-			outFile << 2 << std::endl;
-			outFile << 0 << std::endl;
+			outFile << 5 << std::endl;
+			outFile << 1 << std::endl;
 			for (uint32_t i = 0; i < 3; ++i)
 			{
 				outFile << SIMULATED_RESOLUTION.x * (i + 1) << std::endl;
@@ -407,9 +407,9 @@ namespace game
 
 				jv::ge::SamplerCreateInfo samplerCreateInfo{};
 				samplerCreateInfo.scene = outCardGame->scene;
-				samplerCreateInfo.addressModeU = jv::ge::SamplerCreateInfo::AddressMode::clampToEdge;
-				samplerCreateInfo.addressModeV = jv::ge::SamplerCreateInfo::AddressMode::clampToEdge;
-				samplerCreateInfo.addressModeW = jv::ge::SamplerCreateInfo::AddressMode::clampToEdge;
+				samplerCreateInfo.addressModeU = jv::ge::SamplerCreateInfo::AddressMode::clampToBorder;
+				samplerCreateInfo.addressModeV = jv::ge::SamplerCreateInfo::AddressMode::clampToBorder;
+				samplerCreateInfo.addressModeW = jv::ge::SamplerCreateInfo::AddressMode::clampToBorder;
 				frameBuffer.sampler = AddSampler(samplerCreateInfo);
 			}
 			
