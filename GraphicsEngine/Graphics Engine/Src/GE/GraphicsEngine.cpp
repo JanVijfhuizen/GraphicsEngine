@@ -521,14 +521,18 @@ namespace jv::ge
 			addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			break;
 		case SamplerCreateInfo::AddressMode::mirroredRepeat:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
 			break;
 		case SamplerCreateInfo::AddressMode::clampToEdge:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			break;
 		case SamplerCreateInfo::AddressMode::clampToBorder:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 			break;
-		case SamplerCreateInfo::AddressMode::mirroredClampToBorder:
-			break;
+		//case SamplerCreateInfo::AddressMode::mirroredClampToBorder:
+			//break;
 		case SamplerCreateInfo::AddressMode::mirroredClampToEdge:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
 			break;
 		default:
 			std::cerr << "Address mode not supported." << std::endl;

@@ -407,6 +407,9 @@ namespace game
 
 				jv::ge::SamplerCreateInfo samplerCreateInfo{};
 				samplerCreateInfo.scene = outCardGame->scene;
+				samplerCreateInfo.addressModeU = jv::ge::SamplerCreateInfo::AddressMode::clampToEdge;
+				samplerCreateInfo.addressModeV = jv::ge::SamplerCreateInfo::AddressMode::clampToEdge;
+				samplerCreateInfo.addressModeW = jv::ge::SamplerCreateInfo::AddressMode::clampToEdge;
 				frameBuffer.sampler = AddSampler(samplerCreateInfo);
 			}
 			
