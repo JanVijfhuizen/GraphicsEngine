@@ -49,18 +49,22 @@ vec2 Dist(vec2 pos, vec2 res)
 void main()
 {
     vec2 scaledRes = pushConstants.simResolution;
-    while(scaledRes.x * 2 <= pushConstants.resolution.x && scaledRes.y * 2 <= pushConstants.resolution.y)
-        scaledRes *= 2;
+    while(scaledRes.x + pushConstants.simResolution.x <= pushConstants.resolution.x && 
+        scaledRes.y + pushConstants.simResolution.y <= pushConstants.resolution.y)
+        scaledRes += pushConstants.simResolution;
     vec2 scaledV = pushConstants.resolution / scaledRes;
     vec2 scaledFragPos = fragPos * scaledV;
 
+    /*
     vec2 scaledOff = (pushConstants.resolution - scaledRes) / 2;
     scaledOff = scaledOff / pushConstants.resolution;
     scaledFragPos -= scaledOff;
+    */
+
+
 
     float m = pushConstants.simResolution.x / pushConstants.simResolution.y;
     vec2 res = vec2(pushConstants.simResolution.x * m, pushConstants.simResolution.y);
-
     vec2 uv = scaledFragPos;
     
     vec2 d = Dist(uv, res);
