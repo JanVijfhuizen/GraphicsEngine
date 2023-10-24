@@ -21,6 +21,7 @@ namespace game
 		uint32_t tempArenaSize = 4096;
 		uint32_t frameArenaSize = 4096;
 		glm::ivec2 resolution{ 800, 600 };
+		bool fullScreen = false;
 
 		void (*onKeyCallback)(size_t key, size_t action) = nullptr;
 		void (*onMouseCallback)(size_t key, size_t action) = nullptr;
@@ -68,6 +69,7 @@ namespace game
 		static void Destroy(const Engine& engine);
 		[[nodiscard]] EngineMemory GetMemory();
 		[[nodiscard]] jv::Arena CreateSubArena(uint32_t size);
+		[[nodiscard]] static glm::ivec2 GetMonitorResolution();
 
 	private:
 		void* _arenaMem;

@@ -36,8 +36,7 @@ namespace game
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
-
-	constexpr glm::ivec2 RESOLUTION = SIMULATED_RESOLUTION * 3;
+	constexpr const char* RESOLUTIONS_DATA_PATH = "Resolutions.txt";
 
 	struct KeyCallback final
 	{
@@ -72,6 +71,10 @@ namespace game
 			jv::ge::Resource layout;
 			jv::ge::Resource pipeline;
 		};
+
+		glm::ivec2 resolution;
+		glm::ivec2 snapResolution;
+		bool isFullScreen;
 
 		LevelUpdateInfo::ScreenShakeInfo screenShakeInfo{};
 
@@ -212,7 +215,7 @@ namespace game
 			spells,
 			curses,
 			events,
-			RESOLUTION,
+			resolution,
 			inputState,
 			*textTasks,
 			*pixelPerfectRenderTasks,
@@ -268,7 +271,7 @@ namespace game
 			
 			SwapChainPushConstant pushConstant{};
 			pushConstant.time = cardGame->timeSinceStarted;
-			pushConstant.resolution = RESOLUTION;
+			pushConstant.resolution = cardGame->resolution;
 			pushConstant.simResolution = SIMULATED_RESOLUTION;
 			pushConstant.pixelation = cardGame->pixelation;
 
@@ -292,9 +295,57 @@ namespace game
 		return result;
 	}
 
+	void LoadResolution(glm::ivec2& resolution, bool& fullScreen)
+	{
+		std::ifstream inFile;
+		inFile.open(RESOLUTIONS_DATA_PATH);
+		if (!inFile.is_open())
+		{
+			inFile.close();
+			resolution = SIMULATED_RESOLUTION * 3;
+			fullScreen = false;
+			
+			std::ofstream outFile;
+			outFile.open(RESOLUTIONS_DATA_PATH);
+			outFile << 2 << std::endl;
+			outFile << 0 << std::endl;
+			for (uint32_t i = 0; i < 3; ++i)
+			{
+				outFile << SIMULATED_RESOLUTION.x * (i + 1) << std::endl;
+				outFile << SIMULATED_RESOLUTION.y * (i + 1) << std::endl;
+			}
+			outFile << 1280 << std::endl;
+			outFile << 720 << std::endl;
+			outFile << 1920 << std::endl;
+			outFile << 1080 << std::endl;
+			
+			outFile.close();
+			LoadResolution(resolution, fullScreen);
+			return;
+		}
+
+		uint32_t index = 0;
+		inFile >> index;
+		inFile >> fullScreen;
+		
+		for (uint32_t i = 0; i < index + 1; ++i)
+		{
+			inFile >> resolution.x;
+			inFile >> resolution.y;
+		}
+
+		inFile.close();
+	}
+
 	void CardGame::Create(CardGame* outCardGame)
 	{
 		srand(time(nullptr));
+
+		glm::ivec2 res;
+		bool fullScreen;
+		LoadResolution(res, fullScreen);
+		res.x = jv::Max(res.x, SIMULATED_RESOLUTION.x);
+		res.y = jv::Max(res.y, SIMULATED_RESOLUTION.y);
 
 		*outCardGame = {};
 		{
@@ -302,9 +353,17 @@ namespace game
 			engineCreateInfo.onKeyCallback = OnKeyCallback;
 			engineCreateInfo.onMouseCallback = OnMouseCallback;
 			engineCreateInfo.onScrollCallback = OnScrollCallback;
-			engineCreateInfo.resolution = RESOLUTION;
+			engineCreateInfo.resolution = res;
+			engineCreateInfo.fullScreen = fullScreen;
 			outCardGame->engine = Engine::Create(engineCreateInfo);
 		}
+
+		outCardGame->resolution = res;
+		outCardGame->isFullScreen = fullScreen;
+
+		outCardGame->snapResolution = SIMULATED_RESOLUTION;
+		while (outCardGame->snapResolution.x * 2 <= res.y && outCardGame->snapResolution.y * 2 <= res.y)
+			outCardGame->snapResolution *= 2;
 
 		outCardGame->arena = outCardGame->engine.CreateSubArena(1024);
 		outCardGame->levelArena = outCardGame->engine.CreateSubArena(1024);
@@ -382,7 +441,7 @@ namespace game
 			swapChain.pool = AddDescriptorPool(poolCreateInfo);
 
 			jv::ge::PipelineCreateInfo pipelineCreateInfo{};
-			pipelineCreateInfo.resolution = RESOLUTION;
+			pipelineCreateInfo.resolution = res;
 			pipelineCreateInfo.shader = swapChain.shader;
 			pipelineCreateInfo.layoutCount = 1;
 			pipelineCreateInfo.layouts = &swapChain.layout;

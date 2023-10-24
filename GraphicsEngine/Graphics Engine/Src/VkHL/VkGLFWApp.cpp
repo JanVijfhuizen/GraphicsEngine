@@ -43,9 +43,14 @@ namespace jv::vk
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, false);
 
+		const auto monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
 		// Create window.
 		auto& window = app.window;
-		window = glfwCreateWindow(resolution.x, resolution.y, name, fullScreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+		window = glfwCreateWindow(fullScreen ? mode->width : resolution.x, 
+			fullScreen ? mode->height : resolution.y, name, 
+			fullScreen ? monitor : nullptr, nullptr);
 		assert(window);
 
 		glfwMakeContextCurrent(window);
@@ -74,5 +79,12 @@ namespace jv::vk
 	{
 		const auto buffer = glfwGetRequiredInstanceExtensions(&count);
 		return buffer;
+	}
+
+	glm::ivec2 GLFWApp::GetScreenSize()
+	{
+		const auto monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		return { mode->width, mode->height };
 	}
 }

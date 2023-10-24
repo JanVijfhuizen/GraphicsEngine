@@ -68,6 +68,7 @@ namespace game
 		createInfo.onMouseCallback = info.onMouseCallback;
 		createInfo.onScrollCallback = info.onScrollCallback;
 		createInfo.resolution = info.resolution;
+		createInfo.fullscreen = info.fullScreen;
 		Initialize(createInfo);
 
 		Engine engine{};
@@ -113,5 +114,10 @@ namespace game
 		info.alloc = Alloc;
 		info.free = Free;
 		return jv::Arena::Create(info);
+	}
+
+	glm::ivec2 Engine::GetMonitorResolution()
+	{
+		return jv::ge::GetMonitorResolution();
 	}
 }

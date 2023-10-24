@@ -273,6 +273,11 @@ namespace jv::ge
 		return ge.swapChain.GetResolution();
 	}
 
+	glm::ivec2 GetMonitorResolution()
+	{
+		return vk::GLFWApp::GetScreenSize();
+	}
+
 	glm::vec2 GetMousePosition()
 	{
 		double x, y;
