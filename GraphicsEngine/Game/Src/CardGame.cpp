@@ -1666,12 +1666,75 @@ namespace game
 
 					ActionState drawState{};
 					drawState.trigger = ActionState::Trigger::onDraw;
-					drawState.source = ActionState::Source::board;
-					drawState.src = self;
-					drawState.srcUniqueId = boardState.uniqueIds[self];
+					drawState.source = ActionState::Source::other;
 					for (uint32_t i = 0; i < 5; ++i)
 						state.TryAddToStack(drawState);
 					state.mana += 10;
+					return true;
+				}
+				return false;
+			};
+		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].name = "sword of spellcasting";
+		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].ruleText = "[non combat damage to any target] gain that much temporary attack.";
+		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDamage)
+				{
+					if (actionState.source == ActionState::Source::board)
+						return false;
+
+					const auto& boardState = state.boardState;
+					if (actionState.src != self)
+						return false;
+					if (!boardState.Validate(actionState, true, false))
+						return false;
+
+					const auto dmg = actionState.values[ActionState::VDamage::damage];
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::tempAttack] = dmg;
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
+		arr[ARTIFACT_IDS::STAFF_OF_AEONS].name = "staff of aeons";
+		arr[ARTIFACT_IDS::STAFF_OF_AEONS].ruleText = "[2 or more non combat damage to any target] gain 1 mana.";
+		arr[ARTIFACT_IDS::STAFF_OF_AEONS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDamage)
+				{
+					if (actionState.source == ActionState::Source::board)
+						return false;
+					if (actionState.values[ActionState::VDamage::damage] < 2)
+						return false;
+					++state.mana;
+					return true;
+				}
+				return false;
+			};
+		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].name = "staff of summoning";
+		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].ruleText = "[cast 3 cost or higher] summon a 6/6 demon.";
+		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast)
+				{
+					const auto& card = info.spells[state.hand[actionState.src]];
+					if (card.cost < 3)
+						return false;
+
+					ActionState summonState{};
+					summonState.trigger = ActionState::Trigger::onSummon;
+					summonState.source = ActionState::Source::other;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
+					summonState.values[ActionState::VSummon::isAlly] = 1;
+					summonState.values[ActionState::VSummon::health] = 6;
+					summonState.values[ActionState::VSummon::attack] = 6;
+					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
@@ -2179,7 +2242,7 @@ namespace game
 		groupHug.name = "group hug";
 		groupHug.ruleText = "all allies gain temporary health equal to target monsters temporary health.";
 		groupHug.cost = 2;
-		groupHug.type = SpellCard::Type::all;
+		groupHug.type = SpellCard::Type::target;
 		groupHug.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2386,7 +2449,7 @@ namespace game
 			};
 		auto& pyroblast = arr[SPELL_IDS::PYROBlAST];
 		pyroblast.name = "pyroblast";
-		pyroblast.ruleText = "deal 10 damage.";
+		pyroblast.ruleText = "deal 13 damage.";
 		pyroblast.cost = 3;
 		pyroblast.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2397,7 +2460,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 10;
+					damageState.values[ActionState::VDamage::damage] = 13;
 					state.TryAddToStack(damageState);
 					return true;
 				}
@@ -2406,7 +2469,7 @@ namespace game
 		auto& unstableCopy = arr[SPELL_IDS::UNSTABLE_COPY];
 		unstableCopy.name = "unstable copy";
 		unstableCopy.ruleText = "summon a demon with attack and health equal to target monsters attack.";
-		unstableCopy.cost = 3;
+		unstableCopy.cost = 2;
 		unstableCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2432,7 +2495,7 @@ namespace game
 		auto& perfectCopy = arr[SPELL_IDS::PERFECT_COPY];
 		perfectCopy.name = "perfect copy";
 		perfectCopy.ruleText = "summon a demon with the same stats as target monster.";
-		perfectCopy.cost = 10;
+		perfectCopy.cost = 8;
 		perfectCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2547,7 +2610,7 @@ namespace game
 			};
 		auto& fireStorm = arr[SPELL_IDS::FIRE_STORM];
 		fireStorm.name = "fire storm";
-		fireStorm.ruleText = "deal 3 damage to all enemies.";
+		fireStorm.ruleText = "deal 4 damage to all enemies.";
 		fireStorm.cost = 2;
 		fireStorm.type = SpellCard::Type::all;
 		fireStorm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2557,7 +2620,7 @@ namespace game
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = 3;
+					damageState.values[ActionState::VDamage::damage] = 4;
 					TargetOfType(info, state, damageState, 0, -1, TypeTarget::enemies);
 					return true;
 				}
@@ -2632,6 +2695,34 @@ namespace game
 					drawState.source = ActionState::Source::other;
 					for (uint32_t i = 0; i < c; ++i)
 						state.TryAddToStack(drawState);
+				}
+				return false;
+			};
+		auto& pick = arr[SPELL_IDS::PICK];
+		pick.name = "pick";
+		pick.ruleText = "deal 1 damage and draw.";
+		pick.cost = 0;
+		pick.type = SpellCard::Type::target;
+		pick.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					const auto& boardState = state.boardState;
+					if (!boardState.Validate(actionState, false, true))
+						return false;
+
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.dst = actionState.dst;
+					damageState.dstUniqueId = state.boardState.uniqueIds[actionState.dst];
+					damageState.values[ActionState::VDamage::damage] = 1;
+					state.TryAddToStack(damageState);
+
+					ActionState drawState{};
+					drawState.trigger = ActionState::Trigger::onDraw;
+					drawState.source = ActionState::Source::other;
+					state.TryAddToStack(drawState);
 				}
 				return false;
 			};
