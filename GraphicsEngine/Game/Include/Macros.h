@@ -143,6 +143,7 @@ struct SPELL_IDS
 		TRIBALISM,
 		LOYAL_WORKFORCE,
 		PICK,
+		CYCLE,
 		LENGTH
 	};
 };
