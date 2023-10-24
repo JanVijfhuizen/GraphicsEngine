@@ -573,7 +573,7 @@ namespace game
 
 	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		constexpr uint32_t l = 38;
+		constexpr uint32_t l = 45;
 		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
 		for (uint32_t i = 0; i < l; ++i)
 		{
@@ -1339,6 +1339,50 @@ namespace game
 				}
 				return false;
 			};
+		auto& beastMaster = arr[MONSTER_IDS::BEAST_MASTER];
+		beastMaster.name = "beast master";
+		beastMaster.attack = 1;
+		beastMaster.health = 20;
+		beastMaster.ruleText = "[token attack] draw.";
+		beastMaster.tags = TAG_HUMAN;
+		beastMaster.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					const auto& boardState = state.boardState;
+					if (!boardState.Validate(actionState, true, true))
+						return false;
+
+					const auto& monster = info.monsters[boardState.ids[actionState.src]];
+					if ((monster.tags & TAG_TOKEN) == 0)
+						return false;
+
+					ActionState drawState{};
+					drawState.trigger = ActionState::Trigger::onDraw;
+					drawState.source = ActionState::Source::other;
+					state.TryAddToStack(drawState);
+					return true;
+				}
+				return false;
+			};
+		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
+		librarian.name = "librarian";
+		librarian.attack = 0;
+		librarian.health = 14;
+		librarian.ruleText = "[draw] [ally] gain one mana. [enemy] lose one mana.";
+		librarian.tags = TAG_HUMAN;
+		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDraw)
+				{
+					if (self < BOARD_CAPACITY_PER_SIDE)
+						++state.mana;
+					else if (state.mana > 0)
+						--state.mana;
+					return true;
+				}
+				return false;
+			};
 		return arr;
 	}
 
@@ -1735,6 +1779,20 @@ namespace game
 					summonState.values[ActionState::VSummon::health] = 6;
 					summonState.values[ActionState::VSummon::attack] = 6;
 					state.TryAddToStack(summonState);
+					return true;
+				}
+				return false;
+			};
+		arr[ARTIFACT_IDS::MANA_RING].name = "mana ring";
+		arr[ARTIFACT_IDS::MANA_RING].ruleText = "[cast] draw.";
+		arr[ARTIFACT_IDS::MANA_RING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast)
+				{
+					ActionState drawState{};
+					drawState.trigger = ActionState::Trigger::onDraw;
+					drawState.source = ActionState::Source::other;
+					state.TryAddToStack(drawState);
 					return true;
 				}
 				return false;
