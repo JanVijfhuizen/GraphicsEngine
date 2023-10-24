@@ -55,13 +55,11 @@ void main()
     vec2 scaledV = pushConstants.resolution / scaledRes;
     vec2 scaledFragPos = fragPos * scaledV;
 
-    /*
+    vec2 sRf = pushConstants.simResolution;
     vec2 scaledOff = (pushConstants.resolution - scaledRes) / 2;
     scaledOff = scaledOff / pushConstants.resolution;
+    scaledOff.x *= sRf.x / sRf.y;
     scaledFragPos -= scaledOff;
-    */
-
-
 
     float m = pushConstants.simResolution.x / pushConstants.simResolution.y;
     vec2 res = vec2(pushConstants.simResolution.x * m, pushConstants.simResolution.y);
