@@ -146,6 +146,7 @@ namespace game
 			uint32_t activationIndex = -1;
 			float activationLerp;
 			bool mirrorHorizontal = false;
+			bool draggable = false;
 		};
 
 		struct PartyDrawInfo final

@@ -695,14 +695,6 @@ namespace game
 		Card* cards[l]{};
 		for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			cards[i] = &info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE + i]];
-		
-		bool* selectedArr = nullptr;
-
-		if(selectionState == SelectionState::enemy)
-		{
-			selectedArr = jv::CreateArray<bool>(info.frameArena, l).ptr;
-			selectedArr[selectedId] = true;
-		}
 
 		uint32_t targets[BOARD_CAPACITY_PER_SIDE];
 		memcpy(targets, state.targets, sizeof(uint32_t) * BOARD_CAPACITY_PER_SIDE);
@@ -716,7 +708,7 @@ namespace game
 		enemySelectionDrawInfo.length = boardState.enemyCount;
 		enemySelectionDrawInfo.height = ENEMY_HEIGHT;
 		enemySelectionDrawInfo.costs = targets;
-		enemySelectionDrawInfo.selectedArr = selectedArr;
+		enemySelectionDrawInfo.highlighted = selectionState == SelectionState::enemy ? selectedId : -1;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
 		enemySelectionDrawInfo.offsetMod = 16;
@@ -728,18 +720,11 @@ namespace game
 		DrawBuffAnimation(info, *level, enemySelectionDrawInfo, false);
 		DrawDeathAnimation(*level, enemySelectionDrawInfo, false);
 		const auto enemyResult = level->DrawCardSelection(info, enemySelectionDrawInfo);
-		selectedArr = nullptr;
 
 		if (state.stack.count == 0 && lMousePressed && enemyResult != -1)
 		{
 			selectionState = SelectionState::enemy;
 			selectedId = enemyResult;
-		}
-
-		if (state.stack.count == 0 && selectionState == SelectionState::hand)
-		{
-			selectedArr = jv::CreateArray<bool>(info.frameArena, l).ptr;
-			selectedArr[selectedId] = true;
 		}
 
 		bool greyedOutArr[HAND_MAX_SIZE];
@@ -761,30 +746,24 @@ namespace game
 		handSelectionDrawInfo.length = state.hand.count;
 		handSelectionDrawInfo.height = HAND_HEIGHT;
 		handSelectionDrawInfo.texts = nullptr;
-		handSelectionDrawInfo.selectedArr = selectedArr;
+		handSelectionDrawInfo.highlighted = selectionState == SelectionState::hand ? selectedId : -1;
 		handSelectionDrawInfo.greyedOutArr = greyedOutArr;
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_HAND_INDEX];
 		handSelectionDrawInfo.offsetMod = 4;
+		handSelectionDrawInfo.draggable = true;
 		DrawActivationAnimation(handSelectionDrawInfo, Activation::spell, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
 		if(activeStateValid && activeState.trigger == ActionState::Trigger::onDraw)
 			DrawDrawAnimation(*level, handSelectionDrawInfo);
 
 		const auto handResult = level->DrawCardSelection(info, handSelectionDrawInfo);
-		selectedArr = nullptr;
 
 		if(state.stack.count == 0 && lMousePressed && handResult != -1)
 		{
 			selectionState = SelectionState::hand;
 			selectedId = handResult;
-		}
-
-		if (state.stack.count == 0 && selectionState == SelectionState::ally)
-		{
-			selectedArr = jv::CreateArray<bool>(info.frameArena, l).ptr;
-			selectedArr[selectedId] = true;
 		}
 
 		// Draw allies.
@@ -823,9 +802,10 @@ namespace game
 		playerCardSelectionDrawInfo.lifeTime = level->GetTime();
 		playerCardSelectionDrawInfo.greyedOutArr = state.tapped;
 		playerCardSelectionDrawInfo.combatStats = boardState.combatStats;
-		playerCardSelectionDrawInfo.selectedArr = selectedArr;
+		playerCardSelectionDrawInfo.highlighted = selectionState == SelectionState::ally ? selectedId : -1;
 		playerCardSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ALLY_INDEX];
 		playerCardSelectionDrawInfo.offsetMod = 16;
+		playerCardSelectionDrawInfo.draggable = true;
 		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(info, *level, playerCardSelectionDrawInfo, true);

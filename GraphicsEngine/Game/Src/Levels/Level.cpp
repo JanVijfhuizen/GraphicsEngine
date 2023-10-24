@@ -387,6 +387,7 @@ namespace game
 			
 			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
 			cardDrawInfo.lifeTime = drawInfo.lifeTime;
+			cardDrawInfo.priority = false;
 
 			if(drawInfo.damagedIndex == i)
 			{
@@ -451,6 +452,14 @@ namespace game
 
 			cardDrawInfo.ignoreAnim = true;
 			cardDrawInfo.metaData = nullptr;
+
+			const bool dragged = drawInfo.draggable && drawInfo.highlighted == i;
+			if(dragged)
+			{
+				cardDrawInfo.origin = info.inputState.mousePos;
+				//cardDrawInfo.origin += glm::ivec2(0, 8);
+				cardDrawInfo.priority = true;
+			}
 			
 			if (drawInfo.stacks)
 			{
@@ -462,7 +471,7 @@ namespace game
 						auto stackedDrawInfo = cardDrawInfo;
 						stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (j + 1));
 						stackedDrawInfo.origin.x += 4 * ((stackedCount - j - 1) % 2 == 0);
-						if(CollidesCard(info, stackedDrawInfo))
+						if(!dragged && CollidesCard(info, stackedDrawInfo))
 						{
 							stackedSelected = stackedCount - j - 1;
 							break;
@@ -475,7 +484,7 @@ namespace game
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
 					stackedDrawInfo.origin.x += 4 * ((stackedCount - j - 1) % 2 == 0);
-					stackedDrawInfo.selectable = !collides && stackedSelected == j;
+					stackedDrawInfo.selectable = !dragged && !collides && stackedSelected == j;
 					DrawCard(info, stackedDrawInfo);
 				}
 			}
@@ -602,7 +611,7 @@ namespace game
 			info.renderTasks.Push(imageRenderTask);
 		}
 
-		const bool priority = drawInfo.priority || !info.inputState.rMouse.pressed;
+		const bool priority = drawInfo.priority || !(info.inputState.rMouse.pressed || info.inputState.lMouse.pressed);
 		const auto& statsTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::stats)];
 		jv::ge::SubTexture statFrames[3];
 		Divide(statsTexture.subTexture, statFrames, 3);
