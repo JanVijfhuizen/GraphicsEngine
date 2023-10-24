@@ -2927,7 +2927,7 @@ namespace game
 
 		inputState.lMouse.change = false;
 		inputState.rMouse.change = false;
-		inputState.enter.change = false;
+		inputState.space.change = false;
 		
 		for (const auto& callback : mouseCallbacks)
 		{
@@ -2935,7 +2935,7 @@ namespace game
 			SetInputState(inputState.rMouse, GLFW_MOUSE_BUTTON_RIGHT, callback);
 		}
 		for (const auto& callback : keyCallbacks)
-			SetInputState(inputState.enter, GLFW_KEY_ENTER, callback);
+			SetInputState(inputState.space, GLFW_KEY_SPACE, callback);
 		
 		// Reset callbacks.
 		keyCallbacks = {};

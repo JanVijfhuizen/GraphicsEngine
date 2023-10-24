@@ -57,9 +57,9 @@ namespace game
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
 		if(f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::close, f);
+			level->DrawPressSpaceToContinue(info, HeaderSpacing::close, f);
 		
-		if (info.inputState.enter.PressEvent())
+		if (info.inputState.space.PressEvent())
 			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		return true;
 	}
@@ -196,9 +196,9 @@ namespace game
 		
 		if (discoverOption != -1)
 		{
-			level->DrawPressEnterToContinue(info, HeaderSpacing::close, level->GetTime() - timeSinceDiscovered);
+			level->DrawPressSpaceToContinue(info, HeaderSpacing::close, level->GetTime() - timeSinceDiscovered);
 			
-			if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
+			if (!level->GetIsLoading() && info.inputState.space.PressEvent())
 			{
 				if(!bossPresent)
 				{
@@ -656,7 +656,7 @@ namespace game
 		if(state.stack.count == 0)
 		{
 			// Manually end turn.
-			if (info.inputState.enter.PressEvent())
+			if (info.inputState.space.PressEvent())
 			{
 				ActionState startOfTurnActionState{};
 				startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
@@ -1611,9 +1611,9 @@ namespace game
 		level->DrawTopCenterHeader(info, HeaderSpacing::far, text);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if (f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::far, f);
+			level->DrawPressSpaceToContinue(info, HeaderSpacing::far, f);
 		
-		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
+		if (!level->GetIsLoading() && info.inputState.space.PressEvent())
 		{
 			if (discoverOption != -1)
 				info.gameState.spells[discoverOption] = path.spell;
@@ -1721,8 +1721,8 @@ namespace game
 			if (discoverOption == -1)
 				return true;
 			
-			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, level->GetTime() - timeSinceDiscovered);
-			if (level->GetIsLoading() || !info.inputState.enter.PressEvent())
+			level->DrawPressSpaceToContinue(info, HeaderSpacing::normal, level->GetTime() - timeSinceDiscovered);
+			if (level->GetIsLoading() || !info.inputState.space.PressEvent())
 				return true;
 
 			info.gameState.curses[discoverOption] = path.curse;
@@ -1762,7 +1762,7 @@ namespace game
 		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text, 1);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if (f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::normal, f);
+			level->DrawPressSpaceToContinue(info, HeaderSpacing::normal, f);
 
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			cards[i] = &info.monsters[gameState.monsterIds[i]];
@@ -1820,7 +1820,7 @@ namespace game
 			}
 		}
 
-		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
+		if (!level->GetIsLoading() && info.inputState.space.PressEvent())
 			stateIndex = static_cast<uint32_t>(StateNames::rewardMagic);
 
 		return true;
@@ -1900,8 +1900,8 @@ namespace game
 				if (timeSincePartySelected < 0)
 					timeSincePartySelected = level->GetTime();
 
-				level->DrawPressEnterToContinue(info, HeaderSpacing::normal, level->GetTime() - timeSincePartySelected);
-				if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
+				level->DrawPressSpaceToContinue(info, HeaderSpacing::normal, level->GetTime() - timeSincePartySelected);
+				if (!level->GetIsLoading() && info.inputState.space.PressEvent())
 				{
 					uint32_t d = 0;
 					for (uint32_t i = 0; i < playerState.partySize; ++i)

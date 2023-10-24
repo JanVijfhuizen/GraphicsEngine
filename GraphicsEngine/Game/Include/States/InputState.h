@@ -18,7 +18,7 @@ namespace game
 		State lMouse{};
 		State rMouse{};
 		float scroll = 0;
-		State enter{};
+		State space{};
 	};
 
 	inline bool InputState::State::ReleaseEvent() const

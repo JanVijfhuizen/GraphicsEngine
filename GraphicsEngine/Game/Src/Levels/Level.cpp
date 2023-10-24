@@ -735,7 +735,7 @@ namespace game
 	}
 
 	void Level::DrawTopCenterHeader(const LevelUpdateInfo& info, const HeaderSpacing spacing, 
-	                                const char* text, const uint32_t scale, const float overrideLifeTime) const
+		const char* text, const uint32_t scale, const float overrideLifeTime) const
 	{
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y - GetSpacing(spacing)};
@@ -746,11 +746,11 @@ namespace game
 		DrawHeader(info, headerDrawInfo);
 	}
 
-	void Level::DrawPressEnterToContinue(const LevelUpdateInfo& info, const HeaderSpacing spacing, const float overrideLifeTime) const
+	void Level::DrawPressSpaceToContinue(const LevelUpdateInfo& info, const HeaderSpacing spacing, const float overrideLifeTime) const
 	{
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, GetSpacing(spacing) };
-		headerDrawInfo.text = "press enter to continue...";
+		headerDrawInfo.text = "press space to continue...";
 		headerDrawInfo.center = true;
 		headerDrawInfo.overrideLifeTime = overrideLifeTime;
 		headerDrawInfo.scale = 1;
