@@ -69,7 +69,7 @@ namespace game
 		static void Destroy(const Engine& engine);
 		[[nodiscard]] EngineMemory GetMemory();
 		[[nodiscard]] jv::Arena CreateSubArena(uint32_t size);
-		[[nodiscard]] static glm::ivec2 GetMonitorResolution();
+		[[nodiscard]] static glm::ivec2 GetResolution();
 
 	private:
 		void* _arenaMem;

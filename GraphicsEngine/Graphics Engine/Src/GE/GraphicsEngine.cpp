@@ -238,6 +238,7 @@ namespace jv::ge
 		ge.onScrollCallback = info.onScrollCallback;
 
 		ge.glfwApp = vk::GLFWApp::Create(info.name, info.resolution, info.fullscreen);
+		const auto res = info.fullscreen ? GetMonitorResolution() : info.resolution;
 
 		glfwSetKeyCallback(ge.glfwApp.window, GLFWKeyCallback);
 		glfwSetMouseButtonCallback(ge.glfwApp.window, GLFWMouseKeyCallback);
@@ -254,7 +255,7 @@ namespace jv::ge
 		vkInfo.instanceExtensions = extensions;
 		ge.app = CreateApp(vkInfo);
 
-		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, info.resolution);
+		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, res);
 		ge.cmdPools = CreateArray<CmdBufferPool>(ge.arena, ge.swapChain.GetLength());
 
 		ge.scope = ge.arena.CreateScope();

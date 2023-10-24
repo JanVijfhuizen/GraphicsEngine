@@ -46,10 +46,12 @@ namespace jv::vk
 		const auto monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
+		const auto res = fullScreen ? glm::ivec2(mode->width, mode->height) : resolution;
+
 		// Create window.
 		auto& window = app.window;
-		window = glfwCreateWindow(fullScreen ? mode->width : resolution.x, 
-			fullScreen ? mode->height : resolution.y, name, 
+		window = glfwCreateWindow(fullScreen ? mode->width : res.x,
+			fullScreen ? mode->height : res.y, name,
 			fullScreen ? monitor : nullptr, nullptr);
 		assert(window);
 

@@ -116,8 +116,8 @@ namespace game
 		return jv::Arena::Create(info);
 	}
 
-	glm::ivec2 Engine::GetMonitorResolution()
+	glm::ivec2 Engine::GetResolution()
 	{
-		return jv::ge::GetMonitorResolution();
+		return jv::ge::GetResolution();
 	}
 }
