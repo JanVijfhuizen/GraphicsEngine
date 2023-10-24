@@ -2013,7 +2013,7 @@ namespace game
 		auto& holdTheLine = arr[SPELL_IDS::HOLD_THE_LINE];
 		holdTheLine.name = "hold the line";
 		holdTheLine.ruleText = "give all allies 3 temporary health.";
-		holdTheLine.cost = 4;
+		holdTheLine.cost = 2;
 		holdTheLine.type = SpellCard::Type::all;
 		holdTheLine.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2063,7 +2063,7 @@ namespace game
 		auto& druidicRitual = arr[SPELL_IDS::DRUIDIC_RITUAL];
 		druidicRitual.name = "druidic ritual";
 		druidicRitual.ruleText = "summon two elves.";
-		druidicRitual.cost = 2;
+		druidicRitual.cost = 1;
 		druidicRitual.type = SpellCard::Type::all;
 		druidicRitual.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2103,7 +2103,7 @@ namespace game
 		auto& stampede = arr[SPELL_IDS::STAMPEDE];
 		stampede.name = "stampede";
 		stampede.ruleText = "give all allies 3 temporary attack.";
-		stampede.cost = 4;
+		stampede.cost = 3;
 		stampede.type = SpellCard::Type::all;
 		stampede.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2158,8 +2158,8 @@ namespace game
 			};
 		auto& shield = arr[SPELL_IDS::SHIELD];
 		shield.name = "shield";
-		shield.ruleText = "gain 7 temporary health.";
-		shield.cost = 3;
+		shield.ruleText = "gain 5 temporary health.";
+		shield.cost = 2;
 		shield.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2167,7 +2167,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 7;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 5;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2178,7 +2178,7 @@ namespace game
 		auto& groupHug = arr[SPELL_IDS::GROUP_HUG];
 		groupHug.name = "group hug";
 		groupHug.ruleText = "all allies gain temporary health equal to target monsters temporary health.";
-		groupHug.cost = 4;
+		groupHug.cost = 2;
 		groupHug.type = SpellCard::Type::all;
 		groupHug.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2325,7 +2325,7 @@ namespace game
 		auto& rewind = arr[SPELL_IDS::REWIND];
 		rewind.name = "rewind";
 		rewind.ruleText = "untap all allies.";
-		rewind.cost = 5;
+		rewind.cost = 4;
 		rewind.type = SpellCard::Type::all;
 		rewind.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2510,7 +2510,7 @@ namespace game
 		auto& incantationOfDoom = arr[SPELL_IDS::INCANTATION_OF_DOOM];
 		incantationOfDoom.name = "incantation of doom";
 		incantationOfDoom.ruleText = "deal 13 damage to all enemies.";
-		incantationOfDoom.cost = 6;
+		incantationOfDoom.cost = 5;
 		incantationOfDoom.type = SpellCard::Type::all;
 		incantationOfDoom.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2548,7 +2548,7 @@ namespace game
 		auto& fireStorm = arr[SPELL_IDS::FIRE_STORM];
 		fireStorm.name = "fire storm";
 		fireStorm.ruleText = "deal 3 damage to all enemies.";
-		fireStorm.cost = 3;
+		fireStorm.cost = 2;
 		fireStorm.type = SpellCard::Type::all;
 		fireStorm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2566,7 +2566,7 @@ namespace game
 		auto& unity = arr[SPELL_IDS::UNITY];
 		unity.name = "unity";
 		unity.ruleText = "all allies with the same tags as target monster gain its attack as temporary health.";
-		unity.cost = 3;
+		unity.cost = 2;
 		unity.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2579,8 +2579,6 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.dst = self;
-					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					buffState.values[ActionState::VStatBuff::tempHealth] = stats.attack + stats.tempAttack;
 					TargetOfType(info, state, buffState, actionState.dst, info.monsters[boardState.ids[actionState.dst]].tags, TypeTarget::allies);
 				}
@@ -2706,7 +2704,7 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::HATE].name = "curse of hate";
-		arr[CURSE_IDS::HATE].ruleText = "[start of Turn] gain 3 attack, take 3 damage.";
+		arr[CURSE_IDS::HATE].ruleText = "[start of turn] gain 3 attack, take 3 damage.";
 		arr[CURSE_IDS::HATE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
