@@ -49,9 +49,11 @@ namespace jv::vk
 		// Create window.
 		auto& window = app.window;
 		window = glfwCreateWindow(fullScreen ? mode->width : resolution.x, 
-			fullScreen ? mode->height : resolution.y, name, 
-			fullScreen ? monitor : nullptr, nullptr);
+			fullScreen ? mode->height : resolution.y, name, nullptr, nullptr);
 		assert(window);
+
+		if (fullScreen)
+			glfwSetWindowPos(app.window, 0, 0);
 
 		glfwMakeContextCurrent(window);
 
