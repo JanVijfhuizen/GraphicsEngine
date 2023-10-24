@@ -1718,13 +1718,13 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].name = "staff of summoning";
-		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].ruleText = "[cast 3 cost or higher] summon a 6/6 demon.";
+		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].ruleText = "[cast 2 cost or higher] summon a 6/6 demon.";
 		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
 					const auto& card = info.spells[state.hand[actionState.src]];
-					if (card.cost < 3)
+					if (card.cost < 2)
 						return false;
 
 					ActionState summonState{};
