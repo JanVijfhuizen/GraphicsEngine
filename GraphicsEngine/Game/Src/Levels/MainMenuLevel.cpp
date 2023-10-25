@@ -26,14 +26,21 @@ namespace game
 		buttonDrawInfo.text = "new game";
 		if (DrawButton(info, buttonDrawInfo))
 			Load(LevelIndex::newGame, true);
-		
+
+		constexpr uint32_t BUTTON_OFFSET = 20;
+
 		if (saveDataValid)
 		{
-			buttonDrawInfo.origin.y -= 18;
+			buttonDrawInfo.origin.y -= BUTTON_OFFSET;
 			buttonDrawInfo.text = "continue";
 			if (DrawButton(info, buttonDrawInfo))
 				Load(LevelIndex::partySelect, true);
 		}
+
+		buttonDrawInfo.origin.y -= BUTTON_OFFSET;
+		buttonDrawInfo.text = "exit";
+		if (DrawButton(info, buttonDrawInfo))
+			return false;
 
 		return true;
 	}

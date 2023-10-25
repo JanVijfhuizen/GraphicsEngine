@@ -36,7 +36,7 @@ namespace game
 	constexpr const char* ATLAS_PATH = "Art/Atlas.png";
 	constexpr const char* ATLAS_META_DATA_PATH = "Art/AtlasMetaData.txt";
 	constexpr const char* SAVE_DATA_PATH = "SaveData.txt";
-	constexpr const char* RESOLUTIONS_DATA_PATH = "Resolutions.txt";
+	constexpr const char* RESOLUTION_DATA_PATH = "Resolution.txt";
 
 	struct KeyCallback final
 	{
@@ -321,39 +321,24 @@ namespace game
 	void LoadResolution(glm::ivec2& resolution, bool& fullScreen)
 	{
 		std::ifstream inFile;
-		inFile.open(RESOLUTIONS_DATA_PATH);
+		inFile.open(RESOLUTION_DATA_PATH);
 		if (!inFile.is_open())
 		{
 			inFile.close();
 
 			std::ofstream outFile;
-			outFile.open(RESOLUTIONS_DATA_PATH);
-			outFile << 2 << std::endl;
+			outFile.open(RESOLUTION_DATA_PATH);
 			outFile << 0 << std::endl;
-			for (uint32_t i = 0; i < 3; ++i)
-			{
-				outFile << SIMULATED_RESOLUTION.x * (i + 1) << std::endl;
-				outFile << SIMULATED_RESOLUTION.y * (i + 1) << std::endl;
-			}
-			outFile << 1280 << std::endl;
-			outFile << 720 << std::endl;
-			outFile << 1920 << std::endl;
-			outFile << 1080 << std::endl;
-			
+			outFile << SIMULATED_RESOLUTION.x * 3 << std::endl;
+			outFile << SIMULATED_RESOLUTION.y * 3 << std::endl;
 			outFile.close();
 			LoadResolution(resolution, fullScreen);
 			return;
 		}
-
-		uint32_t index = 0;
-		inFile >> index;
-		inFile >> fullScreen;
 		
-		for (uint32_t i = 0; i < index + 1; ++i)
-		{
-			inFile >> resolution.x;
-			inFile >> resolution.y;
-		}
+		inFile >> fullScreen;
+		inFile >> resolution.x;
+		inFile >> resolution.y;
 
 		inFile.close();
 	}
