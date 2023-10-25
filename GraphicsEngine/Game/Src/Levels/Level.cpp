@@ -434,7 +434,7 @@ namespace game
 
 			cardDrawInfo.fgColor = glm::vec4(1);
 			cardDrawInfo.bgColor = glm::vec4(0, 0, 0, 1);
-			cardDrawInfo.fgColor = greyedOut ? glm::vec4(.1, .1, .1, 1) : cardDrawInfo.fgColor;
+			cardDrawInfo.fgColor = greyedOut ? glm::vec4(glm::vec3(.02), 1) : cardDrawInfo.fgColor;
 			cardDrawInfo.fgColor = selected ? glm::vec4(0, 1, 0, 1) : cardDrawInfo.fgColor;
 
 			if (drawInfo.fadeIndex == i)
