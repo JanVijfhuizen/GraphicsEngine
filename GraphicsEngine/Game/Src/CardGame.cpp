@@ -60,8 +60,8 @@ namespace game
 			glm::ivec2 simResolution;
 			float time;
 			float pixelation;
-			float inCombat;
-			float activePlayer;
+			float p1Lerp;
+			float p2Lerp;
 		};
 
 		struct SwapChain final
@@ -135,10 +135,7 @@ namespace game
 
 		bool activePlayer;
 		bool inCombat;
-		float activePlayerLerp;
-		float inCombatLerp;
-
-		float deltaTime;
+		float p1Lerp, p2Lerp;
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -202,11 +199,24 @@ namespace game
 		const auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - prevTime).count();
 
 		const float dt = static_cast<float>(deltaTime) / 1e3f;
-		this->deltaTime = dt;
 		timeSinceStarted += dt;
 		
 		if (screenShakeInfo.IsInTimeOut())
 			screenShakeInfo.remaining -= dt;
+
+		inCombat = false;
+		if(!inCombat)
+		{
+			p1Lerp -= dt;
+			p2Lerp -= dt;
+		}
+		else
+		{
+			p1Lerp += dt * 2 * (2 * activePlayer - 1);
+			p2Lerp += dt * 2 * (2 * !activePlayer - 1);
+		}
+		p1Lerp = jv::Clamp<float>(p1Lerp, 0, 1);
+		p2Lerp = jv::Clamp<float>(p2Lerp, 0, 1);
 		
 		const LevelUpdateInfo info
 		{
@@ -279,19 +289,14 @@ namespace game
 			writeInfo.bindings = &writeBindingInfo;
 			writeInfo.bindingCount = 1;
 			Write(writeInfo);
-
-			cardGame->inCombatLerp += cardGame->deltaTime * (2 * cardGame->inCombat - 1);
-			cardGame->inCombatLerp = jv::Clamp<float>(cardGame->inCombatLerp, 0, 1);
-			cardGame->activePlayerLerp += cardGame->deltaTime * 2 * (2 * cardGame->activePlayer - 1);
-			cardGame->activePlayerLerp = jv::Clamp<float>(cardGame->activePlayerLerp, 0, 1);
 			
 			SwapChainPushConstant pushConstant{};
 			pushConstant.time = cardGame->timeSinceStarted + 10;
 			pushConstant.resolution = cardGame->resolution;
 			pushConstant.simResolution = SIMULATED_RESOLUTION;
 			pushConstant.pixelation = cardGame->pixelation;
-			pushConstant.inCombat = cardGame->inCombatLerp;
-			pushConstant.activePlayer = cardGame->activePlayerLerp;
+			pushConstant.p1Lerp = cardGame->p1Lerp;
+			pushConstant.p2Lerp = cardGame->p2Lerp;
 
 			jv::ge::DrawInfo drawInfo{};
 			drawInfo.pipeline = swapChain.pipeline;
@@ -385,8 +390,7 @@ namespace game
 
 		outCardGame->activePlayer = false;
 		outCardGame->inCombat = false;
-		outCardGame->activePlayerLerp = 0;
-		outCardGame->inCombatLerp = 0;
+		outCardGame->p1Lerp = outCardGame->p2Lerp = 0;
 
 		const auto mem = outCardGame->engine.GetMemory();
 
@@ -1180,8 +1184,8 @@ namespace game
 			};
 		auto& goblinSlinger = arr[MONSTER_IDS::GOBLIN_SLINGER];
 		goblinSlinger.name = "goblin slinger";
-		goblinSlinger.attack = 0;
-		goblinSlinger.health = 5;
+		goblinSlinger.attack = 1;
+		goblinSlinger.health = 6;
 		goblinSlinger.ruleText = "[ally attack] deals damage to the attacked monster equal to this monsters attack.";
 		goblinSlinger.tags = TAG_GOBLIN;
 		goblinSlinger.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -3206,7 +3210,7 @@ namespace game
 			SetInputState(inputState.rMouse, GLFW_MOUSE_BUTTON_RIGHT, callback);
 		}
 		for (const auto& callback : keyCallbacks)
-			SetInputState(inputState.enter, GLFW_KEY_ENTER, callback);
+			SetInputState(inputState.enter, GLFW_KEY_SPACE, callback);
 		
 		// Reset callbacks.
 		keyCallbacks = {};

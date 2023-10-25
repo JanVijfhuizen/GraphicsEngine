@@ -26,8 +26,8 @@ layout(push_constant) uniform PushConstants
     ivec2 simResolution;
     float time;
     float pixelation;
-    float inCombat;
-    float activePlayer;
+    float p1Lerp;
+    float p2Lerp;
 } pushConstants;
 
 float applyVignette(vec2 uv)
@@ -46,6 +46,12 @@ vec2 Dist(vec2 pos, vec2 res)
 	pos = abs(pos);
 	pos.xy = vec2(max(pos.x, pos.y));
 	return pos;
+}
+
+float GetLightLerped(vec2 uv, float org, float lerp)
+{
+    float rDis = 1.f - abs(uv.y - org);
+    return rDis * lerp;
 }
 
 void main()
@@ -90,14 +96,11 @@ void main()
     v *= .06f;
     v *= applyVignette(uv);
 
-    // Light.
-    float rDis = 1.f - abs(uv.y - (1.f - pushConstants.activePlayer)) + sin(pushConstants.time) * .1f;
-    rDis *= pushConstants.inCombat;
-    vec4 lCol = vec4(pushConstants.activePlayer, 0, max(1.f - pushConstants.activePlayer, 0), 1);
+    vec4 bgl = vec4(1, 0, 0, 1) * GetLightLerped(uv, -.2, pushConstants.p1Lerp) + vec4(0, 0, 1, 1) * GetLightLerped(uv, 1, pushConstants.p2Lerp);
 
     vec4 color = texture(img, pixUv);
     vec4 bgColor = vec4(vec3(v), 1.0);
-    bgColor += lCol * pow(rDis, 6);
+    bgColor += pow(bgl, vec4(6));
     vec4 mixed = mix(color, bgColor, 1.f - color.a);
     vec4 sub = vec4(vec3(b), 0.0);
     vec4 f = mixed - sub;

@@ -8,7 +8,7 @@
 constexpr glm::ivec2 SIMULATED_RESOLUTION(320, 240);
 constexpr float TEXT_DRAW_SPEED = 20;
 
-constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 7;
+constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 6;
 constexpr uint32_t BOARD_CAPACITY = BOARD_CAPACITY_PER_SIDE * 2;
 constexpr uint32_t PARTY_ACTIVE_INITIAL_CAPACITY = 4;
 constexpr uint32_t PARTY_ACTIVE_CAPACITY = BOARD_CAPACITY_PER_SIDE;

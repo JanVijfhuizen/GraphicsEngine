@@ -98,6 +98,8 @@ namespace game
 		{
 			float hoverDuration = 0;
 			float timeSinceStatsChanged = -1;
+			glm::ivec2 mouseOffset{};
+			bool dragging = false;
 		};
 
 		struct CardDrawInfo final
