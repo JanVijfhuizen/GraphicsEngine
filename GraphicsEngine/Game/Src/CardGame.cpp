@@ -204,6 +204,7 @@ namespace game
 		if (screenShakeInfo.IsInTimeOut())
 			screenShakeInfo.remaining -= dt;
 
+		inCombat = false;
 		if(!inCombat)
 		{
 			p1Lerp -= dt;
@@ -1183,8 +1184,8 @@ namespace game
 			};
 		auto& goblinSlinger = arr[MONSTER_IDS::GOBLIN_SLINGER];
 		goblinSlinger.name = "goblin slinger";
-		goblinSlinger.attack = 0;
-		goblinSlinger.health = 5;
+		goblinSlinger.attack = 1;
+		goblinSlinger.health = 6;
 		goblinSlinger.ruleText = "[ally attack] deals damage to the attacked monster equal to this monsters attack.";
 		goblinSlinger.tags = TAG_GOBLIN;
 		goblinSlinger.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -3209,7 +3210,7 @@ namespace game
 			SetInputState(inputState.rMouse, GLFW_MOUSE_BUTTON_RIGHT, callback);
 		}
 		for (const auto& callback : keyCallbacks)
-			SetInputState(inputState.enter, GLFW_KEY_ENTER, callback);
+			SetInputState(inputState.enter, GLFW_KEY_SPACE, callback);
 		
 		// Reset callbacks.
 		keyCallbacks = {};

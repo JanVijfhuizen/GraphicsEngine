@@ -450,16 +450,28 @@ namespace game
 			uint32_t stackedSelected = -1;
 			uint32_t stackedCount = -1;
 
-			cardDrawInfo.ignoreAnim = true;
-			cardDrawInfo.metaData = nullptr;
-
 			const bool dragged = drawInfo.draggable && drawInfo.highlighted == i;
-			if(dragged)
+			if(dragged && drawInfo.metaDatas)
 			{
-				cardDrawInfo.origin = info.inputState.mousePos;
-				//cardDrawInfo.origin += glm::ivec2(0, 8);
+				auto& metaData = drawInfo.metaDatas[i];
+				if (!metaData.dragging)
+				{
+					metaData.mouseOffset = info.inputState.mousePos - cardDrawInfo.origin;
+					metaData.dragging = true;
+				}
 				cardDrawInfo.priority = true;
 			}
+			if(drawInfo.metaDatas)
+			{
+				auto& metaData = drawInfo.metaDatas[i];
+				if (dragged)
+					cardDrawInfo.origin = info.inputState.mousePos - metaData.mouseOffset;
+				else
+					metaData.dragging = false;
+			}
+
+			cardDrawInfo.ignoreAnim = true;
+			cardDrawInfo.metaData = nullptr;
 			
 			if (drawInfo.stacks)
 			{
@@ -750,7 +762,7 @@ namespace game
 	{
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, GetSpacing(spacing) };
-		headerDrawInfo.text = "press enter to continue...";
+		headerDrawInfo.text = "press space to continue...";
 		headerDrawInfo.center = true;
 		headerDrawInfo.overrideLifeTime = overrideLifeTime;
 		headerDrawInfo.scale = 1;
