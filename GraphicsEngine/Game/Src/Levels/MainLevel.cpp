@@ -450,6 +450,7 @@ namespace game
 			// Check for game over.
 			if (boardState.allyCount == 0)
 			{
+				info.inCombat = false;
 				loadLevelIndex = LevelIndex::gameOver;
 				return true;
 			}
@@ -509,6 +510,7 @@ namespace game
 
 						if (valid)
 						{
+							info.inCombat = false;
 							if (recruitSceneLifetime < -1e-5f)
 								recruitSceneLifetime = 0;
 							else

@@ -93,11 +93,11 @@ void main()
     // Light.
     float rDis = 1.f - abs(uv.y - (1.f - pushConstants.activePlayer)) + sin(pushConstants.time) * .1f;
     rDis *= pushConstants.inCombat;
-    vec4 lCol = vec4(pushConstants.activePlayer, 0, 1.f - pushConstants.activePlayer, 1);
+    vec4 lCol = vec4(pushConstants.activePlayer, 0, max(1.f - pushConstants.activePlayer, 0), 1);
 
     vec4 color = texture(img, pixUv);
     vec4 bgColor = vec4(vec3(v), 1.0);
-    bgColor += lCol * pow(rDis, 4);
+    bgColor += lCol * pow(rDis, 6);
     vec4 mixed = mix(color, bgColor, 1.f - color.a);
     vec4 sub = vec4(vec3(b), 0.0);
     vec4 f = mixed - sub;

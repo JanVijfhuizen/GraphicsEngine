@@ -286,7 +286,7 @@ namespace game
 			cardGame->activePlayerLerp = jv::Clamp<float>(cardGame->activePlayerLerp, 0, 1);
 			
 			SwapChainPushConstant pushConstant{};
-			pushConstant.time = cardGame->timeSinceStarted;
+			pushConstant.time = cardGame->timeSinceStarted + 10;
 			pushConstant.resolution = cardGame->resolution;
 			pushConstant.simResolution = SIMULATED_RESOLUTION;
 			pushConstant.pixelation = cardGame->pixelation;
@@ -1299,7 +1299,7 @@ namespace game
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
-		slimeSoldier.health = 6;
+		slimeSoldier.health = 4;
 		slimeSoldier.ruleText = "[end of turn] summons a slime with the same stats.";
 		slimeSoldier.tags = TAG_SLIME;
 		slimeSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
