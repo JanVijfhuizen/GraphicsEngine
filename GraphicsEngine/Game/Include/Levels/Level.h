@@ -71,6 +71,8 @@ namespace game
 		TextureStreamer& textureStreamer;
 		ScreenShakeInfo& screenShakeInfo;
 		float& pixelation;
+		bool& activePlayer;
+		bool& inCombat;
 	};
 
 	struct Level

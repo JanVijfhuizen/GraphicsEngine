@@ -310,7 +310,11 @@ namespace game
 
 		const bool stackOverloaded = state.stack.count == state.stack.length;
 		if (state.stack.count == 0)
+		{
+			info.activePlayer = false;
+			info.inCombat = true;
 			comboCounter = 0;
+		}
 		while(!stackOverloaded && !activeStateValid && state.stack.count > 0)
 		{
 			timeSinceLastActionState = level->GetTime();
@@ -560,6 +564,7 @@ namespace game
 					gameState.artifactSlotCount = jv::Max(gameState.artifactSlotCount, c);
 				}
 
+				info.inCombat = false;
 				if(state.depth % 2 == 0)
 					stateIndex = static_cast<uint32_t>(StateNames::rewardArtifact);
 				else
@@ -665,6 +670,7 @@ namespace game
 				ActionState endOfTurnActionState{};
 				endOfTurnActionState.trigger = ActionState::Trigger::onEndOfTurn;
 				state.TryAddToStack(endOfTurnActionState);
+				info.activePlayer = true;
 
 				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				{

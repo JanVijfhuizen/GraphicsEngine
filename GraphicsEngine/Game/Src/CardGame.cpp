@@ -60,6 +60,8 @@ namespace game
 			glm::ivec2 simResolution;
 			float time;
 			float pixelation;
+			float inCombat;
+			float activePlayer;
 		};
 
 		struct SwapChain final
@@ -131,6 +133,13 @@ namespace game
 		TextureStreamer textureStreamer;
 		float pixelation = 1;
 
+		bool activePlayer;
+		bool inCombat;
+		float activePlayerLerp;
+		float inCombatLerp;
+
+		float deltaTime;
+
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
 		static void Destroy(const CardGame& cardGame);
@@ -193,6 +202,7 @@ namespace game
 		const auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - prevTime).count();
 
 		const float dt = static_cast<float>(deltaTime) / 1e3f;
+		this->deltaTime = dt;
 		timeSinceStarted += dt;
 		
 		if (screenShakeInfo.IsInTimeOut())
@@ -222,7 +232,9 @@ namespace game
 			dt,
 			textureStreamer,
 			screenShakeInfo,
-			pixelation
+			pixelation,
+			activePlayer,
+			inCombat
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -267,12 +279,19 @@ namespace game
 			writeInfo.bindings = &writeBindingInfo;
 			writeInfo.bindingCount = 1;
 			Write(writeInfo);
+
+			cardGame->inCombatLerp += cardGame->deltaTime * (2 * cardGame->inCombat - 1);
+			cardGame->inCombatLerp = jv::Clamp<float>(cardGame->inCombatLerp, 0, 1);
+			cardGame->activePlayerLerp += cardGame->deltaTime * 2 * (2 * cardGame->activePlayer - 1);
+			cardGame->activePlayerLerp = jv::Clamp<float>(cardGame->activePlayerLerp, 0, 1);
 			
 			SwapChainPushConstant pushConstant{};
 			pushConstant.time = cardGame->timeSinceStarted;
 			pushConstant.resolution = cardGame->resolution;
 			pushConstant.simResolution = SIMULATED_RESOLUTION;
 			pushConstant.pixelation = cardGame->pixelation;
+			pushConstant.inCombat = cardGame->inCombatLerp;
+			pushConstant.activePlayer = cardGame->activePlayerLerp;
 
 			jv::ge::DrawInfo drawInfo{};
 			drawInfo.pipeline = swapChain.pipeline;
@@ -363,6 +382,11 @@ namespace game
 		outCardGame->levelArena = outCardGame->engine.CreateSubArena(1024);
 		outCardGame->scene = jv::ge::CreateScene();
 		outCardGame->levelScene = jv::ge::CreateScene();
+
+		outCardGame->activePlayer = false;
+		outCardGame->inCombat = false;
+		outCardGame->activePlayerLerp = 0;
+		outCardGame->inCombatLerp = 0;
 
 		const auto mem = outCardGame->engine.GetMemory();
 
@@ -984,7 +1008,7 @@ namespace game
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 0;
-		goblinKing.health = 7;
+		goblinKing.health = 14;
 		goblinKing.ruleText = "[end of turn] summons 2 goblins.";
 		goblinKing.tags = TAG_GOBLIN;
 		goblinKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1186,7 +1210,7 @@ namespace game
 		auto& goblinBomb = arr[MONSTER_IDS::GOBLIN_BOMB];
 		goblinBomb.name = "goblin bomb";
 		goblinBomb.attack = 0;
-		goblinBomb.health = 5;
+		goblinBomb.health = 16;
 		goblinBomb.ruleText = "[start of turn] gains 1 attack. [death] deals damage to all enemy monsters equal to its attack.";
 		goblinBomb.tags = TAG_GOBLIN;
 		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1840,11 +1864,15 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::MANA_RING].name = "mana ring";
-		arr[ARTIFACT_IDS::MANA_RING].ruleText = "[cast] draw.";
+		arr[ARTIFACT_IDS::MANA_RING].ruleText = "[cast 2 cost or higher] draw.";
 		arr[ARTIFACT_IDS::MANA_RING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
+					const auto& card = info.spells[state.hand[actionState.src]];
+					if (card.cost < 2)
+						return false;
+
 					ActionState drawState{};
 					drawState.trigger = ActionState::Trigger::onDraw;
 					drawState.source = ActionState::Source::other;
