@@ -65,6 +65,9 @@ namespace game
 					gameState.healths[j++] = monster.health;
 				}
 				gameState.artifactSlotCount = playerState.artifactSlotCount;
+				for (uint32_t i = gameState.partySize; i < PARTY_ACTIVE_CAPACITY; ++i)
+					for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
+						gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j] = -1;
 
 				for (uint32_t i = 0; i < 7; ++i)
 				{

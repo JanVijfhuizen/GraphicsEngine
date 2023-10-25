@@ -238,6 +238,7 @@ namespace jv::ge
 		ge.onScrollCallback = info.onScrollCallback;
 
 		ge.glfwApp = vk::GLFWApp::Create(info.name, info.resolution, info.fullscreen);
+		const auto res = info.fullscreen ? GetMonitorResolution() : info.resolution;
 
 		glfwSetKeyCallback(ge.glfwApp.window, GLFWKeyCallback);
 		glfwSetMouseButtonCallback(ge.glfwApp.window, GLFWMouseKeyCallback);
@@ -254,7 +255,7 @@ namespace jv::ge
 		vkInfo.instanceExtensions = extensions;
 		ge.app = CreateApp(vkInfo);
 
-		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, info.resolution);
+		ge.swapChain = vk::SwapChain::Create(ge.arena, ge.tempArena, ge.app, res);
 		ge.cmdPools = CreateArray<CmdBufferPool>(ge.arena, ge.swapChain.GetLength());
 
 		ge.scope = ge.arena.CreateScope();
@@ -271,6 +272,11 @@ namespace jv::ge
 	glm::ivec2 GetResolution()
 	{
 		return ge.swapChain.GetResolution();
+	}
+
+	glm::ivec2 GetMonitorResolution()
+	{
+		return vk::GLFWApp::GetScreenSize();
 	}
 
 	glm::vec2 GetMousePosition()
@@ -516,14 +522,18 @@ namespace jv::ge
 			addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			break;
 		case SamplerCreateInfo::AddressMode::mirroredRepeat:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
 			break;
 		case SamplerCreateInfo::AddressMode::clampToEdge:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			break;
 		case SamplerCreateInfo::AddressMode::clampToBorder:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 			break;
-		case SamplerCreateInfo::AddressMode::mirroredClampToBorder:
-			break;
+		//case SamplerCreateInfo::AddressMode::mirroredClampToBorder:
+			//break;
 		case SamplerCreateInfo::AddressMode::mirroredClampToEdge:
+			addressMode = VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
 			break;
 		default:
 			std::cerr << "Address mode not supported." << std::endl;
@@ -562,7 +572,7 @@ namespace jv::ge
 		samplerInfo.addressModeU = GetAddressMode(info.addressModeU);
 		samplerInfo.addressModeV = GetAddressMode(info.addressModeV);
 		samplerInfo.addressModeW = GetAddressMode(info.addressModeW);
-		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.anisotropyEnable = VK_FALSE;
 		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;

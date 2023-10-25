@@ -26,6 +26,8 @@ layout(push_constant) uniform PushConstants
     ivec2 simResolution;
     float time;
     float pixelation;
+    float inCombat;
+    float activePlayer;
 } pushConstants;
 
 float applyVignette(vec2 uv)
@@ -46,12 +48,24 @@ vec2 Dist(vec2 pos, vec2 res)
 	return pos;
 }
 
-void main() 
+void main()
 {
-    float m =  pushConstants.resolution.x / pushConstants.resolution.y;
-    vec2 res = vec2(pushConstants.simResolution.x * m, pushConstants.simResolution.y);
+    vec2 scaledRes = pushConstants.simResolution;
+    while(scaledRes.x + pushConstants.simResolution.x <= pushConstants.resolution.x && 
+        scaledRes.y + pushConstants.simResolution.y <= pushConstants.resolution.y)
+        scaledRes += pushConstants.simResolution;
+    vec2 scaledV = pushConstants.resolution / scaledRes;
+    vec2 scaledFragPos = fragPos * scaledV;
 
-    vec2 uv = fragPos;
+    vec2 sRf = pushConstants.simResolution;
+    vec2 scaledOff = (pushConstants.resolution - scaledRes) / 2;
+    scaledOff = scaledOff / pushConstants.resolution;
+    scaledOff.x *= sRf.x / sRf.y;
+    scaledFragPos -= scaledOff;
+
+    float m = pushConstants.simResolution.x / pushConstants.simResolution.y;
+    vec2 res = vec2(pushConstants.simResolution.x * m, pushConstants.simResolution.y);
+    vec2 uv = scaledFragPos;
     
     vec2 d = Dist(uv, res);
     float b = length(d);
@@ -63,7 +77,7 @@ void main()
     uv += vec2(0.5f / pushConstants.simResolution);
 
     vec2 pixRes = vec2(pushConstants.simResolution.x * m / pushConstants.pixelation, pushConstants.simResolution.y / pushConstants.pixelation);
-    vec2 pixUv = fragPos;
+    vec2 pixUv = scaledFragPos;
     pixUv *= pixRes;
     pixUv = floor(pixUv);
     pixUv /= pixRes;
@@ -77,13 +91,13 @@ void main()
     v *= applyVignette(uv);
 
     // Light.
-    //vec2 center = vec2(.2, .2);
-    //float dist = 1.0/length(uv - center);
-    //v *= dist * 3.4f;
-    //v = abs(v);
+    float rDis = 1.f - abs(uv.y - (1.f - pushConstants.activePlayer)) + sin(pushConstants.time) * .1f;
+    rDis *= pushConstants.inCombat;
+    vec4 lCol = vec4(pushConstants.activePlayer, 0, 1.f - pushConstants.activePlayer, 1);
 
     vec4 color = texture(img, pixUv);
     vec4 bgColor = vec4(vec3(v), 1.0);
+    bgColor += lCol * pow(rDis, 4);
     vec4 mixed = mix(color, bgColor, 1.f - color.a);
     vec4 sub = vec4(vec3(b), 0.0);
     vec4 f = mixed - sub;

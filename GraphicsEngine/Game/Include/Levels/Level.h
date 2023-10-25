@@ -71,6 +71,8 @@ namespace game
 		TextureStreamer& textureStreamer;
 		ScreenShakeInfo& screenShakeInfo;
 		float& pixelation;
+		bool& activePlayer;
+		bool& inCombat;
 	};
 
 	struct Level
@@ -146,6 +148,7 @@ namespace game
 			uint32_t activationIndex = -1;
 			float activationLerp;
 			bool mirrorHorizontal = false;
+			bool draggable = false;
 		};
 
 		struct PartyDrawInfo final

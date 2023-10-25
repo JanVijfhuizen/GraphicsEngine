@@ -44,7 +44,8 @@ namespace game
 				id,
 				partyId,
 				attack,
-				health
+				health,
+				untapped
 			};
 		};
 

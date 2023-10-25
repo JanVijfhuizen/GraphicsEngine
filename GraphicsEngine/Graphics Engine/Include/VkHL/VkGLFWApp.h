@@ -20,5 +20,6 @@ namespace jv::vk
 
 		static VkSurfaceKHR CreateSurface(VkInstance instance, void* userPtr);
 		static const char** GetRequiredExtensions(uint32_t& count);
+		[[nodiscard]] static glm::ivec2 GetScreenSize();
 	};
 }
