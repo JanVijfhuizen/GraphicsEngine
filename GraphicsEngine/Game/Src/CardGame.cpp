@@ -211,8 +211,8 @@ namespace game
 		}
 		else
 		{
-			p1Lerp += dt * 4 * (2 * activePlayer - 1);
-			p2Lerp += dt * 4 * (2 * !activePlayer - 1);
+			p1Lerp += dt * 2 * (2 * activePlayer - 1);
+			p2Lerp += dt * 2 * (2 * !activePlayer - 1);
 		}
 		p1Lerp = jv::Clamp<float>(p1Lerp, 0, 1);
 		p2Lerp = jv::Clamp<float>(p2Lerp, 0, 1);

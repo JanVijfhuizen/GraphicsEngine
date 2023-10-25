@@ -48,9 +48,9 @@ vec2 Dist(vec2 pos, vec2 res)
 	return pos;
 }
 
-float GetLightLerped(float uvy, float org, float lerp)
+float GetLightLerped(vec2 uv, float org, float lerp)
 {
-    float rDis = 1.f - abs(uvy - org) + sin(pushConstants.time * 5) * .05f;
+    float rDis = 1.f - abs(uv.y - org);
     return rDis * lerp;
 }
 
@@ -96,7 +96,7 @@ void main()
     v *= .06f;
     v *= applyVignette(uv);
 
-    vec4 bgl = vec4(1, 0, 0, 1) * GetLightLerped(uv.y, 0, pushConstants.p1Lerp) + vec4(0, 0, 1, 1) * GetLightLerped(uv.y, 1, pushConstants.p2Lerp);
+    vec4 bgl = vec4(1, 0, 0, 1) * GetLightLerped(uv, -.2, pushConstants.p1Lerp) + vec4(0, 0, 1, 1) * GetLightLerped(uv, 1, pushConstants.p2Lerp);
 
     vec4 color = texture(img, pixUv);
     vec4 bgColor = vec4(vec3(v), 1.0);
