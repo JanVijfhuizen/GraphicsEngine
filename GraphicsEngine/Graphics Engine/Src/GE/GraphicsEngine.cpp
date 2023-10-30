@@ -357,7 +357,6 @@ namespace jv::ge
 
 		vk::ImageCreateInfo vkImageCreateInfo{};
 		glm::vec3 resolution = glm::vec3(info.resolution, 1);
-		vkImageCreateInfo.resolution = resolution;
 		vkImageCreateInfo.cmd = ge.cmd;
 
 		switch (info.format)
@@ -387,6 +386,7 @@ namespace jv::ge
 				std::cerr << "Format not supported." << std::endl;
 		}
 
+		vkImageCreateInfo.resolution = resolution;
 		const auto vkImage = vk::Image::Create(scene->arena, scene->freeArena, ge.app, vkImageCreateInfo);
 
 		VkImageViewCreateInfo viewCreateInfo{};
