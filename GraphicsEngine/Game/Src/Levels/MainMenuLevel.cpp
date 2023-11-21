@@ -25,6 +25,7 @@ namespace game
 		ButtonDrawInfo buttonDrawInfo{};
 		buttonDrawInfo.origin = headerDrawInfo.origin - glm::ivec2(0, 36);
 		buttonDrawInfo.text = "new game";
+		buttonDrawInfo.width = 96;
 		if (DrawButton(info, buttonDrawInfo))
 			Load(LevelIndex::newGame, true);
 
@@ -39,14 +40,14 @@ namespace game
 		}
 
 		buttonDrawInfo.origin.y -= BUTTON_OFFSET;
+		buttonDrawInfo.text = info.isFullScreen ? "to windowed" : "to fullscreen";
+		if (DrawButton(info, buttonDrawInfo))
+			info.isFullScreen = !info.isFullScreen;
+
+		buttonDrawInfo.origin.y -= BUTTON_OFFSET;
 		buttonDrawInfo.text = "exit";
 		if (DrawButton(info, buttonDrawInfo))
 			return false;
-
-		buttonDrawInfo.origin.y -= BUTTON_OFFSET;
-		buttonDrawInfo.text = info.isFullScreen ? "fullscreen" : "windowed";
-		if (DrawButton(info, buttonDrawInfo))
-			info.isFullScreen = !info.isFullScreen;
 
 		return true;
 	}

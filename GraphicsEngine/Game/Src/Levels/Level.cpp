@@ -82,30 +82,7 @@ namespace game
 
 		if(_selectedCard && !_fullCard)
 		{
-			if (info.inputState.lMouse.pressed)
-			{
-				_selectedCardLifeTime += info.deltaTime;
-
-				jv::ge::SubTexture animFrames[CARD_ART_LENGTH];
-				Divide({}, animFrames, CARD_ART_LENGTH);
-
-				auto i = static_cast<uint32_t>(GetTime() / CARD_ANIM_SPEED);
-				i %= CARD_ART_LENGTH;
-
-				PixelPerfectRenderTask imageRenderTask{};
-				imageRenderTask.position = mousePos;
-				imageRenderTask.position.x -= mouseScale.x / 2;
-				imageRenderTask.position.y += mouseScale.y / 2;
-				imageRenderTask.normalImage = info.textureStreamer.Get(_selectedCard->normalAnimIndex);
-				imageRenderTask.image = info.textureStreamer.Get(_selectedCard->animIndex);
-				imageRenderTask.scale = CARD_ART_SHAPE;
-				imageRenderTask.xCenter = false;
-				imageRenderTask.yCenter = true;
-				imageRenderTask.subTexture = animFrames[i];
-				imageRenderTask.color *= glm::vec4(glm::vec3(jv::Min(_selectedCardLifeTime, 1.f)), 1);
-				//info.renderTasks.Push(imageRenderTask);
-			}
-			else
+			if (!info.inputState.lMouse.pressed)
 				_selectedCard = nullptr;
 		}
 
@@ -242,6 +219,19 @@ namespace game
 					titleTextTask.scale = 1;
 					info.textTasks.Push(titleTextTask);
 
+					auto titleBgTask = bgRenderTask;
+					titleBgTask.scale.y = 14 * lerp;
+					titleBgTask.position = titleTextTask.position - glm::ivec2(0, 2);
+					titleBgTask.yCenter = false;
+
+					titleBgTask.color = glm::vec4(11);
+					info.renderTasks.Push(titleBgTask);
+					if(titleBgTask.scale.y > 2)
+						titleBgTask.scale.y -= 2;
+					titleBgTask.position.y += 1;
+					titleBgTask.color = glm::vec4(1, 0, 0, 1);
+					info.renderTasks.Push(titleBgTask);
+
 					auto ruleTextTask = titleTextTask;
 					ruleTextTask.position = bgRenderTask.position;
 					ruleTextTask.position.x += textOffsetX;
@@ -303,7 +293,7 @@ namespace game
 
 		PixelPerfectRenderTask buttonRenderTask{};
 		buttonRenderTask.position = drawInfo.origin;
-		buttonRenderTask.scale = glm::ivec2(64, 2);
+		buttonRenderTask.scale = glm::ivec2(drawInfo.width, 2);
 		buttonRenderTask.subTexture = buttonTexture.subTexture;
 		buttonRenderTask.xCenter = drawInfo.center;
 
