@@ -1928,7 +1928,7 @@ namespace game
 					{
 						const auto partyId = gameState.partyIds[i];
 						const auto id = partyId != -1 ? partyId : d;
-						if (selected[id])
+						if (!selected[id])
 							continue;
 						if (partyId == -1)
 							++d;

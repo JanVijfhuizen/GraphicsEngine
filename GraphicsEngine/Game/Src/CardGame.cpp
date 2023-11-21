@@ -813,8 +813,8 @@ namespace game
 		bob.ruleText = "bob.";
 		auto& greatTroll = arr[MONSTER_IDS::GREAT_TROLL];
 		greatTroll.name = "great troll";
-		greatTroll.attack = 3;
-		greatTroll.health = 100;
+		greatTroll.attack = 5;
+		greatTroll.health = 75;
 		greatTroll.ruleText = "[attacked, cast] +1 bonus attack.";
 		greatTroll.unique = true;
 		greatTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -840,7 +840,7 @@ namespace game
 		auto& slimeQueen = arr[MONSTER_IDS::SLIME_QUEEN];
 		slimeQueen.name = "slime queen";
 		slimeQueen.attack = 3;
-		slimeQueen.health = 50;
+		slimeQueen.health = 30;
 		slimeQueen.ruleText = "[end of turn] summon a copy.";
 		slimeQueen.unique = true;
 		slimeQueen.tags = TAG_SLIME;
