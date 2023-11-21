@@ -1853,7 +1853,7 @@ namespace game
 
 		if(managingParty)
 		{
-			level->DrawTopCenterHeader(info, HeaderSpacing::close, "select up to 7 monsters that you would like to keep.");
+			level->DrawTopCenterHeader(info, HeaderSpacing::close, "select up to 6 monsters that you would like to keep.");
 
 			Card* cards[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
 			Card** artifacts[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY]{};

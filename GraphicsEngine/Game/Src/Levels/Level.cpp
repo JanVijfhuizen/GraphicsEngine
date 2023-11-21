@@ -480,7 +480,7 @@ namespace game
 					{
 						auto stackedDrawInfo = cardDrawInfo;
 						stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (j + 1));
-						stackedDrawInfo.origin.x += stackWidth * ((stackedCount - j - 1) % 2 == 1);
+						stackedDrawInfo.origin.x += stackWidth * (j % 2 == 0);
 						if(!dragged && CollidesCard(info, stackedDrawInfo))
 						{
 							stackedSelected = stackedCount - j - 1;
@@ -805,6 +805,7 @@ namespace game
 		cardSelectionDrawInfo.combatStats = combatInfos;
 		cardSelectionDrawInfo.metaDatas = _cardDrawMetaDatas;
 		cardSelectionDrawInfo.rowCutoff = 8;
+		cardSelectionDrawInfo.offsetMod = 16;
 
 		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}
