@@ -90,7 +90,7 @@ namespace game
 		{
 			constexpr float FULL_CARD_OPEN_DURATION = .1f;
 			constexpr float FULL_CARD_TOTAL_DURATION = .2f;
-			constexpr uint32_t FULL_CARD_LINE_LENGTH = 26;
+			constexpr uint32_t FULL_CARD_LINE_LENGTH = 32;
 
 			const float delta = info.deltaTime * (info.inputState.rMouse.pressed * 2 - 1);
 			const float m = jv::Min(_fullCardLifeTime, FULL_CARD_TOTAL_DURATION);
@@ -139,32 +139,32 @@ namespace game
 				jv::LinkedList<const char*> tags{};
 
 				const auto type = _fullCard->GetType();
-				const char* cardName = "";
+				const char* cardType = "";
 				switch (type)
 				{
 					case Card::Type::artifact:
-						cardName = "[artifact] ";
+						cardType = "[artifact] ";
 						break;
 					case Card::Type::curse:
-						cardName = "[curse] ";
+						cardType = "[curse] ";
 						break;
 					case Card::Type::event:
-						cardName = "[event] ";
+						cardType = "[event] ";
 						break;
 					case Card::Type::monster:
-						cardName = "[monster] ";
+						cardType = "[monster] ";
 						break;
 					case Card::Type::room:
-						cardName = "[room] ";
+						cardType = "[room] ";
 						break;
 					case Card::Type::spell:
-						cardName = "[spell] ";
+						cardType = "[spell] ";
 						break;
 					default: 
 						;
 				}
-				
-				cardName = TextInterpreter::Concat(cardName, _fullCard->name, info.frameArena);
+
+				const char* tagsText = nullptr;
 
 				if(type == Card::Type::spell)
 				{
@@ -193,44 +193,50 @@ namespace game
 					const uint32_t tagCount = tags.GetCount();
 					if(tagCount > 0)
 					{
-						text = "[";
+						auto txt = "";
 						uint32_t i = 0;
 						for (const auto& tag : tags)
 						{
-							text = TextInterpreter::Concat(text, tag, info.frameArena);
+							txt = TextInterpreter::Concat(txt, tag, info.frameArena);
 							if(++i != tagCount)
-								text = TextInterpreter::Concat(text, ", ", info.frameArena);
+								txt = TextInterpreter::Concat(txt, ", ", info.frameArena);
 						}
-						text = TextInterpreter::Concat(text, "] ", info.frameArena);
-						text = TextInterpreter::Concat(text, _fullCard->ruleText, info.frameArena);
+						tagsText = txt;
 					}
 				}
 
 				if (l >= 0)
 				{
+					const auto off = ceil(static_cast<float>(bgRenderTask.scale.y) / 2) - 2;
+
 					TextTask titleTextTask{};
 					titleTextTask.position = bgRenderTask.position;
 					titleTextTask.position.x += textOffsetX;
-					titleTextTask.position.y += bgRenderTask.scale.y / 2 + alphabetTexture.resolution.y / 2;
-					titleTextTask.text = cardName;
+					titleTextTask.position.y += off + alphabetTexture.resolution.y / 2;
+					titleTextTask.text = _fullCard->name;
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
 					titleTextTask.priority = true;
-					titleTextTask.scale = 1;
+					titleTextTask.scale = 2;
 					info.textTasks.Push(titleTextTask);
 
-					auto titleBgTask = bgRenderTask;
-					titleBgTask.scale.y = 14 * lerp;
-					titleBgTask.position = titleTextTask.position - glm::ivec2(0, 2);
-					titleBgTask.yCenter = false;
+					if(tagsText)
+					{
+						auto footerTextTask = titleTextTask;
+						footerTextTask.position.y = SIMULATED_RESOLUTION.y / 2 - off - alphabetTexture.resolution.y + 3;
+						footerTextTask.text = tagsText;
+						footerTextTask.color = glm::vec4(0, 1, 0, 1);
+						footerTextTask.scale = 1;
+						info.textTasks.Push(footerTextTask);
 
-					titleBgTask.color = glm::vec4(11);
-					info.renderTasks.Push(titleBgTask);
-					if(titleBgTask.scale.y > 2)
-						titleBgTask.scale.y -= 2;
-					titleBgTask.position.y += 1;
-					titleBgTask.color = glm::vec4(1, 0, 0, 1);
-					info.renderTasks.Push(titleBgTask);
+						const uint32_t footerYScale = 12 * lerp;
+						auto footerBgTask = bgRenderTask;
+							footerBgTask.scale.y = footerYScale;
+						footerBgTask.position = footerTextTask.position - glm::ivec2(0, 2);
+						footerBgTask.yCenter = false;
+						footerBgTask.color = glm::vec4(1);
+						info.renderTasks.Push(footerBgTask);
+					}
 
 					auto ruleTextTask = titleTextTask;
 					ruleTextTask.position = bgRenderTask.position;

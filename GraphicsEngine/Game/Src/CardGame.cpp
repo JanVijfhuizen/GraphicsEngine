@@ -1747,7 +1747,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of the host";
+		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of offense";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] all allies gain +1 attack.";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1803,7 +1803,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].name = "sword of spellcasting";
+		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].name = "mage sword";
 		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].ruleText = "[non combat damage to any target] gain attack equal to the damage dealt.";
 		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1908,7 +1908,7 @@ namespace game
 			card.animIndex = c++;
 
 		auto& fieldOfVengeance = arr[ROOM_IDS::FIELD_OF_VENGEANCE];
-		fieldOfVengeance.name = "field of vengeance";
+		fieldOfVengeance.name = "field of hate";
 		fieldOfVengeance.ruleText = "[monster is dealt non combat damage] attack randomly.";
 		fieldOfVengeance.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
@@ -1935,7 +1935,7 @@ namespace game
 			return false;
 		};
 		auto& forsakenBattlefield = arr[ROOM_IDS::FORSAKEN_BATTLEFIELD];
-		forsakenBattlefield.name = "forsaken battlefield";
+		forsakenBattlefield.name = "battlefield";
 		forsakenBattlefield.ruleText = "[any non token death] fill the opponents board with vultures.";
 		forsakenBattlefield.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1994,7 +1994,7 @@ namespace game
 				return false;
 			};
 		auto& arenaOfTheDamned = arr[ROOM_IDS::ARENA_OF_THE_DAMNED];
-		arenaOfTheDamned.name = "arena of the damned";
+		arenaOfTheDamned.name = "culling grounds";
 		arenaOfTheDamned.ruleText = "[end of turn] all monsters with the lowest health take 3 damage.";
 		arenaOfTheDamned.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2069,7 +2069,7 @@ namespace game
 		plainMeadow.name = "plain meadow";
 
 		auto& prisonOfEternity = arr[ROOM_IDS::PRISON_OF_ETERNITY];
-		prisonOfEternity.name = "prison of eternity";
+		prisonOfEternity.name = "eternal prison";
 		prisonOfEternity.ruleText = "on turn 7, kill all monsters.";
 		prisonOfEternity.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2116,7 +2116,7 @@ namespace game
 			return false;
 		};
 		auto& dreadSacrifice = arr[SPELL_IDS::DREAD_SACRIFICE];
-		dreadSacrifice.name = "dread sacrifice";
+		dreadSacrifice.name = "sacrifice";
 		dreadSacrifice.ruleText = "kill all allied tokens to gain +3 mana for each one killed.";
 		dreadSacrifice.cost = 1;
 		dreadSacrifice.type = SpellCard::Type::all;
@@ -2276,7 +2276,7 @@ namespace game
 				return false;
 			};
 		auto& druidicRitual = arr[SPELL_IDS::DRUIDIC_RITUAL];
-		druidicRitual.name = "druidic ritual";
+		druidicRitual.name = "druid ritual";
 		druidicRitual.ruleText = "summon two elves.";
 		druidicRitual.cost = 1;
 		druidicRitual.type = SpellCard::Type::all;
@@ -2402,7 +2402,7 @@ namespace game
 			};
 		auto& groupHug = arr[SPELL_IDS::GROUP_HUG];
 		groupHug.name = "group hug";
-		groupHug.ruleText = "all allies gain health equal to my bonus health.";
+		groupHug.ruleText = "all allies gain bonus health equal to my bonus health.";
 		groupHug.cost = 1;
 		groupHug.type = SpellCard::Type::target;
 		groupHug.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2423,7 +2423,7 @@ namespace game
 			};
 		auto& stall = arr[SPELL_IDS::STALL];
 		stall.name = "stall";
-		stall.ruleText = "all monsters gain +10 bonus health.";
+		stall.ruleText = "all monsters gain +3 bonus health.";
 		stall.cost = 1;
 		stall.type = SpellCard::Type::all;
 		stall.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2433,7 +2433,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 10;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
 					TargetOfType(info, state, buffState, -1, -1, TypeTarget::all);
 					return true;
 				}
@@ -2613,7 +2613,7 @@ namespace game
 				return false;
 			};
 		auto& pyroblast = arr[SPELL_IDS::PYROBlAST];
-		pyroblast.name = "pyroblast";
+		pyroblast.name = "pyro blast";
 		pyroblast.ruleText = "deal 10 damage. +2 mana.";
 		pyroblast.cost = 3;
 		pyroblast.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2738,7 +2738,7 @@ namespace game
 				return false;
 			};
 		auto& incantationOfDoom = arr[SPELL_IDS::INCANTATION_OF_DOOM];
-		incantationOfDoom.name = "incantation of flame";
+		incantationOfDoom.name = "doom";
 		incantationOfDoom.ruleText = "all enemies take 10 damage. +2 mana.";
 		incantationOfDoom.cost = 5;
 		incantationOfDoom.type = SpellCard::Type::all;
@@ -2923,7 +2923,7 @@ namespace game
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		arr[CURSE_IDS::FADING].name = "curse of fading";
+		arr[CURSE_IDS::FADING].name = "fading";
 		arr[CURSE_IDS::FADING].ruleText = "[start of turn] take one damage.";
 		arr[CURSE_IDS::FADING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2940,7 +2940,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::WEAKNESS].name = "curse of weakness";
+		arr[CURSE_IDS::WEAKNESS].name = "weakness";
 		arr[CURSE_IDS::WEAKNESS].ruleText = "[start of turn] my attack becomes 1.";
 		arr[CURSE_IDS::WEAKNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2957,7 +2957,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::COWARDICE].name = "curse of cowardice";
+		arr[CURSE_IDS::COWARDICE].name = "cowardice";
 		arr[CURSE_IDS::COWARDICE].ruleText = "[any attack] tap.";
 		arr[CURSE_IDS::COWARDICE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2968,7 +2968,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::DUM_DUM].name = "curse of dum dum";
+		arr[CURSE_IDS::DUM_DUM].name = "dum dum";
 		arr[CURSE_IDS::DUM_DUM].ruleText = "[start of turn] your maximum mana is capped at 5.";
 		arr[CURSE_IDS::DUM_DUM].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2981,7 +2981,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::HATE].name = "curse of hate";
+		arr[CURSE_IDS::HATE].name = "hate";
 		arr[CURSE_IDS::HATE].ruleText = "[start of turn] +3 attack, take 3 damage.";
 		arr[CURSE_IDS::HATE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3006,7 +3006,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::HAUNTING].name = "curse of haunting";
+		arr[CURSE_IDS::HAUNTING].name = "haunting";
 		arr[CURSE_IDS::HAUNTING].ruleText = "[attack] summon two goblins for your opponent.";
 		arr[CURSE_IDS::HAUNTING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3026,7 +3026,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::TIME].name = "curse of time";
+		arr[CURSE_IDS::TIME].name = "time";
 		arr[CURSE_IDS::TIME].ruleText = "[start of turn 7] die.";
 		arr[CURSE_IDS::TIME].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{

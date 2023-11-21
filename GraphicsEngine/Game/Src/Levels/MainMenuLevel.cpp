@@ -23,7 +23,7 @@ namespace game
 		DrawHeader(info, headerDrawInfo);
 
 		ButtonDrawInfo buttonDrawInfo{};
-		buttonDrawInfo.origin = headerDrawInfo.origin - glm::ivec2(0, 36);
+		buttonDrawInfo.origin = headerDrawInfo.origin - glm::ivec2(-4, 36);
 		buttonDrawInfo.text = "new game";
 		buttonDrawInfo.width = 96;
 		if (DrawButton(info, buttonDrawInfo))
