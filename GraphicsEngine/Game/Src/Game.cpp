@@ -1,13 +1,20 @@
 #include "pch_game.h"
 #include "CardGame.h"
 
-int main()
+bool Loop()
 {
 	game::Start();
-
 	bool valid = true;
+	bool ret;
 	while (valid)
-		valid = game::Update();
+		valid = game::Update(ret);
 	game::Stop();
+	return ret;
+}
+
+int main()
+{
+	while (Loop())
+		;
 	return 0;
 }

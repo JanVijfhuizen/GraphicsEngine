@@ -136,6 +136,7 @@ namespace game
 		bool activePlayer;
 		bool inCombat;
 		float p1Lerp, p2Lerp;
+		bool restart;
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -159,6 +160,37 @@ namespace game
 	} cardGame{};
 
 	bool cardGameRunning = false;
+
+	void SaveResolution(const glm::ivec2 resolution, const bool fullScreen)
+	{
+		std::ofstream outFile;
+		outFile.open(RESOLUTION_DATA_PATH);
+		outFile << fullScreen << std::endl;
+		outFile << resolution.x << std::endl;
+		outFile << resolution.y << std::endl;
+		outFile.close();
+	}
+
+	void LoadResolution(glm::ivec2& resolution, bool& fullScreen)
+	{
+		std::ifstream inFile;
+		inFile.open(RESOLUTION_DATA_PATH);
+		if (!inFile.is_open())
+		{
+			glm::ivec2 res = SIMULATED_RESOLUTION * 3;
+			SaveResolution(res, false);
+			inFile.close();
+			
+			LoadResolution(resolution, fullScreen);
+			return;
+		}
+
+		inFile >> fullScreen;
+		inFile >> resolution.x;
+		inFile >> resolution.y;
+
+		inFile.close();
+	}
 
 	bool CardGame::Update()
 	{
@@ -217,6 +249,8 @@ namespace game
 		}
 		p1Lerp = jv::Clamp<float>(p1Lerp, 0, 1);
 		p2Lerp = jv::Clamp<float>(p2Lerp, 0, 1);
+
+		bool fullscreen = isFullScreen;
 		
 		const LevelUpdateInfo info
 		{
@@ -244,7 +278,8 @@ namespace game
 			screenShakeInfo,
 			pixelation,
 			activePlayer,
-			inCombat
+			inCombat,
+			fullscreen
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -258,6 +293,17 @@ namespace game
 		if (!result)
 			return result;
 		level->PostUpdate(info);
+
+		if (fullscreen != isFullScreen)
+		{
+			// Restart.
+			glm::ivec2 res;
+			bool fs;
+			LoadResolution(res, fs);
+			SaveResolution(res, fullscreen);
+			restart = true;
+			return false;
+		}
 
 		if(loadLevelIndex != levelIndex)
 		{
@@ -315,32 +361,8 @@ namespace game
 				return false;
 			return true;
 		}, this);
+
 		return result;
-	}
-
-	void LoadResolution(glm::ivec2& resolution, bool& fullScreen)
-	{
-		std::ifstream inFile;
-		inFile.open(RESOLUTION_DATA_PATH);
-		if (!inFile.is_open())
-		{
-			inFile.close();
-
-			std::ofstream outFile;
-			outFile.open(RESOLUTION_DATA_PATH);
-			outFile << 0 << std::endl;
-			outFile << SIMULATED_RESOLUTION.x * 3 << std::endl;
-			outFile << SIMULATED_RESOLUTION.y * 3 << std::endl;
-			outFile.close();
-			LoadResolution(resolution, fullScreen);
-			return;
-		}
-		
-		inFile >> fullScreen;
-		inFile >> resolution.x;
-		inFile >> resolution.y;
-
-		inFile.close();
 	}
 
 	void CardGame::Create(CardGame* outCardGame)
@@ -363,6 +385,7 @@ namespace game
 			engineCreateInfo.fullScreen = fullScreen;
 			outCardGame->engine = Engine::Create(engineCreateInfo);
 		}
+		outCardGame->restart = false;
 
 		res = Engine::GetResolution();
 		outCardGame->resolution = res;
@@ -3247,10 +3270,12 @@ namespace game
 		cardGameRunning = true;
 	}
 
-	bool Update()
+	bool Update(bool& outRestart)
 	{
 		assert(cardGameRunning);
-		return cardGame.Update();
+		const auto res =  cardGame.Update();
+		outRestart = cardGame.restart;
+		return res;
 	}
 
 	void Stop()
@@ -3258,6 +3283,7 @@ namespace game
 		assert(cardGameRunning);
 		cardGame.Destroy(cardGame);
 		cardGame = {};
+		cardGameRunning = false;
 	}
 
 	bool TryLoadSaveData(PlayerState& playerState)

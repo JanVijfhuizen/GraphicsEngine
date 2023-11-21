@@ -1245,6 +1245,6 @@ namespace jv::ge
 		free(ge.tempArenaMem);
 		free(ge.arenaMem);
 
-		ge.initialized = false;
+		ge = {};
 	}
 }

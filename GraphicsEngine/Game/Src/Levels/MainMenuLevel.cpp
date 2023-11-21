@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainMenuLevel.h"
 #include "CardGame.h"
+#include "Interpreters/TextInterpreter.h"
 
 namespace game
 {
@@ -41,6 +42,11 @@ namespace game
 		buttonDrawInfo.text = "exit";
 		if (DrawButton(info, buttonDrawInfo))
 			return false;
+
+		buttonDrawInfo.origin.y -= BUTTON_OFFSET;
+		buttonDrawInfo.text = info.isFullScreen ? "fullscreen" : "windowed";
+		if (DrawButton(info, buttonDrawInfo))
+			info.isFullScreen = !info.isFullScreen;
 
 		return true;
 	}

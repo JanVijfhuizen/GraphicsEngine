@@ -5,7 +5,7 @@ namespace game
 	struct PlayerState;
 
 	void Start();
-	[[nodiscard]] bool Update();
+	[[nodiscard]] bool Update(bool& outRestart);
 	void Stop();
 
 	[[nodiscard]] bool TryLoadSaveData(PlayerState& playerState);

@@ -73,6 +73,7 @@ namespace game
 		float& pixelation;
 		bool& activePlayer;
 		bool& inCombat;
+		bool& isFullScreen;
 	};
 
 	struct Level
