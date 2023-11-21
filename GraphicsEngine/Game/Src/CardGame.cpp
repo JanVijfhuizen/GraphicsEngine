@@ -1064,7 +1064,7 @@ namespace game
 		unstableGolem.tags = TAG_TOKEN;
 
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MAIDEN_OF_THE_MOON];
-		maidenOfTheMoon.name = "maiden of the moon";
+		maidenOfTheMoon.name = "moon maiden";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 20;
 		maidenOfTheMoon.ruleText = "[any death] +2 attack.";
@@ -1087,7 +1087,7 @@ namespace game
 				return false;
 			};
 		auto& fleetingSoldier = arr[MONSTER_IDS::FLEETING_SOLDIER];
-		fleetingSoldier.name = "fleeting soldier";
+		fleetingSoldier.name = "berserker";
 		fleetingSoldier.attack = 1;
 		fleetingSoldier.health = 20;
 		fleetingSoldier.ruleText = "[damaged] attack randomly.";
@@ -1252,7 +1252,7 @@ namespace game
 				return false;
 			};
 		auto& goblinPartyStarter = arr[MONSTER_IDS::GOBLIN_PARTY_STARTER];
-		goblinPartyStarter.name = "goblin party starter";
+		goblinPartyStarter.name = "goblinette";
 		goblinPartyStarter.attack = 5;
 		goblinPartyStarter.health = 5;
 		goblinPartyStarter.ruleText = "[damage] summon a goblin for each damage taken.";
