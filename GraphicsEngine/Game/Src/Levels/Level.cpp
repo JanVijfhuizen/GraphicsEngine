@@ -305,12 +305,12 @@ namespace game
 
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
-		buttonTextTask.position.x += drawInfo.center ? 0 : buttonRenderTask.scale.x / 2;
+		buttonTextTask.position.x += drawInfo.center ? -buttonRenderTask.scale.x / 2 : 0;
 		buttonTextTask.position.y += 3;
 		buttonTextTask.text = drawInfo.text;
 		buttonTextTask.lifetime = lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
-		buttonTextTask.center = true;
+		buttonTextTask.center = false;
 
 		buttonRenderTask.scale.x *= l;
 		bool pressed = false;
@@ -468,6 +468,8 @@ namespace game
 
 			cardDrawInfo.ignoreAnim = true;
 			cardDrawInfo.metaData = nullptr;
+
+			constexpr uint32_t stackWidth = 8;
 			
 			if (drawInfo.stacks)
 			{
@@ -478,7 +480,7 @@ namespace game
 					{
 						auto stackedDrawInfo = cardDrawInfo;
 						stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (j + 1));
-						stackedDrawInfo.origin.x += 4 * ((stackedCount - j - 1) % 2 == 0);
+						stackedDrawInfo.origin.x += stackWidth * ((stackedCount - j - 1) % 2 == 1);
 						if(!dragged && CollidesCard(info, stackedDrawInfo))
 						{
 							stackedSelected = stackedCount - j - 1;
@@ -491,7 +493,7 @@ namespace game
 					auto stackedDrawInfo = cardDrawInfo;
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
-					stackedDrawInfo.origin.x += 4 * ((stackedCount - j - 1) % 2 == 0);
+					stackedDrawInfo.origin.x += stackWidth * ((stackedCount - j - 1) % 2 == 0);
 					stackedDrawInfo.selectable = !dragged && !collides && stackedSelected == j;
 					DrawCard(info, stackedDrawInfo);
 				}
@@ -516,7 +518,7 @@ namespace game
 				stackedDrawInfo.selectable = true;
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
-				stackedDrawInfo.origin.x += 4 * ((stackedCount - stackedSelected - 1) % 2 == 0);
+				stackedDrawInfo.origin.x += stackWidth * ((stackedCount - stackedSelected - 1) % 2 == 0);
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}

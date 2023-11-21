@@ -1020,7 +1020,7 @@ namespace game
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 0;
-		goblinKing.health = 17;
+		goblinKing.health = 16;
 		goblinKing.ruleText = "[end of turn] summon 2 goblins.";
 		goblinKing.tags = TAG_GOBLIN;
 		goblinKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1479,7 +1479,7 @@ namespace game
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].name = "amulet of arcane acuity";
+		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].name = "arcane amulet";
 		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].ruleText = "[start of turn] +1 mana.";
 		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
@@ -1531,7 +1531,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].name = "mask of eternal youth";
+		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].name = "mask of youth";
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[enemy death] +15 bonus health.";
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1579,7 +1579,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].name = "sacrificial altar";
+		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].name = "the brand";
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die. all allies gain 10 health.";
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1747,7 +1747,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of offense";
+		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of haste";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] all allies gain +1 attack.";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1846,7 +1846,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].name = "staff of summoning";
+		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].name = "demonic staff";
 		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].ruleText = "[cast 2 cost or higher] summon a 6/6 demon.";
 		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
