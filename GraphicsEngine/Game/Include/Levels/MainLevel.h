@@ -143,6 +143,8 @@ namespace game
 		};
 
 		LevelStateMachine<State> stateMachine;
+		bool ingameMenuOpened;
+		float timeSinceIngameMenuOpened;
 		
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;

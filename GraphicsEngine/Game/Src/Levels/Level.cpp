@@ -640,7 +640,7 @@ namespace game
 			costRenderTask.scale *= drawInfo.scale;
 			costRenderTask.xCenter = drawInfo.center;
 			costRenderTask.yCenter = drawInfo.center;
-			costRenderTask.color = drawInfo.fgColor;
+			costRenderTask.color = glm::vec4(1);
 			costRenderTask.color *= glm::vec4(fadeMod, 1);
 			costRenderTask.subTexture = statFrames[2];
 			costRenderTask.priority = priority;

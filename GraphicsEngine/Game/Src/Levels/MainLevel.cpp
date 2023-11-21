@@ -1988,12 +1988,46 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+		ingameMenuOpened = false;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
+
+		if (info.inputState.esc.PressEvent())
+		{
+			ingameMenuOpened = !ingameMenuOpened;
+			timeSinceIngameMenuOpened = GetTime();
+		}
+
+		if (ingameMenuOpened)
+		{
+			const float lifetime = GetTime() - timeSinceIngameMenuOpened;
+
+			DrawTopCenterHeader(info, HeaderSpacing::close, "pause menu", 2, lifetime);
+
+			ButtonDrawInfo buttonDrawInfo{};
+			buttonDrawInfo.center = true;
+			buttonDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 10);
+			
+			buttonDrawInfo.text = "main menu";
+			if(DrawButton(info, buttonDrawInfo, lifetime))
+			{
+				loadLevelIndex = LevelIndex::mainMenu;
+				return true;
+			}
+
+			buttonDrawInfo.text = "exit game";
+			buttonDrawInfo.origin.y -= 20;
+			if (DrawButton(info, buttonDrawInfo, lifetime))
+			{
+				return false;
+			}
+
+			return true;
+		}
 
 		return stateMachine.Update(info, this, loadLevelIndex);
 	}
