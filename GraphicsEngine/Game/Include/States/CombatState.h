@@ -16,7 +16,6 @@ namespace game
 		{
 			jv::Vector<uint32_t> monsters;
 			jv::Vector<uint32_t> artifacts;
-			jv::Vector<uint32_t> bosses;
 			jv::Vector<uint32_t> rooms;
 			jv::Vector<uint32_t> spells;
 			jv::Vector<uint32_t> curses;
@@ -53,7 +52,7 @@ namespace game
 
 		void RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const;
 		[[nodiscard]] uint32_t GetMonster(const LevelInfo& info);
-		[[nodiscard]] uint32_t GetBoss(const LevelInfo& info);
+		[[nodiscard]] uint32_t GetBoss(const LevelInfo& info, uint32_t path) const;
 		[[nodiscard]] uint32_t GetRoom(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetSpell(const LevelInfo& info);
 		[[nodiscard]] uint32_t GetArtifact(const LevelInfo& info);

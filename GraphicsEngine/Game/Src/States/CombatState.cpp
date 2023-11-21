@@ -13,7 +13,6 @@ namespace game
 		Decks decks{};
 		uint32_t count;
 		
-		decks.bosses = jv::CreateVector<uint32_t>(info.arena, info.bosses.length);
 		GetDeck(nullptr, &count, info.rooms);
 		decks.rooms = jv::CreateVector<uint32_t>(info.arena, count);
 		GetDeck(nullptr, &count, info.spells);
@@ -100,17 +99,12 @@ namespace game
 		return monsters.Pop();
 	}
 
-	uint32_t State::GetBoss(const LevelInfo& info)
+	uint32_t State::GetBoss(const LevelInfo& info, const uint32_t path) const
 	{
-		auto& bosses = decks.bosses;
-		if (bosses.count == 0)
-		{
-			memcpy(decks.bosses.ptr, info.bosses.ptr, decks.bosses.length * sizeof(uint32_t));
-			decks.bosses.count = decks.bosses.length;
-			RemoveDuplicates(info, bosses, &Path::boss);
-			Shuffle(decks.bosses.ptr, decks.bosses.count);
-		}
-		return bosses.Pop();
+		uint32_t l = depth / ROOM_COUNT_BEFORE_BOSS;
+		if (info.bosses.length <= l)
+			return -1;
+		return info.bosses[l + path];
 	}
 
 	uint32_t State::GetRoom(const LevelInfo& info)

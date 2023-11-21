@@ -17,13 +17,15 @@ namespace game
 {
 	void MainLevel::BossRevealState::Reset(State& state, const LevelInfo& info)
 	{
+		uint32_t i = 0;
 		for (auto& path : state.paths)
 		{
 			path = {};
 			if (state.depth != SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
-				path.boss = state.GetBoss(info);
-			else
+				path.boss = state.GetBoss(info, i);
+			if(path.boss == -1)
 				path.boss = MONSTER_IDS::GOD;
+			++i;
 		}
 		for (auto& metaData : metaDatas)
 			metaData = {};

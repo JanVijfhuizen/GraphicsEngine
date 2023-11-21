@@ -1892,6 +1892,8 @@ namespace game
 	jv::Array<uint32_t> CardGame::GetBossCards(jv::Arena& arena)
 	{
 		const auto arr = jv::CreateArray<uint32_t>(arena, 3);
+		for (auto& a : arr)
+			a = -1;
 		arr[0] = MONSTER_IDS::GREAT_TROLL;
 		arr[1] = MONSTER_IDS::SLIME_QUEEN;
 		arr[2] = MONSTER_IDS::LICH_KING;
