@@ -2297,19 +2297,19 @@ namespace game
 			};
 		auto& ascension = arr[SPELL_IDS::ASCENSION];
 		ascension.name = "ascension";
-		ascension.ruleText = "attack and health becomes 6.";
+		ascension.ruleText = "gain 5 attack and health.";
 		ascension.cost = 3;
 		ascension.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 				{
 					ActionState buffState{};
-					buffState.trigger = ActionState::Trigger::onStatSet;
+					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					buffState.values[ActionState::VStatSet::attack] = 6;
-					buffState.values[ActionState::VStatSet::health] = 6;
+					buffState.values[ActionState::VStatBuff::attack] = 5;
+					buffState.values[ActionState::VStatBuff::health] = 5;
 					state.TryAddToStack(buffState);
 					return true;
 				}
