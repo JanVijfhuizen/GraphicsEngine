@@ -160,7 +160,6 @@ namespace game
 	bool NewGameLevel::JoinState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		/*
 		const char* text = "daisy joins you on your adventure.";
 		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
 
@@ -182,18 +181,17 @@ namespace game
 
 		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 		{
-		*/
 			auto& playerState = info.playerState = PlayerState::Create();
 			for (auto& artifact : playerState.artifacts)
 				artifact = -1;
 			playerState.monsterIds[0] = state.monsterId;
-			//playerState.monsterIds[1] = MONSTER_IDS::DAISY;
+			playerState.monsterIds[1] = MONSTER_IDS::DAISY;
 			playerState.artifacts[0] = state.artifactId;
-			playerState.partySize = 1;
+			playerState.partySize = 2;
 			playerState.artifactSlotCount = 1;
 			SaveData(playerState);
 			loadLevelIndex = LevelIndex::partySelect;
-		//}
+		}
 		return true;
 	}
 }

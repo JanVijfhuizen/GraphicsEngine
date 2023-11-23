@@ -797,8 +797,8 @@ namespace game
 		slime.tags = TAG_TOKEN | TAG_SLIME;
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
-		daisy.health = 6;
-		daisy.attack = 4;
+		daisy.health = 3;
+		daisy.attack = 3;
 		daisy.unique = true;
 		daisy.ruleText = "loves you unconditionally.";
 		auto& god = arr[MONSTER_IDS::GOD];
@@ -1041,7 +1041,7 @@ namespace game
 		auto& goblinChampion = arr[MONSTER_IDS::GOBLIN_CHAMPION];
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 0;
-		goblinChampion.health = 16;
+		goblinChampion.health = 9;
 		goblinChampion.ruleText = "[start of turn] all goblins gain +2 attack.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1059,7 +1059,7 @@ namespace game
 			};
 		auto& unstableGolem = arr[MONSTER_IDS::UNSTABLE_GOLEM];
 		unstableGolem.name = "unstable golem";
-		unstableGolem.attack = 6;
+		unstableGolem.attack = 4;
 		unstableGolem.health = 20;
 		unstableGolem.tags = TAG_TOKEN;
 
@@ -1138,7 +1138,7 @@ namespace game
 			};
 		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_TROLL];
 		woundedTroll.name = "wounded troll";
-		woundedTroll.attack = 5;
+		woundedTroll.attack = 4;
 		woundedTroll.health = 20;
 		woundedTroll.ruleText = "[end of turn] take 3 damage.";
 		woundedTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1253,7 +1253,7 @@ namespace game
 			};
 		auto& goblinPartyStarter = arr[MONSTER_IDS::GOBLIN_PARTY_STARTER];
 		goblinPartyStarter.name = "goblinette";
-		goblinPartyStarter.attack = 5;
+		goblinPartyStarter.attack = 2;
 		goblinPartyStarter.health = 5;
 		goblinPartyStarter.ruleText = "[damage] summon a goblin for each damage taken.";
 		goblinPartyStarter.tags = TAG_GOBLIN;
@@ -1346,7 +1346,7 @@ namespace game
 			};
 		auto& phantasm = arr[MONSTER_IDS::PHANTASM];
 		phantasm.name = "phantasm";
-		phantasm.attack = 7;
+		phantasm.attack = 4;
 		phantasm.health = 1;
 		phantasm.ruleText = "[start of turn] +7 bonus health. [attack] bonus health becomes 0.";
 		phantasm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2831,8 +2831,8 @@ namespace game
 					uint32_t c = 0;
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
 					{
-						const auto otherTags = info.monsters[boardState.ids[boardState.ids[i]]].tags;
-						if ((otherTags & tags) != 0)
+						const auto otherTags = info.monsters[boardState.ids[i]].tags;
+						if (otherTags & tags)
 							++c;
 					}
 					state.mana += c;
@@ -2841,7 +2841,7 @@ namespace game
 			};
 		auto& loyalWorkforce = arr[SPELL_IDS::LOYAL_WORKFORCE];
 		loyalWorkforce.name = "loyal workforce";
-		loyalWorkforce.ruleText = "draw 1 for each allied token.";
+		loyalWorkforce.ruleText = "draw for each allied token.";
 		loyalWorkforce.cost = 0;
 		loyalWorkforce.type = SpellCard::Type::all;
 		loyalWorkforce.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2853,8 +2853,8 @@ namespace game
 					uint32_t c = 0;
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
 					{
-						const auto otherTags = info.monsters[boardState.ids[boardState.ids[i]]].tags;
-						if ((otherTags & TAG_TOKEN) != 0)
+						const auto otherTags = info.monsters[boardState.ids[i]].tags;
+						if (otherTags & TAG_TOKEN)
 							++c;
 					}
 

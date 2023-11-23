@@ -1197,7 +1197,8 @@ namespace game
 				for (uint32_t j = i; j < c; ++j)
 					state.targets[j] = state.targets[j + 1];
 				const auto id = boardState.ids[i + mod];
-				lastEnemyDefeatedId = id;
+				if(!info.monsters[id].unique)
+					lastEnemyDefeatedId = id;
 				--boardState.enemyCount;
 			}
 			else
@@ -1657,7 +1658,7 @@ namespace game
 		{
 			const auto& curse = info.gameState.curses[i];
 			greyedOut[i] = curse != -1;
-			flawSlotAvailable = flawSlotAvailable ? true : curse == -1
+			flawSlotAvailable = flawSlotAvailable ? true : curse == -1;
 		}
 
 		if (flawSlotAvailable)

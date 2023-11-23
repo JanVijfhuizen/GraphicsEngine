@@ -19,7 +19,7 @@ namespace game
 		uint32_t symbolSize = 9;
 		int32_t spacing = -2;
 		uint32_t bounceHeight = 3;
-		float fadeInSpeed = 20;
+		float fadeInSpeed = 40;
 		float bounceDuration = 4;
 	};
 
