@@ -1020,7 +1020,7 @@ namespace game
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 0;
-		goblinKing.health = 16;
+		goblinKing.health = 8;
 		goblinKing.ruleText = "[end of turn] summon 2 goblins.";
 		goblinKing.tags = TAG_GOBLIN;
 		goblinKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1185,8 +1185,8 @@ namespace game
 			};
 		auto& goblinSlinger = arr[MONSTER_IDS::GOBLIN_SLINGER];
 		goblinSlinger.name = "goblin slinger";
-		goblinSlinger.attack = 0;
-		goblinSlinger.health = 14;
+		goblinSlinger.attack = 1;
+		goblinSlinger.health = 12;
 		goblinSlinger.ruleText = "[ally attack] the attacked monster takes damage equal to my attack.";
 		goblinSlinger.tags = TAG_GOBLIN;
 		goblinSlinger.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1813,8 +1813,6 @@ namespace game
 						return false;
 
 					const auto& boardState = state.boardState;
-					if (actionState.src != self)
-						return false;
 					if (!boardState.Validate(actionState, true, false))
 						return false;
 
@@ -1825,7 +1823,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempAttack] = dmg;
+					buffState.values[ActionState::VStatBuff::attack] = dmg;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -2969,14 +2967,14 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::DUM_DUM].name = "dum dum";
-		arr[CURSE_IDS::DUM_DUM].ruleText = "[start of turn] your maximum mana is capped at 5.";
+		arr[CURSE_IDS::DUM_DUM].ruleText = "[start of turn] your maximum mana is capped at 3.";
 		arr[CURSE_IDS::DUM_DUM].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
-					if (state.maxMana <= 5)
+					if (state.maxMana <= 3)
 						return false;
-					state.maxMana = 5;
+					state.maxMana = 3;
 					return true;
 				}
 				return false;

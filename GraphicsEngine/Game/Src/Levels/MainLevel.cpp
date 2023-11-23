@@ -1657,7 +1657,7 @@ namespace game
 		{
 			const auto& curse = info.gameState.curses[i];
 			greyedOut[i] = curse != -1;
-			flawSlotAvailable = flawSlotAvailable ? true : curse == -1;
+			flawSlotAvailable = flawSlotAvailable ? true : curse == -1
 		}
 
 		if (flawSlotAvailable)
@@ -1671,6 +1671,7 @@ namespace game
 				const auto monster = &info.monsters[gameState.monsterIds[i]];
 				cards[i] = monster;
 				combatStats[i] = GetCombatStat(*monster);
+				combatStats[i].health = gameState.healths[i];
 			}
 
 			Card** stacks[PARTY_CAPACITY]{};

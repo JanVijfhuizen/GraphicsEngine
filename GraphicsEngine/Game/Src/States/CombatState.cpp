@@ -140,8 +140,8 @@ namespace game
 
 			RemoveDuplicates(info, magics, &Path::spell);
 			Shuffle(decks.spells.ptr, decks.spells.count);
+			RemoveMagicsInParty(magics, info.gameState);
 		}
-		RemoveMagicsInParty(magics, info.gameState);
 		return magics.Pop();
 	}
 
@@ -153,8 +153,8 @@ namespace game
 			GetDeck(&artifacts, nullptr, info.artifacts);
 			RemoveDuplicates(info, artifacts, &Path::artifact);
 			Shuffle(decks.artifacts.ptr, decks.artifacts.count);
+			RemoveArtifactsInParty(artifacts, info.playerState, info.gameState);
 		}
-		RemoveArtifactsInParty(artifacts, info.playerState, info.gameState);
 		return artifacts.Pop();
 	}
 
@@ -166,8 +166,8 @@ namespace game
 			GetDeck(&flaws, nullptr, info.curses);
 			RemoveDuplicates(info, flaws, &Path::curse);
 			Shuffle(decks.curses.ptr, decks.curses.count);
+			RemoveFlawsInParty(flaws, info.gameState);
 		}
-		RemoveFlawsInParty(flaws, info.gameState);
 		return flaws.Pop();
 	}
 
