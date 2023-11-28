@@ -618,6 +618,17 @@ namespace game
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			imageRenderTask.priority = drawInfo.priority;
+
+			constexpr uint32_t SHADOW_LERP_DIS = 16;
+			const glm::vec2 off = origin - info.inputState.mousePos;
+			const float dis = length(off);
+			const float shadowLerp = dis > SHADOW_LERP_DIS ? 0 : 1.f - dis / SHADOW_LERP_DIS;
+
+			auto shadowTask = imageRenderTask;
+			shadowTask.color = glm::vec4(0, 0, 0, 1);
+			shadowTask.position += off * shadowLerp;
+
+			info.renderTasks.Push(shadowTask);
 			info.renderTasks.Push(imageRenderTask);
 		}
 

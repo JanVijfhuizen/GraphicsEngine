@@ -2,7 +2,6 @@
 #include "Level.h"
 #include "Macros.h"
 #include "LevelStates/LevelStateMachine.h"
-#include "States/BoardState.h"
 #include "States/CombatState.h"
 
 namespace game
