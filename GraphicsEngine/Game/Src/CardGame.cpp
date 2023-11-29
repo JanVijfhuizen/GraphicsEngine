@@ -236,7 +236,7 @@ namespace game
 		if (screenShakeInfo.IsInTimeOut())
 			screenShakeInfo.remaining -= dt;
 
-		inCombat = false;
+		//inCombat = false;
 		if(!inCombat)
 		{
 			p1Lerp -= dt;
@@ -509,7 +509,7 @@ namespace game
 			outCardGame->textTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
 			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->pixelPerfectRenderTasks = &outCardGame->engine.AddTaskSystem<PixelPerfectRenderTask>();
-			outCardGame->pixelPerfectRenderTasks->Allocate(outCardGame->arena, 128);
+			outCardGame->pixelPerfectRenderTasks->Allocate(outCardGame->arena, 256);
 			outCardGame->lightTasks = &outCardGame->engine.AddTaskSystem<LightTask>();
 			outCardGame->lightTasks->Allocate(outCardGame->arena, 16);
 		}

@@ -447,24 +447,29 @@ namespace game
 			uint32_t stackedCount = -1;
 
 			const bool dragged = drawInfo.draggable && drawInfo.highlighted == i;
-			if(dragged && drawInfo.metaDatas)
+			if (drawInfo.draggable && dragged)
 			{
-				auto& metaData = drawInfo.metaDatas[i];
-				if (!metaData.dragging)
+				if (dragged && drawInfo.metaDatas)
 				{
-					metaData.mouseOffset = info.inputState.mousePos - cardDrawInfo.origin;
-					metaData.dragging = true;
+					auto& metaData = drawInfo.metaDatas[i];
+					if (!metaData.dragging)
+					{
+						metaData.mouseOffset = info.inputState.mousePos - cardDrawInfo.origin;
+						metaData.dragging = true;
+					}
+					cardDrawInfo.priority = true;
 				}
-				cardDrawInfo.priority = true;
+				if (drawInfo.metaDatas)
+				{
+					auto& metaData = drawInfo.metaDatas[i];
+					if (dragged)
+						cardDrawInfo.origin = info.inputState.mousePos - metaData.mouseOffset;
+					else
+						metaData.dragging = false;
+				}
 			}
-			if(drawInfo.metaDatas)
-			{
-				auto& metaData = drawInfo.metaDatas[i];
-				if (dragged)
-					cardDrawInfo.origin = info.inputState.mousePos - metaData.mouseOffset;
-				else
-					metaData.dragging = false;
-			}
+			else
+				drawInfo.metaDatas[i].dragging = false;
 
 			cardDrawInfo.ignoreAnim = true;
 			cardDrawInfo.metaData = nullptr;
@@ -619,10 +624,10 @@ namespace game
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			imageRenderTask.priority = drawInfo.priority;
 
-			constexpr uint32_t SHADOW_LERP_DIS = 16;
+			const uint32_t shadowLerpDis = 16 * drawInfo.scale;
 			const glm::vec2 off = origin - info.inputState.mousePos;
 			const float dis = length(off);
-			const float shadowLerp = dis > SHADOW_LERP_DIS ? 0 : 1.f - dis / SHADOW_LERP_DIS;
+			const float shadowLerp = dis > shadowLerpDis ? 0 : 1.f - dis / shadowLerpDis;
 
 			auto shadowTask = imageRenderTask;
 			shadowTask.color = glm::vec4(0, 0, 0, 1);

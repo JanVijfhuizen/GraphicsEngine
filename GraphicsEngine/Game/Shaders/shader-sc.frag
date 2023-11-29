@@ -95,7 +95,8 @@ void main()
     float v = sin(nx * pushConstants.time + ny * pushConstants.time);
     v *= .06f;
 
-    vec4 bgl = vec4(1, 0, 0, 1) * GetLightLerped(uv, -.2, pushConstants.p1Lerp) + vec4(0, 0, 1, 1) * GetLightLerped(uv, 1, pushConstants.p2Lerp);
+    vec4 bgl = vec4(1, 0, 0, 1) * GetLightLerped(uv, 1, pushConstants.p1Lerp) + vec4(0, 1, 0, 1) * GetLightLerped(uv, 1, pushConstants.p2Lerp);
+    bgl = v > .02 ? bgl : vec4(0);
 
     vec4 color = texture(img, pixUv);
     vec4 bgColor = vec4(vec3(v), 1.0);
