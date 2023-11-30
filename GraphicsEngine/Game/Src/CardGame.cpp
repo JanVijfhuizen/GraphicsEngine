@@ -732,18 +732,7 @@ namespace game
 		goblin.attack = 2;
 		goblin.health = 1;
 		goblin.tags = TAG_TOKEN | TAG_GOBLIN;
-		goblin.ruleText = "can attack immediately.";
 		goblin.unique = true;
-		goblin.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
-			{
-				if (actionState.trigger == ActionState::Trigger::onSummon)
-				{
-					if (self >= BOARD_CAPACITY_PER_SIDE)
-						return false;
-					state.tapped[self] = false;
-				}
-				return false;
-			};
 		auto& demon = arr[MONSTER_IDS::DEMON];
 		demon.name = "demon";
 		demon.health = 0;
