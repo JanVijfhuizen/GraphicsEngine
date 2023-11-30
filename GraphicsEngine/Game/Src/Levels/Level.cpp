@@ -469,7 +469,7 @@ namespace game
 						metaData.dragging = false;
 				}
 			}
-			else
+			else if(drawInfo.metaDatas)
 				drawInfo.metaDatas[i].dragging = false;
 
 			cardDrawInfo.ignoreAnim = true;

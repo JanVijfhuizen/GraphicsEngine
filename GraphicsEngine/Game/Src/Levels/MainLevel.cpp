@@ -228,6 +228,7 @@ namespace game
 		state.mana = 0;
 		state.maxMana = 0;
 		state.turn = 0;
+		lastEnemyDefeatedId = -1;
 
 		activations = {};
 		activations.ptr = activationsPtr;
@@ -263,7 +264,7 @@ namespace game
 
 		if (!bossPresent)
 		{
-			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / (ROOM_COUNT_BEFORE_BOSS / 2), 4), state.depth + 1);
+			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / (ROOM_COUNT_BEFORE_BOSS * 2), 6), state.depth + 1);
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				ActionState summonState{};

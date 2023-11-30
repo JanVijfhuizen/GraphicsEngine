@@ -1021,7 +1021,7 @@ namespace game
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 0;
-		goblinKing.health = 8;
+		goblinKing.health = 12;
 		goblinKing.ruleText = "[end of turn] summon 2 goblins.";
 		goblinKing.tags = TAG_GOBLIN;
 		goblinKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1042,7 +1042,7 @@ namespace game
 		auto& goblinChampion = arr[MONSTER_IDS::GOBLIN_CHAMPION];
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 0;
-		goblinChampion.health = 9;
+		goblinChampion.health = 10;
 		goblinChampion.ruleText = "[start of turn] all goblins gain +2 attack.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1068,7 +1068,7 @@ namespace game
 		maidenOfTheMoon.name = "moon maiden";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 20;
-		maidenOfTheMoon.ruleText = "[any death] +2 attack.";
+		maidenOfTheMoon.ruleText = "[any death] +3 attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1079,7 +1079,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 2;
+					buffState.values[ActionState::VStatBuff::attack] = 3;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1256,7 +1256,7 @@ namespace game
 		goblinPartyStarter.name = "goblinette";
 		goblinPartyStarter.attack = 2;
 		goblinPartyStarter.health = 5;
-		goblinPartyStarter.ruleText = "[damage] summon a goblin for each damage taken.";
+		goblinPartyStarter.ruleText = "[damaged] summon a goblin for each damage taken.";
 		goblinPartyStarter.tags = TAG_GOBLIN;
 		goblinPartyStarter.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1329,7 +1329,7 @@ namespace game
 		auto& madPyromancer = arr[MONSTER_IDS::MAD_PYROMANCER];
 		madPyromancer.name = "mad pyromancer";
 		madPyromancer.attack = 1;
-		madPyromancer.health = 24;
+		madPyromancer.health = 18;
 		madPyromancer.ruleText = "[cast] all monsters take 1 damage.";
 		madPyromancer.tags = TAG_HUMAN;
 		madPyromancer.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1348,7 +1348,7 @@ namespace game
 		auto& phantasm = arr[MONSTER_IDS::PHANTASM];
 		phantasm.name = "phantasm";
 		phantasm.attack = 4;
-		phantasm.health = 1;
+		phantasm.health = 2;
 		phantasm.ruleText = "[start of turn] +7 bonus health. [attack] bonus health becomes 0.";
 		phantasm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1492,7 +1492,7 @@ namespace game
 			return false;
 		};
 		arr[ARTIFACT_IDS::THORNMAIL].name = "thornmail";
-		arr[ARTIFACT_IDS::THORNMAIL].ruleText = "[attacked] the attacker takes 3 damage.";
+		arr[ARTIFACT_IDS::THORNMAIL].ruleText = "[attacked] the attacker takes 5 damage.";
 		arr[ARTIFACT_IDS::THORNMAIL].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
@@ -1508,7 +1508,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.src;
 					damageState.dstUniqueId = actionState.srcUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 3;
+					damageState.values[ActionState::VDamage::damage] = 5;
 					state.TryAddToStack(damageState);
 					return true;
 				}
@@ -2184,7 +2184,7 @@ namespace game
 			};
 		auto& windfall = arr[SPELL_IDS::WINDFALL];
 		windfall.name = "windfall";
-		windfall.ruleText = "all enemies take 1 damage. draw.";
+		windfall.ruleText = "all enemies take 2 damage. draw.";
 		windfall.cost = 1;
 		windfall.type = SpellCard::Type::all;
 		windfall.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2194,7 +2194,7 @@ namespace game
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = 1;
+					damageState.values[ActionState::VDamage::damage] = 2;
 					TargetOfType(info, state, damageState, 0, -1, TypeTarget::enemies);
 
 					ActionState drawState{};
@@ -2296,7 +2296,7 @@ namespace game
 			};
 		auto& ascension = arr[SPELL_IDS::ASCENSION];
 		ascension.name = "ascension";
-		ascension.ruleText = "gain 5 attack and health.";
+		ascension.ruleText = "gain 10 attack.";
 		ascension.cost = 3;
 		ascension.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2307,8 +2307,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					buffState.values[ActionState::VStatBuff::attack] = 5;
-					buffState.values[ActionState::VStatBuff::health] = 5;
+					buffState.values[ActionState::VStatBuff::attack] = 10;
 					state.TryAddToStack(buffState);
 					return true;
 				}
