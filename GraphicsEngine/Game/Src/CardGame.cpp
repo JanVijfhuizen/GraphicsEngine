@@ -1280,11 +1280,10 @@ namespace game
 				return false;
 			};
 		auto& obnoxiousFan = arr[MONSTER_IDS::OBNOXIOUS_FAN];
-		obnoxiousFan.name = "obnoxious fan";
+		obnoxiousFan.name = "lich";
 		obnoxiousFan.attack = 4;
 		obnoxiousFan.health = 1;
-		obnoxiousFan.ruleText = "[death] summon an obnoxious fan for the opponent.";
-		obnoxiousFan.tags = TAG_HUMAN;
+		obnoxiousFan.ruleText = "[death] if the opponent has less than 3 monsters, they summon a lich with my attack.";
 		obnoxiousFan.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1292,11 +1291,18 @@ namespace game
 					if (self != actionState.dst)
 						return false;
 
+					if (self < BOARD_CAPACITY_PER_SIDE && state.boardState.enemyCount > 2 ||
+						self >= BOARD_CAPACITY_PER_SIDE && state.boardState.allyCount > 2)
+						return false;
+
+					auto& stats = state.boardState.combatStats[self];
+
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::OBNOXIOUS_FAN;
 					summonState.values[ActionState::VSummon::isAlly] = self >= BOARD_CAPACITY_PER_SIDE;
+					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
 					state.TryAddToStack(summonState);
 					return true;
 				}
