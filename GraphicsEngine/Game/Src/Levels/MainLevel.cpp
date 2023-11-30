@@ -2060,10 +2060,6 @@ namespace game
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
-
-		// temp.
-		stateMachine.state.depth = 100;
-		stateMachine.next = stateMachine.current;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
