@@ -877,6 +877,112 @@ namespace game
 				}
 				return false;
 			};
+		auto& mirrorKnight = arr[MONSTER_IDS::MIRROR_KNIGHT];
+		mirrorKnight.name = "mirror knight";
+		mirrorKnight.attack = 4;
+		mirrorKnight.health = 120;
+		mirrorKnight.ruleText = "[start of turn] summon 3/3 copies of each enemy monster.";
+		mirrorKnight.unique = true;
+		mirrorKnight.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					const auto& boardState = state.boardState;
+					for (uint32_t i = 0; i < boardState.allyCount; ++i)
+					{
+						ActionState summonState{};
+						summonState.trigger = ActionState::Trigger::onSummon;
+						summonState.source = ActionState::Source::other;
+						summonState.values[ActionState::VSummon::id] = boardState.ids[i];
+						summonState.values[ActionState::VSummon::isAlly] = false;
+						summonState.values[ActionState::VSummon::attack] = 3;
+						summonState.values[ActionState::VSummon::health] = 3;
+						state.TryAddToStack(summonState);
+					}
+					
+					return true;
+				}
+				return false;
+			};
+		auto& bomba = arr[MONSTER_IDS::BOMBA];
+		bomba.name = "bomba";
+		bomba.attack = 8;
+		bomba.health = 120;
+		bomba.ruleText = "[cast, attacked] summon a 0/4 bomb.";
+		bomba.unique = true;
+		bomba.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				const bool attacked = actionState.trigger == ActionState::Trigger::onAttack && actionState.dst == self;
+
+				if (attacked || actionState.trigger == ActionState::Trigger::onCast)
+				{
+					ActionState summonState{};
+					summonState.trigger = ActionState::Trigger::onSummon;
+					summonState.source = ActionState::Source::other;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::BOMB;
+					state.TryAddToStack(summonState);
+					return true;
+				}
+				return false;
+			};
+		auto& bomb = arr[MONSTER_IDS::BOMB];
+		bomb.name = "bomb";
+		bomb.attack = 0;
+		bomb.health = 4;
+		bomb.ruleText = "[end of turn] die and deal 4 damage to all enemies.";
+		bomb.unique = true;
+		bomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				{
+					ActionState killState{};
+					killState.trigger = ActionState::Trigger::onDeath;
+					killState.source = ActionState::Source::other;
+					killState.dst = self;
+					killState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.TryAddToStack(killState);
+
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = 4;
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+					return true;
+				}
+				return false;
+			};
+		auto& theDread = arr[MONSTER_IDS::THE_DREAD];
+		theDread.name = "the dread";
+		theDread.attack = 0;
+		theDread.health = 666;
+		theDread.ruleText = "[start of turn] gain 6 attack. [turn 6] dies.";
+		theDread.unique = true;
+		theDread.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					if(state.turn == 6)
+					{
+						ActionState killState{};
+						killState.trigger = ActionState::Trigger::onDeath;
+						killState.source = ActionState::Source::other;
+						killState.dst = self;
+						killState.dstUniqueId = state.boardState.uniqueIds[self];
+						state.TryAddToStack(killState);
+						return true;
+					}
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::attack] = 6;
+					buffState.dst = self;
+					buffState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
 		auto& copyCat = arr[MONSTER_IDS::COPY_CAT];
 		copyCat.name = "copy cat";
 		copyCat.attack = 1;
@@ -1489,7 +1595,7 @@ namespace game
 			return false;
 		};
 		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "false armor";
-		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[end turn] lose all bonus health and deal that much damage to all enemies.";
+		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[end of turn] lose all bonus health and deal that much damage to all enemies.";
 		arr[ARTIFACT_IDS::FALSE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -1942,6 +2048,9 @@ namespace game
 		arr[0] = MONSTER_IDS::GREAT_TROLL;
 		arr[1] = MONSTER_IDS::SLIME_QUEEN;
 		arr[2] = MONSTER_IDS::LICH_KING;
+		arr[3] = MONSTER_IDS::MIRROR_KNIGHT;
+		arr[4] = MONSTER_IDS::BOMBA;
+		arr[5] = MONSTER_IDS::THE_DREAD;
 		return arr;
 	}
 
