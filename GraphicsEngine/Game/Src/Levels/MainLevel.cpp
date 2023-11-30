@@ -311,10 +311,7 @@ namespace game
 
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
-
-		DrawParallaxBackground(info, false);
-		DrawParallaxBackground(info, true);
-
+		
 		const bool stackOverloaded = state.stack.count == state.stack.length;
 		if (state.stack.count == 0)
 		{
@@ -584,6 +581,9 @@ namespace game
 				}
 			}
 		}
+
+		DrawParallaxBackground(info, false);
+		DrawParallaxBackground(info, true);
 		
 		{
 			const float l = jv::Min(1.f, level->GetTime() * 3);
@@ -2075,6 +2075,7 @@ namespace game
 
 		if (ingameMenuOpened)
 		{
+			info.inCombat = false;
 			const float lifetime = GetTime() - timeSinceIngameMenuOpened;
 
 			DrawTopCenterHeader(info, HeaderSpacing::close, "pause menu", 2, lifetime);
@@ -2094,7 +2095,6 @@ namespace game
 			buttonDrawInfo.origin.y -= 20;
 			if (DrawButton(info, buttonDrawInfo, lifetime))
 			{
-				info.inCombat = false;
 				loadLevelIndex = LevelIndex::mainMenu;
 				return true;
 			}

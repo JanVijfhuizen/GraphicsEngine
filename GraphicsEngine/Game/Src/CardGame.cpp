@@ -236,7 +236,7 @@ namespace game
 		if (screenShakeInfo.IsInTimeOut())
 			screenShakeInfo.remaining -= dt;
 
-		//inCombat = false;
+		inCombat = false;
 		if(!inCombat)
 		{
 			p1Lerp -= dt;
