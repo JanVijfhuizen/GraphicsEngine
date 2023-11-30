@@ -632,7 +632,7 @@ namespace game
 			auto shadowTask = imageRenderTask;
 			shadowTask.color = glm::vec4(0, 0, 0, 1);
 			shadowTask.position += off * shadowLerp;
-
+			
 			info.renderTasks.Push(shadowTask);
 			info.renderTasks.Push(imageRenderTask);
 		}

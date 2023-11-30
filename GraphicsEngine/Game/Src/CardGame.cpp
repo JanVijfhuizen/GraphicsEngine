@@ -532,7 +532,7 @@ namespace game
 			DynamicRenderInterpreterEnableInfo dynamicEnableInfo{};
 			dynamicEnableInfo.arena = &outCardGame->arena;
 			dynamicEnableInfo.scene = outCardGame->scene;
-			dynamicEnableInfo.capacity = 32;
+			dynamicEnableInfo.capacity = 64;
 
 			outCardGame->dynamicPriorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
 				*outCardGame->dynamicPriorityRenderTasks, dynamicCreateInfo);

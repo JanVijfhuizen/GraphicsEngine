@@ -50,6 +50,7 @@ vec2 Dist(vec2 pos, vec2 res)
 
 float GetLightLerped(vec2 uv, float org, float lerp)
 {
+    uv.y += abs(sin(uv.x + pushConstants.time)) * .2f;
     float rDis = 1.f - abs(uv.y - org);
     return rDis * lerp;
 }

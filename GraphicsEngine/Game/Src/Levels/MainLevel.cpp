@@ -664,6 +664,15 @@ namespace game
 		// Check for new turn.
 		if(state.stack.count == 0)
 		{
+			PixelPerfectRenderTask lineRenderTask{};
+			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
+			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x * 2;
+			lineRenderTask.scale.y = 1;
+			lineRenderTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT);
+			lineRenderTask.priority = true;
+			lineRenderTask.xCenter = true;
+			info.renderTasks.Push(lineRenderTask);
+
 			// Manually end turn.
 			if (info.inputState.enter.PressEvent())
 			{
@@ -2020,6 +2029,7 @@ namespace game
 			buttonDrawInfo.text = "main menu";
 			if(DrawButton(info, buttonDrawInfo, lifetime))
 			{
+				info.inCombat = false;
 				loadLevelIndex = LevelIndex::mainMenu;
 				return true;
 			}
