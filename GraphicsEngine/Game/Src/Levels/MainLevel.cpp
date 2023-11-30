@@ -35,35 +35,7 @@ namespace game
 	bool MainLevel::BossRevealState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		Card* cards[DISCOVER_LENGTH]{};
-		CombatStats combatStats[DISCOVER_LENGTH]{};
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			const auto monster = &info.monsters[state.paths[i].boss];
-			cards[i] = monster;
-			combatStats[i] = GetCombatStat(*monster);
-		}
-
-		CardSelectionDrawInfo cardSelectionDrawInfo{};
-		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
-		cardSelectionDrawInfo.metaDatas = metaDatas;
-		cardSelectionDrawInfo.combatStats = combatStats;
-		cardSelectionDrawInfo.lifeTime = level->GetTime();
-		if (state.depth == SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
-			cardSelectionDrawInfo.length = 1;
-
-		level->DrawCardSelection(info, cardSelectionDrawInfo);
-
-		const char* text = "the stage bosses have been revealed.";
-		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
-		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
-		if(f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::close, f);
-		
-		if (info.inputState.enter.PressEvent())
-			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
+		stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		return true;
 	}
 
@@ -90,7 +62,6 @@ namespace game
 		LevelIndex& loadLevelIndex)
 	{
 		const bool flawPresent = state.depth % 2 == 1;
-		const bool bossPresent = state.depth % ROOM_COUNT_BEFORE_BOSS == ROOM_COUNT_BEFORE_BOSS - 1;
 
 		TextTask depthTextTask{};
 		depthTextTask.text = TextInterpreter::IntToConstCharPtr(state.depth + 1, info.frameArena);
@@ -110,82 +81,34 @@ namespace game
 
 		uint32_t stacksCounts[DISCOVER_LENGTH]{};
 		for (auto& c : stacksCounts)
-			c = 2 + !bossPresent;
+			c = 2;
 
-		const uint32_t count = 1 + (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS) + !bossPresent;
+		const uint32_t count = 1 + (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
 			const auto& stack = stacks[i];
 			const auto& path = state.paths[i];
 
-			stack[0] = &info.spells[path.spell];
+			cards[i] = &info.spells[path.spell];
 			if (flawPresent)
-				stack[1] = &info.curses[path.curse];
+				stack[0] = &info.curses[path.curse];
 			else
-				stack[1] = &info.artifacts[path.artifact];
-			stack[2] = &info.rooms[path.room];
+				stack[0] = &info.artifacts[path.artifact];
+			stack[1] = &info.rooms[path.room];
 			stacksCounts[i] = count;
 		}
-
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			if (!bossPresent)
-			{
-				const auto monster = &info.monsters[state.paths[i].boss];
-				cards[i] = monster;
-				combatStats[i] = GetCombatStat(*monster);
-			}
-			else
-			{
-				cards[i] = stacks[i][0];
-				for (uint32_t j = 0; j < count; ++j)
-					stacks[i][j] = stacks[i][j + 1];
-			}
-		}
-
-		const char* texts[DISCOVER_LENGTH]{};
-		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
-		{
-			uint32_t counters = state.paths[i].counters;
-			texts[i] = TextInterpreter::IntToConstCharPtr(counters, info.frameArena);
-		}
-
-		const bool finalBoss = state.depth >= SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS && state.depth < SUB_BOSS_COUNT * (ROOM_COUNT_BEFORE_BOSS + 1);
 		
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
 		cardSelectionDrawInfo.stacks = stacks;
 		cardSelectionDrawInfo.stackCounts = stacksCounts;
-		cardSelectionDrawInfo.texts = bossPresent ? nullptr : texts;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - 16;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
 		cardSelectionDrawInfo.highlighted = discoverOption;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.offsetMod += 12;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
-		if (!bossPresent)
-			cardSelectionDrawInfo.combatStats = combatStats;
-		if (finalBoss)
-			cardSelectionDrawInfo.length = 1;
 		uint32_t selected = level->DrawCardSelection(info, cardSelectionDrawInfo);
-
-		if (bossPresent)
-		{
-			const auto monster = &info.monsters[state.paths[state.GetPrimaryPath()].boss];
-			auto combatStat = GetCombatStat(*monster);
-
-			const auto shape = GetCardShape(info, cardSelectionDrawInfo);
-
-			CardDrawInfo cardDrawInfo{};
-			cardDrawInfo.card = monster;
-			cardDrawInfo.combatStats = &combatStat;
-			cardDrawInfo.center = true;
-			cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
-			cardDrawInfo.origin.x += (shape.x + cardSelectionDrawInfo.offsetMod) * (finalBoss ? 2 : 4) / 2;
-			cardDrawInfo.origin.y = cardSelectionDrawInfo.height;
-			cardDrawInfo.lifeTime = level->GetTime();
-			level->DrawCard(info, cardDrawInfo);
-		}
 
 		if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
 		{
@@ -203,12 +126,9 @@ namespace game
 			
 			if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 			{
-				if(!bossPresent)
-				{
-					state.chosenPath = discoverOption;
-					auto& path = state.paths[discoverOption];
-					++path.counters;
-				}
+				state.chosenPath = discoverOption;
+				auto& path = state.paths[discoverOption];
+				++path.counters;
 
 				stateIndex = static_cast<uint32_t>(StateNames::combat);
 			}
