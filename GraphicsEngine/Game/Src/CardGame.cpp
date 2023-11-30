@@ -247,8 +247,8 @@ namespace game
 			p1Lerp += dt * 2 * (2 * activePlayer - 1);
 			p2Lerp += dt * 2 * (2 * !activePlayer - 1);
 		}
-		p1Lerp = jv::Clamp<float>(p1Lerp, 0, 1);
-		p2Lerp = jv::Clamp<float>(p2Lerp, 0, 1);
+		p1Lerp = jv::Clamp<float>(p1Lerp, 0.5, 1);
+		p2Lerp = jv::Clamp<float>(p2Lerp, 0.5, 1);
 
 		bool fullscreen = isFullScreen;
 		
@@ -2097,7 +2097,7 @@ namespace game
 
 		auto& arcaneIntellect = arr[SPELL_IDS::ARCANE_INTELLECT];
 		arcaneIntellect.name = "arcane intellect";
-		arcaneIntellect.ruleText = "draw 3.";
+		arcaneIntellect.ruleText = "draw 2.";
 		arcaneIntellect.cost = 2;
 		arcaneIntellect.type = SpellCard::Type::all;
 		arcaneIntellect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2107,7 +2107,7 @@ namespace game
 				ActionState drawState{};
 				drawState.trigger = ActionState::Trigger::onDraw;
 				drawState.source = ActionState::Source::other;
-				for (uint32_t i = 0; i < 3; ++i)
+				for (uint32_t i = 0; i < 2; ++i)
 					state.TryAddToStack(drawState);
 				return true;
 			}
@@ -2338,7 +2338,7 @@ namespace game
 			};
 		auto& enrage = arr[SPELL_IDS::ENRAGE];
 		enrage.name = "enrage";
-		enrage.ruleText = "+2 bonus attack.";
+		enrage.ruleText = "+3 bonus attack.";
 		enrage.cost = 1;
 		enrage.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2347,7 +2347,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 2;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 3;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);

@@ -242,6 +242,7 @@ namespace game
 		activeStateValid = false;
 		comboCounter = 0;
 		timeSinceStackOverloaded = -1;
+		timeSinceEmptyStack = -1;
 
 		for (auto& card : eventCards)
 			card = -1;
@@ -391,6 +392,8 @@ namespace game
 				{
 					PostHandleActionState(state, info, level, activeState);
 					activeStateValid = false;
+					if (state.stack.count == 0)
+						timeSinceEmptyStack = level->GetTime();
 				}
 			}
 		}
@@ -662,19 +665,17 @@ namespace game
 		}
 
 		// Check for new turn.
-		if(state.stack.count == 0)
+		if(state.stack.count == 0 && !activeStateValid)
 		{
-			PixelPerfectRenderTask lineRenderTask{};
-			lineRenderTask.subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)].subTexture;
-			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x * 2;
-			lineRenderTask.scale.y = 1;
-			lineRenderTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT);
-			lineRenderTask.priority = true;
-			lineRenderTask.xCenter = true;
-			info.renderTasks.Push(lineRenderTask);
+			ButtonDrawInfo buttonDrawInfo{};
+			buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x - 64, HAND_HEIGHT + 24);
+			buttonDrawInfo.text = "end turn";
+			buttonDrawInfo.width = 64;
+			buttonDrawInfo.centerText = true;
+			const bool endTurn = level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
 
 			// Manually end turn.
-			if (info.inputState.enter.PressEvent())
+			if (endTurn || info.inputState.enter.PressEvent())
 			{
 				ActionState startOfTurnActionState{};
 				startOfTurnActionState.trigger = ActionState::Trigger::onStartOfTurn;
@@ -2026,8 +2027,16 @@ namespace game
 			buttonDrawInfo.center = true;
 			buttonDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 10);
 			
-			buttonDrawInfo.text = "main menu";
+			buttonDrawInfo.text = "resume";
 			if(DrawButton(info, buttonDrawInfo, lifetime))
+			{
+				ingameMenuOpened = false;
+				return true;
+			}
+
+			buttonDrawInfo.text = "main menu";
+			buttonDrawInfo.origin.y -= 20;
+			if (DrawButton(info, buttonDrawInfo, lifetime))
 			{
 				info.inCombat = false;
 				loadLevelIndex = LevelIndex::mainMenu;

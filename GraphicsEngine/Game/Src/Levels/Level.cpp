@@ -306,11 +306,12 @@ namespace game
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
 		buttonTextTask.position.x += drawInfo.center ? -buttonRenderTask.scale.x / 2 : 0;
+		buttonTextTask.position.x += drawInfo.centerText ? buttonRenderTask.scale.x / 2 : 0;
 		buttonTextTask.position.y += 3;
 		buttonTextTask.text = drawInfo.text;
 		buttonTextTask.lifetime = lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
-		buttonTextTask.center = false;
+		buttonTextTask.center = drawInfo.centerText;
 
 		buttonRenderTask.scale.x *= l;
 		bool pressed = false;

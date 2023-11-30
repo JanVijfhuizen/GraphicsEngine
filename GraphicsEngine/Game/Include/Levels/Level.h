@@ -93,6 +93,7 @@ namespace game
 			glm::ivec2 origin;
 			const char* text;
 			bool center = false;
+			bool centerText = false;
 			uint32_t width = 64;
 		};
 
