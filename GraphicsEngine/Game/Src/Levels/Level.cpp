@@ -134,6 +134,7 @@ namespace game
 				cardDrawInfo.priority = true;
 				cardDrawInfo.selectable = false;
 				cardDrawInfo.scale = 2;
+				cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
 
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
@@ -521,7 +522,6 @@ namespace game
 				auto stackedDrawInfo = cardDrawInfo;
 				stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
 				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
-				stackedDrawInfo.selectable = true;
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
 				stackedDrawInfo.origin.x += stackWidth * ((stackedCount - stackedSelected - 1) % 2 == 0);
@@ -724,7 +724,7 @@ namespace game
 			}
 		}
 
-		if (drawInfo.selectable && collided && info.inputState.rMouse.pressed)
+		if (drawInfo.selectable && collided && info.inputState.rMouse.PressEvent())
 			DrawFullCard(drawInfo.card);
 		return collided;
 	}

@@ -791,6 +791,8 @@ namespace game
 		daisy.attack = 3;
 		daisy.unique = true;
 		daisy.ruleText = "loves you unconditionally.";
+		daisy.animIndex = 2;
+		daisy.normalAnimIndex = 47;
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
 		god.health = 99;
