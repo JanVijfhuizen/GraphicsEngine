@@ -1497,6 +1497,55 @@ namespace game
 			}
 			return false;
 		};
+		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "false armor";
+		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[end turn] lose all bonus health and deal that much damage to all enemies.";
+		arr[ARTIFACT_IDS::FALSE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				{
+					const auto& boardState = state.boardState;
+					if (actionState.dst != self)
+						return false;
+
+					const uint32_t dmg = state.boardState.combatStats[self].tempHealth;
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = dmg;
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+
+					ActionState setState{};
+					setState.trigger = ActionState::Trigger::onStatSet;
+					setState.source = ActionState::Source::other;
+					setState.dst = self;
+					setState.dstUniqueId = boardState.uniqueIds[self];
+					setState.values[ActionState::VStatSet::tempHealth] = 0;
+					state.TryAddToStack(setState);
+					return true;
+				}
+				return false;
+			};
+		arr[ARTIFACT_IDS::REVERSE_CARD].name = "reverse card";
+		arr[ARTIFACT_IDS::REVERSE_CARD].ruleText = "[damaged] gain that much attack.";
+		arr[ARTIFACT_IDS::REVERSE_CARD].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDamage)
+				{
+					const auto& boardState = state.boardState;
+					if (actionState.dst != self)
+						return false;
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::attack] = actionState.values[ActionState::VDamage::damage];
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
 		arr[ARTIFACT_IDS::THORNMAIL].name = "thornmail";
 		arr[ARTIFACT_IDS::THORNMAIL].ruleText = "[attacked] the attacker takes 5 damage.";
 		arr[ARTIFACT_IDS::THORNMAIL].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
