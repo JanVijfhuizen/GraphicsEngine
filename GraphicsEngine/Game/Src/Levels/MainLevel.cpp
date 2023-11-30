@@ -1926,23 +1926,13 @@ namespace game
 			level->DrawTopCenterHeader(info, HeaderSpacing::close, "select up to 6 monsters that you would like to keep.");
 
 			Card* cards[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
-			Card** artifacts[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY]{};
 			CombatStats combatStats[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
-			uint32_t artifactCounts[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY]{};
 			
 			for (uint32_t i = 0; i < playerState.partySize; ++i)
 			{
 				const auto monster = &info.monsters[playerState.monsterIds[i]];
 				cards[i] = monster;
 				combatStats[i] = GetCombatStat(*monster);
-
-				const uint32_t count = artifactCounts[i] = playerState.artifactSlotCount;
-				const auto arr = artifacts[i] = jv::CreateArray<Card*>(info.frameArena, MONSTER_ARTIFACT_CAPACITY).ptr;
-				for (uint32_t j = 0; j < count; ++j)
-				{
-					const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
-					arr[j] = index == -1 ? nullptr : &info.artifacts[index];
-				}
 			}
 
 			// Find new monsters.
@@ -1961,8 +1951,6 @@ namespace game
 			cardSelectionDrawInfo.cards = cards;
 			cardSelectionDrawInfo.length = c;
 			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
-			cardSelectionDrawInfo.stacks = artifacts;
-			cardSelectionDrawInfo.stackCounts = artifactCounts;
 			cardSelectionDrawInfo.outStackSelected = &outStackSelected;
 			cardSelectionDrawInfo.combatStats = combatStats;
 			cardSelectionDrawInfo.selectedArr = selected;
@@ -1985,15 +1973,9 @@ namespace game
 				{
 					uint32_t d = 0;
 					for (uint32_t i = 0; i < playerState.partySize; ++i)
-					{
 						if (selected[i])
-						{
-							memcpy(&playerState.artifacts[d * MONSTER_ARTIFACT_CAPACITY], &playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
-								sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 							playerState.monsterIds[d++] = playerState.monsterIds[i];
-						}
-					}
-					
+
 					for (uint32_t i = 0; i < gameState.partySize; ++i)
 					{
 						const auto partyId = gameState.partyIds[i];
@@ -2003,8 +1985,6 @@ namespace game
 						if (partyId == -1)
 							++d;
 						playerState.monsterIds[id] = gameState.monsterIds[i];
-						memcpy(&playerState.artifacts[id * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY],
-							sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 					}
 
 					playerState.partySize = remaining;

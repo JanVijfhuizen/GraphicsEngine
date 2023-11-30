@@ -791,21 +791,6 @@ namespace game
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 			cards[i] = &info.monsters[playerState.monsterIds[i]];
 
-		Card** artifacts[PARTY_CAPACITY]{};
-		uint32_t artifactCounts[PARTY_CAPACITY]{};
-
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-		{
-			const uint32_t count = artifactCounts[i] = playerState.artifactSlotCount;
-			const auto arr = jv::CreateArray<Card*>(info.frameArena, count);
-			artifacts[i] = arr.ptr;
-			for (uint32_t j = 0; j < count; ++j)
-			{
-				const uint32_t index = playerState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j];
-				arr[j] = index == -1 ? nullptr : &info.artifacts[index];
-			}
-		}
-
 		CombatStats combatInfos[PARTY_CAPACITY];
 		for (uint32_t i = 0; i < playerState.partySize; ++i)
 			combatInfos[i] = GetCombatStat(info.monsters[playerState.monsterIds[i]]);
@@ -815,14 +800,11 @@ namespace game
 		cardSelectionDrawInfo.length = playerState.partySize;
 		cardSelectionDrawInfo.selectedArr = drawInfo.selectedArr;
 		cardSelectionDrawInfo.height = drawInfo.height;
-		cardSelectionDrawInfo.stacks = artifacts;
-		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
 		cardSelectionDrawInfo.greyedOutArr = drawInfo.greyedOutArr;
 		cardSelectionDrawInfo.combatStats = combatInfos;
 		cardSelectionDrawInfo.metaDatas = _cardDrawMetaDatas;
 		cardSelectionDrawInfo.rowCutoff = 8;
-		cardSelectionDrawInfo.offsetMod = 16;
 
 		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}

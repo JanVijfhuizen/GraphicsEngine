@@ -13,14 +13,6 @@ namespace game
 
 	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState, const GameState& gameState)
 	{
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			for (uint32_t j = 0; j < playerState.artifactSlotCount; ++j)
-				for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
-					if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * i + j] == deck[k])
-					{
-						deck.RemoveAt(k);
-						break;
-					}
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			for (uint32_t j = 0; j < gameState.artifactSlotCount; ++j)
 				for (int32_t k = static_cast<int32_t>(deck.count) - 1; k >= 0; --k)
@@ -75,12 +67,6 @@ namespace game
 
 	bool ValidateArtifactInclusion(const uint32_t id, const PlayerState& playerState)
 	{
-		for (uint32_t j = 0; j < playerState.partySize; ++j)
-		{
-			for (uint32_t k = 0; k < MONSTER_ARTIFACT_CAPACITY; ++k)
-				if (playerState.artifacts[MONSTER_ARTIFACT_CAPACITY * j + k] == id)
-					return false;
-		}
 		return true;
 	}
 }
