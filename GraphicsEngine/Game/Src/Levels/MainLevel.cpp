@@ -676,7 +676,7 @@ namespace game
 			buttonDrawInfo.text = "end turn";
 			buttonDrawInfo.width = 64;
 			buttonDrawInfo.centerText = true;
-			const bool endTurn = level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
+			const bool endTurn = false;//level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
 
 			// Manually end turn.
 			if (endTurn || info.inputState.enter.PressEvent())
