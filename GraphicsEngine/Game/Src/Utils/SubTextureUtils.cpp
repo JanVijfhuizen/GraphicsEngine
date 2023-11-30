@@ -14,4 +14,12 @@ namespace game
 			sub.rBot.x = sub.lTop.x + partition;
 		}
 	}
+
+	jv::ge::SubTexture Mirror(const jv::ge::SubTexture& subTexture)
+	{
+		auto ret = subTexture;
+		ret.lTop.x = subTexture.rBot.x;
+		ret.rBot.x = subTexture.lTop.x;
+		return ret;
+	}
 }

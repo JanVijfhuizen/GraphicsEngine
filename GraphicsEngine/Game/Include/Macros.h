@@ -245,6 +245,7 @@ enum class TextureId
 	card,
 	button,
 	stats,
+	flowers,
 	fallback,
 	empty,
 	length

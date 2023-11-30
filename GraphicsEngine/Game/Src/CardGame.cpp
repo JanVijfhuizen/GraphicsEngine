@@ -658,8 +658,9 @@ namespace game
 		arr[4] = "Art/card.png";
 		arr[5] = "Art/button.png";
 		arr[6] = "Art/stats.png";
-		arr[7] = "Art/fallback.png";
-		arr[8] = "Art/empty.png";
+		arr[7] = "Art/flowers.png";
+		arr[8] = "Art/fallback.png";
+		arr[9] = "Art/empty.png";
 		return arr;
 	}
 
@@ -3090,17 +3091,17 @@ namespace game
 
 		auto& gatheringStorm = arr[EVENT_IDS::GATHERING_STORM];
 		gatheringStorm.name = "gathering storm";
-		gatheringStorm.ruleText = "[end of turn] all enemies gain +1 bonus attack and health.";
+		gatheringStorm.ruleText = "[start of turn] all enemies gain +1 bonus attack and health.";
 		gatheringStorm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
+				if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
 					return false;
 
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onStatBuff;
 				buffState.source = ActionState::Source::other;
-				buffState.values[ActionState::VStatBuff::attack] = 1;
-				buffState.values[ActionState::VStatBuff::health] = 1;
+				buffState.values[ActionState::VStatBuff::tempAttack] = 1;
+				buffState.values[ActionState::VStatBuff::tempHealth] = 1;
 				TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);
 				return true;
 			};

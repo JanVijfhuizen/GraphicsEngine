@@ -12,6 +12,7 @@
 #include "States/PlayerState.h"
 #include "Utils/Shuffle.h"
 #include "JLib/VectorUtils.h"
+#include "Utils/SubTextureUtils.h"
 
 namespace game
 {
@@ -310,6 +311,9 @@ namespace game
 
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
+
+		DrawParallaxBackground(info, false);
+		DrawParallaxBackground(info, true);
 
 		const bool stackOverloaded = state.stack.count == state.stack.length;
 		if (state.stack.count == 0)
@@ -668,7 +672,7 @@ namespace game
 		if(state.stack.count == 0 && !activeStateValid)
 		{
 			ButtonDrawInfo buttonDrawInfo{};
-			buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x - 64, HAND_HEIGHT + 24);
+			buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x - 64, 6);
 			buttonDrawInfo.text = "end turn";
 			buttonDrawInfo.width = 64;
 			buttonDrawInfo.centerText = true;
@@ -1582,6 +1586,58 @@ namespace game
 		++state.depth;
 	}
 
+	void MainLevel::CombatState::DrawParallaxBackground(const LevelUpdateInfo& info, const bool mirror)
+	{
+		glm::vec2 mouseOffset = info.inputState.mousePos - SIMULATED_RESOLUTION / 2;
+
+		PixelPerfectRenderTask renderTask{};
+		renderTask.scale = glm::ivec2(64);
+		renderTask.xCenter = true;
+
+		auto subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::flowers)].subTexture;
+		jv::ge::SubTexture subTextures[5];
+		Divide(subTexture, subTextures, sizeof subTextures / sizeof(jv::ge::SubTexture));
+
+		glm::ivec2 c = glm::ivec2(0, 24);
+		c.x = mirror ? SIMULATED_RESOLUTION.x - c.x : c.x;
+		const int32_t m = !mirror * 2 - 1;
+
+		renderTask.subTexture = subTextures[4];
+		if (mirror)
+			renderTask.subTexture = Mirror(renderTask.subTexture);
+		renderTask.position = c + glm::ivec2(128 * m, -16);
+		renderTask.position -= mouseOffset * glm::vec2(.002f);
+		info.renderTasks.Push(renderTask);
+
+		renderTask.subTexture = subTextures[3];
+		if (mirror)
+			renderTask.subTexture = Mirror(renderTask.subTexture);
+		renderTask.position = c + glm::ivec2(76 * m, 8);
+		renderTask.position -= mouseOffset * glm::vec2(.005f);
+		info.renderTasks.Push(renderTask);
+
+		renderTask.subTexture = subTextures[2];
+		if (mirror)
+			renderTask.subTexture = Mirror(renderTask.subTexture);
+		renderTask.position = c + glm::ivec2(48 * m, 8);
+		renderTask.position -= mouseOffset * glm::vec2(.01f);
+		info.renderTasks.Push(renderTask);
+
+		renderTask.subTexture = subTextures[1];
+		if (mirror)
+			renderTask.subTexture = Mirror(renderTask.subTexture);
+		renderTask.position = c + glm::ivec2(36 * m, 8);
+		renderTask.position -= mouseOffset * glm::vec2(.02f);
+		info.renderTasks.Push(renderTask);
+		
+		renderTask.subTexture = subTextures[0];
+		if (mirror)
+			renderTask.subTexture = Mirror(renderTask.subTexture);
+		renderTask.position = c;
+		renderTask.position -= mouseOffset * glm::vec2(.04f);
+		info.renderTasks.Push(renderTask);
+	}
+
 	void MainLevel::RewardMagicCardState::Reset(State& state, const LevelInfo& info)
 	{
 		discoverOption = -1;
@@ -2004,6 +2060,10 @@ namespace game
 		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
+
+		// temp.
+		stateMachine.state.depth = 100;
+		stateMachine.next = stateMachine.current;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
