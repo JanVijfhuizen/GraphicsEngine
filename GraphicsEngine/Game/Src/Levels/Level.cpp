@@ -521,7 +521,7 @@ namespace game
 				auto stackedDrawInfo = cardDrawInfo;
 				stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
 				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
-				stackedDrawInfo.selectable = drawInfo.selectable;
+				stackedDrawInfo.selectable = true;
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
 				stackedDrawInfo.origin.x += stackWidth * ((stackedCount - stackedSelected - 1) % 2 == 0);
