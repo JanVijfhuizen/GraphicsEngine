@@ -1329,8 +1329,8 @@ namespace game
 		auto& madPyromancer = arr[MONSTER_IDS::MAD_PYROMANCER];
 		madPyromancer.name = "mad pyromancer";
 		madPyromancer.attack = 1;
-		madPyromancer.health = 18;
-		madPyromancer.ruleText = "[cast] all monsters take 1 damage.";
+		madPyromancer.health = 11;
+		madPyromancer.ruleText = "[cast] all enemies take 1 damage.";
 		madPyromancer.tags = TAG_HUMAN;
 		madPyromancer.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1340,7 +1340,7 @@ namespace game
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 1;
-					TargetOfType(info, state, damageState, self, -1, TypeTarget::all);
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
 					return true;
 				}
 				return false;
