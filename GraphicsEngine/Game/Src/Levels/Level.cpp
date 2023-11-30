@@ -442,12 +442,12 @@ namespace game
 			}
 
 			cardDrawInfo.card = drawInfo.cards[i];
-			cardDrawInfo.selectable = true;
+			cardDrawInfo.selectable = drawInfo.selectable;
 			const bool collides = CollidesCard(info, cardDrawInfo);
 			uint32_t stackedSelected = -1;
 			uint32_t stackedCount = -1;
 
-			const bool dragged = drawInfo.draggable && drawInfo.highlighted == i;
+			const bool dragged = drawInfo.selectable && drawInfo.draggable && drawInfo.highlighted == i;
 			if (drawInfo.draggable && dragged)
 			{
 				if (dragged && drawInfo.metaDatas)
@@ -500,7 +500,7 @@ namespace game
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
 					stackedDrawInfo.origin.x += stackWidth * ((stackedCount - j - 1) % 2 == 0);
-					stackedDrawInfo.selectable = !dragged && !collides && stackedSelected == j;
+					stackedDrawInfo.selectable = drawInfo.selectable && !dragged && !collides && stackedSelected == j;
 					DrawCard(info, stackedDrawInfo);
 				}
 			}
@@ -521,7 +521,7 @@ namespace game
 				auto stackedDrawInfo = cardDrawInfo;
 				stackedDrawInfo.card = drawInfo.stacks[i][stackedSelected];
 				stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - stackedSelected));
-				stackedDrawInfo.selectable = true;
+				stackedDrawInfo.selectable = drawInfo.selectable;
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
 				stackedDrawInfo.origin.x += stackWidth * ((stackedCount - stackedSelected - 1) % 2 == 0);
@@ -549,7 +549,7 @@ namespace game
 				choice = i;
 		}
 
-		return choice;
+		return drawInfo.selectable ? choice : -1;
 	}
 
 	bool Level::DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo)
@@ -581,8 +581,8 @@ namespace game
 		bgRenderTask.yCenter = drawInfo.center;
 		bgRenderTask.priority = drawInfo.priority;
 
-		const bool collided = CollidesShapeInt(drawInfo.origin - 
-			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos);
+		const bool collided = drawInfo.selectable ? CollidesShapeInt(drawInfo.origin - 
+			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos) : false;
 		bgRenderTask.color = drawInfo.card ? drawInfo.bgColor : drawInfo.fgColor * .4f;
 		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 

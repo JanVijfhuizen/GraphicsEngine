@@ -658,6 +658,7 @@ namespace game
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
 		enemySelectionDrawInfo.offsetMod = 16;
 		enemySelectionDrawInfo.mirrorHorizontal = true;
+		enemySelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
 
 		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
@@ -698,7 +699,8 @@ namespace game
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_HAND_INDEX];
 		handSelectionDrawInfo.offsetMod = 4;
-		handSelectionDrawInfo.draggable = !activeStateValid && state.stack.count == 0;
+		handSelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
+		handSelectionDrawInfo.draggable = handSelectionDrawInfo.selectable;
 		DrawActivationAnimation(handSelectionDrawInfo, Activation::spell, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
 		if(activeStateValid && activeState.trigger == ActionState::Trigger::onDraw)
@@ -751,7 +753,8 @@ namespace game
 		playerCardSelectionDrawInfo.highlighted = selectionState == SelectionState::ally ? selectedId : -1;
 		playerCardSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ALLY_INDEX];
 		playerCardSelectionDrawInfo.offsetMod = 16;
-		playerCardSelectionDrawInfo.draggable = !activeStateValid && state.stack.count == 0;
+		playerCardSelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
+		playerCardSelectionDrawInfo.draggable = playerCardSelectionDrawInfo.selectable;
 		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(info, *level, playerCardSelectionDrawInfo, true);

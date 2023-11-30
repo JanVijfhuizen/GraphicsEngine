@@ -154,6 +154,7 @@ namespace game
 			float activationLerp;
 			bool mirrorHorizontal = false;
 			bool draggable = false;
+			bool selectable = true;
 		};
 
 		struct PartyDrawInfo final
