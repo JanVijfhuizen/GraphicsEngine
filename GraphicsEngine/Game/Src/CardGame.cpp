@@ -2980,10 +2980,10 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::HATE].name = "hate";
-		arr[CURSE_IDS::HATE].ruleText = "[start of turn] +3 attack, take 3 damage.";
+		arr[CURSE_IDS::HATE].ruleText = "[end of turn] +3 attack, take 3 damage.";
 		arr[CURSE_IDS::HATE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
 					ActionState dmgState{};
 					dmgState.trigger = ActionState::Trigger::onDamage;
