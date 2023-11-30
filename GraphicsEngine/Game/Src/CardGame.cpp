@@ -1083,7 +1083,7 @@ namespace game
 		masterLich.unique = true;
 		masterLich.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
