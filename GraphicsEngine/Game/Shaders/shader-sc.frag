@@ -76,7 +76,7 @@ void main()
     
     vec2 d = Dist(uv, res);
     float b = length(d);
-    b = step(.45, b);
+    b = step(.1, b);
 
     uv *= res;
     uv = floor(uv);
