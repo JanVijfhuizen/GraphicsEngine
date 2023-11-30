@@ -1459,7 +1459,7 @@ namespace game
 			};
 		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
 		librarian.name = "librarian";
-		librarian.attack = 0;
+		librarian.attack = 1;
 		librarian.health = 14;
 		librarian.ruleText = "[draw] [ally] +1 mana. [enemy] -1 mana.";
 		librarian.tags = TAG_HUMAN;
@@ -1811,7 +1811,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].name = "mage sword";
-		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].ruleText = "[non combat damage to any target] gain attack equal to the damage dealt.";
+		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].ruleText = "[non combat damage to any target] gain bonus attack equal to the damage dealt.";
 		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
@@ -1830,14 +1830,14 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::attack] = dmg;
+					buffState.values[ActionState::VStatBuff::tempAttack] = dmg;
 					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
 			};
 		arr[ARTIFACT_IDS::STAFF_OF_AEONS].name = "staff of aeons";
-		arr[ARTIFACT_IDS::STAFF_OF_AEONS].ruleText = "[2 or more non combat damage to any target] +1 mana.";
+		arr[ARTIFACT_IDS::STAFF_OF_AEONS].ruleText = "[2 or more non combat damage to any target] +2 mana.";
 		arr[ARTIFACT_IDS::STAFF_OF_AEONS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
@@ -1846,7 +1846,7 @@ namespace game
 						return false;
 					if (actionState.values[ActionState::VDamage::damage] < 2)
 						return false;
-					++state.mana;
+					state.mana += 2;
 					return true;
 				}
 				return false;
@@ -3031,12 +3031,12 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::TIME].name = "time";
-		arr[CURSE_IDS::TIME].ruleText = "[start of turn 7] die.";
+		arr[CURSE_IDS::TIME].ruleText = "[start of turn 4] die.";
 		arr[CURSE_IDS::TIME].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
-					if (state.turn != 7)
+					if (state.turn != 4)
 						return false;
 
 					ActionState deathState{};

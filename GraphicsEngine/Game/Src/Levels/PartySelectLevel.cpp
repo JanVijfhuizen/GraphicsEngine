@@ -69,14 +69,12 @@ namespace game
 					for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
 						gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j] = -1;
 
-				for (uint32_t i = 0; i < 7; ++i)
+				for (uint32_t i = 0; i < 9; ++i)
 				{
 					gameState.spells[i] = SPELL_IDS::ENRAGE;
 				}
-				for (uint32_t i = 7; i < 15; ++i)
+				for (uint32_t i = 9; i < 18; ++i)
 					gameState.spells[i] = SPELL_IDS::PROTECT;
-				for (uint32_t i = 15; i < 18; ++i)
-					gameState.spells[i] = SPELL_IDS::ARCANE_INTELLECT;
 				
 				Load(LevelIndex::main, true);
 			}
