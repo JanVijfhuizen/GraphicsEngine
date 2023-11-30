@@ -3343,7 +3343,6 @@ namespace game
 
 		for (auto& monsterId : playerState.monsterIds)
 			inFile >> monsterId;
-		inFile >> playerState.artifactSlotCount;
 		inFile >> playerState.partySize;
 		inFile >> playerState.ironManMode;
 		inFile.close();
@@ -3358,7 +3357,6 @@ namespace game
 
 		for (const auto& monsterId : playerState.monsterIds)
 			outFile << monsterId << std::endl;
-		outFile << playerState.artifactSlotCount << std::endl;
 		outFile << playerState.partySize << std::endl;
 		outFile << playerState.ironManMode << std::endl;
 		outFile.close();

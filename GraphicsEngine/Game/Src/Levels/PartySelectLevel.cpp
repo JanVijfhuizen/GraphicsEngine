@@ -62,7 +62,7 @@ namespace game
 					const auto& monster = info.monsters[info.playerState.monsterIds[i]];
 					gameState.healths[j++] = monster.health;
 				}
-				gameState.artifactSlotCount = playerState.artifactSlotCount;
+				gameState.artifactSlotCount = 1;
 				for (uint32_t i = 0; i < PARTY_ACTIVE_CAPACITY; ++i)
 					for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
 						gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j] = -1;

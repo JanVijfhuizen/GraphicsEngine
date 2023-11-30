@@ -5,7 +5,6 @@ namespace game
 	struct PlayerState final
 	{
 		uint32_t monsterIds[PARTY_CAPACITY]{};
-		uint32_t artifactSlotCount = 1;
 		uint32_t partySize = 0;
 		bool ironManMode = false;
 		

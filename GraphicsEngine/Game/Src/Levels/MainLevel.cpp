@@ -1988,7 +1988,6 @@ namespace game
 					}
 
 					playerState.partySize = remaining;
-					playerState.artifactSlotCount = gameState.artifactSlotCount;
 
 					SaveData(playerState);
 					loadLevelIndex = LevelIndex::mainMenu;

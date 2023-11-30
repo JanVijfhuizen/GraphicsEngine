@@ -167,7 +167,6 @@ namespace game
 			playerState.monsterIds[0] = state.monsterId;
 			playerState.monsterIds[1] = MONSTER_IDS::DAISY;
 			playerState.partySize = 2;
-			playerState.artifactSlotCount = 1;
 			SaveData(playerState);
 			loadLevelIndex = LevelIndex::partySelect;
 		}
