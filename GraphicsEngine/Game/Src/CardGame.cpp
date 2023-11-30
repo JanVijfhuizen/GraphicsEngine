@@ -908,7 +908,7 @@ namespace game
 		bomba.name = "bomba";
 		bomba.attack = 8;
 		bomba.health = 120;
-		bomba.ruleText = "[cast, attacked] summon a 0/4 bomb.";
+		bomba.ruleText = "[cast, attacked] summon a bomb.";
 		bomba.unique = true;
 		bomba.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -955,7 +955,7 @@ namespace game
 		theDread.name = "the dread";
 		theDread.attack = 0;
 		theDread.health = 666;
-		theDread.ruleText = "[start of turn] gain 6 attack. [turn 6] dies.";
+		theDread.ruleText = "[start of turn] gain +6 attack. [turn 6] dies.";
 		theDread.unique = true;
 		theDread.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -980,6 +980,102 @@ namespace game
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
 					return true;
+				}
+				return false;
+			};
+		auto& archmage = arr[MONSTER_IDS::ARCHMAGE];
+		archmage.name = "archmage";
+		archmage.attack = 8;
+		archmage.health = 200;
+		archmage.ruleText = "[enemy buff] copy it for myself. [end of turn] deal 2 damage to all enemies.";
+		archmage.unique = true;
+		archmage.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				{
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = 2;
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+					return true;
+				}
+				if (actionState.trigger == ActionState::Trigger::onStatBuff)
+				{
+					if (actionState.dst == self)
+						return false;
+					auto cpy = actionState;
+					cpy.dst = self;
+					cpy.dstUniqueId = state.boardState.uniqueIds[self];
+					state.stack.Add() = cpy;
+					return true;
+				}
+				return false;
+			};
+		auto& shelly = arr[MONSTER_IDS::SHELLY];
+		shelly.name = "shelly";
+		shelly.attack = 0;
+		shelly.health = 150;
+		shelly.ruleText = "[damaged without bonus health] gain +10 bonus attack and health.";
+		shelly.unique = true;
+		shelly.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDamage)
+				{
+					if (actionState.dst != self)
+						return false;
+					if (state.boardState.combatStats[self].tempHealth > 0)
+						return false;
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 10;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 10;
+					buffState.dst = self;
+					buffState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
+		auto& goblinQueen = arr[MONSTER_IDS::GOBLIN_QUEEN];
+		goblinQueen.name = "goblin queen";
+		goblinQueen.attack = 0;
+		goblinQueen.health = 220;
+		goblinQueen.ruleText = "[start of turn] fill the board with goblins. give all goblins +3 attack. [any death] give all goblins +1 attack.";
+		goblinQueen.unique = true;
+		goblinQueen.tags = TAG_GOBLIN;
+		goblinQueen.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				{
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::attack] = 3;
+					TargetOfType(info, state, buffState, self, TAG_GOBLIN, TypeTarget::all);
+
+					ActionState summonState{};
+					summonState.trigger = ActionState::Trigger::onSummon;
+					summonState.source = ActionState::Source::other;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
+					for (uint32_t i = 0; i < BOARD_CAPACITY_PER_SIDE; ++i)
+					{
+						summonState.values[ActionState::VSummon::isAlly] = true;
+						state.TryAddToStack(summonState);
+						summonState.values[ActionState::VSummon::isAlly] = false;
+						state.TryAddToStack(summonState);
+					}
+					return true;
+				}
+				if(actionState.trigger == ActionState::Trigger::onDeath)
+				{
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::attack] = 1;
+					TargetOfType(info, state, buffState, self, TAG_GOBLIN, TypeTarget::all);
 				}
 				return false;
 			};
@@ -2051,6 +2147,9 @@ namespace game
 		arr[3] = MONSTER_IDS::MIRROR_KNIGHT;
 		arr[4] = MONSTER_IDS::BOMBA;
 		arr[5] = MONSTER_IDS::THE_DREAD;
+		arr[6] = MONSTER_IDS::ARCHMAGE;
+		arr[7] = MONSTER_IDS::SHELLY;
+		arr[8] = MONSTER_IDS::GOBLIN_QUEEN;
 		return arr;
 	}
 

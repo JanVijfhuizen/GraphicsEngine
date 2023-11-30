@@ -103,6 +103,9 @@ struct MONSTER_IDS
 		BOMBA,
 		BOMB,
 		THE_DREAD,
+		ARCHMAGE,
+		SHELLY,
+		GOBLIN_QUEEN,
 		LENGTH
 	};
 };
