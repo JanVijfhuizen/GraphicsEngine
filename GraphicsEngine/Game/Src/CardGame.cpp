@@ -1324,7 +1324,7 @@ namespace game
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 1;
 		goblinChampion.health = 20;
-		goblinChampion.ruleText = "[start of turn] all other goblins gain +3 attack.";
+		goblinChampion.ruleText = "[start of turn] all goblins gain +2 attack.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1333,8 +1333,8 @@ namespace game
 					ActionState setState{};
 					setState.trigger = ActionState::Trigger::onStatBuff;
 					setState.source = ActionState::Source::other;
-					setState.values[ActionState::VStatBuff::attack] = 3;
-					TargetOfType(info, state, setState, self, TAG_GOBLIN, TypeTarget::all, true);
+					setState.values[ActionState::VStatBuff::attack] = 2;
+					TargetOfType(info, state, setState, self, TAG_GOBLIN, TypeTarget::all);
 					return true;
 				}
 				return false;
@@ -1676,7 +1676,7 @@ namespace game
 		goblinScout.name = "goblin scout";
 		goblinScout.attack = 1;
 		goblinScout.health = 16;
-		goblinScout.ruleText = "[attack] all allied tokens gain my attack.";
+		goblinScout.ruleText = "[attack] all other goblins gain my attack.";
 		goblinScout.tags = TAG_GOBLIN;
 		goblinScout.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1692,7 +1692,7 @@ namespace game
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
 					buffState.values[ActionState::VStatBuff::attack] = stats.attack + stats.tempAttack;
-					TargetOfType(info, state, buffState, self, TAG_TOKEN, TypeTarget::allies);
+					TargetOfType(info, state, buffState, self, TAG_GOBLIN, TypeTarget::all, true);
 					return true;
 				}
 				return false;
