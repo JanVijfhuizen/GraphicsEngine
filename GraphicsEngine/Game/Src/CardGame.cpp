@@ -1360,6 +1360,11 @@ namespace game
 					attackState.src = self;
 					attackState.srcUniqueId = boardState.uniqueIds[self];
 
+					if (self < BOARD_CAPACITY_PER_SIDE && boardState.enemyCount == 0)
+						return false;
+					if (self >= BOARD_CAPACITY_PER_SIDE && boardState.allyCount == 0)
+						return false;
+
 					const uint32_t r = self < BOARD_CAPACITY_PER_SIDE ? 
 						BOARD_CAPACITY_PER_SIDE + rand() % boardState.enemyCount : rand() % boardState.allyCount;
 					attackState.dst = r;
