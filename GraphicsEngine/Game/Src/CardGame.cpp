@@ -1560,7 +1560,7 @@ namespace game
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::OBNOXIOUS_FAN;
-					summonState.values[ActionState::VSummon::isAlly] = self >= BOARD_CAPACITY_PER_SIDE;
+					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
 					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
 					state.TryAddToStack(summonState);
 					return true;
