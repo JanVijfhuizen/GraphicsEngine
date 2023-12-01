@@ -99,7 +99,13 @@ void main()
     vec4 bgl = vec4(1, 0, 0, 1) * GetLightLerped(uv, 1, pushConstants.p1Lerp) + vec4(0, 1, 0, 1) * GetLightLerped(uv, 1, pushConstants.p2Lerp);
     bgl = v > .02 ? bgl : vec4(0);
 
-    vec4 color = texture(img, pixUv);
+    float pxl = 1.f / pixRes.x;
+
+    vec4 fragColor;
+    fragColor.r = texture(img, pixUv + vec2(pxl, 0)).r;
+    fragColor.gba = texture(img, pixUv).gba;
+
+    vec4 color = fragColor;
     vec4 bgColor = vec4(vec3(v), 1.0);
     bgColor += pow(bgl, vec4(6));
     vec4 mixed = mix(color, bgColor, 1.f - color.a);
