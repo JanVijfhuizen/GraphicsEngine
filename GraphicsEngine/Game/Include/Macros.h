@@ -219,6 +219,7 @@ struct CURSE_IDS
 		HATE,
 		HAUNTING,
 		TIME,
+		VULNERABILITY,
 		LENGTH
 	};
 };
