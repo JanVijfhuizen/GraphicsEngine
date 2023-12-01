@@ -1260,7 +1260,7 @@ namespace game
 		mossyElemental.name = "mossy elemental";
 		mossyElemental.attack = 1;
 		mossyElemental.health = 12;
-		mossyElemental.ruleText = "[start of turn] +3 bonus health.";
+		mossyElemental.ruleText = "[start of turn] +4 bonus health.";
 		mossyElemental.tags = TAG_ELEMENTAL;
 		mossyElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1269,7 +1269,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
