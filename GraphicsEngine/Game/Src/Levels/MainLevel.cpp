@@ -90,11 +90,12 @@ namespace game
 			const auto& path = state.paths[i];
 
 			cards[i] = &info.spells[path.spell];
+			stack[0] = &info.rooms[path.room];
+
 			if (flawPresent)
 				stack[count - 1] = &info.curses[path.curse];
 			else
 				stack[count - 1] = &info.artifacts[path.artifact];
-			stack[0] = &info.rooms[path.room];
 			stacksCounts[i] = count;
 		}
 		
