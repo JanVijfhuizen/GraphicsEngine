@@ -2008,12 +2008,13 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "blood cup";
-		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].ruleText = "[any death] untap.";
+		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].ruleText = "[ally death] untap.";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					const auto& boardState = state.boardState;
+					if (actionState.dst >= BOARD_CAPACITY_PER_SIDE)
+						return false;
 					state.tapped[self] = false;
 					return true;
 				}
