@@ -1541,7 +1541,7 @@ namespace game
 		obnoxiousFan.name = "lich";
 		obnoxiousFan.attack = 3;
 		obnoxiousFan.health = 1;
-		obnoxiousFan.ruleText = "[death] if I'm not the last monster on my side of the field, summon a lich with my attack.";
+		obnoxiousFan.ruleText = "[death] if i'm not the last monster on my side of the field, summon a lich with my attack.";
 		obnoxiousFan.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
