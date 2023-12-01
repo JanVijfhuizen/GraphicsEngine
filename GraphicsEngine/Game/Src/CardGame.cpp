@@ -1633,7 +1633,7 @@ namespace game
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 1;
-					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::all);
 					return true;
 				}
 				return false;
