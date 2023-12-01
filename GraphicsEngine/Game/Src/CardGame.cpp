@@ -3260,10 +3260,10 @@ namespace game
 			card.animIndex = c++;
 
 		arr[CURSE_IDS::FADING].name = "fading";
-		arr[CURSE_IDS::FADING].ruleText = "[start of turn] take one damage.";
+		arr[CURSE_IDS::FADING].ruleText = "[end of turn] take one damage.";
 		arr[CURSE_IDS::FADING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
@@ -3318,7 +3318,7 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::HATE].name = "hate";
-		arr[CURSE_IDS::HATE].ruleText = "[end of turn] +3 attack, take 3 damage.";
+		arr[CURSE_IDS::HATE].ruleText = "[end of turn] +2 attack, take 2 damage.";
 		arr[CURSE_IDS::HATE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -3328,7 +3328,7 @@ namespace game
 					dmgState.source = ActionState::Source::other;
 					dmgState.dst = self;
 					dmgState.dstUniqueId = state.boardState.uniqueIds[self];
-					dmgState.values[ActionState::VDamage::damage] = 3;
+					dmgState.values[ActionState::VDamage::damage] = 2;
 					state.TryAddToStack(dmgState);
 
 					ActionState buffState{};
@@ -3336,7 +3336,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::attack] = 3;
+					buffState.values[ActionState::VStatBuff::attack] = 2;
 					state.TryAddToStack(buffState);
 					return true;
 				}
