@@ -1549,9 +1549,9 @@ namespace game
 					if (self != actionState.dst)
 						return false;
 
-					if (self < BOARD_CAPACITY_PER_SIDE && state.boardState.allyCount > 1)
+					if (self < BOARD_CAPACITY_PER_SIDE && state.boardState.allyCount == 1)
 						return false;
-					if (self >= BOARD_CAPACITY_PER_SIDE && state.boardState.enemyCount > 1)
+					if (self >= BOARD_CAPACITY_PER_SIDE && state.boardState.enemyCount == 1)
 						return false;
 
 					const auto& stats = state.boardState.combatStats[self];
