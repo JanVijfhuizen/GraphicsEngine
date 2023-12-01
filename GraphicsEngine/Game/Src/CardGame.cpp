@@ -1220,7 +1220,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 1;
+					buffState.values[ActionState::VStatBuff::attack] = 2;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1232,7 +1232,7 @@ namespace game
 		mossyElemental.name = "mossy elemental";
 		mossyElemental.attack = 1;
 		mossyElemental.health = 12;
-		mossyElemental.ruleText = "[start of turn] +4 bonus health.";
+		mossyElemental.ruleText = "[start of turn] +3 bonus health.";
 		mossyElemental.tags = TAG_ELEMENTAL;
 		mossyElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2475,7 +2475,7 @@ namespace game
 		auto& tranquilize = arr[SPELL_IDS::TRANQUILIZE];
 		tranquilize.name = "tranquilize";
 		tranquilize.ruleText = "set my attack to 1.";
-		tranquilize.cost = 2;
+		tranquilize.cost = 1;
 		tranquilize.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2494,7 +2494,7 @@ namespace game
 		auto& doubleTrouble = arr[SPELL_IDS::DOUBLE_TROUBLE];
 		doubleTrouble.name = "double trouble";
 		doubleTrouble.ruleText = "double my attack.";
-		doubleTrouble.cost = 3;
+		doubleTrouble.cost = 2;
 		doubleTrouble.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2514,7 +2514,7 @@ namespace game
 			};
 		auto& goblinAmbush = arr[SPELL_IDS::GOBLIN_AMBUSH];
 		goblinAmbush.name = "goblin ambush";
-		goblinAmbush.ruleText = "summon 4 goblins.";
+		goblinAmbush.ruleText = "summon 3 goblins.";
 		goblinAmbush.cost = 1;
 		goblinAmbush.type = SpellCard::Type::all;
 		goblinAmbush.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2526,7 +2526,7 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
-					for (uint32_t i = 0; i < 4; ++i)
+					for (uint32_t i = 0; i < 3; ++i)
 						state.TryAddToStack(summonState);
 					return true;
 				}
@@ -2646,7 +2646,7 @@ namespace game
 			};
 		auto& ascension = arr[SPELL_IDS::ASCENSION];
 		ascension.name = "ascension";
-		ascension.ruleText = "gain 10 attack.";
+		ascension.ruleText = "+13 attack.";
 		ascension.cost = 3;
 		ascension.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2657,7 +2657,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					buffState.values[ActionState::VStatBuff::attack] = 10;
+					buffState.values[ActionState::VStatBuff::attack] = 13;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -2665,7 +2665,7 @@ namespace game
 			};
 		auto& stampede = arr[SPELL_IDS::STAMPEDE];
 		stampede.name = "stampede";
-		stampede.ruleText = "all allies gain +4 bonus attack. draw.";
+		stampede.ruleText = "all allies gain +4 attack. draw.";
 		stampede.cost = 3;
 		stampede.type = SpellCard::Type::all;
 		stampede.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2675,7 +2675,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 3;
+					buffState.values[ActionState::VStatBuff::attack] = 3;
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
 
 					ActionState drawState{};
@@ -2707,7 +2707,7 @@ namespace game
 			};
 		auto& protect = arr[SPELL_IDS::PROTECT];
 		protect.name = "protect";
-		protect.ruleText = "+3 bonus health.";
+		protect.ruleText = "+4 bonus health.";
 		protect.cost = 1;
 		protect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2716,7 +2716,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2726,7 +2726,7 @@ namespace game
 			};
 		auto& shield = arr[SPELL_IDS::SHIELD];
 		shield.name = "shield";
-		shield.ruleText = "+7 bonus health. draw.";
+		shield.ruleText = "+8 bonus health. draw.";
 		shield.cost = 2;
 		shield.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2735,7 +2735,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 7;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 8;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2837,7 +2837,7 @@ namespace game
 			};
 		auto& infuriate = arr[SPELL_IDS::INFURIATE];
 		infuriate.name = "infuriate";
-		infuriate.ruleText = "+7 bonus attack.";
+		infuriate.ruleText = "+5 attack.";
 		infuriate.cost = 2;
 		infuriate.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2846,7 +2846,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 7;
+					buffState.values[ActionState::VStatBuff::attack] = 7;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2897,8 +2897,8 @@ namespace game
 			};
 		auto& rewind = arr[SPELL_IDS::REWIND];
 		rewind.name = "rewind";
-		rewind.ruleText = "untap all allies. +4 mana.";
-		rewind.cost = 4;
+		rewind.ruleText = "untap all allies.";
+		rewind.cost = 2;
 		rewind.type = SpellCard::Type::all;
 		rewind.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2906,7 +2906,6 @@ namespace game
 				{
 					for (auto& tapped : state.tapped)
 						tapped = false;
-					state.mana += 4;
 					return true;
 				}
 				return false;
@@ -2962,7 +2961,7 @@ namespace game
 			};
 		auto& pyroblast = arr[SPELL_IDS::PYROBlAST];
 		pyroblast.name = "pyro blast";
-		pyroblast.ruleText = "deal 10 damage. +2 mana.";
+		pyroblast.ruleText = "deal 13 damage.";
 		pyroblast.cost = 3;
 		pyroblast.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2975,8 +2974,6 @@ namespace game
 					damageState.dstUniqueId = actionState.dstUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 10;
 					state.TryAddToStack(damageState);
-
-					state.mana += 2;
 					return true;
 				}
 				return false;
@@ -3084,7 +3081,7 @@ namespace game
 		auto& betrayal = arr[SPELL_IDS::BETRAYAL];
 		betrayal.name = "betrayal";
 		betrayal.ruleText = "my allies take damage equal to my attack.";
-		betrayal.cost = 1;
+		betrayal.cost = 0;
 		betrayal.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -3106,7 +3103,7 @@ namespace game
 			};
 		auto& incantationOfDoom = arr[SPELL_IDS::INCANTATION_OF_DOOM];
 		incantationOfDoom.name = "doom";
-		incantationOfDoom.ruleText = "all enemies take 10 damage. +2 mana.";
+		incantationOfDoom.ruleText = "all enemies take 13 damage.";
 		incantationOfDoom.cost = 5;
 		incantationOfDoom.type = SpellCard::Type::all;
 		incantationOfDoom.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -3118,7 +3115,6 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 10;
 					TargetOfType(info, state, damageState, 0, -1, TypeTarget::enemies);
-					state.mana += 2;
 					return true;
 				}
 				return false;
@@ -3126,7 +3122,7 @@ namespace game
 		auto& pariah = arr[SPELL_IDS::PARIAH];
 		pariah.name = "pariah";
 		pariah.ruleText = "[ally] becomes the target of all enemies.";
-		pariah.cost = 1;
+		pariah.cost = 0;
 		pariah.type = SpellCard::Type::target;
 		pariah.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
