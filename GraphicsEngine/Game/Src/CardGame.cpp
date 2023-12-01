@@ -871,7 +871,7 @@ namespace game
 		lichKing.name = "lich king";
 		lichKing.attack = 0;
 		lichKing.health = 75;
-		lichKing.ruleText = "[start of turn] +1 attack and +5 bonus health.";
+		lichKing.ruleText = "[start of turn] +1 attack and +3 bonus health.";
 		lichKing.unique = true;
 		lichKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1416,7 +1416,7 @@ namespace game
 				return false;
 			};
 		auto& chaosClown = arr[MONSTER_IDS::CHAOS_CLOWN];
-		chaosClown.name = "chaos clown";
+		chaosClown.name = "mad clown";
 		chaosClown.attack = 2;
 		chaosClown.health = 10;
 		chaosClown.ruleText = "[end of turn] dies. the opponent summons a chaos clown.";
@@ -1511,7 +1511,7 @@ namespace game
 				return false;
 			};
 		auto& goblinPartyStarter = arr[MONSTER_IDS::GOBLIN_PARTY_STARTER];
-		goblinPartyStarter.name = "goblinette";
+		goblinPartyStarter.name = "goblin princess";
 		goblinPartyStarter.attack = 2;
 		goblinPartyStarter.health = 5;
 		goblinPartyStarter.ruleText = "[damaged] summon a goblin for each damage taken.";
@@ -1539,9 +1539,9 @@ namespace game
 			};
 		auto& obnoxiousFan = arr[MONSTER_IDS::OBNOXIOUS_FAN];
 		obnoxiousFan.name = "lich";
-		obnoxiousFan.attack = 4;
+		obnoxiousFan.attack = 5;
 		obnoxiousFan.health = 1;
-		obnoxiousFan.ruleText = "[death] if the opponent has less than 3 monsters, they summon a lich with my attack.";
+		obnoxiousFan.ruleText = "[death] if I die through non combat damage, the opponent summons a lich with my attack.";
 		obnoxiousFan.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1549,10 +1549,8 @@ namespace game
 					if (self != actionState.dst)
 						return false;
 
-					if (self < BOARD_CAPACITY_PER_SIDE && state.boardState.enemyCount > 2 ||
-						self >= BOARD_CAPACITY_PER_SIDE && state.boardState.allyCount > 2)
+					if (actionState.source == ActionState::Source::board)
 						return false;
-
 					auto& stats = state.boardState.combatStats[self];
 
 					ActionState summonState{};
@@ -1874,14 +1872,6 @@ namespace game
 				{
 					const auto& boardState = state.boardState;
 
-					ActionState buffState{};
-					buffState.trigger = ActionState::Trigger::onStatBuff;
-					buffState.source = ActionState::Source::other;
-					buffState.dst = self;
-					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::attack] = 4;
-					state.TryAddToStack(buffState);
-
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
@@ -1889,6 +1879,14 @@ namespace game
 					damageState.dstUniqueId = boardState.uniqueIds[self];
 					damageState.values[ActionState::VDamage::damage] = 1;
 					state.TryAddToStack(damageState);
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::attack] = 4;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -2078,7 +2076,7 @@ namespace game
 					buffState.source = ActionState::Source::board;
 					buffState.src = self;
 					buffState.srcUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
+					buffState.values[ActionState::VStatBuff::attack] = 1;
 					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2507,7 +2505,7 @@ namespace game
 			};
 		auto& goblinAmbush = arr[SPELL_IDS::GOBLIN_AMBUSH];
 		goblinAmbush.name = "goblin ambush";
-		goblinAmbush.ruleText = "summon two goblins.";
+		goblinAmbush.ruleText = "summon four goblins.";
 		goblinAmbush.cost = 1;
 		goblinAmbush.type = SpellCard::Type::all;
 		goblinAmbush.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2519,7 +2517,7 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
-					for (uint32_t i = 0; i < 2; ++i)
+					for (uint32_t i = 0; i < 4; ++i)
 						state.TryAddToStack(summonState);
 					return true;
 				}

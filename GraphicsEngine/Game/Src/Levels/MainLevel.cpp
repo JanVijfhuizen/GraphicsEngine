@@ -1136,8 +1136,7 @@ namespace game
 				for (uint32_t j = i; j < c; ++j)
 					state.targets[j] = state.targets[j + 1];
 				const auto id = boardState.ids[i + mod];
-				if(!info.monsters[id].unique)
-					lastEnemyDefeatedId = id;
+				lastEnemyDefeatedId = id;
 				--boardState.enemyCount;
 			}
 			else
