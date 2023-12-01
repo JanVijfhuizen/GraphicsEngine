@@ -1785,27 +1785,17 @@ namespace game
 			return false;
 		};
 		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "repulsion armor";
-		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[start of turn] lose all bonus health and deal that much damage to all enemies.";
+		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[end of turn] all enemies take damage equal to my bonus health.";
 		arr[ARTIFACT_IDS::FALSE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
-					const auto& boardState = state.boardState;
-
 					const uint32_t dmg = state.boardState.combatStats[self].tempHealth;
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = dmg;
 					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
-
-					ActionState setState{};
-					setState.trigger = ActionState::Trigger::onStatSet;
-					setState.source = ActionState::Source::other;
-					setState.dst = self;
-					setState.dstUniqueId = boardState.uniqueIds[self];
-					setState.values[ActionState::VStatSet::tempHealth] = 0;
-					state.TryAddToStack(setState);
 					return true;
 				}
 				return false;
