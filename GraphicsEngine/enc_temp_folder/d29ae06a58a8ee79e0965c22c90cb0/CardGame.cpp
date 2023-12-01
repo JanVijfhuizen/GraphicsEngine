@@ -3395,7 +3395,7 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::HAUNTING].name = "haunting";
-		arr[CURSE_IDS::HAUNTING].ruleText = "[attack] summon a goblin for your opponent.";
+		arr[CURSE_IDS::HAUNTING].ruleText = "[attack] summon 2 goblins for your opponent.";
 		arr[CURSE_IDS::HAUNTING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
@@ -3408,6 +3408,7 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::isAlly] = 0;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
+					state.TryAddToStack(summonState);
 					state.TryAddToStack(summonState);
 					return true;
 				}
