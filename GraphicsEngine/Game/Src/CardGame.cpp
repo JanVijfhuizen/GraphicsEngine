@@ -1541,7 +1541,7 @@ namespace game
 		obnoxiousFan.name = "lich";
 		obnoxiousFan.attack = 5;
 		obnoxiousFan.health = 1;
-		obnoxiousFan.ruleText = "[death] if I die through non combat damage, the opponent summons a lich with my attack.";
+		obnoxiousFan.ruleText = "[death] if i die through non combat damage, the opponent summons a lich with my attack.";
 		obnoxiousFan.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1754,14 +1754,12 @@ namespace game
 			return false;
 		};
 		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "false armor";
-		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[end of turn] lose all bonus health and deal that much damage to all enemies.";
+		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[start of turn] lose all bonus health and deal that much damage to all enemies.";
 		arr[ARTIFACT_IDS::FALSE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
 					const auto& boardState = state.boardState;
-					if (actionState.dst != self)
-						return false;
 
 					const uint32_t dmg = state.boardState.combatStats[self].tempHealth;
 					ActionState damageState{};
@@ -1991,6 +1989,18 @@ namespace game
 				}
 				return false;
 			};
+		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "boots of swiftness";
+		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].ruleText = "[any death] untap.";
+		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onDeath)
+				{
+					const auto& boardState = state.boardState;
+					state.tapped[self] = false;
+					return true;
+				}
+				return false;
+			};
 		arr[ARTIFACT_IDS::BLESSED_RING].name = "blessed ring";
 		arr[ARTIFACT_IDS::BLESSED_RING].ruleText = "[summoned] +3 health.";
 		arr[ARTIFACT_IDS::BLESSED_RING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2082,7 +2092,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::RUSTY_SPEAR].name = "rusty spear";
+		arr[ARTIFACT_IDS::RUSTY_SPEAR].name = "moaning orb";
 		arr[ARTIFACT_IDS::RUSTY_SPEAR].ruleText = "[any death] +2 mana.";
 		arr[ARTIFACT_IDS::RUSTY_SPEAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2094,7 +2104,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::RUSTY_COLLAR].name = "rusty collar";
-		arr[ARTIFACT_IDS::RUSTY_COLLAR].ruleText = "[death] +10 mana. draw 5.";
+		arr[ARTIFACT_IDS::RUSTY_COLLAR].ruleText = "[death] +10 mana. draw 5. untap all allies.";
 		arr[ARTIFACT_IDS::RUSTY_COLLAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -2111,6 +2121,8 @@ namespace game
 					for (uint32_t i = 0; i < 5; ++i)
 						state.TryAddToStack(drawState);
 					state.mana += 10;
+					for (auto& tapped : state.tapped)
+						tapped = false;
 					return true;
 				}
 				return false;
@@ -2886,6 +2898,22 @@ namespace game
 				}
 				return false;
 			};
+		auto& untap = arr[SPELL_IDS::UNTAP];
+		untap.name = "untap";
+		untap.ruleText = "untap. draw.";
+		untap.cost = 0;
+		untap.type = SpellCard::Type::target;
+		untap.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					for (auto& tapped : state.tapped)
+						tapped = false;
+					state.mana += 4;
+					return true;
+				}
+				return false;
+			};
 		auto& rewind = arr[SPELL_IDS::REWIND];
 		rewind.name = "rewind";
 		rewind.ruleText = "untap all allies. +4 mana.";
@@ -2968,6 +2996,25 @@ namespace game
 					state.TryAddToStack(damageState);
 
 					state.mana += 2;
+					return true;
+				}
+				return false;
+			};
+		auto& shock = arr[SPELL_IDS::SHOCK];
+		shock.name = "shock";
+		shock.ruleText = "deal 4 damage.";
+		shock.cost = 1;
+		shock.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.dst = actionState.dst;
+					damageState.dstUniqueId = actionState.dstUniqueId;
+					damageState.values[ActionState::VDamage::damage] = 4;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				return false;
