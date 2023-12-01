@@ -91,10 +91,10 @@ namespace game
 
 			cards[i] = &info.spells[path.spell];
 			if (flawPresent)
-				stack[0] = &info.curses[path.curse];
+				stack[count - 1] = &info.curses[path.curse];
 			else
-				stack[0] = &info.artifacts[path.artifact];
-			stack[1] = &info.rooms[path.room];
+				stack[count - 1] = &info.artifacts[path.artifact];
+			stack[0] = &info.rooms[path.room];
 			stacksCounts[i] = count;
 		}
 		

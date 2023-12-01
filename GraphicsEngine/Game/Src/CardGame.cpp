@@ -1989,7 +1989,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "boots of swiftness";
+		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "magic boots";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].ruleText = "[any death] untap.";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2128,33 +2128,27 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].name = "mage sword";
-		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].ruleText = "[non combat damage to any target] gain bonus attack equal to the damage dealt.";
+		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].ruleText = "[non combat damage to any target] +1 attack.";
 		arr[ARTIFACT_IDS::SWORD_OF_SPELLCASTING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
 					if (actionState.source == ActionState::Source::board)
 						return false;
-
-					const auto& boardState = state.boardState;
-					if (!boardState.Validate(actionState, true, false))
-						return false;
-
-					const auto dmg = actionState.values[ActionState::VDamage::damage];
-
+					
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
-					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempAttack] = dmg;
+					buffState.dstUniqueId = state.boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
 					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
 			};
 		arr[ARTIFACT_IDS::STAFF_OF_AEONS].name = "staff of aeons";
-		arr[ARTIFACT_IDS::STAFF_OF_AEONS].ruleText = "[2 or more non combat damage to any target] +2 mana.";
+		arr[ARTIFACT_IDS::STAFF_OF_AEONS].ruleText = "[2 or more non combat damage to any target] +1 mana.";
 		arr[ARTIFACT_IDS::STAFF_OF_AEONS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
@@ -2163,7 +2157,7 @@ namespace game
 						return false;
 					if (actionState.values[ActionState::VDamage::damage] < 2)
 						return false;
-					state.mana += 2;
+					++state.mana;
 					return true;
 				}
 				return false;
@@ -3427,6 +3421,26 @@ namespace game
 					deathState.dst = self;
 					deathState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(deathState);
+					return true;
+				}
+				return false;
+			};
+		arr[CURSE_IDS::VULNERABILITY].name = "vulnerability";
+		arr[CURSE_IDS::VULNERABILITY].ruleText = "[attacked] take 1 damage.";
+		arr[CURSE_IDS::VULNERABILITY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					if (actionState.dst != self)
+						return false;
+
+					ActionState dmgState{};
+					dmgState.trigger = ActionState::Trigger::onDamage;
+					dmgState.source = ActionState::Source::other;
+					dmgState.dst = self;
+					dmgState.dstUniqueId = state.boardState.uniqueIds[self];
+					dmgState.values[ActionState::VDamage::damage] = 1;
+					state.TryAddToStack(dmgState);
 					return true;
 				}
 				return false;
