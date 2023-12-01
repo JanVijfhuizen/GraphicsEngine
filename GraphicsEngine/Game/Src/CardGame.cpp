@@ -786,7 +786,7 @@ namespace game
 		slime.unique = true;
 		slime.tags = TAG_TOKEN | TAG_SLIME;
 		auto& daisy = arr[MONSTER_IDS::DAISY];
-		daisy.name = "daisy";
+		daisy.name = "daisy the dog";
 		daisy.health = 3;
 		daisy.attack = 3;
 		daisy.unique = true;
@@ -795,9 +795,26 @@ namespace game
 		daisy.normalAnimIndex = 47;
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
-		god.health = 99;
-		god.attack = 99;
+		god.health = 0;
+		god.attack = 999;
 		god.unique = true;
+		god.ruleText = "[attacked, cast] deal 1 damage to all enemies.";
+		god.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast || actionState.trigger == ActionState::Trigger::onAttack)
+				{
+					if (actionState.trigger == ActionState::Trigger::onAttack && actionState.dst != self)
+						return false;
+
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = 1;
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+					return true;
+				}
+				return false;
+			};
 		auto& greatTroll = arr[MONSTER_IDS::GREAT_TROLL];
 		greatTroll.name = "great troll";
 		greatTroll.attack = 5;
@@ -1304,7 +1321,7 @@ namespace game
 		maidenOfTheMoon.name = "moon maiden";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 20;
-		maidenOfTheMoon.ruleText = "[any death] +3 attack.";
+		maidenOfTheMoon.ruleText = "[any death] +5 attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1315,7 +1332,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 3;
+					buffState.values[ActionState::VStatBuff::attack] = 5;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1896,7 +1913,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLOOD_AXE].name = "blood axe";
-		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] +4 attack.";
+		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] +5 attack.";
 		arr[ARTIFACT_IDS::BLOOD_AXE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1915,7 +1932,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::attack] = 4;
+					buffState.values[ActionState::VStatBuff::attack] = 5;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -1936,7 +1953,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLOOD_HAMMER].name = "blood hammer";
-		arr[ARTIFACT_IDS::BLOOD_HAMMER].ruleText = "[any death] +4 bonus attack.";
+		arr[ARTIFACT_IDS::BLOOD_HAMMER].ruleText = "[any death] +5 bonus attack.";
 		arr[ARTIFACT_IDS::BLOOD_HAMMER].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1948,7 +1965,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempAttack] = 4;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 5;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -2181,7 +2198,7 @@ namespace game
 
 	jv::Array<uint32_t> CardGame::GetBossCards(jv::Arena& arena)
 	{
-		const auto arr = jv::CreateArray<uint32_t>(arena, 3);
+		const auto arr = jv::CreateArray<uint32_t>(arena, 12);
 		for (auto& a : arr)
 			a = -1;
 		arr[0] = MONSTER_IDS::GREAT_TROLL;
@@ -2416,7 +2433,7 @@ namespace game
 		};
 		auto& dreadSacrifice = arr[SPELL_IDS::DREAD_SACRIFICE];
 		dreadSacrifice.name = "sacrifice";
-		dreadSacrifice.ruleText = "kill all allied tokens to gain +3 mana for each one killed.";
+		dreadSacrifice.ruleText = "gain +3 mana for every allied token, then kill them.";
 		dreadSacrifice.cost = 1;
 		dreadSacrifice.type = SpellCard::Type::all;
 		dreadSacrifice.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2445,7 +2462,7 @@ namespace game
 			};
 		auto& tranquilize = arr[SPELL_IDS::TRANQUILIZE];
 		tranquilize.name = "tranquilize";
-		tranquilize.ruleText = "my attack becomes 1.";
+		tranquilize.ruleText = "set my attack to 1.";
 		tranquilize.cost = 2;
 		tranquilize.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2457,6 +2474,27 @@ namespace game
 					setState.dst = actionState.dst;
 					setState.dstUniqueId = actionState.dstUniqueId;
 					setState.values[ActionState::VStatSet::attack] = 1;
+					state.TryAddToStack(setState);
+					return true;
+				}
+				return false;
+			};
+		auto& doubleTrouble = arr[SPELL_IDS::DOUBLE_TROUBLE];
+		doubleTrouble.name = "double trouble";
+		doubleTrouble.ruleText = "double my attack.";
+		doubleTrouble.cost = 3;
+		doubleTrouble.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					const auto& stats = state.boardState.combatStats[actionState.dst];
+
+					ActionState setState{};
+					setState.trigger = ActionState::Trigger::onStatBuff;
+					setState.source = ActionState::Source::other;
+					setState.dst = actionState.dst;
+					setState.dstUniqueId = actionState.dstUniqueId;
+					setState.values[ActionState::VStatBuff::attack] = stats.attack + stats.tempAttack;
 					state.TryAddToStack(setState);
 					return true;
 				}
