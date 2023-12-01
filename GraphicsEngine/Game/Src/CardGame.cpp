@@ -1349,7 +1349,7 @@ namespace game
 		maidenOfTheMoon.name = "moon maiden";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 20;
-		maidenOfTheMoon.ruleText = "[any death] +5 attack.";
+		maidenOfTheMoon.ruleText = "[any death] +4 attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1360,7 +1360,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 5;
+					buffState.values[ActionState::VStatBuff::attack] = 4;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1568,8 +1568,8 @@ namespace game
 		auto& obnoxiousFan = arr[MONSTER_IDS::OBNOXIOUS_FAN];
 		obnoxiousFan.name = "lich";
 		obnoxiousFan.attack = 3;
-		obnoxiousFan.health = 1;
-		obnoxiousFan.ruleText = "[death] if i am not the last monster on my side of the field, summon a lich with my attack.";
+		obnoxiousFan.health = 2;
+		obnoxiousFan.ruleText = "[death] if there is another allied monster, summon a lich with my attack.";
 		obnoxiousFan.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1623,7 +1623,7 @@ namespace game
 		madPyromancer.name = "mad pyromancer";
 		madPyromancer.attack = 1;
 		madPyromancer.health = 13;
-		madPyromancer.ruleText = "[cast] all other monsters take 1 damage.";
+		madPyromancer.ruleText = "[cast] all monsters take 1 damage.";
 		madPyromancer.tags = TAG_HUMAN;
 		madPyromancer.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1633,7 +1633,7 @@ namespace game
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 1;
-					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies, true);
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
 					return true;
 				}
 				return false;
@@ -1873,7 +1873,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].name = "mask of youth";
-		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[any death] +15 bonus health.";
+		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[any death] +5 bonus health.";
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -2017,7 +2017,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "magic boots";
+		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "blood cup";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].ruleText = "[any death] untap.";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2121,12 +2121,12 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::RUSTY_SPEAR].name = "moaning orb";
-		arr[ARTIFACT_IDS::RUSTY_SPEAR].ruleText = "[any death] +2 mana.";
+		arr[ARTIFACT_IDS::RUSTY_SPEAR].ruleText = "[any death] +1 mana.";
 		arr[ARTIFACT_IDS::RUSTY_SPEAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					state.mana += 2;
+					++state.mana;
 					return true;
 				}
 				return false;
