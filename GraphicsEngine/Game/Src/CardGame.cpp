@@ -3147,7 +3147,7 @@ namespace game
 		auto& pariah = arr[SPELL_IDS::PARIAH];
 		pariah.name = "pariah";
 		pariah.ruleText = "[ally] becomes the target of all enemies.";
-		pariah.cost = 0;
+		pariah.cost = 3;
 		pariah.type = SpellCard::Type::target;
 		pariah.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
