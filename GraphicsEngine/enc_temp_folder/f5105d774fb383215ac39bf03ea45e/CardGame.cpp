@@ -1290,8 +1290,8 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 2;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 1;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
