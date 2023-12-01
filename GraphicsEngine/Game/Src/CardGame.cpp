@@ -1541,7 +1541,7 @@ namespace game
 		obnoxiousFan.name = "lich";
 		obnoxiousFan.attack = 3;
 		obnoxiousFan.health = 1;
-		obnoxiousFan.ruleText = "[death] if i'm not the last monster on my side of the field, summon a lich with my attack.";
+		obnoxiousFan.ruleText = "[death] if i am not the last monster on my side of the field, summon a lich with my attack.";
 		obnoxiousFan.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1845,23 +1845,20 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].name = "mask of youth";
-		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[enemy death] +15 bonus health.";
+		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[any death] +15 bonus health.";
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					if(actionState.dst >= BOARD_CAPACITY_PER_SIDE)
-					{
-						const auto& boardState = state.boardState;
-						ActionState buffState{};
-						buffState.trigger = ActionState::Trigger::onStatBuff;
-						buffState.source = ActionState::Source::other;
-						buffState.dst = self;
-						buffState.dstUniqueId = boardState.uniqueIds[self];
-						buffState.values[ActionState::VStatBuff::tempHealth] = 15;
-						state.TryAddToStack(buffState);
-						return true;
-					}
+					const auto& boardState = state.boardState;
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::tempHealth] = 5;
+					state.TryAddToStack(buffState);
+					return true;
 				}
 				return false;
 			};

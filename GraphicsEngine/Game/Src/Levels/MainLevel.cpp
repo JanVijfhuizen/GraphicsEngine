@@ -56,6 +56,7 @@ namespace game
 		}
 		for (auto& metaData : metaDatas)
 			metaData = {};
+		info.gameState.artifactSlotCount = jv::Min<uint32_t>(1 + state.depth / (ROOM_COUNT_BEFORE_BOSS * 2), 3);
 	}
 
 	bool MainLevel::PathSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -1137,7 +1138,8 @@ namespace game
 				for (uint32_t j = i; j < c; ++j)
 					state.targets[j] = state.targets[j + 1];
 				const auto id = boardState.ids[i + mod];
-				lastEnemyDefeatedId = id;
+				if(!info.monsters[id].unique)
+					lastEnemyDefeatedId = id;
 				--boardState.enemyCount;
 			}
 			else

@@ -82,6 +82,17 @@ namespace game
 				if (removed)
 					continue;
 
+				for (uint32_t j = 0; j < info.gameState.partySize; ++j)
+					if (monsters[i] == info.gameState.monsterIds[j])
+					{
+						monsters.RemoveAt(i);
+						removed = true;
+						break;
+					}
+
+				if (removed)
+					continue;
+
 				for (auto& as: stack)
 				{
 					if (as.trigger != ActionState::Trigger::onSummon)
