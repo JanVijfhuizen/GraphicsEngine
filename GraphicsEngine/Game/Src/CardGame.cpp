@@ -3015,7 +3015,7 @@ namespace game
 			};
 		auto& unstableCopy = arr[SPELL_IDS::UNSTABLE_COPY];
 		unstableCopy.name = "unstable copy";
-		unstableCopy.ruleText = "summon a demon with attack and health equal to my attack.";
+		unstableCopy.ruleText = "summon a demon with my attack and 1 health.";
 		unstableCopy.cost = 1;
 		unstableCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3031,7 +3031,7 @@ namespace game
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
-					summonState.values[ActionState::VSummon::health] = stats.attack + stats.tempAttack;
+					summonState.values[ActionState::VSummon::health] = 1;
 					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
 					state.TryAddToStack(summonState);
