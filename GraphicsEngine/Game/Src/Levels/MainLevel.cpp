@@ -613,6 +613,10 @@ namespace game
 				state.TryAddToStack(endOfTurnActionState);
 				info.activePlayer = true;
 
+				ActionState drawState{};
+				drawState.trigger = ActionState::Trigger::onDraw;
+				state.TryAddToStack(drawState);
+
 				for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				{
 					const uint32_t target = state.targets[i];
@@ -1029,10 +1033,6 @@ namespace game
 			// Set new random enemy targets.
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 				state.targets[i] = boardState.allyCount == 0 ? -1 : rand() % boardState.allyCount;
-
-			ActionState drawState{};
-			drawState.trigger = ActionState::Trigger::onDraw;
-			state.TryAddToStack(drawState);
 
 			for (auto& combatStat : boardState.combatStats)
 			{

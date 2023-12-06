@@ -1324,16 +1324,18 @@ namespace game
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 1;
 		goblinChampion.health = 20;
-		goblinChampion.ruleText = "[start of turn] all goblins gain +2 attack.";
+		goblinChampion.ruleText = "[end of turn] all goblins gain my attack.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
+					const auto& stats = state.boardState.combatStats[self];
+
 					ActionState setState{};
 					setState.trigger = ActionState::Trigger::onStatBuff;
 					setState.source = ActionState::Source::other;
-					setState.values[ActionState::VStatBuff::attack] = 2;
+					setState.values[ActionState::VStatBuff::attack] = stats.attack + stats.tempAttack;
 					TargetOfType(info, state, setState, self, TAG_GOBLIN, TypeTarget::all);
 					return true;
 				}
@@ -1371,7 +1373,7 @@ namespace game
 		auto& fleetingSoldier = arr[MONSTER_IDS::FLEETING_SOLDIER];
 		fleetingSoldier.name = "berserker";
 		fleetingSoldier.attack = 1;
-		fleetingSoldier.health = 20;
+		fleetingSoldier.health = 12;
 		fleetingSoldier.ruleText = "[damaged] attack randomly.";
 		fleetingSoldier.tags = TAG_HUMAN;
 		fleetingSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1406,7 +1408,7 @@ namespace game
 		manaCyclone.name = "mana cyclone";
 		manaCyclone.attack = 1;
 		manaCyclone.health = 20;
-		manaCyclone.ruleText = "[end of turn] gain 4 attack per unspent mana.";
+		manaCyclone.ruleText = "[end of turn] gain 3 attack per unspent mana.";
 		manaCyclone.tags = TAG_ELEMENTAL;
 		manaCyclone.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1415,7 +1417,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = state.mana * 4;
+					buffState.values[ActionState::VStatBuff::attack] = state.mana * 3;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1503,11 +1505,11 @@ namespace game
 		goblinBomb.name = "goblin bomb";
 		goblinBomb.attack = 0;
 		goblinBomb.health = 12;
-		goblinBomb.ruleText = "[start of turn] +1 attack. [death] all enemies take damage equal to my attack.";
+		goblinBomb.ruleText = "[end of turn] +1 attack. [death] all enemies take damage equal to my attack.";
 		goblinBomb.tags = TAG_GOBLIN;
 		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if(actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
@@ -2055,9 +2057,7 @@ namespace game
 
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
-					buffState.source = ActionState::Source::board;
-					buffState.src = self;
-					buffState.srcUniqueId = boardState.uniqueIds[self];
+					buffState.source = ActionState::Source::other;
 					buffState.dst = buffState.src;
 					buffState.dstUniqueId = buffState.srcUniqueId;
 					buffState.values[ActionState::VStatBuff::tempAttack] = 2;
@@ -2088,8 +2088,40 @@ namespace game
 				}
 				return false;
 			};
+		arr[ARTIFACT_IDS::RED_CLOTH].name = "red cloth";
+		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[end of turn] gain 3 bonus health for every enemy. they all attack me.";
+		arr[ARTIFACT_IDS::RED_CLOTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				{
+					const auto& boardState = state.boardState;
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3 * boardState.enemyCount;
+					state.TryAddToStack(buffState);
+
+					ActionState attackState{};
+					attackState.trigger = ActionState::Trigger::onAttack;
+					attackState.source = ActionState::Source::board;
+					attackState.dst = self;
+					attackState.dstUniqueId = boardState.uniqueIds[self];
+					
+					for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+					{
+						attackState.src = BOARD_CAPACITY_PER_SIDE + i;
+						attackState.srcUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+						state.stack.Add() = attackState;
+					}
+					return true;
+				}
+				return false;
+			};
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of haste";
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] all allies gain +1 attack.";
+		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] all allies gain +2 attack.";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
@@ -2105,7 +2137,7 @@ namespace game
 					buffState.source = ActionState::Source::board;
 					buffState.src = self;
 					buffState.srcUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::attack] = 1;
+					buffState.values[ActionState::VStatBuff::attack] = 2;
 					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2996,7 +3028,7 @@ namespace game
 			};
 		auto& shock = arr[SPELL_IDS::SHOCK];
 		shock.name = "shock";
-		shock.ruleText = "deal 4 damage.";
+		shock.ruleText = "deal 3 damage.";
 		shock.cost = 1;
 		shock.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3007,7 +3039,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 4;
+					damageState.values[ActionState::VDamage::damage] = 3;
 					state.TryAddToStack(damageState);
 					return true;
 				}
