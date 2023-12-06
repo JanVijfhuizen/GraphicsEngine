@@ -2662,7 +2662,7 @@ namespace game
 			};
 		auto& ascension = arr[SPELL_IDS::ASCENSION];
 		ascension.name = "ascension";
-		ascension.ruleText = "+8 attack.";
+		ascension.ruleText = "+13 attack.";
 		ascension.cost = 3;
 		ascension.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2673,7 +2673,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					buffState.values[ActionState::VStatBuff::attack] = 8;
+					buffState.values[ActionState::VStatBuff::attack] = 13;
 					state.TryAddToStack(buffState);
 					return true;
 				}
