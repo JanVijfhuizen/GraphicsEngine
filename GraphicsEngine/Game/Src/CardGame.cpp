@@ -737,7 +737,7 @@ namespace game
 		goblin.health = 1;
 		goblin.tags = TAG_TOKEN | TAG_GOBLIN;
 		goblin.unique = true;
-		goblin.ruleText = "[summon] untap.";
+		goblin.ruleText = "[summoned] untap.";
 		goblin.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onSummon)
@@ -1505,7 +1505,7 @@ namespace game
 		goblinBomb.name = "goblin bomb";
 		goblinBomb.attack = 0;
 		goblinBomb.health = 12;
-		goblinBomb.ruleText = "[end of turn] +1 attack. [death] all enemies take damage equal to my attack.";
+		goblinBomb.ruleText = "[end of turn] +1 attack. [attacked] all enemies take damage equal to my attack.";
 		goblinBomb.tags = TAG_GOBLIN;
 		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1520,8 +1520,11 @@ namespace game
 					state.TryAddToStack(buffState);
 				}
 
-				if (actionState.trigger == ActionState::Trigger::onDeath)
+				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
+					if (actionState.dst != self)
+						return false;
+
 					const auto& boardState = state.boardState;
 					if (!boardState.Validate(actionState, false, true))
 						return false;
