@@ -767,15 +767,12 @@ namespace game
 		elf.attack = 0;
 		elf.tags = TAG_TOKEN | TAG_ELF;
 		elf.unique = true;
-		elf.ruleText = "[start of turn] [ally] +1 mana. [enemy] -1 mana.";
+		elf.ruleText = "[start of turn] +1 mana.";
 		elf.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
-					if (self < BOARD_CAPACITY_PER_SIDE)
-						++state.mana;
-					else if (state.mana > 1)
-						--state.mana;
+					++state.mana;
 					return true;
 				}
 				return false;
@@ -808,11 +805,10 @@ namespace game
 		slime.unique = true;
 		slime.tags = TAG_TOKEN | TAG_SLIME;
 		auto& daisy = arr[MONSTER_IDS::DAISY];
-		daisy.name = "daisy the dog";
+		daisy.name = "daisy";
 		daisy.health = 3;
 		daisy.attack = 3;
 		daisy.unique = true;
-		daisy.ruleText = "loves you unconditionally.";
 		daisy.animIndex = 2;
 		daisy.normalAnimIndex = 47;
 		auto& god = arr[MONSTER_IDS::GOD];
@@ -871,8 +867,8 @@ namespace game
 			};
 		auto& slimeQueen = arr[MONSTER_IDS::SLIME_QUEEN];
 		slimeQueen.name = "slime queen";
-		slimeQueen.attack = 3;
-		slimeQueen.health = 30;
+		slimeQueen.attack = 2;
+		slimeQueen.health = 35;
 		slimeQueen.ruleText = "[end of turn] summon a copy.";
 		slimeQueen.unique = true;
 		slimeQueen.tags = TAG_SLIME;
@@ -898,7 +894,7 @@ namespace game
 		auto& lichKing = arr[MONSTER_IDS::LICH_KING];
 		lichKing.name = "lich king";
 		lichKing.attack = 0;
-		lichKing.health = 75;
+		lichKing.health = 100;
 		lichKing.ruleText = "[start of turn] +1 attack and +3 bonus health.";
 		lichKing.unique = true;
 		lichKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -921,7 +917,7 @@ namespace game
 		mirrorKnight.name = "mirror knight";
 		mirrorKnight.attack = 4;
 		mirrorKnight.health = 100;
-		mirrorKnight.ruleText = "[start of turn] summon 3/3 copies of each enemy monster.";
+		mirrorKnight.ruleText = "[start of turn] summon 2/1 copies of each enemy monster.";
 		mirrorKnight.unique = true;
 		mirrorKnight.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -935,8 +931,8 @@ namespace game
 						summonState.source = ActionState::Source::other;
 						summonState.values[ActionState::VSummon::id] = boardState.ids[i];
 						summonState.values[ActionState::VSummon::isAlly] = false;
-						summonState.values[ActionState::VSummon::attack] = 3;
-						summonState.values[ActionState::VSummon::health] = 3;
+						summonState.values[ActionState::VSummon::attack] = 2;
+						summonState.values[ActionState::VSummon::health] = 1;
 						state.TryAddToStack(summonState);
 					}
 					
@@ -947,7 +943,7 @@ namespace game
 		auto& bomba = arr[MONSTER_IDS::BOMBA];
 		bomba.name = "bomba";
 		bomba.attack = 4;
-		bomba.health = 144;
+		bomba.health = 140;
 		bomba.ruleText = "[cast, attacked] summon a bomb.";
 		bomba.unique = true;
 		bomba.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -968,7 +964,7 @@ namespace game
 		auto& bomb = arr[MONSTER_IDS::BOMB];
 		bomb.name = "bomb";
 		bomb.attack = 0;
-		bomb.health = 4;
+		bomb.health = 2;
 		bomb.ruleText = "[end of turn] die and deal 4 damage to all enemies.";
 		bomb.unique = true;
 		bomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1027,7 +1023,7 @@ namespace game
 		archmage.name = "archmage";
 		archmage.attack = 8;
 		archmage.health = 200;
-		archmage.ruleText = "[enemy buff] copy it for myself. [end of turn] deal 2 damage to all enemies.";
+		archmage.ruleText = "[on enemy buff] copy it for myself. [end of turn] deal 2 damage to all enemies.";
 		archmage.unique = true;
 		archmage.tags = TAG_HUMAN;
 		archmage.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1348,7 +1344,7 @@ namespace game
 		unstableGolem.tags = TAG_TOKEN;
 
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MAIDEN_OF_THE_MOON];
-		maidenOfTheMoon.name = "moon maiden";
+		maidenOfTheMoon.name = "acolyte";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 20;
 		maidenOfTheMoon.ruleText = "[any death] +4 attack.";
@@ -1502,7 +1498,7 @@ namespace game
 				return false;
 			};
 		auto& goblinBomb = arr[MONSTER_IDS::GOBLIN_BOMB];
-		goblinBomb.name = "goblin bomb";
+		goblinBomb.name = "goblin bomber";
 		goblinBomb.attack = 0;
 		goblinBomb.health = 12;
 		goblinBomb.ruleText = "[end of turn] +1 attack. [attacked] all enemies take damage equal to my attack.";
@@ -1646,7 +1642,7 @@ namespace game
 		auto& phantasm = arr[MONSTER_IDS::PHANTASM];
 		phantasm.name = "phantasm";
 		phantasm.attack = 4;
-		phantasm.health = 2;
+		phantasm.health = 1;
 		phantasm.ruleText = "[start of turn] +7 bonus health. [attack] bonus health becomes 0.";
 		phantasm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1936,7 +1932,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::BLOOD_AXE].name = "blood axe";
+		arr[ARTIFACT_IDS::BLOOD_AXE].name = "bloodied axe";
 		arr[ARTIFACT_IDS::BLOOD_AXE].ruleText = "[kill] +5 attack.";
 		arr[ARTIFACT_IDS::BLOOD_AXE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2012,7 +2008,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "blood cup";
+		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "cup of blood";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].ruleText = "[ally death] untap.";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2287,7 +2283,7 @@ namespace game
 			card.animIndex = c++;
 
 		auto& fieldOfVengeance = arr[ROOM_IDS::FIELD_OF_VENGEANCE];
-		fieldOfVengeance.name = "field of hate";
+		fieldOfVengeance.name = "field of violence";
 		fieldOfVengeance.ruleText = "[monster is dealt non combat damage] attack randomly.";
 		fieldOfVengeance.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
@@ -2448,7 +2444,7 @@ namespace game
 		plainMeadow.name = "plain meadow";
 
 		auto& prisonOfEternity = arr[ROOM_IDS::PRISON_OF_ETERNITY];
-		prisonOfEternity.name = "eternal prison";
+		prisonOfEternity.name = "eternity prison";
 		prisonOfEternity.ruleText = "on turn 4, kill all monsters.";
 		prisonOfEternity.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2565,7 +2561,7 @@ namespace game
 			};
 		auto& goblinAmbush = arr[SPELL_IDS::GOBLIN_AMBUSH];
 		goblinAmbush.name = "goblin ambush";
-		goblinAmbush.ruleText = "summon 3 goblins.";
+		goblinAmbush.ruleText = "summon 2 goblins.";
 		goblinAmbush.cost = 1;
 		goblinAmbush.type = SpellCard::Type::all;
 		goblinAmbush.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2577,7 +2573,7 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
 					summonState.values[ActionState::VSummon::isAlly] = 1;
-					for (uint32_t i = 0; i < 3; ++i)
+					for (uint32_t i = 0; i < 2; ++i)
 						state.TryAddToStack(summonState);
 					return true;
 				}
@@ -2608,8 +2604,8 @@ namespace game
 			};
 		auto& rally = arr[SPELL_IDS::RALLY];
 		rally.name = "rally";
-		rally.ruleText = "all allies gain +2 bonus attack.";
-		rally.cost = 2;
+		rally.ruleText = "all allies gain +1 bonus attack.";
+		rally.cost = 1;
 		rally.type = SpellCard::Type::all;
 		rally.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2618,7 +2614,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 2;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2676,7 +2672,7 @@ namespace game
 				return false;
 			};
 		auto& druidicRitual = arr[SPELL_IDS::DRUIDIC_RITUAL];
-		druidicRitual.name = "druid ritual";
+		druidicRitual.name = "druidic ritual";
 		druidicRitual.ruleText = "summon 2 elves.";
 		druidicRitual.cost = 1;
 		druidicRitual.type = SpellCard::Type::all;
@@ -2823,7 +2819,7 @@ namespace game
 		auto& stall = arr[SPELL_IDS::STALL];
 		stall.name = "stall";
 		stall.ruleText = "all monsters gain +3 bonus health.";
-		stall.cost = 1;
+		stall.cost = 2;
 		stall.type = SpellCard::Type::all;
 		stall.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2879,6 +2875,30 @@ namespace game
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
 					buffState.values[ActionState::VStatBuff::tempAttack] = stats.tempHealth;
+					buffState.dst = actionState.dst;
+					buffState.dstUniqueId = actionState.dstUniqueId;
+					state.TryAddToStack(buffState);
+					return true;
+				}
+				return false;
+			};
+		auto& grit = arr[SPELL_IDS::GRIT];
+		grit.name = "grit";
+		grit.ruleText = "gain attack equal to my bonus attack.";
+		grit.cost = 2;
+		grit.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
+				{
+					if (!state.boardState.Validate(actionState, false, true))
+						return false;
+
+					const auto& stats = state.boardState.combatStats[actionState.dst];
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::attack] = stats.tempAttack;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -3077,7 +3097,7 @@ namespace game
 		auto& perfectCopy = arr[SPELL_IDS::PERFECT_COPY];
 		perfectCopy.name = "perfect copy";
 		perfectCopy.ruleText = "summon a demon with my stats.";
-		perfectCopy.cost = 5;
+		perfectCopy.cost = 3;
 		perfectCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -3490,7 +3510,7 @@ namespace game
 
 		auto& aetherSurge = arr[EVENT_IDS::AETHER_SURGE];
 		aetherSurge.name = "aether surge";
-		aetherSurge.ruleText = "[card played] all enemies gain 1 attack and health.";
+		aetherSurge.ruleText = "[cast] all enemies gain 1 attack and health.";
 		aetherSurge.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onCast)
@@ -3541,7 +3561,7 @@ namespace game
 			};
 
 		auto& noYou = arr[EVENT_IDS::NO_YOU];
-		noYou.name = "no you";
+		noYou.name = "repercussion";
 		noYou.ruleText = "[enemy attacked] attack back.";
 		noYou.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
