@@ -1320,19 +1320,15 @@ namespace game
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 1;
 		goblinChampion.health = 20;
-		goblinChampion.ruleText = "[end of turn] all goblins gain my attack.";
+		goblinChampion.ruleText = "[buffed] all other goblins gain the same buff.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onStatBuff)
 				{
-					const auto& stats = state.boardState.combatStats[self];
-
-					ActionState setState{};
-					setState.trigger = ActionState::Trigger::onStatBuff;
-					setState.source = ActionState::Source::other;
-					setState.values[ActionState::VStatBuff::attack] = stats.attack + stats.tempAttack;
-					TargetOfType(info, state, setState, self, TAG_GOBLIN, TypeTarget::all);
+					if (actionState.dst != self)
+						return false;
+					TargetOfType(info, state, actionState, self, TAG_GOBLIN, TypeTarget::all, true);
 					return true;
 				}
 				return false;
@@ -2095,14 +2091,6 @@ namespace game
 				{
 					const auto& boardState = state.boardState;
 
-					ActionState buffState{};
-					buffState.trigger = ActionState::Trigger::onStatBuff;
-					buffState.source = ActionState::Source::other;
-					buffState.dst = self;
-					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3 * boardState.enemyCount;
-					state.TryAddToStack(buffState);
-
 					ActionState attackState{};
 					attackState.trigger = ActionState::Trigger::onAttack;
 					attackState.source = ActionState::Source::board;
@@ -2115,6 +2103,15 @@ namespace game
 						attackState.srcUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
 						state.stack.Add() = attackState;
 					}
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3 * boardState.enemyCount;
+					state.TryAddToStack(buffState);
+
 					return true;
 				}
 				return false;
