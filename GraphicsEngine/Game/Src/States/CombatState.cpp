@@ -144,11 +144,6 @@ namespace game
 		if (magics.count == 0)
 		{
 			GetDeck(&magics, nullptr, info.spells);
-			const uint32_t c = magics.count;
-			for (uint32_t i = 0; i < c; ++i)
-				for (uint32_t j = 0; j < 3; ++j)
-					magics.Add() = magics[i];
-
 			RemoveDuplicates(info, magics, &Path::spell);
 			Shuffle(decks.spells.ptr, decks.spells.count);
 			RemoveMagicsInParty(magics, info.gameState);

@@ -17,11 +17,11 @@ constexpr uint32_t PARTY_CAPACITY = PARTY_ACTIVE_CAPACITY + PARTY_INACTIVE_CAPAC
 constexpr uint32_t MONSTER_ARTIFACT_CAPACITY = 3;
 constexpr uint32_t MONSTER_FLAW_CAPACITY = 4;
 constexpr uint32_t ROOM_COUNT_BEFORE_BOSS = 7;
-constexpr uint32_t SPELL_DECK_SIZE = 18;
+constexpr uint32_t SPELL_DECK_SIZE = 12;
 constexpr uint32_t DISCOVER_LENGTH = 3;
 constexpr uint32_t SUB_BOSS_COUNT = 4;
 constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
-constexpr uint32_t SPELL_CARD_COPY_COUNT = 4;
+constexpr uint32_t SPELL_CARD_COPY_COUNT = 2;
 constexpr uint32_t ROOMS_BEFORE_ROOM_EFFECTS = ROOM_COUNT_BEFORE_BOSS;
 constexpr uint32_t ROOMS_BEFORE_EVENT_EFFECTS = ROOM_COUNT_BEFORE_BOSS * 3;
 

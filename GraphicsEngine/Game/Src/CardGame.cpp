@@ -2732,7 +2732,7 @@ namespace game
 			};
 		auto& enrage = arr[SPELL_IDS::ENRAGE];
 		enrage.name = "enrage";
-		enrage.ruleText = "+3 bonus attack.";
+		enrage.ruleText = "+2 bonus attack.";
 		enrage.cost = 1;
 		enrage.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2741,7 +2741,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 3;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 2;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2751,7 +2751,7 @@ namespace game
 			};
 		auto& protect = arr[SPELL_IDS::PROTECT];
 		protect.name = "protect";
-		protect.ruleText = "+4 bonus health.";
+		protect.ruleText = "+3 bonus health.";
 		protect.cost = 1;
 		protect.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2760,7 +2760,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -3048,7 +3048,7 @@ namespace game
 			};
 		auto& shock = arr[SPELL_IDS::SHOCK];
 		shock.name = "shock";
-		shock.ruleText = "deal 3 damage.";
+		shock.ruleText = "deal 2 damage.";
 		shock.cost = 1;
 		shock.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3059,7 +3059,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 3;
+					damageState.values[ActionState::VDamage::damage] = 2;
 					state.TryAddToStack(damageState);
 					return true;
 				}

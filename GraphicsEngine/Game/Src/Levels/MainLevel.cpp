@@ -1591,7 +1591,7 @@ namespace game
 
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2 + 40;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;// +cardTexture.resolution.y / 2;
 		cardSelectionDrawInfo.highlighted = discoverOption;
 		cardSelectionDrawInfo.length = SPELL_DECK_SIZE;
 		cardSelectionDrawInfo.costs = costs;
