@@ -1468,7 +1468,7 @@ namespace game
 		goblinSlinger.name = "goblin slinger";
 		goblinSlinger.attack = 1;
 		goblinSlinger.health = 12;
-		goblinSlinger.ruleText = "[ally attack] the attacked monster takes damage equal to my attack.";
+		goblinSlinger.ruleText = "[ally attack] the attacked monster takes damage equal to my bonus attack.";
 		goblinSlinger.tags = TAG_GOBLIN;
 		goblinSlinger.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1484,7 +1484,7 @@ namespace game
 						ActionState damageState{};
 						damageState.trigger = ActionState::Trigger::onDamage;
 						damageState.source = ActionState::Source::other;
-						damageState.values[ActionState::VDamage::damage] = combatStats.attack + combatStats.tempAttack;
+						damageState.values[ActionState::VDamage::damage] = combatStats.tempAttack;
 						damageState.dst = actionState.dst;
 						damageState.dstUniqueId = actionState.dstUniqueId;
 						state.TryAddToStack(damageState);
