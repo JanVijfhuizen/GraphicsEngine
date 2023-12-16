@@ -15,8 +15,7 @@ namespace game
 			combat,
 			rewardMagic,
 			rewardFlaw,
-			rewardArtifact,
-			exitFound
+			rewardArtifact
 		};
 
 		struct BossRevealState final : LevelState<State>
@@ -127,17 +126,6 @@ namespace game
 		struct RewardArtifactState final : LevelState<State>
 		{
 			CardDrawMetaData metaDatas[PARTY_ACTIVE_CAPACITY + 1];
-			void Reset(State& state, const LevelInfo& info) override;
-			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
-				LevelIndex& loadLevelIndex) override;
-		};
-
-		struct ExitFoundState final : LevelState<State>
-		{
-			bool managingParty;
-			bool selected[PARTY_CAPACITY];
-			float timeSincePartySelected;
-
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;

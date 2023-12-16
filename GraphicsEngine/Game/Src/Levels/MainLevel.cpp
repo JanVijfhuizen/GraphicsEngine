@@ -119,7 +119,7 @@ namespace game
 				timeSinceDiscovered = level->GetTime();
 		}
 
-		const char* text = "select which road to take.";
+		const char* text = "select a path.";
 		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
 		
 		if (discoverOption != -1)
@@ -192,11 +192,14 @@ namespace game
 				const uint32_t id = state.GetMonster(info);
 				const uint32_t healthMod = (state.depth / ROOM_COUNT_BEFORE_BOSS) * 5;
 
+				uint32_t health = info.monsters[id].health + healthMod;
+				health = jv::Min<uint32_t>(health, 50);
+
 				ActionState summonState{};
 				summonState.trigger = ActionState::Trigger::onSummon;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = id;
-				summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = info.monsters[id].health + healthMod;
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = health;
 				state.TryAddToStack(summonState);
 			}
 		}
@@ -1625,11 +1628,7 @@ namespace game
 		{
 			if (discoverOption != -1)
 				info.gameState.spells[discoverOption] = path.spell;
-
-			if (state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
-				stateIndex = static_cast<uint32_t>(StateNames::exitFound);
-			else
-				stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
+			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		}
 
 		return true;
@@ -1767,7 +1766,7 @@ namespace game
 		
 		auto& gameState = info.gameState;
 
-		const char* text = "you may swap artifacts.";
+		const char* text = "you may swap artifacts around.";
 		level->DrawTopCenterHeader(info, HeaderSpacing::normal, text, 1);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if (f >= 0)
@@ -1835,138 +1834,17 @@ namespace game
 		return true;
 	}
 
-	void MainLevel::ExitFoundState::Reset(State& state, const LevelInfo& info)
-	{
-		LevelState<State>::Reset(state, info);
-		managingParty = false;
-		for (auto& b : selected)
-			b = false;
-		timeSincePartySelected = -1;
-	}
-
-	bool MainLevel::ExitFoundState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
-		LevelIndex& loadLevelIndex)
-	{
-		const auto& gameState = info.gameState;
-		auto& playerState = info.playerState;
-
-		if(managingParty)
-		{
-			level->DrawTopCenterHeader(info, HeaderSpacing::close, "select up to 6 monsters that you would like to keep.");
-
-			Card* cards[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
-			CombatStats combatStats[PARTY_CAPACITY + PARTY_ACTIVE_CAPACITY];
-			
-			for (uint32_t i = 0; i < playerState.partySize; ++i)
-			{
-				const auto monster = &info.monsters[playerState.monsterIds[i]];
-				cards[i] = monster;
-				combatStats[i] = GetCombatStat(*monster);
-			}
-
-			// Find new monsters.
-			uint32_t c = playerState.partySize;
-			for (uint32_t i = 0; i < gameState.partySize; ++i)
-			{
-				if (gameState.partyIds[i] != -1)
-					continue;
-				const auto monster = &info.monsters[gameState.monsterIds[i]];
-				combatStats[c] = GetCombatStat(*monster);
-				cards[c++] = monster;
-			}
-
-			uint32_t outStackSelected;
-			CardSelectionDrawInfo cardSelectionDrawInfo{};
-			cardSelectionDrawInfo.cards = cards;
-			cardSelectionDrawInfo.length = c;
-			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2;
-			cardSelectionDrawInfo.outStackSelected = &outStackSelected;
-			cardSelectionDrawInfo.combatStats = combatStats;
-			cardSelectionDrawInfo.selectedArr = selected;
-			const auto choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
-
-			if (info.inputState.lMouse.PressEvent() && choice != -1)
-				selected[choice] = !selected[choice];
-
-			uint32_t remaining = 0;
-			for (uint32_t i = 0; i < c; ++i)
-				remaining += selected[i];
-
-			if (remaining > 0)
-			{
-				if (timeSincePartySelected < 0)
-					timeSincePartySelected = level->GetTime();
-
-				level->DrawPressEnterToContinue(info, HeaderSpacing::normal, level->GetTime() - timeSincePartySelected);
-				if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
-				{
-					uint32_t d = 0;
-					for (uint32_t i = 0; i < playerState.partySize; ++i)
-						if (selected[i])
-							playerState.monsterIds[d++] = playerState.monsterIds[i];
-
-					for (uint32_t i = 0; i < gameState.partySize; ++i)
-					{
-						const auto partyId = gameState.partyIds[i];
-						const auto id = partyId != -1 ? partyId : d;
-						if (!selected[id])
-							continue;
-						if (partyId == -1)
-							++d;
-						playerState.monsterIds[id] = gameState.monsterIds[i];
-					}
-
-					playerState.partySize = remaining;
-
-					SaveData(playerState);
-					loadLevelIndex = LevelIndex::mainMenu;
-				}
-			}
-			else
-				timeSincePartySelected = -1;
-			
-			return true;
-		}
-
-		level->DrawTopCenterHeader(info, HeaderSpacing::close, "press onwards, or flee.");
-
-		ButtonDrawInfo buttonDrawInfo{};
-		buttonDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 9 };
-		buttonDrawInfo.text = "continue";
-		buttonDrawInfo.center = true;
-
-		if (level->DrawButton(info, buttonDrawInfo))
-		{
-			stateIndex = static_cast<uint32_t>(state.depth % ROOM_COUNT_BEFORE_BOSS == 0 ? StateNames::bossReveal : StateNames::pathSelect);
-			return true;
-		}
-
-		buttonDrawInfo.origin.y -= 18;
-		buttonDrawInfo.text = "quit";
-		if (level->DrawButton(info, buttonDrawInfo))
-		{
-			managingParty = true;
-			return true;
-		}
-		
-		return true;
-	}
-
 	void MainLevel::Create(const LevelCreateInfo& info)
 	{
 		Level::Create(info);
-
-		if (info.playerState.ironManMode)
-			ClearSaveData();
-
-		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 7);
+		
+		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 6);
 		states[0] = info.arena.New<BossRevealState>();
 		states[1] = info.arena.New<PathSelectState>();
 		states[2] = info.arena.New<CombatState>();
 		states[3] = info.arena.New<RewardMagicCardState>();
 		states[4] = info.arena.New<RewardFlawCardState>();
 		states[5] = info.arena.New<RewardArtifactState>();
-		states[6] = info.arena.New<ExitFoundState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
 	}

@@ -1,13 +1,11 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainMenuLevel.h"
-#include "CardGame.h"
 
 namespace game
 {
 	void MainMenuLevel::Create(const LevelCreateInfo& info)
 	{
 		Level::Create(info);
-		saveDataValid = TryLoadSaveData(info.playerState);
 		inTutorial = false;
 	}
 
@@ -30,18 +28,10 @@ namespace game
 
 			ButtonDrawInfo buttonDrawInfo{};
 			buttonDrawInfo.origin = buttonOrigin;
-			buttonDrawInfo.text = "new game";
+			buttonDrawInfo.text = "start";
 			buttonDrawInfo.width = 96;
 			if (DrawButton(info, buttonDrawInfo))
 				Load(LevelIndex::newGame, true);
-
-			if (saveDataValid)
-			{
-				buttonDrawInfo.origin.y -= BUTTON_OFFSET;
-				buttonDrawInfo.text = "continue";
-				if (DrawButton(info, buttonDrawInfo))
-					Load(LevelIndex::partySelect, true);
-			}
 
 			buttonDrawInfo.origin.y -= BUTTON_OFFSET;
 			buttonDrawInfo.text = info.isFullScreen ? "to windowed" : "to fullscreen";
@@ -67,11 +57,10 @@ namespace game
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = origin;
 		headerDrawInfo.text = "how to play";
-		headerDrawInfo.lineLength = 10;
 		DrawHeader(info, headerDrawInfo);
 
 		TextTask textTask{};
-		textTask.position = buttonOrigin;
+		textTask.position = origin - glm::ivec2(0, 16);
 		textTask.text = "[mouse left] select and drag cards.";
 		info.textTasks.Push(textTask);
 
@@ -84,7 +73,7 @@ namespace game
 		info.textTasks.Push(textTask);
 
 		textTask.position.y -= BUTTON_OFFSET;
-		textTask.text = "[esc] open in game menu.";
+		textTask.text = "[esc] open menu.";
 		info.textTasks.Push(textTask);
 
 		ButtonDrawInfo buttonDrawInfo{};

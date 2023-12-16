@@ -1,7 +1,5 @@
 ﻿#include "pch_game.h"
 #include "Levels/NewGameLevel.h"
-#include "CardGame.h"
-#include "GE/AtlasGenerator.h"
 #include "Levels/LevelUtils.h"
 #include "LevelStates/LevelStateMachine.h"
 #include "States/InputState.h"
@@ -13,12 +11,10 @@ namespace game
 	void NewGameLevel::Create(const LevelCreateInfo& info)
 	{
 		Level::Create(info);
-		ClearSaveData();
 
-		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 3);
-		states[0] = info.arena.New<ModeSelectState>();
-		states[1] = info.arena.New<PartySelectState>();
-		states[2] = info.arena.New<JoinState>();
+		const auto states = jv::CreateArray<LevelState<State>*>(info.arena, 2);
+		states[0] = info.arena.New<PartySelectState>();
+		states[1] = info.arena.New<JoinState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states);
 	}
 
@@ -27,38 +23,6 @@ namespace game
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
 		return stateMachine.Update(info, this, loadLevelIndex);
-	}
-
-	bool NewGameLevel::ModeSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
-	{
-		HeaderDrawInfo headerDrawInfo{};
-		headerDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 27 };
-		headerDrawInfo.text = "choose a mode.";
-		headerDrawInfo.center = true;
-		level->DrawHeader(info, headerDrawInfo);
-
-		ButtonDrawInfo buttonDrawInfo{};
-		buttonDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 9 };
-		buttonDrawInfo.text = "standard";
-		buttonDrawInfo.center = true;
-
-		if (level->DrawButton(info, buttonDrawInfo))
-		{
-			info.playerState.ironManMode = false;
-			stateIndex = 1;
-			return true;
-		}
-
-		buttonDrawInfo.origin.y -= 18;
-		buttonDrawInfo.text = "iron man";
-		if (level->DrawButton(info, buttonDrawInfo))
-		{
-			info.playerState.ironManMode = true;
-			stateIndex = 1;
-			return true;
-		}
-
-		return true;
 	}
 
 	bool NewGameLevel::PartySelectState::Create(State& state, const LevelCreateInfo& info)
@@ -97,7 +61,7 @@ namespace game
 			if (info.inputState.enter.PressEvent())
 			{
 				state.monsterId = monsterDiscoverOptions[monsterChoice];
-				stateIndex = 2;
+				stateIndex = 1;
 			}
 		}
 
@@ -167,7 +131,6 @@ namespace game
 			playerState.monsterIds[0] = state.monsterId;
 			playerState.monsterIds[1] = MONSTER_IDS::DAISY;
 			playerState.partySize = 2;
-			SaveData(playerState);
 			loadLevelIndex = LevelIndex::partySelect;
 		}
 		return true;

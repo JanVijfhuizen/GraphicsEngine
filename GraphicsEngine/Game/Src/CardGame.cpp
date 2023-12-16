@@ -806,6 +806,7 @@ namespace game
 		slime.tags = TAG_TOKEN | TAG_SLIME;
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
+		daisy.ruleText = "loyal until the very end.";
 		daisy.health = 3;
 		daisy.attack = 3;
 		daisy.unique = true;
@@ -3736,43 +3737,5 @@ namespace game
 		cardGame.Destroy(cardGame);
 		cardGame = {};
 		cardGameRunning = false;
-	}
-
-	bool TryLoadSaveData(PlayerState& playerState)
-	{
-		assert(cardGameRunning);
-		std::ifstream inFile;
-		inFile.open(SAVE_DATA_PATH);
-		if (!inFile.is_open())
-		{
-			inFile.close();
-			return false;
-		}
-
-		for (auto& monsterId : playerState.monsterIds)
-			inFile >> monsterId;
-		inFile >> playerState.partySize;
-		inFile >> playerState.ironManMode;
-		inFile.close();
-		return true;
-	}
-
-	void SaveData(PlayerState& playerState)
-	{
-		assert(cardGameRunning);
-		std::ofstream outFile;
-		outFile.open(SAVE_DATA_PATH);
-
-		for (const auto& monsterId : playerState.monsterIds)
-			outFile << monsterId << std::endl;
-		outFile << playerState.partySize << std::endl;
-		outFile << playerState.ironManMode << std::endl;
-		outFile.close();
-	}
-
-	void ClearSaveData()
-	{
-		assert(cardGameRunning);
-		remove(SAVE_DATA_PATH);
 	}
 }

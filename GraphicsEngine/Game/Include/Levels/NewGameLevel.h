@@ -11,11 +11,6 @@ namespace game
 			uint32_t monsterId;
 		};
 
-		struct ModeSelectState final : LevelState<State>
-		{
-			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
-		};
-
 		struct PartySelectState final : LevelState<State>
 		{
 			jv::Vector<uint32_t> monsterDeck;
