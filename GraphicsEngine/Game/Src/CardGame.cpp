@@ -1256,13 +1256,16 @@ namespace game
 		auto& mossyElemental = arr[MONSTER_IDS::MOSSY_ELEMENTAL];
 		mossyElemental.name = "mossy elemental";
 		mossyElemental.attack = 1;
-		mossyElemental.health = 12;
-		mossyElemental.ruleText = "[start of turn] +4 bonus health.";
+		mossyElemental.health = 20;
+		mossyElemental.ruleText = "[damaged] +4 bonus health.";
 		mossyElemental.tags = TAG_ELEMENTAL;
 		mossyElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
+					if (actionState.dst != self)
+						return false;
+
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
@@ -1422,26 +1425,24 @@ namespace game
 		woundedTroll.name = "wounded troll";
 		woundedTroll.attack = 4;
 		woundedTroll.health = 20;
-		woundedTroll.ruleText = "[end of turn] take 2 damage.";
+		woundedTroll.ruleText = "[death] all monsters gain +5 health.";
 		woundedTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					ActionState damageState{};
-					damageState.trigger = ActionState::Trigger::onDamage;
-					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = 2;
-					damageState.dst = self;
-					damageState.dstUniqueId = state.boardState.uniqueIds[self];
-					state.TryAddToStack(damageState);
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::health] = 5;
+					TargetOfType(info, state, buffState, self, -1, TypeTarget::all);
 					return true;
 				}
 				return false;
 			};
 		auto& chaosClown = arr[MONSTER_IDS::CHAOS_CLOWN];
 		chaosClown.name = "mad clown";
-		chaosClown.attack = 2;
-		chaosClown.health = 7;
+		chaosClown.attack = 1;
+		chaosClown.health = 15;
 		chaosClown.ruleText = "[end of turn] dies. the opponent summons a mad clown.";
 		chaosClown.tags = TAG_HUMAN;
 		chaosClown.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
