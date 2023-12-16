@@ -22,7 +22,7 @@ namespace game
 		for (auto& path : state.paths)
 		{
 			path = {};
-			if (state.depth != SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
+			if (state.depth < SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
 				path.boss = state.GetBoss(info, i);
 			if(path.boss == -1)
 				path.boss = MONSTER_IDS::GOD;
@@ -189,10 +189,14 @@ namespace game
 			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / (ROOM_COUNT_BEFORE_BOSS * 2), 6), state.depth + 1);
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
+				const uint32_t id = state.GetMonster(info);
+				const uint32_t healthMod = (state.depth / ROOM_COUNT_BEFORE_BOSS) * 5;
+
 				ActionState summonState{};
 				summonState.trigger = ActionState::Trigger::onSummon;
 				summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 0;
-				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = state.GetMonster(info); 
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = id;
+				summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = info.monsters[id].health + healthMod;
 				state.TryAddToStack(summonState);
 			}
 		}
