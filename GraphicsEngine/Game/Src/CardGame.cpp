@@ -1344,7 +1344,7 @@ namespace game
 		unstableGolem.tags = TAG_TOKEN;
 
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MAIDEN_OF_THE_MOON];
-		maidenOfTheMoon.name = "acolyte";
+		maidenOfTheMoon.name = "moon acolyte";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 20;
 		maidenOfTheMoon.ruleText = "[any death] +4 attack.";
@@ -1747,16 +1747,13 @@ namespace game
 		librarian.name = "librarian";
 		librarian.attack = 1;
 		librarian.health = 14;
-		librarian.ruleText = "[draw] [ally] +1 mana. [enemy] -1 mana.";
+		librarian.ruleText = "[draw] +1 mana.";
 		librarian.tags = TAG_HUMAN;
 		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDraw)
 				{
-					if (self < BOARD_CAPACITY_PER_SIDE)
-						++state.mana;
-					else if (state.mana > 0)
-						--state.mana;
+					++state.mana;
 					return true;
 				}
 				return false;
