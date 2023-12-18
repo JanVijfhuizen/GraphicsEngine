@@ -3018,7 +3018,6 @@ namespace game
 					damageState.dstUniqueId = actionState.dstUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 6;
 					state.TryAddToStack(damageState);
-
 					++state.mana;
 					return true;
 				}
@@ -3037,7 +3036,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 10;
+					damageState.values[ActionState::VDamage::damage] = 13;
 					state.TryAddToStack(damageState);
 					return true;
 				}
@@ -3168,7 +3167,7 @@ namespace game
 			};
 		auto& incantationOfDoom = arr[SPELL_IDS::INCANTATION_OF_DOOM];
 		incantationOfDoom.name = "doom";
-		incantationOfDoom.ruleText = "all enemies take 13 damage.";
+		incantationOfDoom.ruleText = "all enemies take 10 damage.";
 		incantationOfDoom.cost = 5;
 		incantationOfDoom.type = SpellCard::Type::all;
 		incantationOfDoom.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
