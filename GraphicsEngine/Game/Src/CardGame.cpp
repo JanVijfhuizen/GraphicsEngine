@@ -1430,6 +1430,9 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
+					if (actionState.dst != self)
+						return false;
+
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
@@ -1597,7 +1600,7 @@ namespace game
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
-		slimeSoldier.health = 6;
+		slimeSoldier.health = 9;
 		slimeSoldier.ruleText = "[end of turn] summon a slime with my stats.";
 		slimeSoldier.tags = TAG_SLIME;
 		slimeSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1622,7 +1625,7 @@ namespace game
 		madPyromancer.name = "mad pyromancer";
 		madPyromancer.attack = 1;
 		madPyromancer.health = 13;
-		madPyromancer.ruleText = "[cast] all monsters take 1 damage.";
+		madPyromancer.ruleText = "[cast] all other monsters take 1 damage.";
 		madPyromancer.tags = TAG_HUMAN;
 		madPyromancer.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1632,7 +1635,7 @@ namespace game
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = 1;
-					TargetOfType(info, state, damageState, self, -1, TypeTarget::all);
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::all, true);
 					return true;
 				}
 				return false;
@@ -3042,7 +3045,7 @@ namespace game
 			};
 		auto& shock = arr[SPELL_IDS::SHOCK];
 		shock.name = "shock";
-		shock.ruleText = "deal 2 damage.";
+		shock.ruleText = "deal 3 damage.";
 		shock.cost = 1;
 		shock.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3053,7 +3056,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 2;
+					damageState.values[ActionState::VDamage::damage] = 3;
 					state.TryAddToStack(damageState);
 					return true;
 				}
