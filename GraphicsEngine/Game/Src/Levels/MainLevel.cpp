@@ -188,7 +188,7 @@ namespace game
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				const uint32_t id = state.GetMonster(info);
-				const uint32_t healthMod = state.depth / ROOM_COUNT_BEFORE_BOSS * 3;
+				const uint32_t healthMod = state.depth / ROOM_COUNT_BEFORE_BOSS * 4;
 
 				uint32_t health = info.monsters[id].health + healthMod;
 				health = jv::Min<uint32_t>(health, 50);
@@ -426,7 +426,7 @@ namespace game
 
 				if(!actionsRemaining)
 				{
-					if (boardState.allyCount < PARTY_CAPACITY)
+					if (boardState.allyCount < 4)
 					{
 						bool valid = false;
 						if(lastEnemyDefeatedId != -1)
@@ -499,7 +499,7 @@ namespace game
 					gameState.monsterIds[i] = boardState.ids[i];
 					const uint32_t h1 = boardState.combatStats[i].health;
 					const uint32_t h2 = info.monsters[gameState.monsterIds[i]].health;
-					gameState.healths[i] = (state.depth + 1) % ROOM_COUNT_BEFORE_BOSS == 0 ? jv::Max(h1, h2) : jv::Min(h1, h2);
+					gameState.healths[i] = (state.depth + 1) % ROOM_COUNT_BEFORE_BOSS == 0 ? jv::Max(h1, h2) : h1;
 					auto c = 1 + state.depth / ROOM_COUNT_BEFORE_BOSS;
 					c = jv::Min(gameState.artifactSlotCount, MONSTER_ARTIFACT_CAPACITY);
 					gameState.artifactSlotCount = jv::Max(gameState.artifactSlotCount, c);
@@ -936,6 +936,47 @@ namespace game
 		const auto& boardState = state.boardState;
 		const auto& gameState = info.gameState;
 
+		const auto& path = state.paths[state.GetPrimaryPath()];
+		const auto& room = info.rooms[path.room];
+		if (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS && room.onActionEvent)
+			if (room.onActionEvent(info, state, actionState, 0))
+			{
+				Activation activation{};
+				activation.type = Activation::room;
+				activations.Add() = activation;
+			}
+
+		const auto eventCount = GetEventCardCount(state);
+		for (uint32_t i = 0; i < eventCount; ++i)
+		{
+			if (eventCards[i] == -1)
+				continue;
+			const auto& event = info.events[eventCards[i]];
+			if (event.onActionEvent)
+				if (event.onActionEvent(info, state, actionState, i))
+				{
+					Activation activation{};
+					activation.type = Activation::event;
+					activation.id = i;
+					activations.Add() = activation;
+				}
+		}
+
+		const uint32_t enemyCount = boardState.enemyCount;
+		for (uint32_t i = 0; i < enemyCount; ++i)
+		{
+			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
+			const auto& monster = info.monsters[id];
+			if (monster.onActionEvent)
+				if (monster.onActionEvent(info, state, actionState, BOARD_CAPACITY_PER_SIDE + i))
+				{
+					Activation activation{};
+					activation.id = BOARD_CAPACITY_PER_SIDE + i;
+					activation.type = Activation::monster;
+					activations.Add() = activation;
+				}
+		}
+
 		const uint32_t allyCount = boardState.allyCount;
 		for (uint32_t i = 0; i < allyCount; ++i)
 		{
@@ -976,46 +1017,6 @@ namespace game
 			}
 		}
 
-		const auto& path = state.paths[state.GetPrimaryPath()];
-		const auto& room = info.rooms[path.room];
-		if (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS && room.onActionEvent)
-			if(room.onActionEvent(info, state, actionState, 0))
-			{
-				Activation activation{};
-				activation.type = Activation::room;
-				activations.Add() = activation;
-			}
-
-		const auto eventCount = GetEventCardCount(state);
-		for (uint32_t i = 0; i < eventCount; ++i)
-		{
-			if (eventCards[i] == -1)
-				continue;
-			const auto& event = info.events[eventCards[i]];
-			if (event.onActionEvent)
-				if (event.onActionEvent(info, state, actionState, i))
-				{
-					Activation activation{};
-					activation.type = Activation::event;
-					activation.id = i;
-					activations.Add() = activation;
-				}
-		}
-
-		const uint32_t enemyCount = boardState.enemyCount;
-		for (uint32_t i = 0; i < enemyCount; ++i)
-		{
-			const auto id = boardState.ids[BOARD_CAPACITY_PER_SIDE + i];
-			const auto& monster = info.monsters[id];
-			if (monster.onActionEvent)
-				if (monster.onActionEvent(info, state, actionState, BOARD_CAPACITY_PER_SIDE + i))
-				{
-					Activation activation{};
-					activation.id = BOARD_CAPACITY_PER_SIDE + i;
-					activation.type = Activation::monster;
-					activations.Add() = activation;
-				}
-		}
 		for (uint32_t i = 0; i < state.hand.count; ++i)
 		{
 			const auto& spell = &info.spells[state.hand[i]];
@@ -1627,7 +1628,10 @@ namespace game
 		{
 			if (discoverOption != -1)
 				info.gameState.spells[discoverOption] = path.spell;
-			stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
+			if(state.depth % ROOM_COUNT_BEFORE_BOSS == 0)
+				stateIndex = static_cast<uint32_t>(StateNames::bossReveal);
+			else
+				stateIndex = static_cast<uint32_t>(StateNames::pathSelect);
 		}
 
 		return true;

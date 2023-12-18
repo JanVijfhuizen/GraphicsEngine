@@ -1191,16 +1191,18 @@ namespace game
 		knifeJuggler.name = "knife juggler";
 		knifeJuggler.attack = 1;
 		knifeJuggler.health = 15;
-		knifeJuggler.ruleText = "[draw] all enemies take 1 damage.";
+		knifeJuggler.ruleText = "[draw] deal damage to all enemies equal to my attack.";
 		knifeJuggler.tags = TAG_HUMAN;
 		knifeJuggler.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDraw)
 				{
+					const auto& stats = state.boardState.combatStats[self];
+
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = 1;
+					damageState.values[ActionState::VDamage::damage] = stats.attack + stats.tempAttack;
 					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
 					return true;
 				}
@@ -1317,7 +1319,7 @@ namespace game
 		auto& goblinChampion = arr[MONSTER_IDS::GOBLIN_CHAMPION];
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 1;
-		goblinChampion.health = 20;
+		goblinChampion.health = 12;
 		goblinChampion.ruleText = "[buffed] all other goblins gain the same buff.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1341,7 +1343,7 @@ namespace game
 		maidenOfTheMoon.name = "moon acolyte";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 16;
-		maidenOfTheMoon.ruleText = "[any death] +3 attack.";
+		maidenOfTheMoon.ruleText = "[any death] +4 attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1352,7 +1354,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 3;
+					buffState.values[ActionState::VStatBuff::attack] = 4;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1507,7 +1509,7 @@ namespace game
 		goblinBomb.name = "goblin bomber";
 		goblinBomb.attack = 0;
 		goblinBomb.health = 12;
-		goblinBomb.ruleText = "[end of turn] +1 attack. [attacked] all enemies take damage equal to my attack.";
+		goblinBomb.ruleText = "[end of turn] +1 attack. [attack] all enemies take damage equal to my attack.";
 		goblinBomb.tags = TAG_GOBLIN;
 		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1524,7 +1526,7 @@ namespace game
 
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
-					if (actionState.dst != self)
+					if (actionState.src != self)
 						return false;
 
 					const auto& boardState = state.boardState;
@@ -2163,7 +2165,7 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					if (actionState.src != self)
+					if (actionState.dst != self)
 						return false;
 
 					ActionState summonState{};
@@ -2381,13 +2383,15 @@ namespace game
 					uint32_t lowestHealth = -1;
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
 					{
-						const auto health = boardState.combatStats[i].health;
+						const auto& stats = boardState.combatStats[i];
+						const auto health = stats.health + stats.tempHealth;
 						if (health < lowestHealth)
 							lowestHealth = health;
 					}
 					for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 					{
-						const auto health = boardState.combatStats[BOARD_CAPACITY_PER_SIDE + i].health;
+						const auto& stats = boardState.combatStats[BOARD_CAPACITY_PER_SIDE + i];
+						const auto health = stats.health + stats.tempHealth;
 						if (health < lowestHealth)
 							lowestHealth = health;
 					}
