@@ -2501,7 +2501,7 @@ namespace game
 					ActionState killState{};
 					killState.trigger = ActionState::Trigger::onDeath;
 					killState.source = ActionState::Source::other;
-					TargetOfType(info, state, killState, 0, TAG_TOKEN, TypeTarget::all);
+					TargetOfType(info, state, killState, 0, TAG_TOKEN, TypeTarget::allies);
 
 					const auto& boardState = state.boardState;
 

@@ -452,6 +452,8 @@ namespace game
 							else
 								recruitSceneLifetime += info.deltaTime;
 
+							const auto monster = &info.monsters[lastEnemyDefeatedId];
+
 							// Recruitment.
 							level->DrawTopCenterHeader(info, HeaderSpacing::normal, "someone wants to join your party.", 1, recruitSceneLifetime);
 							bool recruitScreenActive = true;
