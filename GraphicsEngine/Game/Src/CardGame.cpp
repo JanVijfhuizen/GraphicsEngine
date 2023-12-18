@@ -2603,8 +2603,8 @@ namespace game
 			};
 		auto& rally = arr[SPELL_IDS::RALLY];
 		rally.name = "rally";
-		rally.ruleText = "all allies gain +1 bonus attack.";
-		rally.cost = 1;
+		rally.ruleText = "all allies gain +1 attack.";
+		rally.cost = 2;
 		rally.type = SpellCard::Type::all;
 		rally.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2613,7 +2613,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
+					buffState.values[ActionState::VStatBuff::attack] = 1;
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2884,7 +2884,7 @@ namespace game
 		auto& grit = arr[SPELL_IDS::GRIT];
 		grit.name = "grit";
 		grit.ruleText = "gain attack equal to my bonus attack.";
-		grit.cost = 2;
+		grit.cost = 1;
 		grit.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -3167,6 +3167,7 @@ namespace game
 					const auto& stats = boardState.combatStats[actionState.dst];
 					damageState.values[ActionState::VDamage::damage] = stats.attack + stats.tempAttack;
 					TargetOfType(info, state, damageState, actionState.dst, -1, TypeTarget::allies);
+					return true;
 				}
 				return false;
 			};
@@ -3230,7 +3231,7 @@ namespace game
 			};
 		auto& unity = arr[SPELL_IDS::UNITY];
 		unity.name = "unity";
-		unity.ruleText = "all allies with my tags gain my attack as bonus health.";
+		unity.ruleText = "all other allies with my tags gain my bonus attack.";
 		unity.cost = 1;
 		unity.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3244,8 +3245,9 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = stats.attack + stats.tempAttack;
-					TargetOfType(info, state, buffState, actionState.dst, info.monsters[boardState.ids[actionState.dst]].tags, TypeTarget::allies);
+					buffState.values[ActionState::VStatBuff::tempAttack] = stats.tempAttack;
+					TargetOfType(info, state, buffState, actionState.dst, info.monsters[boardState.ids[actionState.dst]].tags, TypeTarget::allies, true);
+					return true;
 				}
 				return false;
 			};
@@ -3270,6 +3272,7 @@ namespace game
 							++c;
 					}
 					state.mana += c;
+					return true;
 				}
 				return false;
 			};
@@ -3297,6 +3300,7 @@ namespace game
 					drawState.source = ActionState::Source::other;
 					for (uint32_t i = 0; i < c; ++i)
 						state.TryAddToStack(drawState);
+					return true;
 				}
 				return false;
 			};
@@ -3324,6 +3328,7 @@ namespace game
 					drawState.trigger = ActionState::Trigger::onDraw;
 					drawState.source = ActionState::Source::other;
 					state.TryAddToStack(drawState);
+					return true;
 				}
 				return false;
 			};
@@ -3342,6 +3347,7 @@ namespace game
 					state.TryAddToStack(drawState);
 
 					++state.mana;
+					return true;
 				}
 				return false;
 			};
