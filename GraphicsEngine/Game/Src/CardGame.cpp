@@ -3030,7 +3030,7 @@ namespace game
 			};
 		auto& pyroblast = arr[SPELL_IDS::PYROBlAST];
 		pyroblast.name = "pyro blast";
-		pyroblast.ruleText = "deal 13 damage.";
+		pyroblast.ruleText = "deal 10 damage.";
 		pyroblast.cost = 3;
 		pyroblast.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3041,7 +3041,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 13;
+					damageState.values[ActionState::VDamage::damage] = 10;
 					state.TryAddToStack(damageState);
 					return true;
 				}
