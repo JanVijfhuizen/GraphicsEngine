@@ -1251,7 +1251,7 @@ namespace game
 		mossyElemental.name = "mossy elemental";
 		mossyElemental.attack = 1;
 		mossyElemental.health = 20;
-		mossyElemental.ruleText = "[damaged] +4 bonus health.";
+		mossyElemental.ruleText = "[damaged] +3 bonus health.";
 		mossyElemental.tags = TAG_ELEMENTAL;
 		mossyElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1263,7 +1263,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1409,7 +1409,7 @@ namespace game
 		manaCyclone.name = "mana cyclone";
 		manaCyclone.attack = 1;
 		manaCyclone.health = 20;
-		manaCyclone.ruleText = "[end of turn] gain 3 attack per unspent mana.";
+		manaCyclone.ruleText = "[end of turn] gain 2 attack per unspent mana.";
 		manaCyclone.tags = TAG_ELEMENTAL;
 		manaCyclone.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1418,7 +1418,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = state.mana * 3;
+					buffState.values[ActionState::VStatBuff::attack] = state.mana * 2;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1605,7 +1605,7 @@ namespace game
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
-		slimeSoldier.health = 9;
+		slimeSoldier.health = 6;
 		slimeSoldier.ruleText = "[end of turn] summon a slime with my stats.";
 		slimeSoldier.tags = TAG_SLIME;
 		slimeSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
