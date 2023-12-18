@@ -1209,7 +1209,7 @@ namespace game
 		auto& elvenSage = arr[MONSTER_IDS::ELVEN_SAGE];
 		elvenSage.name = "elven sage";
 		elvenSage.attack = 1;
-		elvenSage.health = 15;
+		elvenSage.health = 9;
 		elvenSage.ruleText = "[cast] summon an elf.";
 		elvenSage.tags = TAG_ELF;
 		elvenSage.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
