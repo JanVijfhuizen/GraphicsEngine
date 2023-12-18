@@ -1340,8 +1340,8 @@ namespace game
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MAIDEN_OF_THE_MOON];
 		maidenOfTheMoon.name = "moon acolyte";
 		maidenOfTheMoon.attack = 1;
-		maidenOfTheMoon.health = 20;
-		maidenOfTheMoon.ruleText = "[any death] +4 attack.";
+		maidenOfTheMoon.health = 16;
+		maidenOfTheMoon.ruleText = "[any death] +3 attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1352,7 +1352,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 4;
+					buffState.values[ActionState::VStatBuff::attack] = 3;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -1629,7 +1629,7 @@ namespace game
 		auto& madPyromancer = arr[MONSTER_IDS::MAD_PYROMANCER];
 		madPyromancer.name = "mad pyromancer";
 		madPyromancer.attack = 1;
-		madPyromancer.health = 13;
+		madPyromancer.health = 11;
 		madPyromancer.ruleText = "[cast] all other monsters take 1 damage.";
 		madPyromancer.tags = TAG_HUMAN;
 		madPyromancer.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2653,7 +2653,7 @@ namespace game
 			};
 		auto& enlightenment = arr[SPELL_IDS::ENLIGHTENMENT];
 		enlightenment.name = "enlightenment";
-		enlightenment.ruleText = "draw until your hand is full. +3 mana.";
+		enlightenment.ruleText = "draw until your hand is full. +1 mana.";
 		enlightenment.cost = 3;
 		enlightenment.type = SpellCard::Type::all;
 		enlightenment.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2665,7 +2665,7 @@ namespace game
 					drawState.source = ActionState::Source::other;
 					for (uint32_t i = 0; i < HAND_MAX_SIZE - state.hand.count; ++i)
 						state.TryAddToStack(drawState);
-					state.mana += 3;
+					++state.mana;
 					return true;
 				}
 				return false;
