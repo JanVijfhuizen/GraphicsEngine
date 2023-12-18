@@ -858,8 +858,8 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.dst = buffState.src;
-					buffState.dstUniqueId = buffState.srcUniqueId;
+					buffState.dst = self;
+					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
 					state.TryAddToStack(buffState);
 					return true;
@@ -1339,7 +1339,7 @@ namespace game
 			};
 		auto& unstableGolem = arr[MONSTER_IDS::UNSTABLE_GOLEM];
 		unstableGolem.name = "unstable golem";
-		unstableGolem.attack = 4;
+		unstableGolem.attack = 3;
 		unstableGolem.health = 20;
 		unstableGolem.tags = TAG_TOKEN;
 
@@ -1423,7 +1423,7 @@ namespace game
 			};
 		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_TROLL];
 		woundedTroll.name = "wounded troll";
-		woundedTroll.attack = 4;
+		woundedTroll.attack = 3;
 		woundedTroll.health = 20;
 		woundedTroll.ruleText = "[death] all monsters gain +5 health.";
 		woundedTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2150,25 +2150,20 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::RUSTY_COLLAR].name = "rusty collar";
-		arr[ARTIFACT_IDS::RUSTY_COLLAR].ruleText = "[death] +10 mana. draw 5. untap all allies.";
+		arr[ARTIFACT_IDS::RUSTY_COLLAR].ruleText = "[death] summon a copy.";
 		arr[ARTIFACT_IDS::RUSTY_COLLAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
-					const auto& boardState = state.boardState;
 					if (actionState.src != self)
 						return false;
-					if (!boardState.Validate(actionState, true, false))
-						return false;
 
-					ActionState drawState{};
-					drawState.trigger = ActionState::Trigger::onDraw;
-					drawState.source = ActionState::Source::other;
-					for (uint32_t i = 0; i < 5; ++i)
-						state.TryAddToStack(drawState);
-					state.mana += 10;
-					for (auto& tapped : state.tapped)
-						tapped = false;
+					ActionState summonState{};
+					summonState.trigger = ActionState::Trigger::onSummon;
+					summonState.source = ActionState::Source::other;
+					summonState.values[ActionState::VSummon::id] = state.boardState.ids[self];
+					summonState.values[ActionState::VSummon::isAlly] = 1;
+					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
