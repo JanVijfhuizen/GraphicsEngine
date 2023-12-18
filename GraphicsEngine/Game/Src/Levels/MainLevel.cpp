@@ -1,7 +1,6 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainLevel.h"
 #include <Levels/LevelUtils.h>
-#include "CardGame.h"
 #include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Curve.h"
@@ -9,7 +8,6 @@
 #include "States/InputState.h"
 #include "States/GameState.h"
 #include "States/BoardState.h"
-#include "States/PlayerState.h"
 #include "Utils/Shuffle.h"
 #include "JLib/VectorUtils.h"
 #include "Utils/SubTextureUtils.h"
@@ -214,14 +212,12 @@ namespace game
 		
 		for (int32_t i = static_cast<int32_t>(gameState.partySize) - 1; i >= 0; --i)
 		{
-			const auto partyId = gameState.partyIds[i];
 			const auto monsterId = gameState.monsterIds[i];
 
 			ActionState summonState{};
 			summonState.trigger = ActionState::Trigger::onSummon;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::isAlly)] = 1;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::id)] = monsterId;
-			summonState.values[static_cast<uint32_t>(ActionState::VSummon::partyId)] = partyId;
 			summonState.values[static_cast<uint32_t>(ActionState::VSummon::health)] = gameState.healths[i];
 			state.TryAddToStack(summonState);
 		}
@@ -430,7 +426,7 @@ namespace game
 
 				if(!actionsRemaining)
 				{
-					if (boardState.allyCount < PARTY_ACTIVE_INITIAL_CAPACITY)
+					if (boardState.allyCount < PARTY_CAPACITY)
 					{
 						const auto monster = &info.monsters[lastEnemyDefeatedId];
 						bool valid = !monster->unique;
@@ -474,7 +470,6 @@ namespace game
 								// Add to party.
 								boardState.ids[boardState.allyCount] = lastEnemyDefeatedId;
 								boardState.combatStats[boardState.allyCount] = GetCombatStat(info.monsters[lastEnemyDefeatedId]);
-								gameState.partyIds[boardState.allyCount] = -1;
 								for (uint32_t i = 0; i < MONSTER_ARTIFACT_CAPACITY; ++i)
 									gameState.artifacts[boardState.allyCount * MONSTER_ARTIFACT_CAPACITY + i] = -1;
 								++boardState.allyCount;
@@ -492,7 +487,7 @@ namespace game
 						}
 				}
 
-				gameState.partySize = jv::Min(boardState.allyCount, PARTY_ACTIVE_CAPACITY);
+				gameState.partySize = jv::Min(boardState.allyCount, PARTY_CAPACITY);
 				for (uint32_t i = 0; i < gameState.partySize; ++i)
 				{
 					gameState.monsterIds[i] = boardState.ids[i];
@@ -899,7 +894,6 @@ namespace game
 		{
 			const bool isAlly = actionState.values[ActionState::VSummon::isAlly] == 1;
 			const auto monsterId = actionState.values[ActionState::VSummon::id];
-			const auto partyId = isAlly ? actionState.values[ActionState::VSummon::partyId] : -1;
 			const auto attack = actionState.values[ActionState::VSummon::attack];
 			const auto health = actionState.values[ActionState::VSummon::health];
 			const auto untapped = actionState.values[ActionState::VSummon::untapped];
@@ -908,9 +902,7 @@ namespace game
 			boardState.ids[targetId] = monsterId;
 			boardState.combatStats[targetId] = GetCombatStat(info.monsters[monsterId]);
 			boardState.uniqueIds[targetId] = uniqueId++;
-			if(isAlly && targetId < PARTY_ACTIVE_CAPACITY)
-				info.gameState.partyIds[targetId] = partyId;
-			else if(!isAlly && boardState.allyCount > 0)
+			if(!isAlly && boardState.allyCount > 0)
 				state.targets[boardState.enemyCount] = rand() % boardState.allyCount;
 			if (attack != -1)
 				boardState.combatStats[targetId].attack = attack;
@@ -1155,7 +1147,6 @@ namespace game
 				for (uint32_t j = i; j < c; ++j)
 				{
 					state.tapped[j] = state.tapped[j + 1];
-					gameState.partyIds[j] = gameState.partyIds[j + 1];
 					memcpy(&gameState.artifacts[j * MONSTER_ARTIFACT_CAPACITY], &gameState.artifacts[(j + 1) * MONSTER_ARTIFACT_CAPACITY], 
 						sizeof(uint32_t) * MONSTER_ARTIFACT_CAPACITY);
 					gameState.curses[j] = gameState.curses[j + 1];
@@ -1647,7 +1638,7 @@ namespace game
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
 		const auto& gameState = info.gameState;
 
-		bool greyedOut[PARTY_ACTIVE_CAPACITY];
+		bool greyedOut[PARTY_CAPACITY];
 		bool flawSlotAvailable = false;
 
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
@@ -1661,8 +1652,8 @@ namespace game
 		{
 			level->DrawTopCenterHeader(info, HeaderSpacing::normal, "select the bearer of this curse.");
 
-			Card* cards[PARTY_ACTIVE_CAPACITY];
-			CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
+			Card* cards[PARTY_CAPACITY];
+			CombatStats combatStats[PARTY_CAPACITY];
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
 				const auto monster = &info.monsters[gameState.monsterIds[i]];
@@ -1716,7 +1707,7 @@ namespace game
 			cardDrawInfo.center = true;
 			cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
 			cardDrawInfo.lifeTime = level->GetTime();
-			cardDrawInfo.metaData = &metaDatas[PARTY_ACTIVE_CAPACITY];
+			cardDrawInfo.metaData = &metaDatas[PARTY_CAPACITY];
 			level->DrawCard(info, cardDrawInfo);
 
 			if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
@@ -1750,7 +1741,6 @@ namespace game
 
 			for (uint32_t i = 0; i < gameState.partySize; ++i)
 			{
-				const uint32_t id = gameState.partyIds[i];
 				auto& slotCount = gameState.artifactSlotCount;
 				slotCount = jv::Max(slotCount, 1 + state.depth / (ROOM_COUNT_BEFORE_BOSS * 2));
 				slotCount = jv::Min(slotCount, MONSTER_ARTIFACT_CAPACITY);
@@ -1762,7 +1752,7 @@ namespace game
 		LevelIndex& loadLevelIndex)
 	{
 		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
-		Card* cards[PARTY_ACTIVE_CAPACITY]{};
+		Card* cards[PARTY_CAPACITY]{};
 		
 		auto& gameState = info.gameState;
 
@@ -1775,9 +1765,9 @@ namespace game
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			cards[i] = &info.monsters[gameState.monsterIds[i]];
 
-		Card** artifacts[PARTY_ACTIVE_CAPACITY]{};
-		CombatStats combatStats[PARTY_ACTIVE_CAPACITY];
-		uint32_t artifactCounts[PARTY_ACTIVE_CAPACITY]{};
+		Card** artifacts[PARTY_CAPACITY]{};
+		CombatStats combatStats[PARTY_CAPACITY];
+		uint32_t artifactCounts[PARTY_CAPACITY]{};
 		
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 		{
@@ -1815,7 +1805,7 @@ namespace game
 		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y + 2 };
 		cardDrawInfo.center = true;
 		cardDrawInfo.lifeTime = level->GetTime();
-		cardDrawInfo.metaData = &metaDatas[PARTY_ACTIVE_CAPACITY];
+		cardDrawInfo.metaData = &metaDatas[PARTY_CAPACITY];
 		level->DrawCard(info, cardDrawInfo);
 		
 		if(choice != -1 && outStackSelected != -1)

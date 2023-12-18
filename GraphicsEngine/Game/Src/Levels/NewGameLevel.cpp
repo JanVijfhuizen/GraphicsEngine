@@ -2,8 +2,8 @@
 #include "Levels/NewGameLevel.h"
 #include "Levels/LevelUtils.h"
 #include "LevelStates/LevelStateMachine.h"
+#include "States/GameState.h"
 #include "States/InputState.h"
-#include "States/PlayerState.h"
 #include "Utils/Shuffle.h"
 
 namespace game
@@ -73,9 +73,7 @@ namespace game
 		cardSelectionDrawInfo.length = DISCOVER_LENGTH;
 		cardSelectionDrawInfo.combatStats = combatStats;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
-
-		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
-
+		
 		cardSelectionDrawInfo.highlighted = monsterChoice;
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
 		{
@@ -106,33 +104,32 @@ namespace game
 	bool NewGameLevel::JoinState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 		LevelIndex& loadLevelIndex)
 	{
-		const char* text = "daisy joins you on your adventure.";
-		level->DrawTopCenterHeader(info, HeaderSpacing::close, text);
+		auto& gameState = info.gameState;
+		gameState.partySize = 2;
+		gameState.artifactSlotCount = 1;
+		gameState.monsterIds[0] = state.monsterId;
+		gameState.monsterIds[1] = MONSTER_IDS::DAISY;
 
-		const auto monster = &info.monsters[MONSTER_IDS::DAISY];
-		auto combatStats = GetCombatStat(*monster);
-
-		CardDrawInfo cardDrawInfo{};
-		cardDrawInfo.card = monster;
-		cardDrawInfo.center = true;
-		cardDrawInfo.combatStats = &combatStats;
-		cardDrawInfo.origin = SIMULATED_RESOLUTION / 2;
-		cardDrawInfo.lifeTime = level->GetTime();
-		cardDrawInfo.metaData = &metaData;
-		level->DrawCard(info, cardDrawInfo);
-		
-		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
-		if(f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::close, f);
-
-		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
+		for (uint32_t i = 0; i < PARTY_CAPACITY; ++i)
 		{
-			auto& playerState = info.playerState = PlayerState::Create();
-			playerState.monsterIds[0] = state.monsterId;
-			playerState.monsterIds[1] = MONSTER_IDS::DAISY;
-			playerState.partySize = 2;
-			loadLevelIndex = LevelIndex::partySelect;
+			const auto& monster = info.monsters[gameState.monsterIds[i]];
+			gameState.healths[i] = monster.health;
 		}
+
+		for (uint32_t i = 0; i < 2; ++i)
+			for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
+				gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j] = -1;
+		for (uint32_t i = 0; i < 4; ++i)
+			gameState.curses[i] = -1;
+
+		for (uint32_t i = 0; i < 4; ++i)
+			gameState.spells[i] = SPELL_IDS::ENRAGE;
+		for (uint32_t i = 4; i < 8; ++i)
+			gameState.spells[i] = SPELL_IDS::SHOCK;
+		for (uint32_t i = 8; i < 12; ++i)
+			gameState.spells[i] = SPELL_IDS::PROTECT;
+
+		loadLevelIndex = LevelIndex::main;
 		return true;
 	}
 }

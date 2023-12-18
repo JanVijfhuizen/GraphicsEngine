@@ -7,7 +7,6 @@
 #include "JLib/Math.h"
 #include "States/BoardState.h"
 #include "States/InputState.h"
-#include "States/PlayerState.h"
 #include "Utils/BoxCollision.h"
 #include "Utils/SubTextureUtils.h"
 
@@ -782,31 +781,6 @@ namespace game
 		headerDrawInfo.overrideLifeTime = overrideLifeTime;
 		headerDrawInfo.scale = 1;
 		DrawHeader(info, headerDrawInfo);
-	}
-	uint32_t Level::DrawParty(const LevelUpdateInfo& info, const PartyDrawInfo& drawInfo)
-	{
-		const auto& playerState = info.playerState;
-
-		Card* cards[PARTY_CAPACITY]{};
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			cards[i] = &info.monsters[playerState.monsterIds[i]];
-
-		CombatStats combatInfos[PARTY_CAPACITY];
-		for (uint32_t i = 0; i < playerState.partySize; ++i)
-			combatInfos[i] = GetCombatStat(info.monsters[playerState.monsterIds[i]]);
-
-		CardSelectionDrawInfo cardSelectionDrawInfo{};
-		cardSelectionDrawInfo.cards = cards;
-		cardSelectionDrawInfo.length = playerState.partySize;
-		cardSelectionDrawInfo.selectedArr = drawInfo.selectedArr;
-		cardSelectionDrawInfo.height = drawInfo.height;
-		cardSelectionDrawInfo.lifeTime = _timeSinceOpened;
-		cardSelectionDrawInfo.greyedOutArr = drawInfo.greyedOutArr;
-		cardSelectionDrawInfo.combatStats = combatInfos;
-		cardSelectionDrawInfo.metaDatas = _cardDrawMetaDatas;
-		cardSelectionDrawInfo.rowCutoff = 8;
-
-		return DrawCardSelection(info, cardSelectionDrawInfo);
 	}
 
 	uint32_t Level::GetSpacing(const HeaderSpacing spacing)

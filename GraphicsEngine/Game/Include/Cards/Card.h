@@ -42,7 +42,6 @@ namespace game
 			{
 				isAlly,
 				id,
-				partyId,
 				attack,
 				health,
 				untapped,

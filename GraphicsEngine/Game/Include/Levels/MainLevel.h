@@ -114,7 +114,7 @@ namespace game
 
 		struct RewardFlawCardState final : LevelState<State>
 		{
-			CardDrawMetaData metaDatas[PARTY_ACTIVE_CAPACITY + 1];
+			CardDrawMetaData metaDatas[PARTY_CAPACITY + 1];
 			uint32_t discoverOption;
 			float timeSinceDiscovered;
 
@@ -125,7 +125,7 @@ namespace game
 
 		struct RewardArtifactState final : LevelState<State>
 		{
-			CardDrawMetaData metaDatas[PARTY_ACTIVE_CAPACITY + 1];
+			CardDrawMetaData metaDatas[PARTY_CAPACITY + 1];
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
 				LevelIndex& loadLevelIndex) override;

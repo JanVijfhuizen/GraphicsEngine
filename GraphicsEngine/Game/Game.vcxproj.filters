@@ -51,12 +51,6 @@
     <ClCompile Include="Src\Levels\MainLevel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Levels\PartySelectLevel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\States\PlayerState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Src\States\GameState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -119,9 +113,6 @@
     <ClInclude Include="Include\States\GameState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\States\PlayerState.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Include\States\BoardState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -168,9 +159,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\Cards\EventCard.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Levels\PartySelectLevel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\LevelStates\LevelStateMachine.h">

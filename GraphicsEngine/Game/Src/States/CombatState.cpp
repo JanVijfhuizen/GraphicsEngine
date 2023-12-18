@@ -4,7 +4,6 @@
 #include "Levels/MainLevel.h"
 #include <Utils/Shuffle.h>
 #include "States/GameState.h"
-#include "States/PlayerState.h"
 
 namespace game
 {
@@ -68,17 +67,6 @@ namespace game
 						removed = true;
 						break;
 					}
-				if (removed)
-					continue;
-
-				for (uint32_t j = 0; j < info.playerState.partySize; ++j)
-					if (monsters[i] == info.playerState.monsterIds[j])
-					{
-						monsters.RemoveAt(i);
-						removed = true;
-						break;
-					}
-
 				if (removed)
 					continue;
 
@@ -159,7 +147,7 @@ namespace game
 			GetDeck(&artifacts, nullptr, info.artifacts);
 			RemoveDuplicates(info, artifacts, &Path::artifact);
 			Shuffle(decks.artifacts.ptr, decks.artifacts.count);
-			RemoveArtifactsInParty(artifacts, info.playerState, info.gameState);
+			RemoveArtifactsInParty(artifacts, info.gameState);
 		}
 		return artifacts.Pop();
 	}

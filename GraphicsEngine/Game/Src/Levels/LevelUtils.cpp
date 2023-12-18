@@ -2,16 +2,10 @@
 #include "Levels/LevelUtils.h"
 #include "Levels/Level.h"
 #include "States/GameState.h"
-#include "States/PlayerState.h"
 
 namespace game
 {
-	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState)
-	{
-		RemoveDuplicates(deck, playerState.monsterIds, playerState.partySize);
-	}
-
-	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState, const GameState& gameState)
+	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState)
 	{
 		for (uint32_t i = 0; i < gameState.partySize; ++i)
 			for (uint32_t j = 0; j < gameState.artifactSlotCount; ++j)
@@ -54,19 +48,5 @@ namespace game
 					deck.RemoveAt(j);
 					break;
 				}
-	}
-
-	bool ValidateMonsterInclusion(const uint32_t id, const PlayerState& playerState)
-	{
-		for (uint32_t j = 0; j < playerState.partySize; ++j)
-			if (playerState.monsterIds[j] == id)
-				return false;
-
-		return true;
-	}
-
-	bool ValidateArtifactInclusion(const uint32_t id, const PlayerState& playerState)
-	{
-		return true;
 	}
 }

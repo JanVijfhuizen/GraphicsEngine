@@ -10,10 +10,7 @@ constexpr float TEXT_DRAW_SPEED = 20;
 
 constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 6;
 constexpr uint32_t BOARD_CAPACITY = BOARD_CAPACITY_PER_SIDE * 2;
-constexpr uint32_t PARTY_ACTIVE_INITIAL_CAPACITY = 4;
-constexpr uint32_t PARTY_ACTIVE_CAPACITY = BOARD_CAPACITY_PER_SIDE;
-constexpr uint32_t PARTY_INACTIVE_CAPACITY = 2;
-constexpr uint32_t PARTY_CAPACITY = PARTY_ACTIVE_CAPACITY + PARTY_INACTIVE_CAPACITY;
+constexpr uint32_t PARTY_CAPACITY = BOARD_CAPACITY_PER_SIDE;
 constexpr uint32_t MONSTER_ARTIFACT_CAPACITY = 3;
 constexpr uint32_t MONSTER_FLAW_CAPACITY = 4;
 constexpr uint32_t ROOM_COUNT_BEFORE_BOSS = 7;
@@ -246,7 +243,6 @@ enum class LevelIndex
 {
 	mainMenu,
 	newGame,
-	partySelect,
 	main,
 	gameOver,
 	animOnly

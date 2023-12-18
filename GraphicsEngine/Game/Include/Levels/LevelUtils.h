@@ -4,11 +4,9 @@
 
 namespace game
 {
-	struct PlayerState;
 	struct GameState;
-
-	void RemoveMonstersInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState);
-	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const PlayerState& playerState, const GameState& gameState);
+	
+	void RemoveArtifactsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState);
 	void RemoveFlawsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState);
 	void RemoveMagicsInParty(jv::Vector<uint32_t>& deck, const GameState& gameState);
 	void RemoveDuplicates(jv::Vector<uint32_t>& deck, const uint32_t* duplicates, uint32_t duplicateCount);

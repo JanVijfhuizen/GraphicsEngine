@@ -22,10 +22,8 @@
 #include "Levels/MainLevel.h"
 #include "Levels/MainMenuLevel.h"
 #include "Levels/NewGameLevel.h"
-#include "Levels/PartySelectLevel.h"
 #include "States/GameState.h"
 #include "States/InputState.h"
-#include "States/PlayerState.h"
 #include <time.h>
 
 #include "JLib/Math.h"
@@ -107,7 +105,6 @@ namespace game
 		PixelPerfectRenderInterpreter* pixelPerfectRenderInterpreter;
 
 		GameState gameState{};
-		PlayerState playerState{};
 
 		LevelIndex levelIndex = LevelIndex::mainMenu;
 		bool levelLoading = true;
@@ -213,7 +210,6 @@ namespace game
 				levelScene,
 				atlasTextures,
 				gameState,
-				playerState,
 				monsters,
 				artifacts,
 				bosses,
@@ -260,7 +256,6 @@ namespace game
 			levelScene,
 			atlasTextures,
 			gameState,
-			playerState,
 			monsters,
 			artifacts,
 			bosses,
@@ -589,12 +584,11 @@ namespace game
 		}
 
 		{
-			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 5);
+			outCardGame->levels = jv::CreateArray<Level*>(outCardGame->arena, 4);
 			outCardGame->levels[0] = outCardGame->arena.New<MainMenuLevel>();
 			outCardGame->levels[1] = outCardGame->arena.New<NewGameLevel>();
-			outCardGame->levels[2] = outCardGame->arena.New<PartySelectLevel>();
-			outCardGame->levels[3] = outCardGame->arena.New<MainLevel>();
-			outCardGame->levels[4] = outCardGame->arena.New<GameOverLevel>();
+			outCardGame->levels[2] = outCardGame->arena.New<MainLevel>();
+			outCardGame->levels[3] = outCardGame->arena.New<GameOverLevel>();
 		}
 
 		outCardGame->prevTime = outCardGame->timer.now();
@@ -800,22 +794,22 @@ namespace game
 			};
 		auto& slime = arr[MONSTER_IDS::SLIME];
 		slime.name = "slime";
-		slime.health = 0;
 		slime.attack = 0;
+		slime.health = 0;
 		slime.unique = true;
 		slime.tags = TAG_TOKEN | TAG_SLIME;
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
 		daisy.ruleText = "loyal until the very end.";
-		daisy.health = 3;
 		daisy.attack = 3;
+		daisy.health = 3;
 		daisy.unique = true;
 		daisy.animIndex = 2;
 		daisy.normalAnimIndex = 47;
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
-		god.health = 0;
-		god.attack = 999;
+		god.attack = 0;
+		god.health = 999;
 		god.unique = true;
 		god.ruleText = "[attacked, cast] deal 1 damage to all enemies and gain 1 attack.";
 		god.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1302,7 +1296,7 @@ namespace game
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 0;
-		goblinKing.health = 12;
+		goblinKing.health = 9;
 		goblinKing.ruleText = "[start of turn] summon 2 goblins.";
 		goblinKing.tags = TAG_GOBLIN;
 		goblinKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
