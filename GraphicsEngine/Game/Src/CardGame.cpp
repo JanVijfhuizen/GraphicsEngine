@@ -1364,7 +1364,7 @@ namespace game
 		fleetingSoldier.name = "berserker";
 		fleetingSoldier.attack = 1;
 		fleetingSoldier.health = 12;
-		fleetingSoldier.ruleText = "[damaged] attack randomly.";
+		fleetingSoldier.ruleText = "[damaged] attack the lowest health enemy.";
 		fleetingSoldier.tags = TAG_HUMAN;
 		fleetingSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1380,15 +1380,26 @@ namespace game
 					attackState.src = self;
 					attackState.srcUniqueId = boardState.uniqueIds[self];
 
-					if (self < BOARD_CAPACITY_PER_SIDE && boardState.enemyCount == 0)
-						return false;
-					if (self >= BOARD_CAPACITY_PER_SIDE && boardState.allyCount == 0)
+					const bool allied = self < BOARD_CAPACITY_PER_SIDE;
+					const uint32_t c = allied ? boardState.enemyCount : boardState.allyCount;
+					if (c == 0)
 						return false;
 
-					const uint32_t r = self < BOARD_CAPACITY_PER_SIDE ? 
-						BOARD_CAPACITY_PER_SIDE + rand() % boardState.enemyCount : rand() % boardState.allyCount;
-					attackState.dst = r;
-					attackState.dstUniqueId = boardState.uniqueIds[r];
+					uint32_t target = -1;
+					uint32_t health = -1;
+					for (uint32_t i = 0; i < c; ++i)
+					{
+						const uint32_t in = allied * BOARD_CAPACITY_PER_SIDE + i;
+						const auto& stats = boardState.combatStats[in];
+						const uint32_t h = stats.health + stats.tempHealth;
+						if (h > health)
+							continue;
+						target = in;
+						health = h;
+					}
+
+					attackState.dst = target;
+					attackState.dstUniqueId = boardState.uniqueIds[target];
 					state.TryAddToStack(attackState);
 					return true;
 				}
@@ -1439,7 +1450,7 @@ namespace game
 		auto& chaosClown = arr[MONSTER_IDS::CHAOS_CLOWN];
 		chaosClown.name = "mad clown";
 		chaosClown.attack = 1;
-		chaosClown.health = 15;
+		chaosClown.health = 10;
 		chaosClown.ruleText = "[end of turn] dies. the opponent summons a mad clown.";
 		chaosClown.tags = TAG_HUMAN;
 		chaosClown.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1742,7 +1753,7 @@ namespace game
 			};
 		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
 		librarian.name = "librarian";
-		librarian.attack = 1;
+		librarian.attack = 2;
 		librarian.health = 14;
 		librarian.ruleText = "[draw] +1 mana.";
 		librarian.tags = TAG_HUMAN;

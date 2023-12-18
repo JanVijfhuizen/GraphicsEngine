@@ -114,14 +114,11 @@ namespace game
 		{
 			const auto& monster = info.monsters[gameState.monsterIds[i]];
 			gameState.healths[i] = monster.health;
-		}
-
-		for (uint32_t i = 0; i < 2; ++i)
 			for (uint32_t j = 0; j < MONSTER_ARTIFACT_CAPACITY; ++j)
 				gameState.artifacts[i * MONSTER_ARTIFACT_CAPACITY + j] = -1;
-		for (uint32_t i = 0; i < 4; ++i)
 			gameState.curses[i] = -1;
-
+		}
+		
 		for (uint32_t i = 0; i < 4; ++i)
 			gameState.spells[i] = SPELL_IDS::ENRAGE;
 		for (uint32_t i = 4; i < 8; ++i)
