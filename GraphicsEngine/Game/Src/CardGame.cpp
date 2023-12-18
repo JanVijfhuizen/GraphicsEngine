@@ -2938,7 +2938,7 @@ namespace game
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
 					{
 						const auto& monster = info.monsters[boardState.ids[i]];
-						m += monster.tags & TAG_GOBLIN;
+						m += (monster.tags & TAG_GOBLIN) != 0;
 					}
 					state.mana += m;
 					return true;

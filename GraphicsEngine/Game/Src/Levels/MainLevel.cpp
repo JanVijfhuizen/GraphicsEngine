@@ -428,17 +428,21 @@ namespace game
 				{
 					if (boardState.allyCount < PARTY_CAPACITY)
 					{
-						const auto monster = &info.monsters[lastEnemyDefeatedId];
-						bool valid = !monster->unique;
+						bool valid = false;
+						if(lastEnemyDefeatedId != -1)
+						{
+							const auto monster = &info.monsters[lastEnemyDefeatedId];
+							valid = !monster->unique;
 
-						// Check if you already own this monster.
-						if(valid)
-							for (uint32_t i = 0; i < boardState.allyCount; ++i)
-								if (lastEnemyDefeatedId == boardState.ids[i])
-								{
-									valid = false;
-									break;
-								}
+							// Check if you already own this monster.
+							if (valid)
+								for (uint32_t i = 0; i < boardState.allyCount; ++i)
+									if (lastEnemyDefeatedId == boardState.ids[i])
+									{
+										valid = false;
+										break;
+									}
+						}
 
 						if (valid)
 						{
