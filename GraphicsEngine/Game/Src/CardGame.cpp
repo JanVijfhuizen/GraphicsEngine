@@ -2071,22 +2071,21 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::THORN_WHIP].name = "thorn whip";
-		arr[ARTIFACT_IDS::THORN_WHIP].ruleText = "[attack] all enemies take 3 damage.";
+		arr[ARTIFACT_IDS::THORN_WHIP].ruleText = "[attack] all enemies take damage equal to my bonus attack.";
 		arr[ARTIFACT_IDS::THORN_WHIP].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
-					const auto& boardState = state.boardState;
-
 					if (actionState.src != self)
 						return false;
-					if (!boardState.Validate(actionState, true, false))
-						return false;
+
+					const auto& boardState = state.boardState;
+					const auto& stats = boardState.combatStats[self];
 
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = 3;
+					damageState.values[ActionState::VDamage::damage] = stats.tempAttack;
 					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
 					return true;
 				}
@@ -2607,7 +2606,7 @@ namespace game
 			};
 		auto& rally = arr[SPELL_IDS::RALLY];
 		rally.name = "rally";
-		rally.ruleText = "all allies gain +1 attack.";
+		rally.ruleText = "all allies gain +2 attack.";
 		rally.cost = 2;
 		rally.type = SpellCard::Type::all;
 		rally.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2617,7 +2616,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 1;
+					buffState.values[ActionState::VStatBuff::attack] = 2;
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
 					return true;
 				}

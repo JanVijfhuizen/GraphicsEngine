@@ -188,7 +188,7 @@ namespace game
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				const uint32_t id = state.GetMonster(info);
-				const uint32_t healthMod = state.depth / ROOM_COUNT_BEFORE_BOSS * 4;
+				const uint32_t healthMod = state.depth / ROOM_COUNT_BEFORE_BOSS * 5;
 
 				uint32_t health = info.monsters[id].health + healthMod;
 				health = jv::Min<uint32_t>(health, 50);
