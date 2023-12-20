@@ -1330,7 +1330,7 @@ namespace game
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 1;
 		goblinChampion.health = 12;
-		goblinChampion.ruleText = "[buffed] all other goblins gain the same buff.";
+		goblinChampion.ruleText = "[buffed] all other goblins gain +1 attack.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1338,7 +1338,12 @@ namespace game
 				{
 					if (actionState.dst != self)
 						return false;
-					TargetOfType(info, state, actionState, self, TAG_GOBLIN, TypeTarget::all, true);
+
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.values[ActionState::VStatBuff::attack] = 1;
+					TargetOfType(info, state, buffState, self, TAG_GOBLIN, TypeTarget::all, true);
 					return true;
 				}
 				return false;
