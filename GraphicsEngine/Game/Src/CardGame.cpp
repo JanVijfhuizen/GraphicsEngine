@@ -2083,6 +2083,8 @@ namespace game
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = stats.attack + stats.tempAttack;
+					damageState.dst = self;
+					damageState.dstUniqueId = boardState.uniqueIds[self];
 					state.stack.Add() = damageState;
 
 					state.tapped[self] = false;
