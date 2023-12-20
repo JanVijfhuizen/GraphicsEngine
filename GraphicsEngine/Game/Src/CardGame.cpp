@@ -1201,7 +1201,7 @@ namespace game
 		auto& knifeJuggler = arr[MONSTER_IDS::KNIFE_JUGGLER];
 		knifeJuggler.name = "knife juggler";
 		knifeJuggler.attack = 1;
-		knifeJuggler.health = 15;
+		knifeJuggler.health = 20;
 		knifeJuggler.ruleText = "[draw] deal 1 damage to all enemies.";
 		knifeJuggler.tags = TAG_HUMAN;
 		knifeJuggler.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1220,7 +1220,7 @@ namespace game
 		auto& elvenSage = arr[MONSTER_IDS::ELVEN_SAGE];
 		elvenSage.name = "elven sage";
 		elvenSage.attack = 1;
-		elvenSage.health = 9;
+		elvenSage.health = 16;
 		elvenSage.ruleText = "[cast] summon an elf.";
 		elvenSage.tags = TAG_ELF;
 		elvenSage.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1240,7 +1240,7 @@ namespace game
 		auto& stormElemental = arr[MONSTER_IDS::STORM_ELEMENTAL];
 		stormElemental.name = "storm elemental";
 		stormElemental.attack = 1;
-		stormElemental.health = 16;
+		stormElemental.health = 20;
 		stormElemental.ruleText = "[cast] +2 attack.";
 		stormElemental.tags = TAG_ELEMENTAL;
 		stormElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1261,7 +1261,7 @@ namespace game
 		auto& mossyElemental = arr[MONSTER_IDS::MOSSY_ELEMENTAL];
 		mossyElemental.name = "mossy elemental";
 		mossyElemental.attack = 1;
-		mossyElemental.health = 12;
+		mossyElemental.health = 16;
 		mossyElemental.ruleText = "[damaged] +3 bonus health.";
 		mossyElemental.tags = TAG_ELEMENTAL;
 		mossyElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1285,7 +1285,7 @@ namespace game
 		auto& stoneElemental = arr[MONSTER_IDS::STONE_ELEMENTAL];
 		stoneElemental.name = "stone elemental";
 		stoneElemental.attack = 1;
-		stoneElemental.health = 14;
+		stoneElemental.health = 20;
 		stoneElemental.ruleText = "[cast] +2 bonus attack and health.";
 		stoneElemental.tags = TAG_ELEMENTAL;
 		stoneElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1307,7 +1307,7 @@ namespace game
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 0;
-		goblinKing.health = 9;
+		goblinKing.health = 16;
 		goblinKing.ruleText = "[start of turn] summon 2 goblins.";
 		goblinKing.tags = TAG_GOBLIN;
 		goblinKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1328,7 +1328,7 @@ namespace game
 		auto& goblinChampion = arr[MONSTER_IDS::GOBLIN_CHAMPION];
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 1;
-		goblinChampion.health = 12;
+		goblinChampion.health = 20;
 		goblinChampion.ruleText = "[buffed] all other goblins gain +1 attack.";
 		goblinChampion.tags = TAG_GOBLIN;
 		goblinChampion.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1356,7 +1356,7 @@ namespace game
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MAIDEN_OF_THE_MOON];
 		maidenOfTheMoon.name = "moon acolyte";
 		maidenOfTheMoon.attack = 1;
-		maidenOfTheMoon.health = 16;
+		maidenOfTheMoon.health = 20;
 		maidenOfTheMoon.ruleText = "[any death] +2 attack and +2 bonus attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1380,7 +1380,7 @@ namespace game
 		auto& fleetingSoldier = arr[MONSTER_IDS::FLEETING_SOLDIER];
 		fleetingSoldier.name = "berserker";
 		fleetingSoldier.attack = 1;
-		fleetingSoldier.health = 12;
+		fleetingSoldier.health = 20;
 		fleetingSoldier.ruleText = "[damaged] attack the lowest health enemy.";
 		fleetingSoldier.tags = TAG_HUMAN;
 		fleetingSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1467,7 +1467,7 @@ namespace game
 		auto& chaosClown = arr[MONSTER_IDS::CHAOS_CLOWN];
 		chaosClown.name = "mad clown";
 		chaosClown.attack = 1;
-		chaosClown.health = 10;
+		chaosClown.health = 13;
 		chaosClown.ruleText = "[end of turn] dies. the opponent summons a mad clown.";
 		chaosClown.tags = TAG_HUMAN;
 		chaosClown.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1494,7 +1494,7 @@ namespace game
 		auto& goblinSlinger = arr[MONSTER_IDS::GOBLIN_SLINGER];
 		goblinSlinger.name = "goblin slinger";
 		goblinSlinger.attack = 1;
-		goblinSlinger.health = 12;
+		goblinSlinger.health = 20;
 		goblinSlinger.ruleText = "[ally attack] the attacked monster takes damage equal to my bonus attack.";
 		goblinSlinger.tags = TAG_GOBLIN;
 		goblinSlinger.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1523,7 +1523,7 @@ namespace game
 		auto& goblinBomb = arr[MONSTER_IDS::GOBLIN_BOMB];
 		goblinBomb.name = "goblin bomber";
 		goblinBomb.attack = 0;
-		goblinBomb.health = 12;
+		goblinBomb.health = 20;
 		goblinBomb.ruleText = "[any attack] attacker takes damage equal to my bonus attack. +1 bonus attack.";
 		goblinBomb.tags = TAG_GOBLIN;
 		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1554,8 +1554,8 @@ namespace game
 			};
 		auto& goblinPartyStarter = arr[MONSTER_IDS::GOBLIN_PARTY_STARTER];
 		goblinPartyStarter.name = "goblin princess";
-		goblinPartyStarter.attack = 2;
-		goblinPartyStarter.health = 5;
+		goblinPartyStarter.attack = 0;
+		goblinPartyStarter.health = 14;
 		goblinPartyStarter.ruleText = "[damaged] summon a goblin for each damage taken.";
 		goblinPartyStarter.tags = TAG_GOBLIN;
 		goblinPartyStarter.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1623,7 +1623,7 @@ namespace game
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
-		slimeSoldier.health = 6;
+		slimeSoldier.health = 12;
 		slimeSoldier.ruleText = "[end of turn] summon a slime with my stats.";
 		slimeSoldier.tags = TAG_SLIME;
 		slimeSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1647,7 +1647,7 @@ namespace game
 		auto& madPyromancer = arr[MONSTER_IDS::MAD_PYROMANCER];
 		madPyromancer.name = "mad pyromancer";
 		madPyromancer.attack = 1;
-		madPyromancer.health = 11;
+		madPyromancer.health = 13;
 		madPyromancer.ruleText = "[cast] all other monsters take 1 damage.";
 		madPyromancer.tags = TAG_HUMAN;
 		madPyromancer.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1771,14 +1771,21 @@ namespace game
 			};
 		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
 		librarian.name = "librarian";
-		librarian.attack = 2;
-		librarian.health = 14;
-		librarian.ruleText = "[draw] +1 mana.";
+		librarian.attack = 1;
+		librarian.health = 20;
+		librarian.ruleText = "[draw] +1 mana. take 1 damage.";
 		librarian.tags = TAG_HUMAN;
 		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDraw)
 				{
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = 1;
+					damageState.dst = self;
+					damageState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.stack.Add() = damageState;
 					++state.mana;
 					return true;
 				}
