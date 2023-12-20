@@ -2034,27 +2034,17 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLESSED_RING].name = "blessed ring";
-		arr[ARTIFACT_IDS::BLESSED_RING].ruleText = "[summoned] +3 health.";
+		arr[ARTIFACT_IDS::BLESSED_RING].ruleText = "[attack] draw.";
 		arr[ARTIFACT_IDS::BLESSED_RING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onSummon)
+				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
-					const auto& boardState = state.boardState;
-					const bool isAlly = actionState.values[ActionState::VSummon::isAlly];
-					if (!isAlly)
+					if (actionState.src != self)
 						return false;
-
-					if(self == boardState.allyCount - 1)
-					{
-						ActionState buffState{};
-						buffState.trigger = ActionState::Trigger::onStatBuff;
-						buffState.source = ActionState::Source::other;
-						buffState.dst = self;
-						buffState.dstUniqueId = boardState.uniqueIds[self];
-						buffState.values[ActionState::VStatBuff::health] = 3;
-						state.TryAddToStack(buffState);
-						return true;
-					}
+					ActionState drawState{};
+					drawState.trigger = ActionState::Trigger::onDraw;
+					drawState.source = ActionState::Source::other;
+					state.TryAddToStack(drawState);
 				}
 				return false;
 			};
@@ -2078,7 +2068,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::THORN_WHIP].name = "thorn whip";
-		arr[ARTIFACT_IDS::THORN_WHIP].ruleText = "[attack] all enemies take damage equal to my bonus attack.";
+		arr[ARTIFACT_IDS::THORN_WHIP].ruleText = "[attack] untap. take damage equal to my attack.";
 		arr[ARTIFACT_IDS::THORN_WHIP].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
@@ -2092,14 +2082,16 @@ namespace game
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = stats.tempAttack;
-					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+					damageState.values[ActionState::VDamage::damage] = stats.attack + stats.tempAttack;
+					state.stack.Add() = damageState;
+
+					state.tapped[self] = false;
 					return true;
 				}
 				return false;
 			};
 		arr[ARTIFACT_IDS::RED_CLOTH].name = "red cloth";
-		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[end of turn] gain 3 bonus health for every enemy. they all attack me.";
+		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[end of turn] gain 4 bonus health for every enemy. they all attack me.";
 		arr[ARTIFACT_IDS::RED_CLOTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -2124,7 +2116,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3 * boardState.enemyCount;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 4 * boardState.enemyCount;
 					state.TryAddToStack(buffState);
 
 					return true;
