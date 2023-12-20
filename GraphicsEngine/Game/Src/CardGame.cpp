@@ -736,7 +736,7 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onSummon)
 				{
-					const uint32_t misAlly = actionState.values[ActionState::VSummon::isAlly];
+					const uint32_t isAlly = actionState.values[ActionState::VSummon::isAlly];
 					if (isAlly && self < BOARD_CAPACITY_PER_SIDE)
 						if (state.boardState.allyCount - 1 == self)
 						{

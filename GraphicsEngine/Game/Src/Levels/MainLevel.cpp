@@ -54,7 +54,7 @@ namespace game
 		}
 		for (auto& metaData : metaDatas)
 			metaData = {};
-		info.gameState.artifactSlotCount = jv::Min<uint32_t>(1 + state.depth / (ROOM_COUNT_BEFORE_BOSS * 2), 3);
+		info.gameState.artifactSlotCount = jv::Min<uint32_t>(1 + state.depth / (ROOM_COUNT_BEFORE_BOSS * 2), MONSTER_ARTIFACT_CAPACITY);
 	}
 
 	bool MainLevel::PathSelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex,
@@ -184,11 +184,11 @@ namespace game
 
 		if (!bossPresent)
 		{
-			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / (ROOM_COUNT_BEFORE_BOSS * 2), 6), state.depth + 1);
+			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / ROOM_COUNT_BEFORE_BOSS, 4), state.depth + 1);
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				const uint32_t id = state.GetMonster(info);
-				const uint32_t healthMod = state.depth / ROOM_COUNT_BEFORE_BOSS * 5;
+				const uint32_t healthMod = 0;// state.depth / ROOM_COUNT_BEFORE_BOSS * 5;
 
 				uint32_t health = info.monsters[id].health + healthMod;
 				health = jv::Min<uint32_t>(health, 50);
