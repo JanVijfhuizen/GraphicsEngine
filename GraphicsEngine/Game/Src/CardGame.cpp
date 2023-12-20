@@ -1937,7 +1937,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].name = "the brand";
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die. all allies gain 10 health.";
+		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die. all allies gain 5 health.";
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -1954,7 +1954,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::health] = 10;
+					buffState.values[ActionState::VStatBuff::health] = 5;
 					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2001,7 +2001,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::BLOOD_HAMMER].name = "blood hammer";
-		arr[ARTIFACT_IDS::BLOOD_HAMMER].ruleText = "[any death] +5 bonus attack.";
+		arr[ARTIFACT_IDS::BLOOD_HAMMER].ruleText = "[any death] +4 bonus attack.";
 		arr[ARTIFACT_IDS::BLOOD_HAMMER].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -2013,7 +2013,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempAttack] = 5;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 4;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -2169,20 +2169,26 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::RUSTY_COLLAR].name = "rusty collar";
-		arr[ARTIFACT_IDS::RUSTY_COLLAR].ruleText = "[death] summon a copy.";
+		arr[ARTIFACT_IDS::RUSTY_COLLAR].ruleText = "[on bonus attack buffed] gain that much attack.";
 		arr[ARTIFACT_IDS::RUSTY_COLLAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onDeath)
+				if (actionState.trigger == ActionState::Trigger::onStatBuff)
 				{
 					if (actionState.dst != self)
 						return false;
 
-					ActionState summonState{};
-					summonState.trigger = ActionState::Trigger::onSummon;
-					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = state.boardState.ids[self];
-					summonState.values[ActionState::VSummon::isAlly] = 1;
-					state.TryAddToStack(summonState);
+					const uint32_t bonusAtk = actionState.values[ActionState::VStatBuff::tempAttack];
+					if (bonusAtk == -1)
+						return false;
+
+					const auto& boardState = state.boardState;
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::attack] = bonusAtk;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
