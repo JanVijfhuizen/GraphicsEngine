@@ -1896,7 +1896,7 @@ namespace game
 						return false;
 
 					const uint32_t bonusAtk = actionState.values[ActionState::VStatBuff::tempAttack];
-					if (bonusAtk == 0)
+					if (bonusAtk == -1)
 						return false;
 
 					const auto& boardState = state.boardState;
@@ -2086,26 +2086,19 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::THORN_WHIP].name = "thorn whip";
-		arr[ARTIFACT_IDS::THORN_WHIP].ruleText = "[attack] untap. take damage equal to my attack.";
+		arr[ARTIFACT_IDS::THORN_WHIP].ruleText = "[attack] deal 1 damage to all other monsters.";
 		arr[ARTIFACT_IDS::THORN_WHIP].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
 					if (actionState.src != self)
 						return false;
-
-					const auto& boardState = state.boardState;
-					const auto& stats = boardState.combatStats[self];
-
+					
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = stats.attack + stats.tempAttack;
-					damageState.dst = self;
-					damageState.dstUniqueId = boardState.uniqueIds[self];
-					state.stack.Add() = damageState;
-
-					state.tapped[self] = false;
+					damageState.values[ActionState::VDamage::damage] = 1;
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::all, true);
 					return true;
 				}
 				return false;
