@@ -1201,18 +1201,16 @@ namespace game
 		knifeJuggler.name = "knife juggler";
 		knifeJuggler.attack = 1;
 		knifeJuggler.health = 15;
-		knifeJuggler.ruleText = "[draw] deal damage to all enemies equal to my attack.";
+		knifeJuggler.ruleText = "[draw] deal 1 damage to all enemies.";
 		knifeJuggler.tags = TAG_HUMAN;
 		knifeJuggler.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDraw)
 				{
-					const auto& stats = state.boardState.combatStats[self];
-
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = stats.attack + stats.tempAttack;
+					damageState.values[ActionState::VDamage::damage] = 1;
 					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
 					return true;
 				}
