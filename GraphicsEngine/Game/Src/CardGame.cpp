@@ -1583,20 +1583,9 @@ namespace game
 		obnoxiousFan.name = "lich";
 		obnoxiousFan.attack = 3;
 		obnoxiousFan.health = 2;
-		obnoxiousFan.ruleText = "[summon] untap. [death] if there is another allied monster, summon a lich with my attack.";
+		obnoxiousFan.ruleText = "[death] if there is another allied monster, summon a lich with my attack.";
 		obnoxiousFan.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if(actionState.trigger == ActionState::Trigger::onSummon)
-				{
-					const uint32_t isAlly = actionState.values[ActionState::VSummon::isAlly];
-					if (isAlly && self < BOARD_CAPACITY_PER_SIDE)
-						if (state.boardState.allyCount - 1 == self)
-						{
-							state.tapped[self] = false;
-							return true;
-						}
-				}
-
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
 					if (self != actionState.dst)
