@@ -1845,7 +1845,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::THORNMAIL].name = "thornmail";
-		arr[ARTIFACT_IDS::THORNMAIL].ruleText = "[attacked] the attacker takes the same damage.";
+		arr[ARTIFACT_IDS::THORNMAIL].ruleText = "[attacked] the attacker takes damage equal to their attack.";
 		arr[ARTIFACT_IDS::THORNMAIL].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
@@ -1853,12 +1853,14 @@ namespace game
 					if (actionState.dst != self)
 						return false;
 
+					const auto& stats = state.boardState.combatStats[actionState.src];
+
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.src;
 					damageState.dstUniqueId = actionState.srcUniqueId;
-					damageState.values[ActionState::VDamage::damage] = actionState.values[ActionState::VDamage::damage];
+					damageState.values[ActionState::VDamage::damage] = stats.attack + stats.tempAttack;
 					state.TryAddToStack(damageState);
 					return true;
 				}
