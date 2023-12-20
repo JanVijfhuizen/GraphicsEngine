@@ -1792,17 +1792,22 @@ namespace game
 			return false;
 		};
 		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "repulsion armor";
-		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[end of turn] all enemies take damage equal to my bonus health.";
+		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[attack] the attacked monster takes damage equal to my bonus health.";
 		arr[ARTIFACT_IDS::FALSE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
+					if (actionState.src != self)
+						return false;
+
 					const uint32_t dmg = state.boardState.combatStats[self].tempHealth;
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
 					damageState.values[ActionState::VDamage::damage] = dmg;
-					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+					damageState.dst = actionState.dst;
+					damageState.dstUniqueId = actionState.dstUniqueId;
+					state.stack.Add() = damageState;
 					return true;
 				}
 				return false;
@@ -1829,15 +1834,12 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::THORNMAIL].name = "thornmail";
-		arr[ARTIFACT_IDS::THORNMAIL].ruleText = "[attacked] the attacker takes 5 damage.";
+		arr[ARTIFACT_IDS::THORNMAIL].ruleText = "[attacked] the attacker takes the same damage.";
 		arr[ARTIFACT_IDS::THORNMAIL].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
-					const auto& boardState = state.boardState;
 					if (actionState.dst != self)
-						return false;
-					if (!boardState.Validate(actionState, true, true))
 						return false;
 
 					ActionState damageState{};
@@ -1845,7 +1847,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.src;
 					damageState.dstUniqueId = actionState.srcUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 5;
+					damageState.values[ActionState::VDamage::damage] = actionState.values[ActionState::VDamage::damage];
 					state.TryAddToStack(damageState);
 					return true;
 				}
@@ -1870,18 +1872,22 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].name = "mask of youth";
-		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[any death] +5 bonus health.";
+		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[bonus attack buffed] gain that much bonus health.";
 		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onDeath)
+				if (actionState.trigger == ActionState::Trigger::onStatBuff)
 				{
+					const uint32_t bonusAtk = actionState.values[ActionState::VStatBuff::tempAttack];
+					if (bonusAtk == 0)
+						return false;
+
 					const auto& boardState = state.boardState;
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempHealth] = 5;
+					buffState.values[ActionState::VStatBuff::tempHealth] = bonusAtk;
 					state.TryAddToStack(buffState);
 					return true;
 				}
