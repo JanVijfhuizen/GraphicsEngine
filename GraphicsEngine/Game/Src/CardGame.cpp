@@ -2931,7 +2931,7 @@ namespace game
 		auto& goblinChant = arr[SPELL_IDS::GOBLIN_CHANT];
 		goblinChant.name = "goblin chant";
 		goblinChant.ruleText = "+1 mana for each friendly goblin.";
-		goblinChant.cost = 0;
+		goblinChant.cost = 1;
 		goblinChant.type = SpellCard::Type::all;
 		goblinChant.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2952,7 +2952,7 @@ namespace game
 		auto& treasureHunt = arr[SPELL_IDS::TREASURE_HUNT];
 		treasureHunt.name = "treasure hunt";
 		treasureHunt.ruleText = "summon 3 treasures for your opponent.";
-		treasureHunt.cost = 0;
+		treasureHunt.cost = 1;
 		treasureHunt.type = SpellCard::Type::all;
 		treasureHunt.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2986,28 +2986,28 @@ namespace game
 			};
 		auto& manaSurge = arr[SPELL_IDS::MANA_SURGE];
 		manaSurge.name = "mana surge";
-		manaSurge.ruleText = "+4 mana.";
+		manaSurge.ruleText = "+3 mana.";
 		manaSurge.cost = 2;
 		manaSurge.type = SpellCard::Type::all;
 		manaSurge.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 				{
-					state.mana += 4;
+					state.mana += 3;
 					return true;
 				}
 				return false;
 			};
 		auto& darkRitual = arr[SPELL_IDS::DARK_RITUAL];
 		darkRitual.name = "dark ritual";
-		darkRitual.ruleText = "+3 mana.";
+		darkRitual.ruleText = "+2 mana.";
 		darkRitual.cost = 1;
 		darkRitual.type = SpellCard::Type::all;
 		darkRitual.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 				{
-					state.mana += 3;
+					state.mana += 2;
 					return true;
 				}
 				return false;
@@ -3153,7 +3153,7 @@ namespace game
 		auto& betrayal = arr[SPELL_IDS::BETRAYAL];
 		betrayal.name = "betrayal";
 		betrayal.ruleText = "my allies take damage equal to my attack.";
-		betrayal.cost = 0;
+		betrayal.cost = 1;
 		betrayal.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -3268,6 +3268,8 @@ namespace game
 					uint32_t c = 0;
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
 					{
+						if (i == self)
+							continue;
 						const auto otherTags = info.monsters[boardState.ids[i]].tags;
 						if (otherTags & tags)
 							++c;
@@ -3280,7 +3282,7 @@ namespace game
 		auto& loyalWorkforce = arr[SPELL_IDS::LOYAL_WORKFORCE];
 		loyalWorkforce.name = "loyal workforce";
 		loyalWorkforce.ruleText = "draw for each allied token.";
-		loyalWorkforce.cost = 0;
+		loyalWorkforce.cost = 1;
 		loyalWorkforce.type = SpellCard::Type::all;
 		loyalWorkforce.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3307,8 +3309,8 @@ namespace game
 			};
 		auto& pick = arr[SPELL_IDS::PICK];
 		pick.name = "pick";
-		pick.ruleText = "deal 1 damage and draw.";
-		pick.cost = 0;
+		pick.ruleText = "deal 2 damage and draw.";
+		pick.cost = 1;
 		pick.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -3322,7 +3324,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = state.boardState.uniqueIds[actionState.dst];
-					damageState.values[ActionState::VDamage::damage] = 1;
+					damageState.values[ActionState::VDamage::damage] = 2;
 					state.TryAddToStack(damageState);
 
 					ActionState drawState{};
@@ -3336,7 +3338,7 @@ namespace game
 		auto& cycle = arr[SPELL_IDS::CYCLE];
 		cycle.name = "cycle";
 		cycle.ruleText = "draw. +1 mana.";
-		cycle.cost = 0;
+		cycle.cost = 1;
 		cycle.type = SpellCard::Type::all;
 		cycle.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
