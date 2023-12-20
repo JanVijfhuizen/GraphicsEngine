@@ -1353,7 +1353,7 @@ namespace game
 		maidenOfTheMoon.name = "moon acolyte";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 16;
-		maidenOfTheMoon.ruleText = "[any death] +4 attack.";
+		maidenOfTheMoon.ruleText = "[any death] +2 attack and +2 bonus attack.";
 		maidenOfTheMoon.tags = TAG_ELF;
 		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1364,7 +1364,8 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 4;
+					buffState.values[ActionState::VStatBuff::attack] = 2;
+					buffState.values[ActionState::VStatBuff::tempAttack] = 2;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
