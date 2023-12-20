@@ -31,7 +31,7 @@ namespace game
 	void State::RemoveDuplicates(const LevelInfo& info, jv::Vector<uint32_t>& deck, uint32_t Path::* mem) const
 	{
 		for (const auto& path : paths)
-			for (uint32_t i = 0; i < deck.count; ++i)
+			for (int32_t i = static_cast<int32_t>(deck.count) - 1; i >= 0; --i)
 				if (deck[i] == path.*mem)
 				{
 					deck.RemoveAt(i);
