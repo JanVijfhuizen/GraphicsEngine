@@ -1882,6 +1882,9 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onStatBuff)
 				{
+					if (actionState.dst != self)
+						return false;
+
 					const uint32_t bonusAtk = actionState.values[ActionState::VStatBuff::tempAttack];
 					if (bonusAtk == 0)
 						return false;
