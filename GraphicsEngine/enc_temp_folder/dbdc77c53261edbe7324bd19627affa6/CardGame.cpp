@@ -2665,7 +2665,7 @@ namespace game
 			};
 		auto& enlightenment = arr[SPELL_IDS::ENLIGHTENMENT];
 		enlightenment.name = "enlightenment";
-		enlightenment.ruleText = "draw until your hand is full.";
+		enlightenment.ruleText = "draw until your hand is full. +1 mana.";
 		enlightenment.cost = 3;
 		enlightenment.type = SpellCard::Type::all;
 		enlightenment.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2677,6 +2677,7 @@ namespace game
 					drawState.source = ActionState::Source::other;
 					for (uint32_t i = 0; i < HAND_MAX_SIZE - state.hand.count; ++i)
 						state.TryAddToStack(drawState);
+					++state.mana;
 					return true;
 				}
 				return false;
@@ -3021,7 +3022,7 @@ namespace game
 			};
 		auto& flameBolt = arr[SPELL_IDS::FLAME_BOLT];
 		flameBolt.name = "flame bolt";
-		flameBolt.ruleText = "deal 6 damage.";
+		flameBolt.ruleText = "deal 6 damage. +1 mana.";
 		flameBolt.cost = 2;
 		flameBolt.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3034,6 +3035,7 @@ namespace game
 					damageState.dstUniqueId = actionState.dstUniqueId;
 					damageState.values[ActionState::VDamage::damage] = 6;
 					state.TryAddToStack(damageState);
+					++state.mana;
 					return true;
 				}
 				return false;

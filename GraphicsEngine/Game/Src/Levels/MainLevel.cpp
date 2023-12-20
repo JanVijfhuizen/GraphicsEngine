@@ -243,7 +243,6 @@ namespace game
 		{
 			info.activePlayer = false;
 			info.inCombat = true;
-			comboCounter = 0;
 		}
 		while(!stackOverloaded && !activeStateValid && state.stack.count > 0)
 		{
@@ -379,6 +378,8 @@ namespace game
 
 		if(!activeStateValid && state.stack.count == 0)
 		{
+			comboCounter = 0;
+
 			// Check for game over.
 			if (boardState.allyCount == 0)
 			{
