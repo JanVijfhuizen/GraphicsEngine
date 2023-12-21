@@ -1262,7 +1262,7 @@ namespace game
 		mossyElemental.name = "mossy elemental";
 		mossyElemental.attack = 1;
 		mossyElemental.health = 16;
-		mossyElemental.ruleText = "[damaged] +3 bonus health.";
+		mossyElemental.ruleText = "[damaged] +2 bonus health.";
 		mossyElemental.tags = TAG_ELEMENTAL;
 		mossyElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1274,7 +1274,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);
@@ -2102,7 +2102,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::RED_CLOTH].name = "red cloth";
-		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[end of turn] gain 4 bonus health for every enemy. they all attack me.";
+		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[end of turn] gain 3 bonus health for every enemy. they all attack me.";
 		arr[ARTIFACT_IDS::RED_CLOTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -2127,7 +2127,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = self;
 					buffState.dstUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempHealth] = 4 * boardState.enemyCount;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 3 * boardState.enemyCount;
 					state.TryAddToStack(buffState);
 
 					return true;
@@ -2463,12 +2463,12 @@ namespace game
 
 		auto& prisonOfEternity = arr[ROOM_IDS::PRISON_OF_ETERNITY];
 		prisonOfEternity.name = "eternity prison";
-		prisonOfEternity.ruleText = "on turn 4, kill all monsters.";
+		prisonOfEternity.ruleText = "on turn 6, kill all monsters.";
 		prisonOfEternity.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
-					if (state.turn != 4)
+					if (state.turn != 6)
 						return false;
 
 					ActionState killState{};
@@ -3133,14 +3133,6 @@ namespace game
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 				{
-					ActionState damageState{};
-					damageState.trigger = ActionState::Trigger::onDamage;
-					damageState.source = ActionState::Source::other;
-					damageState.dst = actionState.dst;
-					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 3;
-					state.TryAddToStack(damageState);
-
 					if(actionState.dst < BOARD_CAPACITY_PER_SIDE)
 					{
 						ActionState drawState{};
@@ -3149,6 +3141,14 @@ namespace game
 						for (uint32_t i = 0; i < 3; ++i)
 							state.TryAddToStack(drawState);
 					}
+
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.dst = actionState.dst;
+					damageState.dstUniqueId = actionState.dstUniqueId;
+					damageState.values[ActionState::VDamage::damage] = 3;
+					state.TryAddToStack(damageState);
 					
 					return true;
 				}
@@ -3471,12 +3471,12 @@ namespace game
 				return false;
 			};
 		arr[CURSE_IDS::TIME].name = "time";
-		arr[CURSE_IDS::TIME].ruleText = "[start of turn 4] die.";
+		arr[CURSE_IDS::TIME].ruleText = "[start of turn 6] die.";
 		arr[CURSE_IDS::TIME].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
-					if (state.turn != 4)
+					if (state.turn != 6)
 						return false;
 
 					ActionState deathState{};

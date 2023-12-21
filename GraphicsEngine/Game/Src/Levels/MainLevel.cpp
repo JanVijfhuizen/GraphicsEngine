@@ -282,7 +282,7 @@ namespace game
 			TextTask textTask{};
 			textTask.position = SIMULATED_RESOLUTION / 2;
 			textTask.center = true;
-			textTask.text = "stack overloaded";
+			textTask.text = "combo limiter activated";
 			textTask.priority = true;
 			textTask.color = glm::vec4(1, 0, 0, 1);
 			textTask.lifetime = level->GetTime() - timeSinceStackOverloaded;
