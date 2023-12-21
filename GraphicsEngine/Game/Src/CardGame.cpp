@@ -2135,7 +2135,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of haste";
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] all allies gain +2 attack.";
+		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] all allies gain +1 attack.";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
@@ -2151,7 +2151,7 @@ namespace game
 					buffState.source = ActionState::Source::board;
 					buffState.src = self;
 					buffState.srcUniqueId = boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::attack] = 2;
+					buffState.values[ActionState::VStatBuff::attack] = 1;
 					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2510,7 +2510,7 @@ namespace game
 		};
 		auto& dreadSacrifice = arr[SPELL_IDS::DREAD_SACRIFICE];
 		dreadSacrifice.name = "sacrifice";
-		dreadSacrifice.ruleText = "gain +3 mana for every allied token, then kill them.";
+		dreadSacrifice.ruleText = "for every allied token, gain 2 mana. then kill them.";
 		dreadSacrifice.cost = 1;
 		dreadSacrifice.type = SpellCard::Type::all;
 		dreadSacrifice.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2532,7 +2532,7 @@ namespace game
 						++c;
 					}
 
-					state.mana += c * 3;
+					state.mana += c * 2;
 					return true;
 				}
 				return false;
@@ -2540,7 +2540,7 @@ namespace game
 		auto& tranquilize = arr[SPELL_IDS::TRANQUILIZE];
 		tranquilize.name = "tranquilize";
 		tranquilize.ruleText = "set my attack to 1.";
-		tranquilize.cost = 1;
+		tranquilize.cost = 3;
 		tranquilize.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2559,7 +2559,7 @@ namespace game
 		auto& doubleTrouble = arr[SPELL_IDS::DOUBLE_TROUBLE];
 		doubleTrouble.name = "double trouble";
 		doubleTrouble.ruleText = "double my attack.";
-		doubleTrouble.cost = 2;
+		doubleTrouble.cost = 3;
 		doubleTrouble.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2580,7 +2580,7 @@ namespace game
 		auto& goblinAmbush = arr[SPELL_IDS::GOBLIN_AMBUSH];
 		goblinAmbush.name = "goblin ambush";
 		goblinAmbush.ruleText = "summon 2 goblins.";
-		goblinAmbush.cost = 1;
+		goblinAmbush.cost = 2;
 		goblinAmbush.type = SpellCard::Type::all;
 		goblinAmbush.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2600,7 +2600,7 @@ namespace game
 		auto& windfall = arr[SPELL_IDS::WINDFALL];
 		windfall.name = "windfall";
 		windfall.ruleText = "all enemies take 2 damage.";
-		windfall.cost = 1;
+		windfall.cost = 2;
 		windfall.type = SpellCard::Type::all;
 		windfall.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2617,7 +2617,7 @@ namespace game
 			};
 		auto& rally = arr[SPELL_IDS::RALLY];
 		rally.name = "rally";
-		rally.ruleText = "all allies gain +2 attack.";
+		rally.ruleText = "all allies gain +1 attack.";
 		rally.cost = 2;
 		rally.type = SpellCard::Type::all;
 		rally.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2627,7 +2627,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 2;
+					buffState.values[ActionState::VStatBuff::attack] = 1;
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2635,7 +2635,7 @@ namespace game
 			};
 		auto& holdTheLine = arr[SPELL_IDS::HOLD_THE_LINE];
 		holdTheLine.name = "hold the line";
-		holdTheLine.ruleText = "all allies gain +3 bonus health.";
+		holdTheLine.ruleText = "all allies gain +2 bonus health.";
 		holdTheLine.cost = 2;
 		holdTheLine.type = SpellCard::Type::all;
 		holdTheLine.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2645,7 +2645,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 3;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::allies);
 					return true;
 				}
@@ -2705,7 +2705,7 @@ namespace game
 			};
 		auto& ascension = arr[SPELL_IDS::ASCENSION];
 		ascension.name = "ascension";
-		ascension.ruleText = "+8 attack.";
+		ascension.ruleText = "+6 attack.";
 		ascension.cost = 3;
 		ascension.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2716,7 +2716,7 @@ namespace game
 					buffState.source = ActionState::Source::other;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
-					buffState.values[ActionState::VStatBuff::attack] = 8;
+					buffState.values[ActionState::VStatBuff::attack] = 6;
 					state.TryAddToStack(buffState);
 					return true;
 				}
@@ -2724,7 +2724,7 @@ namespace game
 			};
 		auto& stampede = arr[SPELL_IDS::STAMPEDE];
 		stampede.name = "stampede";
-		stampede.ruleText = "all allies gain +4 attack.";
+		stampede.ruleText = "all allies gain +3 attack.";
 		stampede.cost = 3;
 		stampede.type = SpellCard::Type::all;
 		stampede.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2780,7 +2780,7 @@ namespace game
 			};
 		auto& shield = arr[SPELL_IDS::SHIELD];
 		shield.name = "shield";
-		shield.ruleText = "+8 bonus health. draw.";
+		shield.ruleText = "+5 bonus health. draw.";
 		shield.cost = 2;
 		shield.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2789,7 +2789,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 8;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 5;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2844,7 +2844,7 @@ namespace game
 		auto& balance = arr[SPELL_IDS::BALANCE];
 		balance.name = "balance";
 		balance.ruleText = "gain bonus health equal to my bonus attack.";
-		balance.cost = 0;
+		balance.cost = 1;
 		balance.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2868,7 +2868,7 @@ namespace game
 		auto& counterBalance = arr[SPELL_IDS::COUNTER_BALANCE];
 		counterBalance.name = "counter balance";
 		counterBalance.ruleText = "gain bonus attack equal to my bonus health.";
-		counterBalance.cost = 0;
+		counterBalance.cost = 1;
 		counterBalance.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -2915,7 +2915,7 @@ namespace game
 			};
 		auto& infuriate = arr[SPELL_IDS::INFURIATE];
 		infuriate.name = "infuriate";
-		infuriate.ruleText = "+5 attack.";
+		infuriate.ruleText = "+3 attack.";
 		infuriate.cost = 2;
 		infuriate.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2924,7 +2924,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = 7;
+					buffState.values[ActionState::VStatBuff::attack] = 3;
 					buffState.dst = actionState.dst;
 					buffState.dstUniqueId = actionState.dstUniqueId;
 					state.TryAddToStack(buffState);
@@ -2976,7 +2976,7 @@ namespace game
 		auto& rewind = arr[SPELL_IDS::REWIND];
 		rewind.name = "rewind";
 		rewind.ruleText = "untap all allies.";
-		rewind.cost = 2;
+		rewind.cost = 4;
 		rewind.type = SpellCard::Type::all;
 		rewind.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2990,14 +2990,14 @@ namespace game
 			};
 		auto& manaSurge = arr[SPELL_IDS::MANA_SURGE];
 		manaSurge.name = "mana surge";
-		manaSurge.ruleText = "+3 mana.";
+		manaSurge.ruleText = "+4 mana.";
 		manaSurge.cost = 2;
 		manaSurge.type = SpellCard::Type::all;
 		manaSurge.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
 				{
-					state.mana += 3;
+					state.mana += 4;
 					return true;
 				}
 				return false;
@@ -3018,7 +3018,7 @@ namespace game
 			};
 		auto& flameBolt = arr[SPELL_IDS::FLAME_BOLT];
 		flameBolt.name = "flame bolt";
-		flameBolt.ruleText = "deal 5 damage.";
+		flameBolt.ruleText = "deal 6 damage.";
 		flameBolt.cost = 2;
 		flameBolt.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3029,7 +3029,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 5;
+					damageState.values[ActionState::VDamage::damage] = 6;
 					state.TryAddToStack(damageState);
 					return true;
 				}
@@ -3037,7 +3037,7 @@ namespace game
 			};
 		auto& pyroblast = arr[SPELL_IDS::PYROBlAST];
 		pyroblast.name = "pyro blast";
-		pyroblast.ruleText = "deal 8 damage.";
+		pyroblast.ruleText = "deal 10 damage.";
 		pyroblast.cost = 3;
 		pyroblast.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3048,7 +3048,7 @@ namespace game
 					damageState.source = ActionState::Source::other;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					damageState.values[ActionState::VDamage::damage] = 8;
+					damageState.values[ActionState::VDamage::damage] = 10;
 					state.TryAddToStack(damageState);
 					return true;
 				}
@@ -3102,7 +3102,7 @@ namespace game
 		auto& perfectCopy = arr[SPELL_IDS::PERFECT_COPY];
 		perfectCopy.name = "perfect copy";
 		perfectCopy.ruleText = "summon a demon with my stats.";
-		perfectCopy.cost = 3;
+		perfectCopy.cost = 4;
 		perfectCopy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -3157,7 +3157,7 @@ namespace game
 		auto& betrayal = arr[SPELL_IDS::BETRAYAL];
 		betrayal.name = "betrayal";
 		betrayal.ruleText = "my allies take damage equal to my attack.";
-		betrayal.cost = 1;
+		betrayal.cost = 2;
 		betrayal.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast && self == actionState.src)
@@ -3218,8 +3218,8 @@ namespace game
 			};
 		auto& fireStorm = arr[SPELL_IDS::FIRE_STORM];
 		fireStorm.name = "fire storm";
-		fireStorm.ruleText = "all enemies take 3 damage.";
-		fireStorm.cost = 2;
+		fireStorm.ruleText = "all enemies take 4 damage.";
+		fireStorm.cost = 3;
 		fireStorm.type = SpellCard::Type::all;
 		fireStorm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3228,7 +3228,7 @@ namespace game
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = 3;
+					damageState.values[ActionState::VDamage::damage] = 4;
 					TargetOfType(info, state, damageState, 0, -1, TypeTarget::enemies);
 					return true;
 				}
