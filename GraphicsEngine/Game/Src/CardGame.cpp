@@ -2369,7 +2369,7 @@ namespace game
 			};
 		auto& arenaOfTheDamned = arr[ROOM_IDS::ARENA_OF_THE_DAMNED];
 		arenaOfTheDamned.name = "culling grounds";
-		arenaOfTheDamned.ruleText = "[end of turn] all monsters with the lowest health take 5 damage.";
+		arenaOfTheDamned.ruleText = "[end of turn] all monsters with the lowest health die.";
 		arenaOfTheDamned.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -2394,19 +2394,18 @@ namespace game
 							lowestHealth = health;
 					}
 
-					ActionState damageState{};
-					damageState.trigger = ActionState::Trigger::onDamage;
-					damageState.source = ActionState::Source::other;
-					damageState.values[ActionState::VDamage::damage] = 5;
+					ActionState killState{};
+					killState.trigger = ActionState::Trigger::onDeath;
+					killState.source = ActionState::Source::other;
 
 					for (uint32_t i = 0; i < boardState.allyCount; ++i)
 					{
 						const auto health = boardState.combatStats[i].health;
 						if (health == lowestHealth)
 						{
-							damageState.dst = i;
-							damageState.dstUniqueId = boardState.uniqueIds[i];
-							state.TryAddToStack(damageState);
+							killState.dst = i;
+							killState.dstUniqueId = boardState.uniqueIds[i];
+							state.TryAddToStack(killState);
 						}
 					}
 
@@ -2415,9 +2414,9 @@ namespace game
 						const auto health = boardState.combatStats[BOARD_CAPACITY_PER_SIDE + i].health;
 						if (health == lowestHealth)
 						{
-							damageState.dst = BOARD_CAPACITY_PER_SIDE + i;
-							damageState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-							state.TryAddToStack(damageState);
+							killState.dst = BOARD_CAPACITY_PER_SIDE + i;
+							killState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+							state.TryAddToStack(killState);
 						}
 					}
 
