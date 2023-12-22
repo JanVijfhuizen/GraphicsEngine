@@ -241,8 +241,14 @@ namespace game
 		auto& boardState = state.boardState;
 		
 		const bool stackOverloaded = state.stack.count == state.stack.length;
-		if (stackOverloaded)
+		if (stackOverloaded || comboCounter > STACK_OVERLOAD_THRESHOLD)
+		{
 			overloaded = true;
+			state.stack.Clear();
+			activeStateValid = false;
+			comboCounter = 0;
+			timeSinceStackOverloaded = level->GetTime();
+		}
 
 		if (state.stack.count == 0)
 		{
@@ -272,14 +278,6 @@ namespace game
 			activeStateValid = PreHandleActionState(state, info, activeState);
 			activationDuration = -1;
 			++comboCounter;
-		}
-
-		if(stackOverloaded || comboCounter > STACK_OVERLOAD_THRESHOLD)
-		{
-			state.stack.Clear();
-			activeStateValid = false;
-			comboCounter = 0;
-			timeSinceStackOverloaded = level->GetTime();
 		}
 
 		const bool stillOverloaded = level->GetTime() - timeSinceStackOverloaded < STACK_OVERLOAD_DURATION;
