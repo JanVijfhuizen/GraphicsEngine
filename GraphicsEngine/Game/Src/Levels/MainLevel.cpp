@@ -520,8 +520,7 @@ namespace game
 				{
 					gameState.monsterIds[i] = boardState.ids[i];
 					const uint32_t h1 = boardState.combatStats[i].health;
-					const uint32_t h2 = info.monsters[gameState.monsterIds[i]].health;
-					gameState.healths[i] = (state.depth + 1) % ROOM_COUNT_BEFORE_BOSS == 0 ? jv::Max(h1, h2) : h1;
+					gameState.healths[i] = h1;
 					auto c = 1 + state.depth / ROOM_COUNT_BEFORE_BOSS;
 					c = jv::Min(gameState.artifactSlotCount, MONSTER_ARTIFACT_CAPACITY);
 					gameState.artifactSlotCount = jv::Max(gameState.artifactSlotCount, c);

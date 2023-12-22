@@ -1441,7 +1441,7 @@ namespace game
 		woundedTroll.name = "wounded troll";
 		woundedTroll.attack = 3;
 		woundedTroll.health = 20;
-		woundedTroll.ruleText = "[death] all monsters gain +5 health.";
+		woundedTroll.ruleText = "[death] all monsters gain +3 health.";
 		woundedTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1452,7 +1452,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::health] = 5;
+					buffState.values[ActionState::VStatBuff::health] = 3;
 					TargetOfType(info, state, buffState, self, -1, TypeTarget::all);
 					return true;
 				}
@@ -1920,7 +1920,7 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].name = "the brand";
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die. all allies gain 5 health.";
+		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die. all allies gain 6 health.";
 		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -1937,7 +1937,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::health] = 5;
+					buffState.values[ActionState::VStatBuff::health] = 6;
 					TargetOfType(info, state, buffState, self, -1, TypeTarget::allies);
 					return true;
 				}
