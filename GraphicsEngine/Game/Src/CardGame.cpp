@@ -2096,11 +2096,14 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::RED_CLOTH].name = "red cloth";
-		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[end of turn] gain 3 bonus health for every enemy. they all attack me.";
+		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[attack] gain 3 bonus health for every enemy. they all attack me.";
 		arr[ARTIFACT_IDS::RED_CLOTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
+					if (actionState.src != self)
+						return false;
+
 					const auto& boardState = state.boardState;
 
 					ActionState attackState{};
