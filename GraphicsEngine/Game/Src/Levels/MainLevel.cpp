@@ -312,7 +312,7 @@ namespace game
 			{
 				damageState.dst = BOARD_CAPACITY_PER_SIDE + i;
 				damageState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-				state.stack.Add() = damageState;
+				state.TryAddToStack(damageState);
 			}
 		}
 

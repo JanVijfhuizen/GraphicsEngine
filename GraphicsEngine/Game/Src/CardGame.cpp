@@ -995,15 +995,15 @@ namespace game
 			};
 		auto& theDread = arr[MONSTER_IDS::THE_DREAD];
 		theDread.name = "the dread";
-		theDread.attack = 6;
-		theDread.health = 666;
-		theDread.ruleText = "[end of turn] summon the dread. [turn 6] dies.";
+		theDread.attack = 5;
+		theDread.health = 555;
+		theDread.ruleText = "[end of turn] summon the dread. [start of turn 5] dies.";
 		theDread.unique = true;
 		theDread.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
-					if(state.turn == 6)
+					if(state.turn == 5)
 					{
 						ActionState killState{};
 						killState.trigger = ActionState::Trigger::onDeath;
@@ -1013,7 +1013,9 @@ namespace game
 						state.TryAddToStack(killState);
 						return true;
 					}
-
+				}
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				{
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
@@ -1049,7 +1051,7 @@ namespace game
 					auto cpy = actionState;
 					cpy.dst = self;
 					cpy.dstUniqueId = state.boardState.uniqueIds[self];
-					state.stack.Add() = cpy;
+					state.TryAddToStack(cpy);
 					return true;
 				}
 				return false;
@@ -1138,7 +1140,7 @@ namespace game
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					buffState.values[ActionState::VStatBuff::health] = state.boardState.allyCount * state.turn;
-					state.stack.Add() = buffState;
+					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
@@ -1518,18 +1520,27 @@ namespace game
 		goblinBomb.name = "goblin bomber";
 		goblinBomb.attack = 0;
 		goblinBomb.health = 20;
-		goblinBomb.ruleText = "[start of turn] summon a bomb.";
+		goblinBomb.ruleText = "[any attack] the attacker takes damage equal to my bonus attack. +1 bonus attack.";
 		goblinBomb.tags = TAG_GOBLIN;
 		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
+				if(actionState.trigger == ActionState::Trigger::onAttack)
 				{
-					ActionState summonState{};
-					summonState.trigger = ActionState::Trigger::onSummon;
-					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::BOMB;
-					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
-					state.TryAddToStack(summonState);
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatBuff;
+					buffState.source = ActionState::Source::other;
+					buffState.dst = self;
+					buffState.dstUniqueId = state.boardState.uniqueIds[self];
+					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
+					state.TryAddToStack(buffState);
+
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.dst = actionState.src;
+					damageState.dstUniqueId = actionState.srcUniqueId;
+					damageState.values[ActionState::VStatBuff::tempAttack] = 1;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				
@@ -1757,7 +1768,7 @@ namespace game
 					damageState.values[ActionState::VDamage::damage] = 1;
 					damageState.dst = self;
 					damageState.dstUniqueId = state.boardState.uniqueIds[self];
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 					++state.mana;
 					return true;
 				}
@@ -1801,7 +1812,7 @@ namespace game
 					damageState.values[ActionState::VDamage::damage] = dmg;
 					damageState.dst = actionState.dst;
 					damageState.dstUniqueId = actionState.dstUniqueId;
-					state.stack.Add() = damageState;
+					state.TryAddToStack(damageState);
 					return true;
 				}
 				return false;
@@ -2102,7 +2113,7 @@ namespace game
 					{
 						attackState.src = BOARD_CAPACITY_PER_SIDE + i;
 						attackState.srcUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-						state.stack.Add() = attackState;
+						state.TryAddToStack(attackState);
 					}
 
 					ActionState buffState{};
