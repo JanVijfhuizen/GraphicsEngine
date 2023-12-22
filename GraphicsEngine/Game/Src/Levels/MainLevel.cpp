@@ -154,6 +154,8 @@ namespace game
 		activations.ptr = activationsPtr;
 		activations.length = 2 + HAND_MAX_SIZE + BOARD_CAPACITY;
 
+		overloaded = false;
+
 		recruitSceneLifetime = -1;
 		selectionState = SelectionState::none;
 		time = 0;
@@ -239,12 +241,15 @@ namespace game
 		auto& boardState = state.boardState;
 		
 		const bool stackOverloaded = state.stack.count == state.stack.length;
+		if (stackOverloaded)
+			overloaded = true;
+
 		if (state.stack.count == 0)
 		{
 			info.activePlayer = false;
 			info.inCombat = true;
 		}
-		while(!stackOverloaded && !activeStateValid && state.stack.count > 0)
+		while(!overloaded && !activeStateValid && state.stack.count > 0)
 		{
 			timeSinceLastActionState = level->GetTime();
 			actionStateDuration = ACTION_STATE_DEFAULT_DURATION;
@@ -277,12 +282,13 @@ namespace game
 			timeSinceStackOverloaded = level->GetTime();
 		}
 
-		if(timeSinceStackOverloaded > 0 && level->GetTime() - timeSinceStackOverloaded < STACK_OVERLOAD_DURATION)
+		const bool stillOverloaded = level->GetTime() - timeSinceStackOverloaded < STACK_OVERLOAD_DURATION;
+		if(timeSinceStackOverloaded > 0 && stillOverloaded)
 		{
 			TextTask textTask{};
 			textTask.position = SIMULATED_RESOLUTION / 2;
 			textTask.center = true;
-			textTask.text = "combo limiter activated";
+			textTask.text = "combo finisher activated";
 			textTask.priority = true;
 			textTask.color = glm::vec4(1, 0, 0, 1);
 			textTask.lifetime = level->GetTime() - timeSinceStackOverloaded;
@@ -293,6 +299,23 @@ namespace game
 			info.screenShakeInfo.intensity = 2;
 			info.screenShakeInfo.remaining = STACK_OVERLOAD_DURATION;
 			info.screenShakeInfo.timeOut = 1e4;
+		}
+
+		if(overloaded && !stillOverloaded)
+		{
+			overloaded = false;
+
+			ActionState damageState{};
+			damageState.trigger = ActionState::Trigger::onDamage;
+			damageState.source = ActionState::Source::other;
+			damageState.values[ActionState::VDamage::damage] = 99;
+			
+			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+			{
+				damageState.dst = BOARD_CAPACITY_PER_SIDE + i;
+				damageState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+				state.stack.Add() = damageState;
+			}
 		}
 
 		if (activeStateValid)
