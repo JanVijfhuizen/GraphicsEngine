@@ -1527,7 +1527,7 @@ namespace game
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN_BOMB;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::BOMB;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
 					state.TryAddToStack(summonState);
 					return true;
