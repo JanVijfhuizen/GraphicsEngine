@@ -2096,29 +2096,12 @@ namespace game
 				return false;
 			};
 		arr[ARTIFACT_IDS::RED_CLOTH].name = "red cloth";
-		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[attack] gain 3 bonus health for every enemy. they all attack me.";
+		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[start of turn] gain 3 bonus health for every enemy. [end of turn] they all attack me.";
 		arr[ARTIFACT_IDS::RED_CLOTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onAttack)
+				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
-					if (actionState.src != self)
-						return false;
-
 					const auto& boardState = state.boardState;
-
-					ActionState attackState{};
-					attackState.trigger = ActionState::Trigger::onAttack;
-					attackState.source = ActionState::Source::board;
-					attackState.dst = self;
-					attackState.dstUniqueId = boardState.uniqueIds[self];
-					
-					for (uint32_t i = 0; i < boardState.enemyCount; ++i)
-					{
-						attackState.src = BOARD_CAPACITY_PER_SIDE + i;
-						attackState.srcUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-						state.TryAddToStack(attackState);
-					}
-
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
@@ -2127,6 +2110,25 @@ namespace game
 					buffState.values[ActionState::VStatBuff::tempHealth] = 3 * boardState.enemyCount;
 					state.TryAddToStack(buffState);
 
+					return true;
+				}
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
+				{
+					const auto& boardState = state.boardState;
+
+					ActionState attackState{};
+					attackState.trigger = ActionState::Trigger::onAttack;
+					attackState.source = ActionState::Source::board;
+					attackState.dst = self;
+					attackState.dstUniqueId = boardState.uniqueIds[self];
+
+					for (uint32_t i = 0; i < boardState.enemyCount; ++i)
+					{
+						attackState.src = BOARD_CAPACITY_PER_SIDE + i;
+						attackState.srcUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+						state.TryAddToStack(attackState);
+					}
+					
 					return true;
 				}
 				return false;
