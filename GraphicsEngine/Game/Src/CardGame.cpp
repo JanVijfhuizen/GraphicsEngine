@@ -2290,7 +2290,7 @@ namespace game
 
 		auto& fieldOfVengeance = arr[ROOM_IDS::FIELD_OF_VENGEANCE];
 		fieldOfVengeance.name = "field of violence";
-		fieldOfVengeance.ruleText = "[monster is dealt non combat damage] attack randomly.";
+		fieldOfVengeance.ruleText = "[monster is dealt non combat damage] attack the highest health enemy.";
 		fieldOfVengeance.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onDamage)
@@ -2299,19 +2299,34 @@ namespace game
 					return false;
 
 				const auto& boardState = state.boardState;
-				if (boardState.enemyCount == 0 || boardState.allyCount == 0)
-					return false;
-
-				ActionState attackState = actionState;
+				
+				ActionState attackState{};
 				attackState.trigger = ActionState::Trigger::onAttack;
 				attackState.source = ActionState::Source::board;
-				attackState.src = actionState.dst;
-				attackState.dst = rand() % (actionState.dst < BOARD_CAPACITY_PER_SIDE ? boardState.enemyCount : boardState.allyCount);
-				attackState.dst += (actionState.dst < BOARD_CAPACITY_PER_SIDE) * BOARD_CAPACITY_PER_SIDE;
-				attackState.srcUniqueId = boardState.uniqueIds[attackState.src];
-				attackState.dstUniqueId = boardState.uniqueIds[attackState.dst];
+				attackState.src = self;
+				attackState.srcUniqueId = boardState.uniqueIds[self];
+
+				const bool allied = self < BOARD_CAPACITY_PER_SIDE;
+				const uint32_t c = allied ? boardState.enemyCount : boardState.allyCount;
+				if (c == 0)
+					return false;
+
+				uint32_t target = -1;
+				uint32_t health = 0;
+				for (uint32_t i = 0; i < c; ++i)
+				{
+					const uint32_t in = allied * BOARD_CAPACITY_PER_SIDE + i;
+					const auto& stats = boardState.combatStats[in];
+					const uint32_t h = stats.health + stats.tempHealth;
+					if (h < health)
+						continue;
+					target = in;
+					health = h;
+				}
+
+				attackState.dst = target;
+				attackState.dstUniqueId = boardState.uniqueIds[target];
 				state.TryAddToStack(attackState);
-				return true;
 			}
 			return false;
 		};
@@ -2342,7 +2357,7 @@ namespace game
 			};
 		auto& blessedHalls = arr[ROOM_IDS::BLESSED_HALLS];
 		blessedHalls.name = "blessed halls";
-		blessedHalls.ruleText = "[start of turn] all enemies gain +4 bonus health.";
+		blessedHalls.ruleText = "[start of turn] all enemies gain +2 bonus health.";
 		blessedHalls.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -2350,7 +2365,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::tempHealth] = 4;
+					buffState.values[ActionState::VStatBuff::tempHealth] = 2;
 
 					TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);
 					return true;
@@ -2358,7 +2373,7 @@ namespace game
 				return false;
 			};
 		auto& khaalsDomain = arr[ROOM_IDS::KHAALS_DOMAIN];
-		khaalsDomain.name = "khaals domain";
+		khaalsDomain.name = "domain of pain";
 		khaalsDomain.ruleText = "[end of turn] all monsters take 1 damage.";
 		khaalsDomain.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3523,16 +3538,22 @@ namespace game
 		};
 		auto& doppleGangsters = arr[EVENT_IDS::DOPPLEGANGSTERS];
 		doppleGangsters.name = "dopplegangsters";
-		doppleGangsters.ruleText = "[summon ally] summon a copy for your opponent.";
+		doppleGangsters.ruleText = "[summon ally] summon a demon for your opponent with the same stats.";
 		doppleGangsters.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onSummon)
 				{
 					if (!actionState.values[ActionState::VSummon::isAlly])
 						return false;
+
+					const auto& card = info.monsters[actionState.values[ActionState::VSummon::id]];
+
 					ActionState summonState = actionState;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::isAlly] = 0;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
+					summonState.values[ActionState::VSummon::attack] = card.attack;
+					summonState.values[ActionState::VSummon::health] = card.health;
 					state.TryAddToStack(summonState);
 					return true;
 				}
@@ -3541,7 +3562,7 @@ namespace game
 
 		auto& gatheringStorm = arr[EVENT_IDS::GATHERING_STORM];
 		gatheringStorm.name = "gathering storm";
-		gatheringStorm.ruleText = "[start of turn] all enemies gain +2 attack.";
+		gatheringStorm.ruleText = "[start of turn] all enemies gain +1 attack.";
 		gatheringStorm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
@@ -3550,7 +3571,7 @@ namespace game
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onStatBuff;
 				buffState.source = ActionState::Source::other;
-				buffState.values[ActionState::VStatBuff::attack] = 2;
+				buffState.values[ActionState::VStatBuff::attack] = 1;
 				TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);
 				return true;
 			};
@@ -3575,7 +3596,7 @@ namespace game
 			};
 		auto& goblinPlague = arr[EVENT_IDS::GOBLIN_PLAGUE];
 		goblinPlague.name = "goblin plague";
-		goblinPlague.ruleText = "[end of turn] summon 4 goblins.";
+		goblinPlague.ruleText = "[end of turn] summon 2 goblins.";
 		goblinPlague.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
@@ -3586,7 +3607,7 @@ namespace game
 				summonState.source = ActionState::Source::other;
 				summonState.values[ActionState::VSummon::isAlly] = 0;
 				summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
-				for (uint32_t i = 0; i < 4; ++i)
+				for (uint32_t i = 0; i < 2; ++i)
 					state.TryAddToStack(summonState);
 				return true;
 			};
@@ -3608,7 +3629,7 @@ namespace game
 
 		auto& healingWord = arr[EVENT_IDS::HEALING_WORD];
 		healingWord.name = "healing word";
-		healingWord.ruleText = "[start of turn] all enemies gain +4 bonus health.";
+		healingWord.ruleText = "[start of turn] all enemies gain +2 bonus health.";
 		healingWord.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
@@ -3617,7 +3638,7 @@ namespace game
 				ActionState buffState{};
 				buffState.trigger = ActionState::Trigger::onStatBuff;
 				buffState.source = ActionState::Source::other;
-				buffState.values[ActionState::VStatBuff::tempHealth] = 4;
+				buffState.values[ActionState::VStatBuff::tempHealth] = 2;
 				TargetOfType(info, state, buffState, 0, -1, TypeTarget::enemies);
 				return true;
 			};

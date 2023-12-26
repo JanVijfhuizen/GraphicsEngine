@@ -19,7 +19,7 @@ constexpr uint32_t SUB_BOSS_COUNT = 4;
 constexpr uint32_t TOTAL_BOSS_COUNT = SUB_BOSS_COUNT + 1;
 constexpr uint32_t SPELL_CARD_COPY_COUNT = 2;
 constexpr uint32_t ROOMS_BEFORE_ROOM_EFFECTS = ROOM_COUNT_BEFORE_BOSS * 2;
-constexpr uint32_t ROOMS_BEFORE_EVENT_EFFECTS = ROOM_COUNT_BEFORE_BOSS * 3;
+constexpr uint32_t ROOMS_BEFORE_EVENT_EFFECTS = ROOM_COUNT_BEFORE_BOSS;
 
 constexpr uint32_t HAND_INITIAL_SIZE = 3;
 constexpr uint32_t HAND_MAX_SIZE = 5;
