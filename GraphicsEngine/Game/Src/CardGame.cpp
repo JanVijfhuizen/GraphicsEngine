@@ -3596,10 +3596,10 @@ namespace game
 			};
 		auto& goblinPlague = arr[EVENT_IDS::GOBLIN_PLAGUE];
 		goblinPlague.name = "goblin plague";
-		goblinPlague.ruleText = "[end of turn] summon 2 goblins.";
+		goblinPlague.ruleText = "[start of turn] summon 2 goblins.";
 		goblinPlague.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger != ActionState::Trigger::onEndOfTurn)
+				if (actionState.trigger != ActionState::Trigger::onStartOfTurn)
 					return false;
 
 				ActionState summonState{};
