@@ -94,6 +94,7 @@ void main()
     float ny = noise(uv.yx * pushConstants.simResolution.y);
     
     float v = sin(nx * pushConstants.time + ny * pushConstants.time);
+    vec2 col = vec2(cos(nx * pushConstants.time), sin(ny * pushConstants.time));
     v *= .06f;
 
     vec4 bgl = vec4(1, 0, 0, 1) * GetLightLerped(uv, 1, pushConstants.p1Lerp) + vec4(0, 1, 0, 1) * GetLightLerped(uv, 1, pushConstants.p2Lerp);
@@ -106,7 +107,7 @@ void main()
     fragColor.gba = texture(img, pixUv).gba;
 
     vec4 color = fragColor;
-    vec4 bgColor = vec4(vec3(v), 1.0);
+    vec4 bgColor = vec4(vec3(col.x, 0, col.y) * vec3(v), 1.0);
     bgColor += pow(bgl, vec4(6));
     vec4 mixed = mix(color, bgColor, 1.f - color.a);
     vec4 sub = vec4(vec3(b), 0.0);
