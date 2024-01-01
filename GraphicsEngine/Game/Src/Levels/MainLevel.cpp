@@ -186,7 +186,7 @@ namespace game
 
 		if (!bossPresent)
 		{
-			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / ROOM_COUNT_BEFORE_BOSS, 5), state.depth + 1);
+			const auto enemyCount = jv::Min<uint32_t>(jv::Min<uint32_t>(2 + state.depth / ROOM_COUNT_BEFORE_BOSS, 4), state.depth + 1);
 			for (uint32_t i = 0; i < enemyCount; ++i)
 			{
 				const uint32_t id = state.GetMonster(info);
