@@ -1539,9 +1539,9 @@ namespace game
 			};
 		auto& goblinPartyStarter = arr[MONSTER_IDS::GOBLIN_PARTY_STARTER];
 		goblinPartyStarter.name = "goblin princess";
-		goblinPartyStarter.attack = 1;
+		goblinPartyStarter.attack = 0;
 		goblinPartyStarter.health = 14;
-		goblinPartyStarter.ruleText = "[damaged] summon a goblin.";
+		goblinPartyStarter.ruleText = "[damaged] summon a goblin for each damage taken.";
 		goblinPartyStarter.tags = TAG_GOBLIN;
 		goblinPartyStarter.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1555,7 +1555,11 @@ namespace game
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GOBLIN;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
-					state.TryAddToStack(summonState);
+
+					uint32_t dmg = actionState.values[ActionState::VDamage::damage];
+					dmg = jv::Min(dmg, BOARD_CAPACITY_PER_SIDE);
+					for (uint32_t i = 0; i < dmg; ++i)
+						state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
