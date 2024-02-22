@@ -568,7 +568,7 @@ namespace game
 		if (drawInfo.metaData)
 		{
 			const auto curve = je::CreateCurveOvershooting();
-			origin.y += curve.Evaluate(drawInfo.metaData->hoverDuration) * 4 * drawInfo.scale;
+			origin.y += curve.Evaluate(drawInfo.metaData->hoverDuration) * 8 * drawInfo.scale;
 		}
 
 		glm::vec3 fadeMod{1};
@@ -655,25 +655,26 @@ namespace game
 
 		if(drawInfo.cost != -1)
 		{
+			const auto& manaCrystalTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::manacrystal)];
+
 			PixelPerfectRenderTask costRenderTask{};
 			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2 + 10 * drawInfo.scale);
-			costRenderTask.scale = statsTexture.resolution / glm::ivec2(3, 1);
+			costRenderTask.position.y -= 16 * drawInfo.scale;
+			costRenderTask.scale = manaCrystalTexture.resolution;
 			costRenderTask.scale *= drawInfo.scale;
 			costRenderTask.xCenter = drawInfo.center;
 			costRenderTask.yCenter = drawInfo.center;
-			costRenderTask.color = glm::vec4(1);
-			costRenderTask.color *= glm::vec4(fadeMod, 1);
-			costRenderTask.subTexture = statFrames[2];
+			costRenderTask.color = fgRenderTask.color;
+			costRenderTask.subTexture = manaCrystalTexture.subTexture;
 			costRenderTask.priority = priority;
-			//info.renderTasks.Push(costRenderTask);
+			info.renderTasks.Push(costRenderTask);
 
 			TextTask textTask{};
 			textTask.position = costRenderTask.position;
 			textTask.center = drawInfo.center;
-			textTask.position.y -= 16 * drawInfo.scale;
+			textTask.position.y -= 2 * drawInfo.scale;
 			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
 			textTask.priority = priority;
-			textTask.color = costRenderTask.color;
 			textTask.lifetime = textLifeTime;
 			textTask.scale *= drawInfo.scale;
 			info.textTasks.Push(textTask);

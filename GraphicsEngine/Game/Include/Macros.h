@@ -260,5 +260,6 @@ enum class TextureId
 	fallback,
 	empty,
 	manabar,
+	manacrystal,
 	length
 };

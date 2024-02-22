@@ -85,7 +85,7 @@ namespace game
 			void CollectActivatedCards(State& state, const LevelUpdateInfo& info, const ActionState& actionState);
 			void PostHandleActionState(State& state, const LevelUpdateInfo& info, const Level* level, const ActionState& actionState);
 			[[nodiscard]] static bool ValidateActionState(const State& state, const ActionState& actionState);
-			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
+			void DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied, bool bossPresent) const;
 			void DrawDamageAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawBuffAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
 			void DrawSummonAnimation(const LevelUpdateInfo& info, const Level& level, CardSelectionDrawInfo& drawInfo, bool allied) const;
@@ -95,8 +95,8 @@ namespace game
 			void DrawCardPlayAnimation(const Level& level, CardSelectionDrawInfo& drawInfo) const;
 			void DrawFadeAnimation(const Level& level, CardSelectionDrawInfo& drawInfo, uint32_t src) const;
 			[[nodiscard]] float GetActionStateLerp(const Level& level, float duration = ACTION_STATE_DEFAULT_DURATION, float startoffset = 0) const;
-			[[nodiscard]] float GetAttackMoveOffset(const State& state, const ActionState& actionState) const;
-			[[nodiscard]] float GetAttackMoveDuration(const State& state, const ActionState& actionState) const;
+			[[nodiscard]] float GetAttackMoveOffset(const State& state, const ActionState& actionState, bool bossPresent) const;
+			[[nodiscard]] float GetAttackMoveDuration(const State& state, const ActionState& actionState, bool bossPresent) const;
 			[[nodiscard]] static uint32_t GetEventCardCount(const State& state);
 			static void Shake(const LevelUpdateInfo& info);
 			void OnExit(State& state, const LevelInfo& info) override;
