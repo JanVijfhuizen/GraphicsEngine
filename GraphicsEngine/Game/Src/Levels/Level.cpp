@@ -692,7 +692,6 @@ namespace game
 			statsRenderTask.scale *= drawInfo.scale;
 			statsRenderTask.xCenter = drawInfo.center;
 			statsRenderTask.yCenter = drawInfo.center;
-			statsRenderTask.color = drawInfo.fgColor;
 			statsRenderTask.color *= glm::vec4(fadeMod, 1);
 			statsRenderTask.priority = priority;
 			
