@@ -665,6 +665,7 @@ namespace game
 		arr[7] = "Art/flowers.png";
 		arr[8] = "Art/fallback.png";
 		arr[9] = "Art/empty.png";
+		arr[10] = "Art/manabar.png";
 		return arr;
 	}
 
@@ -2296,7 +2297,7 @@ namespace game
 
 		auto& fieldOfVengeance = arr[ROOM_IDS::FIELD_OF_VENGEANCE];
 		fieldOfVengeance.name = "field of violence";
-		fieldOfVengeance.ruleText = "[monster is dealt non combat damage] attack the highest health enemy.";
+		fieldOfVengeance.ruleText = "[monster is dealt non combat damage] gain 2 attack.";
 		fieldOfVengeance.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onDamage)
@@ -2306,33 +2307,13 @@ namespace game
 
 				const auto& boardState = state.boardState;
 				
-				ActionState attackState{};
-				attackState.trigger = ActionState::Trigger::onAttack;
-				attackState.source = ActionState::Source::board;
-				attackState.src = self;
-				attackState.srcUniqueId = boardState.uniqueIds[self];
-
-				const bool allied = self < BOARD_CAPACITY_PER_SIDE;
-				const uint32_t c = allied ? boardState.enemyCount : boardState.allyCount;
-				if (c == 0)
-					return false;
-
-				uint32_t target = -1;
-				uint32_t health = 0;
-				for (uint32_t i = 0; i < c; ++i)
-				{
-					const uint32_t in = allied * BOARD_CAPACITY_PER_SIDE + i;
-					const auto& stats = boardState.combatStats[in];
-					const uint32_t h = stats.health + stats.tempHealth;
-					if (h < health)
-						continue;
-					target = in;
-					health = h;
-				}
-
-				attackState.dst = target;
-				attackState.dstUniqueId = boardState.uniqueIds[target];
-				state.TryAddToStack(attackState);
+				ActionState buffState{};
+				buffState.trigger = ActionState::Trigger::onStatBuff;
+				buffState.source = ActionState::Source::other;
+				buffState.values[ActionState::VStatBuff::attack] = 2;
+				buffState.dst = self;
+				buffState.dstUniqueId = boardState.uniqueIds[self];
+				state.TryAddToStack(buffState);
 			}
 			return false;
 		};

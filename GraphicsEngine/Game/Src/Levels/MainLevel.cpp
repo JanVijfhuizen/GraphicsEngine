@@ -286,7 +286,7 @@ namespace game
 			TextTask textTask{};
 			textTask.position = SIMULATED_RESOLUTION / 2;
 			textTask.center = true;
-			textTask.text = "combo finisher activated";
+			textTask.text = "combo finisher";
 			textTask.priority = true;
 			textTask.color = glm::vec4(1, 0, 0, 1);
 			textTask.lifetime = level->GetTime() - timeSinceStackOverloaded;
@@ -303,16 +303,15 @@ namespace game
 		{
 			overloaded = false;
 
-			ActionState damageState{};
-			damageState.trigger = ActionState::Trigger::onDamage;
-			damageState.source = ActionState::Source::other;
-			damageState.values[ActionState::VDamage::damage] = 99;
+			ActionState deathState{};
+			deathState.trigger = ActionState::Trigger::onDeath;
+			deathState.source = ActionState::Source::other;
 			
 			for (uint32_t i = 0; i < boardState.enemyCount; ++i)
 			{
-				damageState.dst = BOARD_CAPACITY_PER_SIDE + i;
-				damageState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
-				state.TryAddToStack(damageState);
+				deathState.dst = BOARD_CAPACITY_PER_SIDE + i;
+				deathState.dstUniqueId = boardState.uniqueIds[BOARD_CAPACITY_PER_SIDE + i];
+				state.TryAddToStack(deathState);
 			}
 		}
 
@@ -490,7 +489,7 @@ namespace game
 							level->DrawCard(info, cardDrawInfo);
 
 							ButtonDrawInfo buttonAcceptDrawInfo{};
-							buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 28);
+							buttonAcceptDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 34);
 							buttonAcceptDrawInfo.text = "accept";
 							buttonAcceptDrawInfo.center = true;
 							if (level->DrawButton(info, buttonAcceptDrawInfo))
@@ -504,7 +503,7 @@ namespace game
 								recruitScreenActive = false;
 							}
 							ButtonDrawInfo buttonDeclineDrawInfo{};
-							buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 36);
+							buttonDeclineDrawInfo.origin = SIMULATED_RESOLUTION / 2 - glm::ivec2(0, 42);
 							buttonDeclineDrawInfo.text = "decline";
 							buttonDeclineDrawInfo.center = true;
 							if (level->DrawButton(info, buttonDeclineDrawInfo))
@@ -810,13 +809,24 @@ namespace game
 		// Draw mana.
 		{
 			TextTask manaTextTask{};
-			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 8);
+			manaTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, 4);
 			manaTextTask.text = TextInterpreter::IntToConstCharPtr(state.mana, info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(state.maxMana, info.frameArena), info.frameArena);
 			manaTextTask.lifetime = level->GetTime();
 			manaTextTask.center = true;
+			manaTextTask.priority = true;
 			info.textTasks.Push(manaTextTask);
+
+			PixelPerfectRenderTask manabarRenderTask{};
+			manabarRenderTask.position = manaTextTask.position;
+			auto& manabarImg = info.atlasTextures[static_cast<uint32_t>(TextureId::manabar)];
+			manabarRenderTask.subTexture = manabarImg.subTexture;
+			manabarRenderTask.scale = manabarImg.resolution;
+			manabarRenderTask.xCenter = true;
+			manabarRenderTask.yCenter = true;
+			manabarRenderTask.priority = true;
+			info.renderTasks.Push(manabarRenderTask);
 		}
 
 		if(state.stack.count == 0)
@@ -1630,7 +1640,7 @@ namespace game
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.card = rewardCard;
 		cardDrawInfo.center = true;
-		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 44 };
+		cardDrawInfo.origin = { SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + cardTexture.resolution.y / 2 + 40 };
 		cardDrawInfo.lifeTime = level->GetTime();
 		cardDrawInfo.cost = rewardCard->cost;
 		cardDrawInfo.metaData = &metaDatas[SPELL_DECK_SIZE];
@@ -1724,7 +1734,7 @@ namespace game
 			cardSelectionDrawInfo.cards = cards;
 			cardSelectionDrawInfo.length = gameState.partySize;
 			cardSelectionDrawInfo.greyedOutArr = greyedOut;
-			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
+			cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2;
 			cardSelectionDrawInfo.stacks = stacks;
 			cardSelectionDrawInfo.stackCounts = stackCounts;
 			cardSelectionDrawInfo.highlighted = discoverOption;
@@ -1822,7 +1832,7 @@ namespace game
 		CardSelectionDrawInfo cardSelectionDrawInfo{};
 		cardSelectionDrawInfo.cards = cards;
 		cardSelectionDrawInfo.length = gameState.partySize;
-		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y - 2;
+		cardSelectionDrawInfo.height = SIMULATED_RESOLUTION.y / 2 - cardTexture.resolution.y / 2;
 		cardSelectionDrawInfo.stacks = artifacts;
 		cardSelectionDrawInfo.stackCounts = artifactCounts;
 		cardSelectionDrawInfo.outStackSelected = &outStackSelected;

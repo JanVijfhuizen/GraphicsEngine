@@ -8,7 +8,7 @@
 constexpr glm::ivec2 SIMULATED_RESOLUTION(320, 240);
 constexpr float TEXT_DRAW_SPEED = 20;
 
-constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 6;
+constexpr uint32_t BOARD_CAPACITY_PER_SIDE = 5;
 constexpr uint32_t BOARD_CAPACITY = BOARD_CAPACITY_PER_SIDE * 2;
 constexpr uint32_t PARTY_CAPACITY = BOARD_CAPACITY_PER_SIDE;
 constexpr uint32_t MONSTER_ARTIFACT_CAPACITY = 2;
@@ -22,7 +22,7 @@ constexpr uint32_t ROOMS_BEFORE_ROOM_EFFECTS = ROOM_COUNT_BEFORE_BOSS * 2;
 constexpr uint32_t ROOMS_BEFORE_EVENT_EFFECTS = ROOM_COUNT_BEFORE_BOSS;
 
 constexpr uint32_t HAND_INITIAL_SIZE = 3;
-constexpr uint32_t HAND_MAX_SIZE = 5;
+constexpr uint32_t HAND_MAX_SIZE = 4;
 constexpr uint32_t MAX_MANA = 5;
 constexpr uint32_t STACK_MAX_SIZE = 128;
 
@@ -34,7 +34,7 @@ constexpr float CARD_DRAW_DURATION = ACTION_STATE_DEFAULT_DURATION * .75f;
 constexpr float STACK_OVERLOAD_DURATION = 3;
 constexpr uint32_t STACK_OVERLOAD_THRESHOLD = 99;
 
-constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 4;
+constexpr uint32_t ALLY_HEIGHT = SIMULATED_RESOLUTION.y / 10 * 4.5;
 constexpr uint32_t ENEMY_HEIGHT = ALLY_HEIGHT + 92;
 constexpr uint32_t HAND_HEIGHT = 40;
 constexpr uint32_t CENTER_HEIGHT = ALLY_HEIGHT + (ENEMY_HEIGHT - ALLY_HEIGHT) / 2;
@@ -259,5 +259,6 @@ enum class TextureId
 	flowers,
 	fallback,
 	empty,
+	manabar,
 	length
 };

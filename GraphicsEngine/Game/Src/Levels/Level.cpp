@@ -128,7 +128,7 @@ namespace game
 
 				CardDrawInfo cardDrawInfo{};
 				cardDrawInfo.card = _fullCard;
-				cardDrawInfo.origin = glm::ivec2(0, SIMULATED_RESOLUTION.y / 2);
+				cardDrawInfo.origin = glm::ivec2(4, SIMULATED_RESOLUTION.y / 2);
 				cardDrawInfo.origin.x += textOffsetX * lerp;
 				cardDrawInfo.priority = true;
 				cardDrawInfo.selectable = false;
@@ -617,7 +617,7 @@ namespace game
 			imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex);
 			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
 			imageRenderTask.scale = CARD_ART_SHAPE;
-			imageRenderTask.scale *= drawInfo.scale;
+			imageRenderTask.scale *= drawInfo.scale * 2; // temp
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];
@@ -649,7 +649,7 @@ namespace game
 		if(drawInfo.cost != -1)
 		{
 			PixelPerfectRenderTask costRenderTask{};
-			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2 + 5 * drawInfo.scale);
+			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2 + 10 * drawInfo.scale);
 			costRenderTask.scale = statsTexture.resolution / glm::ivec2(3, 1);
 			costRenderTask.scale *= drawInfo.scale;
 			costRenderTask.xCenter = drawInfo.center;
@@ -663,7 +663,7 @@ namespace game
 			TextTask textTask{};
 			textTask.position = costRenderTask.position;
 			textTask.center = drawInfo.center;
-			textTask.position.y -= 4 * drawInfo.scale;
+			textTask.position.y -= 16 * drawInfo.scale;
 			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
 			textTask.priority = priority;
 			textTask.color = costRenderTask.color;
@@ -678,7 +678,8 @@ namespace game
 
 			PixelPerfectRenderTask statsRenderTask{};
 			statsRenderTask.position = origin;
-			statsRenderTask.position.x -= bgRenderTask.scale.x / 2;
+			statsRenderTask.position.x -= bgRenderTask.scale.x / 2 + 6 * drawInfo.scale;
+			statsRenderTask.position.y -= 4 * drawInfo.scale;
 			statsRenderTask.scale = statsTexture.resolution / glm::ivec2(3, 1);
 			statsRenderTask.scale *= drawInfo.scale;
 			statsRenderTask.xCenter = drawInfo.center;
