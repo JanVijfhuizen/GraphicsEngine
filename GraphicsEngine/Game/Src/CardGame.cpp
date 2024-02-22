@@ -858,12 +858,14 @@ namespace game
 				}
 				return false;
 			};
+		god.tags = TAG_BOSS;
 		auto& greatTroll = arr[MONSTER_IDS::GREAT_TROLL];
 		greatTroll.name = "great troll";
 		greatTroll.attack = 5;
 		greatTroll.health = 75;
 		greatTroll.ruleText = "[attacked, cast] +1 bonus attack.";
 		greatTroll.unique = true;
+		greatTroll.tags = TAG_BOSS;
 		greatTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast || actionState.trigger == ActionState::Trigger::onAttack)
@@ -888,7 +890,7 @@ namespace game
 		slimeQueen.health = 35;
 		slimeQueen.ruleText = "[end of turn] summon a copy.";
 		slimeQueen.unique = true;
-		slimeQueen.tags = TAG_SLIME;
+		slimeQueen.tags = TAG_SLIME | TAG_BOSS;
 		slimeQueen.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -930,6 +932,7 @@ namespace game
 				}
 				return false;
 			};
+		lichKing.tags = TAG_BOSS;
 		auto& mirrorKnight = arr[MONSTER_IDS::MIRROR_KNIGHT];
 		mirrorKnight.name = "mirror knight";
 		mirrorKnight.attack = 6;
@@ -957,6 +960,7 @@ namespace game
 				}
 				return false;
 			};
+		mirrorKnight.tags = TAG_BOSS;
 		auto& bomba = arr[MONSTER_IDS::BOMBA];
 		bomba.name = "bomba";
 		bomba.attack = 10;
@@ -979,6 +983,7 @@ namespace game
 				}
 				return false;
 			};
+		bomba.tags = TAG_BOSS;
 		auto& bomb = arr[MONSTER_IDS::BOMB];
 		bomb.name = "bomb";
 		bomb.attack = 0;
@@ -1038,13 +1043,14 @@ namespace game
 				}
 				return false;
 			};
+		theDread.tags = TAG_BOSS;
 		auto& archmage = arr[MONSTER_IDS::ARCHMAGE];
 		archmage.name = "archmage";
 		archmage.attack = 8;
 		archmage.health = 200;
 		archmage.ruleText = "[enemy buff] copy it for myself. [end of turn] deal 2 damage to all enemies.";
 		archmage.unique = true;
-		archmage.tags = TAG_HUMAN;
+		archmage.tags = TAG_HUMAN | TAG_BOSS;
 		archmage.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -1095,13 +1101,14 @@ namespace game
 				}
 				return false;
 			};
+		shelly.tags = TAG_BOSS;
 		auto& goblinQueen = arr[MONSTER_IDS::GOBLIN_QUEEN];
 		goblinQueen.name = "goblin queen";
 		goblinQueen.attack = 0;
 		goblinQueen.health = 200;
 		goblinQueen.ruleText = "[start of turn] fill the board with goblins. [any death] give all goblins +1 attack.";
 		goblinQueen.unique = true;
-		goblinQueen.tags = TAG_GOBLIN;
+		goblinQueen.tags = TAG_GOBLIN | TAG_BOSS;
 		goblinQueen.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -1157,6 +1164,7 @@ namespace game
 				}
 				return false;
 			};
+		masterLich.tags = TAG_BOSS;
 		auto& theCollector = arr[MONSTER_IDS::THE_COLLECTOR];
 		theCollector.name = "the collector";
 		theCollector.attack = 15;
@@ -1179,13 +1187,14 @@ namespace game
 				}
 				return false;
 			};
+		theCollector.tags = TAG_BOSS;
 		auto& slimeEmperor = arr[MONSTER_IDS::SLIME_EMPEROR];
 		slimeEmperor.name = "slime emperor";
 		slimeEmperor.attack = 10;
 		slimeEmperor.health = 300;
 		slimeEmperor.ruleText = "[damaged] summon a slime with attack and health equal to the damage taken.";
 		slimeEmperor.unique = true;
-		slimeEmperor.tags = TAG_SLIME;
+		slimeEmperor.tags = TAG_SLIME | TAG_BOSS;
 		slimeEmperor.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)

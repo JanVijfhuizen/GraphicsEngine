@@ -264,7 +264,7 @@ namespace game
 			switch (activeState.trigger)
 			{
 			case ActionState::Trigger::onAttack:
-				actionStateDuration = GetAttackMoveDuration(state, activeState, true) * 2 + CARD_VERTICAL_MOVE_SPEED * 2;
+				actionStateDuration = GetAttackMoveDuration(state, activeState) * 2 + CARD_VERTICAL_MOVE_SPEED * 2;
 				break;
 			case ActionState::Trigger::onStartOfTurn:
 				actionStateDuration = START_OF_TURN_ACTION_STATE_DURATION;
@@ -695,10 +695,11 @@ namespace game
 		enemySelectionDrawInfo.offsetMod = 16;
 		enemySelectionDrawInfo.mirrorHorizontal = true;
 		enemySelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
-		enemySelectionDrawInfo.containsBoss = true;
+		if(enemySelectionDrawInfo.length > 0)
+			enemySelectionDrawInfo.containsBoss = (info.monsters[boardState.ids[BOARD_CAPACITY_PER_SIDE]].tags & TAG_BOSS) != 0;
 
 		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
-		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false, true);
+		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
 		DrawDamageAnimation(info, *level, enemySelectionDrawInfo, false);
 		DrawSummonAnimation(info, *level, enemySelectionDrawInfo, false);
 		DrawBuffAnimation(info, *level, enemySelectionDrawInfo, false);
@@ -793,7 +794,7 @@ namespace game
 		playerCardSelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
 		playerCardSelectionDrawInfo.draggable = playerCardSelectionDrawInfo.selectable;
 		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
-		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true, true);
+		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(info, *level, playerCardSelectionDrawInfo, true);
 		DrawBuffAnimation(info, *level, playerCardSelectionDrawInfo, true);
 		DrawSummonAnimation(info, *level, playerCardSelectionDrawInfo, true);
@@ -1271,7 +1272,7 @@ namespace game
 	}
 
 	void MainLevel::CombatState::DrawAttackAnimation(const State& state, const LevelUpdateInfo& info, const Level& level,
-		CardSelectionDrawInfo& drawInfo, const bool allied, const bool bossPresent) const
+		CardSelectionDrawInfo& drawInfo, const bool allied) const
 	{
 		if (!activeStateValid)
 			return;
@@ -1291,9 +1292,9 @@ namespace game
 		const bool isSrc = allied ? activeState.src < BOARD_CAPACITY_PER_SIDE : activeState.src >= BOARD_CAPACITY_PER_SIDE;
 
 		// Move towards each other.
-		const float delta = GetAttackMoveOffset(state, activeState, bossPresent);
+		const float delta = GetAttackMoveOffset(state, activeState);
 
-		const float moveDuration = GetAttackMoveDuration(state, activeState, bossPresent);
+		const float moveDuration = GetAttackMoveDuration(state, activeState);
 		const float current = level.GetTime() - timeSinceLastActionState;
 
 		const auto curve = je::CreateCurveOvershooting();
@@ -1494,7 +1495,7 @@ namespace game
 		return jv::Clamp(a, 0.f, 1.f);
 	}
 
-	float MainLevel::CombatState::GetAttackMoveOffset(const State& state, const ActionState& actionState, const bool bossPresent) const
+	float MainLevel::CombatState::GetAttackMoveOffset(const State& state, const ActionState& actionState) const
 	{
 		const auto& boardState = state.boardState;
 
@@ -1522,9 +1523,9 @@ namespace game
 		return delta;
 	}
 
-	float MainLevel::CombatState::GetAttackMoveDuration(const State& state, const ActionState& actionState, const bool bossPresent) const
+	float MainLevel::CombatState::GetAttackMoveDuration(const State& state, const ActionState& actionState) const
 	{
-		return fabs(GetAttackMoveOffset(state, actionState, bossPresent)) / CARD_HORIZONTAL_MOVE_SPEED;
+		return fabs(GetAttackMoveOffset(state, actionState)) / CARD_HORIZONTAL_MOVE_SPEED;
 	}
 
 	uint32_t MainLevel::CombatState::GetEventCardCount(const State& state)
@@ -1880,8 +1881,6 @@ namespace game
 		states[4] = info.arena.New<RewardFlawCardState>();
 		states[5] = info.arena.New<RewardArtifactState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 99;
-		stateMachine.next = 0;
 		ingameMenuOpened = false;
 	}
 

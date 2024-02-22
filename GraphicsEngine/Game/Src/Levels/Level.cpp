@@ -189,6 +189,8 @@ namespace game
 						Add(info.frameArena, tags) = "goblin";
 					if (c->tags & TAG_ELEMENTAL)
 						Add(info.frameArena, tags) = "elemental";
+					if (c->tags & TAG_BOSS)
+						Add(info.frameArena, tags) = "boss";
 
 					const uint32_t tagCount = tags.GetCount();
 					if(tagCount > 0)
@@ -383,8 +385,6 @@ namespace game
 			int32_t yAddOffset = 0;
 
 			const uint32_t scale = drawInfo.containsBoss && i == 0 ? 2 : 1;
-			const uint32_t xOff = (i > 0 && drawInfo.containsBoss) * shape.x / 2;
-			xAddOffset = xOff;
 			
 			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
 			cardDrawInfo.lifeTime = drawInfo.lifeTime;
