@@ -261,7 +261,7 @@ namespace game
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = mouseScale;
 		renderTask.position = mousePos;
-		renderTask.priority = true;
+		renderTask.front = true;
 		renderTask.subTexture = info.inputState.lMouse.pressed || info.inputState.rMouse.pressed ? subTextures[1] : subTextures[0];
 		info.renderTasks.Push(renderTask);
 

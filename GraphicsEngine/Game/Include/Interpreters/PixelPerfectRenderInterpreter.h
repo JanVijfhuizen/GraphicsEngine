@@ -15,6 +15,7 @@ namespace game
 		TaskSystem<RenderTask>* priorityRenderTasks;
 		TaskSystem<DynamicRenderTask>* dynRenderTasks;
 		TaskSystem<DynamicRenderTask>* dynPriorityRenderTasks;
+		TaskSystem<RenderTask>* frontRenderTasks;
 		jv::ge::SubTexture background;
 		LevelUpdateInfo::ScreenShakeInfo* screenShakeInfo;
 	};

@@ -94,11 +94,13 @@ namespace game
 		TaskSystem<DynamicRenderTask>* dynamicRenderTasks;
 		TaskSystem<RenderTask>* priorityRenderTasks;
 		TaskSystem<DynamicRenderTask>* dynamicPriorityRenderTasks;
+		TaskSystem<RenderTask>* frontRenderTasks;
 		TaskSystem<TextTask>* textTasks;
 		TaskSystem<PixelPerfectRenderTask>* pixelPerfectRenderTasks;
 		TaskSystem<LightTask>* lightTasks;
 		InstancedRenderInterpreter<RenderTask>* renderInterpreter;
 		InstancedRenderInterpreter<RenderTask>* priorityRenderInterpreter;
+		InstancedRenderInterpreter<RenderTask>* frontRenderInterpreter;
 		DynamicRenderInterpreter* dynamicRenderInterpreter;
 		DynamicRenderInterpreter* dynamicPriorityRenderInterpreter;
 		TextInterpreter* textInterpreter;
@@ -501,6 +503,8 @@ namespace game
 			outCardGame->priorityRenderTasks->Allocate(outCardGame->arena, 512);
 			outCardGame->dynamicPriorityRenderTasks = &outCardGame->engine.AddTaskSystem<DynamicRenderTask>();
 			outCardGame->dynamicPriorityRenderTasks->Allocate(outCardGame->arena, 16);
+			outCardGame->frontRenderTasks = &outCardGame->engine.AddTaskSystem<RenderTask>();
+			outCardGame->frontRenderTasks->Allocate(outCardGame->arena, 8);
 			outCardGame->textTasks = &outCardGame->engine.AddTaskSystem<TextTask>();
 			outCardGame->textTasks->Allocate(outCardGame->arena, 32);
 			outCardGame->pixelPerfectRenderTasks = &outCardGame->engine.AddTaskSystem<PixelPerfectRenderTask>();
@@ -529,6 +533,11 @@ namespace game
 			dynamicEnableInfo.scene = outCardGame->scene;
 			dynamicEnableInfo.capacity = 64;
 
+			outCardGame->frontRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<RenderTask, InstancedRenderInterpreter<RenderTask>>(
+				*outCardGame->frontRenderTasks, createInfo);
+			outCardGame->frontRenderInterpreter->Enable(enableInfo);
+			outCardGame->frontRenderInterpreter->image = outCardGame->atlas;
+
 			outCardGame->dynamicPriorityRenderInterpreter = &outCardGame->engine.AddTaskInterpreter<DynamicRenderTask, DynamicRenderInterpreter>(
 				*outCardGame->dynamicPriorityRenderTasks, dynamicCreateInfo);
 			outCardGame->dynamicPriorityRenderInterpreter->Enable(dynamicEnableInfo);
@@ -552,6 +561,7 @@ namespace game
 			pixelPerfectRenderInterpreterCreateInfo.priorityRenderTasks = outCardGame->priorityRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.dynRenderTasks = outCardGame->dynamicRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.dynPriorityRenderTasks = outCardGame->dynamicPriorityRenderTasks;
+			pixelPerfectRenderInterpreterCreateInfo.frontRenderTasks = outCardGame->frontRenderTasks;
 			pixelPerfectRenderInterpreterCreateInfo.screenShakeInfo = &outCardGame->screenShakeInfo;
 
 			pixelPerfectRenderInterpreterCreateInfo.resolution = SIMULATED_RESOLUTION;

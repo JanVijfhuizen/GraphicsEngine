@@ -13,6 +13,7 @@ namespace game
 		bool xCenter = false;
 		bool yCenter = false;
 		bool priority = false;
+		bool front = false;
 		jv::ge::Resource image = nullptr;
 		jv::ge::Resource normalImage = nullptr;
 

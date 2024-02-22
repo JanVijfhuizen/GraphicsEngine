@@ -45,6 +45,12 @@ namespace game
 				}
 				else
 				{
+					if (task.front)
+					{
+						_createInfo.frontRenderTasks->Push(normalTask);
+						continue;
+					}
+
 					if (!task.priority)
 						_createInfo.renderTasks->Push(normalTask);
 					else
