@@ -381,10 +381,16 @@ namespace game
 		{
 			int32_t xAddOffset = 0;
 			int32_t yAddOffset = 0;
+
+			const uint32_t scale = drawInfo.containsBoss && i == 0 ? 2 : 1;
+			const uint32_t xOff = (i > 0 && drawInfo.containsBoss) * shape.x / 2;
+			xAddOffset = xOff;
 			
 			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
 			cardDrawInfo.lifeTime = drawInfo.lifeTime;
 			cardDrawInfo.priority = false;
+			cardDrawInfo.scale = scale;
+			cardDrawInfo.target = drawInfo.targets ? drawInfo.targets[i] : -1;
 
 			if(drawInfo.damagedIndex == i)
 			{
@@ -524,6 +530,7 @@ namespace game
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
 				stackedDrawInfo.origin.x += stackWidth * ((stackedCount - stackedSelected - 1) % 2 == 0);
+				stackedDrawInfo.scale = scale;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -688,20 +695,25 @@ namespace game
 			statsRenderTask.color *= glm::vec4(fadeMod, 1);
 			statsRenderTask.priority = priority;
 			
-			uint32_t values[2]
+			uint32_t values[3]
 			{
 				combatStats.attack,
-				combatStats.health
+				combatStats.health,
+				drawInfo.target
 			};
 
-			uint32_t tempValues[2]
+			uint32_t tempValues[3]
 			{
 				combatStats.tempAttack,
-				combatStats.tempHealth
+				combatStats.tempHealth,
+				0
 			};
 
-			for (uint32_t i = 0; i < 2; ++i)
+			for (uint32_t i = 0; i < 3; ++i)
 			{
+				if (i == 2 && drawInfo.target == -1)
+					continue;
+
 				statsRenderTask.subTexture = statFrames[i];
 				statsRenderTask.position.y -= statsRenderTask.scale.y;
 				info.renderTasks.Push(statsRenderTask);

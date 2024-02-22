@@ -688,13 +688,14 @@ namespace game
 		enemySelectionDrawInfo.cards = cards;
 		enemySelectionDrawInfo.length = boardState.enemyCount;
 		enemySelectionDrawInfo.height = ENEMY_HEIGHT;
-		enemySelectionDrawInfo.costs = targets;
+		enemySelectionDrawInfo.targets = targets;
 		enemySelectionDrawInfo.highlighted = selectionState == SelectionState::enemy ? selectedId : -1;
 		enemySelectionDrawInfo.combatStats = &boardState.combatStats[BOARD_CAPACITY_PER_SIDE];
 		enemySelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ENEMY_INDEX];
 		enemySelectionDrawInfo.offsetMod = 16;
 		enemySelectionDrawInfo.mirrorHorizontal = true;
 		enemySelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
+		enemySelectionDrawInfo.containsBoss = true;
 
 		DrawActivationAnimation(enemySelectionDrawInfo, Activation::monster, BOARD_CAPACITY_PER_SIDE);
 		DrawAttackAnimation(state, info, *level, enemySelectionDrawInfo, false);
@@ -1879,6 +1880,8 @@ namespace game
 		states[4] = info.arena.New<RewardFlawCardState>();
 		states[5] = info.arena.New<RewardArtifactState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
+		stateMachine.state.depth = 99;
+		stateMachine.next = 0;
 		ingameMenuOpened = false;
 	}
 

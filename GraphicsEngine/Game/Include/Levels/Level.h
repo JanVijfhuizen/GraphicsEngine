@@ -119,6 +119,7 @@ namespace game
 			CardDrawMetaData* metaData = nullptr;
 			bool priority = false;
 			uint32_t scale = 1;
+			uint32_t target = -1;
 		};
 
 		struct CardSelectionDrawInfo final
@@ -128,6 +129,7 @@ namespace game
 			uint32_t* stackCounts = nullptr;
 			uint32_t* outStackSelected = nullptr;
 			const char** texts = nullptr;
+			const uint32_t* targets = nullptr;
 			uint32_t length = 1;
 			uint32_t height;
 			uint32_t highlighted = -1;
@@ -153,6 +155,7 @@ namespace game
 			bool mirrorHorizontal = false;
 			bool draggable = false;
 			bool selectable = true;
+			bool containsBoss = false;
 		};
 
 		struct PartyDrawInfo final
