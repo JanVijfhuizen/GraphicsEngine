@@ -660,26 +660,25 @@ namespace game
 		arr[2] = "Art/symbols.png";
 		arr[3] = "Art/mouse.png";
 		arr[4] = "Art/card.png";
-		arr[5] = "Art/button.png";
-		arr[6] = "Art/stats.png";
-		arr[7] = "Art/flowers.png";
-		arr[8] = "Art/fallback.png";
-		arr[9] = "Art/empty.png";
-		arr[10] = "Art/manabar.png";
-		arr[11] = "Art/manacrystal.png";
+		arr[5] = "Art/stats.png";
+		arr[6] = "Art/flowers.png";
+		arr[7] = "Art/fallback.png";
+		arr[8] = "Art/empty.png";
+		arr[9] = "Art/manabar.png";
+		arr[10] = "Art/manacrystal.png";
 		return arr;
 	}
 
 	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		constexpr uint32_t l = 45;
+		constexpr uint32_t l = 1;
 		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
 		for (uint32_t i = 0; i < l; ++i)
 		{
 			const char* prefix = "Art/Monsters/";
 			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
-			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
+			arr[i] = TextInterpreter::Concat(arr[i], ".jpeg", arena);
 		}
 
 		return arr;
@@ -729,7 +728,7 @@ namespace game
 
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		auto& vulture = arr[MONSTER_IDS::VULTURE];
 		vulture.name = "vulture";
@@ -826,8 +825,6 @@ namespace game
 		daisy.attack = 3;
 		daisy.health = 3;
 		daisy.unique = true;
-		daisy.animIndex = 2;
-		daisy.normalAnimIndex = 47;
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
 		god.attack = 0;
@@ -1791,7 +1788,7 @@ namespace game
 
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].name = "arcane amulet";
 		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].ruleText = "[start of turn] +1 mana.";
@@ -2303,7 +2300,7 @@ namespace game
 		const auto arr = jv::CreateArray<RoomCard>(arena, ROOM_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		auto& fieldOfVengeance = arr[ROOM_IDS::FIELD_OF_VENGEANCE];
 		fieldOfVengeance.name = "field of violence";
@@ -2489,7 +2486,7 @@ namespace game
 		const auto arr = jv::CreateArray<SpellCard>(arena, SPELL_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		auto& arcaneIntellect = arr[SPELL_IDS::ARCANE_INTELLECT];
 		arcaneIntellect.name = "arcane intellect";
@@ -3363,7 +3360,7 @@ namespace game
 		const auto arr = jv::CreateArray<CurseCard>(arena, CURSE_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		arr[CURSE_IDS::FADING].name = "fading";
 		arr[CURSE_IDS::FADING].ruleText = "[end of turn] take one damage.";
@@ -3514,7 +3511,7 @@ namespace game
 		const auto arr = jv::CreateArray<EventCard>(arena, EVENT_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		auto& aetherSurge = arr[EVENT_IDS::AETHER_SURGE];
 		aetherSurge.name = "aether surge";

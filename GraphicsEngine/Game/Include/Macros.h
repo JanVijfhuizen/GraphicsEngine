@@ -47,9 +47,9 @@ constexpr uint32_t META_DATA_HAND_INDEX = META_DATA_EVENT_INDEX + EVENT_CARD_MAX
 constexpr uint32_t META_DATA_ALLY_INDEX = META_DATA_HAND_INDEX + HAND_MAX_SIZE;
 constexpr uint32_t META_DATA_ENEMY_INDEX = META_DATA_ALLY_INDEX + BOARD_CAPACITY_PER_SIDE;
 
-constexpr glm::ivec2 CARD_ART_SHAPE{ 16 };
-constexpr uint32_t CARD_ART_LENGTH = 2;
-constexpr float CARD_ANIM_SPEED = .5f;
+constexpr glm::ivec2 CARD_ART_SHAPE{ 32 };
+constexpr uint32_t CARD_ART_LENGTH = 5;
+constexpr float CARD_ANIM_SPEED = .2f;
 
 constexpr float CARD_HORIZONTAL_MOVE_SPEED = 1.f / (ACTION_STATE_DEFAULT_DURATION / 2);
 constexpr float CARD_VERTICAL_MOVE_SPEED = ACTION_STATE_DEFAULT_DURATION / 2;
@@ -254,7 +254,6 @@ enum class TextureId
 	symbols,
 	mouse,
 	card,
-	button,
 	stats,
 	flowers,
 	fallback,

@@ -624,7 +624,7 @@ namespace game
 			imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex);
 			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
 			imageRenderTask.scale = CARD_ART_SHAPE;
-			imageRenderTask.scale *= drawInfo.scale * 2; // temp
+			imageRenderTask.scale *= drawInfo.scale;
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];
