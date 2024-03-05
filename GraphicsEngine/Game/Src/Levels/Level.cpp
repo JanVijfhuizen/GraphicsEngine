@@ -272,7 +272,7 @@ namespace game
 		LightTask lightTask{};
 		lightTask.pos = LightTask::ToLightTaskPos(renderTask.position);
 		lightTask.pos.z = .2f;
-		lightTask.intensity = 10;
+		lightTask.intensity = 4;
 		lightTask.fallOf = 8;
 		info.lightTasks.Push(lightTask);
 	}

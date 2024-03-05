@@ -381,7 +381,7 @@ namespace game
 				info.textTasks.Push(textTask);
 
 				LightTask lightTask{};
-				lightTask.intensity = 20;
+				lightTask.intensity = 4;
 				lightTask.fallOf = 8;
 				lightTask.pos = LightTask::ToLightTaskPos(textTask.position);
 				lightTask.pos.z = .2f;
