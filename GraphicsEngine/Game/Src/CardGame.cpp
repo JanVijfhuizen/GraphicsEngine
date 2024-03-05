@@ -130,6 +130,7 @@ namespace game
 		std::chrono::time_point<std::chrono::steady_clock> prevTime{};
 
 		TextureStreamer textureStreamer;
+		TextureStreamer largeTextureStreamer;
 		float pixelation = 1;
 
 		bool activePlayer;
@@ -143,6 +144,7 @@ namespace game
 
 		[[nodiscard]] static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<const char*> GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena);
+		[[nodiscard]] static jv::Array<const char*> GetDynamicBossTexturePaths(jv::Arena& arena, jv::Arena& frameArena);
 		[[nodiscard]] static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<uint32_t> GetBossCards(jv::Arena& arena);
@@ -272,6 +274,7 @@ namespace game
 			*lightTasks,
 			dt,
 			textureStreamer,
+			largeTextureStreamer,
 			screenShakeInfo,
 			pixelation,
 			activePlayer,
@@ -611,6 +614,14 @@ namespace game
 		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().arena, outCardGame->engine.GetMemory().frameArena);
 		for (const auto& dynText : dynTexts)
 			outCardGame->textureStreamer.DefineTexturePath(dynText);
+		
+		imageCreateInfo.resolution = LARGE_CARD_ART_SHAPE * glm::ivec2(LARGE_CARD_ART_LENGTH, 1);
+		imageCreateInfo.scene = outCardGame->scene;
+
+		outCardGame->largeTextureStreamer = TextureStreamer::Create(outCardGame->arena, 8, 32, imageCreateInfo);
+		const auto dynBossTexts = GetDynamicBossTexturePaths(outCardGame->engine.GetMemory().arena, outCardGame->engine.GetMemory().frameArena);
+		for (const auto& dynText : dynBossTexts)
+			outCardGame->largeTextureStreamer.DefineTexturePath(dynText);
 
 		// Render graph.
 		/*
@@ -676,6 +687,21 @@ namespace game
 		for (uint32_t i = 0; i < l; ++i)
 		{
 			const char* prefix = "Art/Monsters/";
+			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
+			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
+			arr[i] = TextInterpreter::Concat(arr[i], ".jpeg", arena);
+		}
+
+		return arr;
+	}
+
+	jv::Array<const char*> CardGame::GetDynamicBossTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
+	{
+		constexpr uint32_t l = 1;
+		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
+		for (uint32_t i = 0; i < l; ++i)
+		{
+			const char* prefix = "Art/Monsters/B";
 			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".jpeg", arena);

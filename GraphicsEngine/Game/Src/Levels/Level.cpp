@@ -389,8 +389,9 @@ namespace game
 			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
 			cardDrawInfo.lifeTime = drawInfo.lifeTime;
 			cardDrawInfo.priority = false;
-			cardDrawInfo.scale = scale;
 			cardDrawInfo.target = drawInfo.targets ? drawInfo.targets[i] : -1;
+			cardDrawInfo.large = drawInfo.containsBoss && i == 0;
+			cardDrawInfo.scale = scale;
 
 			if(drawInfo.damagedIndex == i)
 			{
@@ -530,7 +531,6 @@ namespace game
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
 				stackedDrawInfo.origin.x += stackWidth * ((stackedCount - stackedSelected - 1) % 2 == 0);
-				stackedDrawInfo.scale = scale;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -613,16 +613,28 @@ namespace game
 		// Draw image.
 		if (!drawInfo.ignoreAnim && drawInfo.card)
 		{
-			jv::ge::SubTexture animFrames[CARD_ART_LENGTH];
-			Divide({}, animFrames, CARD_ART_LENGTH);
+			const uint32_t l = drawInfo.large ? LARGE_CARD_ART_LENGTH : CARD_ART_LENGTH;
 
-			auto i = static_cast<uint32_t>(GetTime() / CARD_ANIM_SPEED);
-			i %= CARD_ART_LENGTH;
+			jv::ge::SubTexture animFrames[LARGE_CARD_ART_LENGTH];
+			Divide({}, animFrames, l);
+
+			auto i = static_cast<uint32_t>(GetTime() * CARD_ANIM_SPEED);
+			i %= l;
 
 			PixelPerfectRenderTask imageRenderTask{};
 			imageRenderTask.position = origin;
-			imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex);
-			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
+
+			if(!drawInfo.large)
+			{
+				imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex);
+				imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
+			}
+			else
+			{
+				imageRenderTask.normalImage = info.largeTextureStreamer.Get(drawInfo.card->normalAnimIndex);
+				imageRenderTask.image = info.largeTextureStreamer.Get(drawInfo.card->animIndex);
+			}
+			
 			imageRenderTask.scale = CARD_ART_SHAPE;
 			imageRenderTask.scale *= drawInfo.scale;
 			imageRenderTask.xCenter = drawInfo.center;

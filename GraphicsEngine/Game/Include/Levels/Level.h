@@ -67,6 +67,7 @@ namespace game
 		TaskSystem<LightTask>& lightTasks;
 		float deltaTime;
 		TextureStreamer& textureStreamer;
+		TextureStreamer& largeTextureStreamer;
 		ScreenShakeInfo& screenShakeInfo;
 		float& pixelation;
 		bool& activePlayer;
@@ -120,6 +121,7 @@ namespace game
 			bool priority = false;
 			uint32_t scale = 1;
 			uint32_t target = -1;
+			bool large = false;
 		};
 
 		struct CardSelectionDrawInfo final
