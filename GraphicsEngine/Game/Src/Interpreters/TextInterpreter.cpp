@@ -168,6 +168,7 @@ namespace game
 
 						PixelPerfectRenderTask cpyTask = task;
 						cpyTask.priority = job.priority;
+						cpyTask.front = job.front;
 						cpyTask.position.y += static_cast<int32_t>(yMod * _createInfo.bounceHeight);
 						if (isInBrackets)
 							cpyTask.color = { 0, 1, 0, 1 };

@@ -46,7 +46,7 @@ void main()
         discard;
 
     vec4 n = texture(normal, fragPos);
-    vec3 norm = (CalculateNormal() + n.xyz) / 2;
+    vec3 norm = (CalculateNormal() + n.xyz);
 
     vec3 lightMul = vec3(0);
 
@@ -70,7 +70,7 @@ void main()
         vec3 specular = light.color.xyz * light.specularity * spec;  
         diffuse += specular;
 
-        lightMul += diffuse;
+        //lightMul += diffuse;
     }
 
     vec4 result = vec4(lightInfo.ambient + lightMul, 1.0) * color;

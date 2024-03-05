@@ -205,6 +205,8 @@ namespace game
 						}
 						tagsText = txt;
 					}
+
+					cardDrawInfo.large = (c->tags & TAG_BOSS) != 0;
 				}
 
 				if (l >= 0)
