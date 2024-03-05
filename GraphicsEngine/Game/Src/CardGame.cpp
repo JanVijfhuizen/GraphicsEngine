@@ -911,7 +911,7 @@ namespace game
 		slimeQueen.name = "slime queen";
 		slimeQueen.attack = 2;
 		slimeQueen.health = 35;
-		slimeQueen.ruleText = "[end of turn] summon a copy.";
+		slimeQueen.ruleText = "[end of turn] summon a slime soldier with my stats.";
 		slimeQueen.unique = true;
 		slimeQueen.tags = TAG_SLIME | TAG_BOSS;
 		slimeQueen.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -924,7 +924,7 @@ namespace game
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_QUEEN;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_SOLDIER;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
 					summonState.values[ActionState::VSummon::health] = stats.health + stats.tempHealth;
 					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
