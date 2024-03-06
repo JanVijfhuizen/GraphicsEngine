@@ -689,7 +689,7 @@ namespace game
 			const char* prefix = "Art/Monsters/";
 			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
-			arr[i] = TextInterpreter::Concat(arr[i], ".jpeg", arena);
+			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 		}
 
 		return arr;
@@ -704,7 +704,7 @@ namespace game
 			const char* prefix = "Art/Monsters/B";
 			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
-			arr[i] = TextInterpreter::Concat(arr[i], ".jpeg", arena);
+			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 		}
 
 		return arr;
