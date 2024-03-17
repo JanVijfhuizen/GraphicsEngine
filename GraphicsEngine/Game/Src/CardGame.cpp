@@ -576,6 +576,7 @@ namespace game
 
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
 			textInterpreterCreateInfo.alphabetAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::alphabet)];
+			textInterpreterCreateInfo.largeAlphabetAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::largeAlphabet)];
 			textInterpreterCreateInfo.symbolAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)];
 			textInterpreterCreateInfo.numberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
@@ -667,16 +668,17 @@ namespace game
 	{
 		const auto arr = jv::CreateArray<const char*>(arena, static_cast<uint32_t>(TextureId::length));
 		arr[0] = "Art/alphabet.png";
-		arr[1] = "Art/numbers.png";
-		arr[2] = "Art/symbols.png";
-		arr[3] = "Art/mouse.png";
-		arr[4] = "Art/card.png";
-		arr[5] = "Art/stats.png";
-		arr[6] = "Art/flowers.png";
-		arr[7] = "Art/fallback.png";
-		arr[8] = "Art/empty.png";
-		arr[9] = "Art/manabar.png";
-		arr[10] = "Art/manacrystal.png";
+		arr[1] = "Art/largealphabet.png";
+		arr[2] = "Art/numbers.png";
+		arr[3] = "Art/symbols.png";
+		arr[4] = "Art/mouse.png";
+		arr[5] = "Art/card.png";
+		arr[6] = "Art/stats.png";
+		arr[7] = "Art/flowers.png";
+		arr[8] = "Art/fallback.png";
+		arr[9] = "Art/empty.png";
+		arr[10] = "Art/manabar.png";
+		arr[11] = "Art/manacrystal.png";
 		return arr;
 	}
 

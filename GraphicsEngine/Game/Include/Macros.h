@@ -252,6 +252,7 @@ enum class LevelIndex
 enum class TextureId
 {
 	alphabet,
+	largeAlphabet,
 	numbers,
 	symbols,
 	mouse,

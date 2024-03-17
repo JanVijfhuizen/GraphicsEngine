@@ -221,8 +221,9 @@ namespace game
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
 					titleTextTask.priority = true;
-					titleTextTask.scale = 2;
+					titleTextTask.largeFont = true;
 					info.textTasks.Push(titleTextTask);
+					titleTextTask.largeFont = false;
 
 					if(tagsText)
 					{
