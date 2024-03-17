@@ -17,7 +17,7 @@ namespace game
 
 		float lifetime = -1;
 		bool loop = false;
-		bool fadingOut = false;
+		bool fadeIn = true;
 		bool largeFont = false;
 	};
 }

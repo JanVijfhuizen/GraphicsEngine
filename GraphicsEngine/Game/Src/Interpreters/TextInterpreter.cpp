@@ -81,10 +81,12 @@ namespace game
 				const auto len = static_cast<uint32_t>(strlen(job.text));
 				auto maxLen = job.maxLength == -1 ? len : job.maxLength;
 
-				const bool fadeIn = job.lifetime >= 0 && job.lifetime < _createInfo.fadeInSpeed * static_cast<float>(len);
+				bool fadeIn = job.lifetime >= 0 && job.lifetime < _createInfo.fadeInSpeed * static_cast<float>(len);
+				if (!job.fadeIn)
+					fadeIn = false;
 				if(fadeIn)
 					maxLen = jv::Min<uint32_t>(maxLen, static_cast<uint32_t>(job.lifetime * _createInfo.fadeInSpeed));
-
+				
 				const float size = job.largeFont ? _createInfo.largeSymbolSize : _createInfo.symbolSize;
 				const float pctSize = job.largeFont ? largeSymbolPctSize : symbolPctSize;
 

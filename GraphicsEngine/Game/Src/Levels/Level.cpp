@@ -22,6 +22,8 @@ namespace game
 
 	void Level::Create(const LevelCreateInfo& info)
 	{
+		_buttonHovered = false;
+		_buttonHoveredLastFrame = false;
 		_fullCard = nullptr;
 		_timeSinceOpened = 0;
 		_timeSinceLoading = 0;
@@ -71,6 +73,16 @@ namespace game
 
 	void Level::PostUpdate(const LevelUpdateInfo& info)
 	{
+		if (!_buttonHovered)
+		{
+			_buttonLifetime = 0;
+			_buttonHoveredLastFrame = false;
+			_buttonLifetime = 0;
+		}
+		else
+			_buttonLifetime += info.deltaTime;
+		_buttonHovered = false;
+
 		const auto atlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::mouse)];
 
 		jv::ge::SubTexture subTextures[2];
@@ -221,6 +233,7 @@ namespace game
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
 					titleTextTask.priority = true;
+					//titleTextTask.scale = 2;
 					titleTextTask.largeFont = true;
 					info.textTasks.Push(titleTextTask);
 					titleTextTask.largeFont = false;
@@ -290,14 +303,14 @@ namespace game
 		info.textTasks.Push(titleTextTask);
 	}
 
-	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo, float overrideLifetime) const
+	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo, float overrideLifetime)
 	{
 		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
 
 		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)];
 		uint32_t textMaxLen = -1;
 
-		const float lifeTime = overrideLifetime < -1e-5f  ? GetTime() : overrideLifetime;
+		const float lifeTime = overrideLifetime < -1e-5f ? GetTime() : overrideLifetime;
 		float l = 1;
 		if (lifeTime <= BUTTON_SPAWN_ANIM_DURATION)
 			l = lifeTime / BUTTON_SPAWN_ANIM_DURATION;
@@ -317,22 +330,28 @@ namespace game
 		buttonTextTask.lifetime = lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
 		buttonTextTask.center = drawInfo.centerText;
+		buttonTextTask.largeFont = drawInfo.largeFont;
 
 		buttonRenderTask.scale.x *= l;
 		bool pressed = false;
 		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin - 
 			glm::ivec2(buttonRenderTask.scale.x / 2, 0) * static_cast<int32_t>(drawInfo.center),
-			buttonRenderTask.scale + glm::ivec2(0, 9), info.inputState.mousePos);
+			buttonRenderTask.scale + glm::ivec2(0, drawInfo.largeFont ? 17 : 9), info.inputState.mousePos);
 		if (collided)
 		{
 			buttonTextTask.loop = true;
 			buttonRenderTask.color = glm::vec4(1, 0, 0, 1);
+			info.renderTasks.Push(buttonRenderTask);
+			buttonTextTask.lifetime = _buttonLifetime;
+			buttonTextTask.fadeIn = false;
+			_buttonHovered = true;
 		}
+		else if(drawInfo.drawLineByDefault)
+			info.renderTasks.Push(buttonRenderTask);
 		if (collided && info.inputState.lMouse.ReleaseEvent())
 			pressed = true;
 
 		info.textTasks.Push(buttonTextTask);
-		info.renderTasks.Push(buttonRenderTask);
 		return pressed;
 	}
 

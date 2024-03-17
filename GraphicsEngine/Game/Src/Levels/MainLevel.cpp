@@ -1881,8 +1881,6 @@ namespace game
 		states[4] = info.arena.New<RewardFlawCardState>();
 		states[5] = info.arena.New<RewardArtifactState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 5;
-		stateMachine.next = 0;
 		ingameMenuOpened = false;
 	}
 
