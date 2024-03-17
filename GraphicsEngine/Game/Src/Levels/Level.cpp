@@ -120,14 +120,14 @@ namespace game
 
 				PixelPerfectRenderTask bgRenderTask{};
 				bgRenderTask.position = SIMULATED_RESOLUTION / 2;
-				bgRenderTask.scale = glm::ivec2(SIMULATED_RESOLUTION.x, lineCount * alphabetTexture.resolution.y + 6);
+				bgRenderTask.scale = glm::ivec2(SIMULATED_RESOLUTION.x, lineCount * alphabetTexture.resolution.y + 6 + 13);
 				bgRenderTask.scale.y *= lerp;
 				bgRenderTask.subTexture = emptyTexture.subTexture;
 				bgRenderTask.xCenter = true;
 				bgRenderTask.yCenter = true;
 				bgRenderTask.priority = true;
 				info.renderTasks.Push(bgRenderTask);
-
+				
 				if(bgRenderTask.scale.y > 2)
 				{
 					bgRenderTask.scale.y -= 2;
@@ -145,7 +145,7 @@ namespace game
 				cardDrawInfo.priority = true;
 				cardDrawInfo.selectable = false;
 				cardDrawInfo.scale = 2;
-				cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
+				//cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
 
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
@@ -180,8 +180,10 @@ namespace game
 
 				if(type == Card::Type::spell)
 				{
+					/*
 					const auto c = static_cast<SpellCard*>(_fullCard);
 					cardDrawInfo.cost = c->cost;
+					*/
 				}
 				else if (type == Card::Type::monster)
 				{
@@ -229,6 +231,7 @@ namespace game
 					titleTextTask.position = bgRenderTask.position;
 					titleTextTask.position.x += textOffsetX;
 					titleTextTask.position.y += off + alphabetTexture.resolution.y / 2;
+					titleTextTask.position.y -= 17;
 					titleTextTask.text = _fullCard->name;
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
@@ -259,6 +262,7 @@ namespace game
 					auto ruleTextTask = titleTextTask;
 					ruleTextTask.position = bgRenderTask.position;
 					ruleTextTask.position.x += textOffsetX;
+					ruleTextTask.position.y -= 11;
 					ruleTextTask.text = text;
 					ruleTextTask.position.y += alphabetTexture.resolution.y * (lineCount - 1) / 2;
 					ruleTextTask.position.y -= alphabetTexture.resolution.y / 2;
