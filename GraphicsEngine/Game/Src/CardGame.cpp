@@ -684,30 +684,46 @@ namespace game
 
 	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		constexpr uint32_t l = 1;
-		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
-		for (uint32_t i = 0; i < l; ++i)
+		const auto arr = jv::CreateArray<const char*>(frameArena, MONSTER_IDS::LENGTH + ARTIFACT_IDS::LENGTH);
+		for (uint32_t i = 0; i < arr.length; ++i)
 		{
+			/*
 			const char* prefix = "Art/Monsters/";
 			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
+			*/
+			if(i < MONSTER_IDS::LENGTH)
+				arr[i] = "Art/Monsters/Fire_Elemental.png";
+			else
+				arr[i] = "Art/Artifacts/Blessed_Ring.png";
 		}
 
+		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/Slime_Soldier.png";
+		arr[MONSTER_IDS::DAISY] = "Art/Monsters/Fire_Elemental.png"; // Temp.
+
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::BLESSED_RING] = "Art/Artifacts/Blessed_Ring.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifacts/Arcane_Amulet.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::BLOOD_AXE] = "Art/Artifacts/Bloody_Axe.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::STAFF_OF_SUMMONING] = "Art/Artifacts/Demonic_Staff.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MANA_RING] = "Art/Artifacts/Mana_Ring.png";
 		return arr;
 	}
 
 	jv::Array<const char*> CardGame::GetDynamicBossTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		constexpr uint32_t l = 1;
-		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
-		for (uint32_t i = 0; i < l; ++i)
+		const auto arr = jv::CreateArray<const char*>(frameArena, TOTAL_BOSS_COUNT);
+		for (uint32_t i = 0; i < arr.length; ++i)
 		{
+			/*
 			const char* prefix = "Art/Monsters/B";
 			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
+			*/
+			arr[i] = "Art/Monsters/Slime_King.png";
 		}
+		arr[0] = "Art/Monsters/Slime_King.png";
 
 		return arr;
 	}
@@ -756,7 +772,7 @@ namespace game
 
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = 0;
+			card.animIndex = c++;
 
 		auto& vulture = arr[MONSTER_IDS::VULTURE];
 		vulture.name = "vulture";
@@ -1814,13 +1830,13 @@ namespace game
 	{
 		const auto arr = jv::CreateArray<ArtifactCard>(arena, ARTIFACT_IDS::LENGTH);
 
-		uint32_t c = 0;
+		uint32_t c = MONSTER_IDS::LENGTH;
 		for (auto& card : arr)
-			card.animIndex = 0;
+			card.animIndex = c++;
 
-		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].name = "arcane amulet";
-		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].ruleText = "[start of turn] +1 mana.";
-		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::ARCANE_AMULET].name = "arcane amulet";
+		arr[ARTIFACT_IDS::ARCANE_AMULET].ruleText = "[start of turn] +1 mana.";
+		arr[ARTIFACT_IDS::ARCANE_AMULET].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 			{
