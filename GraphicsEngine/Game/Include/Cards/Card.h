@@ -97,6 +97,7 @@ namespace game
 		const char* ruleText = "...";
 		uint32_t animIndex = 0;
 		uint32_t normalAnimIndex = -1;
+		uint32_t animFrameCount = 1;
 
 		bool(*onActionEvent)(const struct LevelInfo& info, State& state, const ActionState& actionState, uint32_t self) = nullptr;
 		[[nodiscard]] virtual Type GetType() = 0;

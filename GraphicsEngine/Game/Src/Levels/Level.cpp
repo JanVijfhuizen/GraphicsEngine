@@ -639,10 +639,11 @@ namespace game
 		// Draw image.
 		if (!drawInfo.ignoreAnim && drawInfo.card)
 		{
-			const uint32_t l = drawInfo.large ? LARGE_CARD_ART_LENGTH : CARD_ART_LENGTH;
+			const uint32_t l = drawInfo.card->animFrameCount;
+			const uint32_t ml = drawInfo.large ? LARGE_CARD_ART_MAX_LENGTH : CARD_ART_MAX_LENGTH;
 
-			jv::ge::SubTexture animFrames[LARGE_CARD_ART_LENGTH];
-			Divide({}, animFrames, l);
+			jv::ge::SubTexture animFrames[CARD_ART_MAX_LENGTH > LARGE_CARD_ART_MAX_LENGTH ? CARD_ART_MAX_LENGTH : LARGE_CARD_ART_MAX_LENGTH];
+			Divide({}, animFrames, ml);
 
 			auto i = static_cast<uint32_t>(GetTime() * CARD_ANIM_SPEED);
 			i %= l;

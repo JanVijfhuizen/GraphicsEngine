@@ -608,7 +608,7 @@ namespace game
 		outCardGame->prevTime = outCardGame->timer.now();
 
 		jv::ge::ImageCreateInfo imageCreateInfo{};
-		imageCreateInfo.resolution = CARD_ART_SHAPE * glm::ivec2(CARD_ART_LENGTH, 1);
+		imageCreateInfo.resolution = CARD_ART_SHAPE * glm::ivec2(CARD_ART_MAX_LENGTH, 1);
 		imageCreateInfo.scene = outCardGame->scene;
 
 		outCardGame->textureStreamer = TextureStreamer::Create(outCardGame->arena, 32, 256, imageCreateInfo);
@@ -616,7 +616,7 @@ namespace game
 		for (const auto& dynText : dynTexts)
 			outCardGame->textureStreamer.DefineTexturePath(dynText);
 		
-		imageCreateInfo.resolution = LARGE_CARD_ART_SHAPE * glm::ivec2(LARGE_CARD_ART_LENGTH, 1);
+		imageCreateInfo.resolution = LARGE_CARD_ART_SHAPE * glm::ivec2(LARGE_CARD_ART_MAX_LENGTH, 1);
 		imageCreateInfo.scene = outCardGame->scene;
 
 		outCardGame->largeTextureStreamer = TextureStreamer::Create(outCardGame->arena, 8, 32, imageCreateInfo);
@@ -694,7 +694,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 			if(i < MONSTER_IDS::LENGTH)
-				arr[i] = "Art/Monsters/Fire_Elemental.png";
+				arr[i] = "Art/Monsters/Slime_Soldier.png";
 			else
 				arr[i] = "Art/Artifacts/Blessed_Ring.png";
 		}
@@ -772,7 +772,10 @@ namespace game
 
 		uint32_t c = 0;
 		for (auto& card : arr)
+		{
 			card.animIndex = c++;
+			card.animFrameCount = 10;
+		}
 
 		auto& vulture = arr[MONSTER_IDS::VULTURE];
 		vulture.name = "vulture";
@@ -869,6 +872,7 @@ namespace game
 		daisy.attack = 3;
 		daisy.health = 3;
 		daisy.unique = true;
+		daisy.animFrameCount = 5;
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
 		god.attack = 0;
@@ -926,6 +930,7 @@ namespace game
 				return false;
 			};
 		greatTroll.animIndex = 0;
+		greatTroll.animFrameCount = 12;
 		auto& slimeQueen = arr[MONSTER_IDS::SLIME_QUEEN];
 		slimeQueen.name = "slime queen";
 		slimeQueen.attack = 2;
@@ -953,6 +958,7 @@ namespace game
 				return false;
 			};
 		slimeQueen.animIndex = 0;
+		slimeQueen.animFrameCount = 12;
 		auto& lichKing = arr[MONSTER_IDS::LICH_KING];
 		lichKing.name = "lich king";
 		lichKing.attack = 0;
@@ -977,6 +983,7 @@ namespace game
 			};
 		lichKing.tags = TAG_BOSS;
 		lichKing.animIndex = 0;
+		lichKing.animFrameCount = 12;
 		auto& mirrorKnight = arr[MONSTER_IDS::MIRROR_KNIGHT];
 		mirrorKnight.name = "mirror knight";
 		mirrorKnight.attack = 6;
@@ -1679,6 +1686,7 @@ namespace game
 				}
 				return false;
 			};
+		slimeSoldier.animFrameCount = 5;
 		auto& madPyromancer = arr[MONSTER_IDS::MAD_PYROMANCER];
 		madPyromancer.name = "mad pyromancer";
 		madPyromancer.attack = 1;
@@ -1835,7 +1843,10 @@ namespace game
 
 		uint32_t c = MONSTER_IDS::LENGTH;
 		for (auto& card : arr)
+		{
 			card.animIndex = c++;
+			card.animFrameCount = 6;
+		}
 
 		arr[ARTIFACT_IDS::ARCANE_AMULET].name = "arcane amulet";
 		arr[ARTIFACT_IDS::ARCANE_AMULET].ruleText = "[start of turn] +1 mana.";
@@ -1848,6 +1859,7 @@ namespace game
 			}
 			return false;
 		};
+		arr[ARTIFACT_IDS::ARCANE_AMULET].animFrameCount = 3;
 		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "repulsion armor";
 		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[attack] the attacked monster takes damage equal to my bonus health.";
 		arr[ARTIFACT_IDS::FALSE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2032,6 +2044,7 @@ namespace game
 				}
 				return false;
 			};
+		arr[ARTIFACT_IDS::BLOOD_AXE].animFrameCount = 6;
 		arr[ARTIFACT_IDS::RUSTY_CLAW].name = "rusty claw";
 		arr[ARTIFACT_IDS::RUSTY_CLAW].ruleText = "[any death] draw.";
 		arr[ARTIFACT_IDS::RUSTY_CLAW].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2110,6 +2123,7 @@ namespace game
 				}
 				return false;
 			};
+		arr[ARTIFACT_IDS::BLESSED_RING].animFrameCount = 6;
 		arr[ARTIFACT_IDS::MANAMUNE].name = "manamune";
 		arr[ARTIFACT_IDS::MANAMUNE].ruleText = "[cast] +2 bonus attack.";
 		arr[ARTIFACT_IDS::MANAMUNE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2301,6 +2315,7 @@ namespace game
 				}
 				return false;
 			};
+		arr[ARTIFACT_IDS::STAFF_OF_SUMMONING].animFrameCount = 4;
 		arr[ARTIFACT_IDS::MANA_RING].name = "mana ring";
 		arr[ARTIFACT_IDS::MANA_RING].ruleText = "[cast 2 cost or higher] draw.";
 		arr[ARTIFACT_IDS::MANA_RING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -2319,6 +2334,7 @@ namespace game
 				}
 				return false;
 			};
+		arr[ARTIFACT_IDS::MANA_RING].animFrameCount = 6;
 		return arr;
 	}
 
