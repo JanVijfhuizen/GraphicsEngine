@@ -13,7 +13,8 @@ namespace game
 		uint32_t DefineTexturePath(const char* path);
 		void Update() const;
 
-		static TextureStreamer Create(jv::Arena& arena, uint32_t poolChunkSize, uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo);
+		static TextureStreamer Create(jv::Arena& arena, uint32_t poolChunkSize, uint32_t idCount, 
+			const jv::ge::ImageCreateInfo& imageCreateInfo);
 		static void Destroy(const TextureStreamer& pool);
 
 	private:

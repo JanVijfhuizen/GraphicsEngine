@@ -415,12 +415,12 @@ namespace jv::ge
 		return &image;
 	}
 
-	void FillImage(const Resource image, unsigned char* pixels)
+	void FillImage(const Resource image, unsigned char* pixels, glm::ivec2* overrideResolution)
 	{
 		assert(ge.initialized);
 		const auto pImage = static_cast<Image*>(image);
 		const auto scene = pImage->scene;
-		pImage->image.FillImage(scene->arena, scene->freeArena, ge.app, pixels, ge.cmd);
+		pImage->image.FillImage(scene->arena, scene->freeArena, ge.app, pixels, ge.cmd, overrideResolution);
 	}
 
 	Resource AddMesh(MeshCreateInfo& info)

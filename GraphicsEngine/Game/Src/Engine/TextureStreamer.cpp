@@ -64,7 +64,8 @@ namespace game
 
 		int texWidth, texHeight, texChannels2;
 		stbi_uc* pixels = stbi_load(id.path, &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
-		jv::ge::FillImage(id.resource->resource, pixels);
+		glm::ivec2 resolution{ texWidth, texHeight };
+		jv::ge::FillImage(id.resource->resource, pixels, &resolution);
 		stbi_image_free(pixels);
 		id.resource->active = true;
 		id.inactiveCount = 0;
@@ -98,7 +99,8 @@ namespace game
 		}
 	}
 
-	TextureStreamer TextureStreamer::Create(jv::Arena& arena, const uint32_t poolChunkSize, const uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo)
+	TextureStreamer TextureStreamer::Create(jv::Arena& arena, const uint32_t poolChunkSize, const uint32_t idCount, 
+		const jv::ge::ImageCreateInfo& imageCreateInfo)
 	{
 		TextureStreamer texturePool{};
 		texturePool._arena = &arena;

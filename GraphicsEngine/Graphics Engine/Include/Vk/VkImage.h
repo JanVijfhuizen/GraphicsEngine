@@ -31,7 +31,8 @@ namespace jv::vk
 
 		// Transition the layout for it to be used in different ways, like for a depth attachment, or a sampled image.
 		void TransitionLayout(VkCommandBuffer cmd, VkImageLayout newLayout, VkImageAspectFlags aspectFlags);
-		void FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels, VkCommandBuffer cmd);
+		void FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels, 
+			VkCommandBuffer cmd, glm::ivec2* overrideResolution = nullptr);
 
 		[[nodiscard]] static Image Create(Arena& arena, const FreeArena& freeArena, const App& app, const ImageCreateInfo& info);
 		static void Destroy(const FreeArena& freeArena, const App& app, const Image& image);

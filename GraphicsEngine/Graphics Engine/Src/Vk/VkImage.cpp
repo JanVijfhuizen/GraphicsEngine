@@ -69,11 +69,13 @@ namespace jv::vk
 		layout = newLayout;
 	}
 
-	void Image::FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels, const VkCommandBuffer cmd)
+	void Image::FillImage(Arena& arena, const FreeArena& freeArena, const App& app, unsigned char* pixels, 
+		const VkCommandBuffer cmd, glm::ivec2* overrideResolution)
 	{
 		assert(usageFlags | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
-		const uint32_t imageSize = resolution.x * resolution.y * 4;
+		auto oResolution = overrideResolution ? *overrideResolution : resolution;
+		const uint32_t imageSize = oResolution.x * oResolution.y * 4;
 
 		VkBuffer stagingBuffer;
 		VkBufferCreateInfo bufferInfo{};
@@ -132,8 +134,8 @@ namespace jv::vk
 		region.imageOffset = { 0, 0, 0 };
 		region.imageExtent =
 		{
-			static_cast<uint32_t>(resolution.x),
-			static_cast<uint32_t>(resolution.y),
+			static_cast<uint32_t>(oResolution.x),
+			static_cast<uint32_t>(oResolution.y),
 			1
 		};
 
