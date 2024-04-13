@@ -639,28 +639,29 @@ namespace game
 		// Draw image.
 		if (!drawInfo.ignoreAnim && drawInfo.card)
 		{
-			const uint32_t l = drawInfo.card->animFrameCount;
+			PixelPerfectRenderTask imageRenderTask{};
+			imageRenderTask.position = origin;
+
+			uint32_t frameCount;
+
+			if(!drawInfo.large)
+			{
+				imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex, &frameCount);
+				imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex, &frameCount);
+			}
+			else
+			{
+				imageRenderTask.normalImage = info.largeTextureStreamer.Get(drawInfo.card->normalAnimIndex, &frameCount);
+				imageRenderTask.image = info.largeTextureStreamer.Get(drawInfo.card->animIndex, &frameCount);
+			}
+
+			auto i = static_cast<uint32_t>(GetTime() * CARD_ANIM_SPEED);
+			i %= frameCount;
+			
 			const uint32_t ml = drawInfo.large ? LARGE_CARD_ART_MAX_LENGTH : CARD_ART_MAX_LENGTH;
 
 			jv::ge::SubTexture animFrames[CARD_ART_MAX_LENGTH > LARGE_CARD_ART_MAX_LENGTH ? CARD_ART_MAX_LENGTH : LARGE_CARD_ART_MAX_LENGTH];
 			Divide({}, animFrames, ml);
-
-			auto i = static_cast<uint32_t>(GetTime() * CARD_ANIM_SPEED);
-			i %= l;
-
-			PixelPerfectRenderTask imageRenderTask{};
-			imageRenderTask.position = origin;
-
-			if(!drawInfo.large)
-			{
-				imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex);
-				imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
-			}
-			else
-			{
-				imageRenderTask.normalImage = info.largeTextureStreamer.Get(drawInfo.card->normalAnimIndex);
-				imageRenderTask.image = info.largeTextureStreamer.Get(drawInfo.card->animIndex);
-			}
 			
 			imageRenderTask.scale = CARD_ART_SHAPE;
 			imageRenderTask.scale *= drawInfo.scale;
@@ -676,8 +677,8 @@ namespace game
 				{
 					const auto c = je::CreateCurveOvershooting();
 					const auto c2 = je::CreateCurveDecelerate();
-					const float eval = DoubleCurveEvaluate(fmodf(drawInfo.lifeTime * 4, 1), c, c2);
-					imageRenderTask.position.y += eval * 4;
+					const float eval = DoubleCurveEvaluate(fmodf(drawInfo.lifeTime, 1), c, c2);
+					imageRenderTask.position.y += eval * 2;
 				}
 
 			const uint32_t shadowLerpDis = 16 * drawInfo.scale;
