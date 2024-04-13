@@ -712,7 +712,7 @@ namespace game
 
 	jv::Array<const char*> CardGame::GetDynamicBossTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		const auto arr = jv::CreateArray<const char*>(frameArena, TOTAL_BOSS_COUNT);
+		const auto arr = jv::CreateArray<const char*>(frameArena, 3 * TOTAL_BOSS_COUNT);
 		for (uint32_t i = 0; i < arr.length; ++i)
 		{
 			/*
@@ -925,6 +925,7 @@ namespace game
 				}
 				return false;
 			};
+		greatTroll.animIndex = 0;
 		auto& slimeQueen = arr[MONSTER_IDS::SLIME_QUEEN];
 		slimeQueen.name = "slime queen";
 		slimeQueen.attack = 2;
@@ -951,6 +952,7 @@ namespace game
 				}
 				return false;
 			};
+		slimeQueen.animIndex = 0;
 		auto& lichKing = arr[MONSTER_IDS::LICH_KING];
 		lichKing.name = "lich king";
 		lichKing.attack = 0;
@@ -974,6 +976,7 @@ namespace game
 				return false;
 			};
 		lichKing.tags = TAG_BOSS;
+		lichKing.animIndex = 0;
 		auto& mirrorKnight = arr[MONSTER_IDS::MIRROR_KNIGHT];
 		mirrorKnight.name = "mirror knight";
 		mirrorKnight.attack = 6;

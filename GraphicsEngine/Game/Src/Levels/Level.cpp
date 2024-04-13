@@ -669,6 +669,16 @@ namespace game
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			imageRenderTask.priority = drawInfo.priority;
 
+			// Hover anim.
+			if(drawInfo.metaData && !drawInfo.large)
+				if(drawInfo.metaData->hoverDuration > 0)
+				{
+					const auto c = je::CreateCurveOvershooting();
+					const auto c2 = je::CreateCurveDecelerate();
+					const float eval = DoubleCurveEvaluate(fmodf(drawInfo.lifeTime * 4, 1), c, c2);
+					imageRenderTask.position.y += eval * 4;
+				}
+
 			const uint32_t shadowLerpDis = 16 * drawInfo.scale;
 			const glm::vec2 off = origin - info.inputState.mousePos;
 			const float dis = length(off);
