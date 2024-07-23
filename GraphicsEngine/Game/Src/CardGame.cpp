@@ -694,19 +694,28 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 			if(i < MONSTER_IDS::LENGTH)
-				arr[i] = "Art/Monsters/Slime_Soldier.png";
+				arr[i] = "Art/Monsters/Goblin_King.png";
 			else
 				arr[i] = "Art/Artifacts/Blessed_Ring.png";
 		}
 
 		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/Slime_Soldier.png";
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/Fire_Elemental.png"; // Temp.
+		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/Knife_Juggler.png";
+		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/Elven_Sage.png";
+		arr[MONSTER_IDS::LIBRARIAN] = "Art/Monsters/Librarian.png";
+		arr[MONSTER_IDS::GOBLIN_KING] = "Art/Monsters/Goblin_King.png";
+		arr[MONSTER_IDS::GOBLIN_BOMB] = "Art/Monsters/Goblin_Bomber.png";
 
 		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::BLESSED_RING] = "Art/Artifacts/Blessed_Ring.png";
 		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifacts/Arcane_Amulet.png";
 		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::BLOOD_AXE] = "Art/Artifacts/Bloody_Axe.png";
 		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::STAFF_OF_SUMMONING] = "Art/Artifacts/Demonic_Staff.png";
 		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MANA_RING] = "Art/Artifacts/Mana_Ring.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MAGE_ARMOR] = "Art/Artifacts/Mage_Armor.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifacts/Mage_Sword.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::RED_CLOTH] = "Art/Artifacts/Red_Cloth.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::CUP_OF_BLOOD] = "Art/Artifacts/Cup_Of_Blood.png";
 		return arr;
 	}
 
@@ -1982,9 +1991,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].name = "the brand";
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die. all allies gain 6 health.";
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].name = "the brand";
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].ruleText = "[start of turn] die. all allies gain 6 health.";
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
@@ -2110,9 +2119,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::MANAMUNE].name = "manamune";
-		arr[ARTIFACT_IDS::MANAMUNE].ruleText = "[cast] +2 bonus attack.";
-		arr[ARTIFACT_IDS::MANAMUNE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::MAGE_SWORD].name = "manamune";
+		arr[ARTIFACT_IDS::MAGE_SWORD].ruleText = "[cast] +2 bonus attack.";
+		arr[ARTIFACT_IDS::MAGE_SWORD].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
