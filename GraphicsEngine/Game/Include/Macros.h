@@ -56,6 +56,10 @@ constexpr float CARD_ANIM_SPEED = 8.f;
 constexpr float CARD_HORIZONTAL_MOVE_SPEED = 1.f / (ACTION_STATE_DEFAULT_DURATION / 2);
 constexpr float CARD_VERTICAL_MOVE_SPEED = ACTION_STATE_DEFAULT_DURATION / 2;
 
+const constexpr char* SOUND_BACKGROUND_MUSIC = "Audio/Level1.wav";
+const constexpr char* SOUND_CLICK = "Audio/Bullet.wav";
+const constexpr char* SOUND_ATTACK = "Audio/Bullet.wav";
+
 struct MONSTER_IDS
 {
 	enum

@@ -1896,7 +1896,7 @@ namespace game
 		{
 			ingameMenuOpened = !ingameMenuOpened;
 			timeSinceIngameMenuOpened = GetTime();
-			const auto result = ma_engine_play_sound(&info.audioEngine, "Audio/Bullet.wav", 0);
+			const auto result = ma_engine_play_sound(&info.audioEngine, SOUND_CLICK, 0);
 			assert(result == MA_SUCCESS);
 		}
 
