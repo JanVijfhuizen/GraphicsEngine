@@ -9,7 +9,7 @@
 
 namespace game
 {
-	jv::ge::Resource TextureStreamer::Get(const uint32_t i)
+	jv::ge::Resource TextureStreamer::Get(const uint32_t i, uint32_t* outFrameCount)
 	{
 		if (i == -1)
 			return nullptr;
@@ -19,6 +19,8 @@ namespace game
 		if (id.resource)
 		{
 			id.inactiveCount = 0;
+			if (outFrameCount)
+				*outFrameCount = id.frameCount;
 			return id.resource->resource;
 		}
 
@@ -64,10 +66,14 @@ namespace game
 
 		int texWidth, texHeight, texChannels2;
 		stbi_uc* pixels = stbi_load(id.path, &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
-		jv::ge::FillImage(id.resource->resource, pixels);
+		glm::ivec2 resolution{ texWidth, texHeight };
+		jv::ge::FillImage(id.resource->resource, pixels, &resolution);
 		stbi_image_free(pixels);
 		id.resource->active = true;
 		id.inactiveCount = 0;
+		id.frameCount = static_cast<uint32_t>(texWidth) / _frameWidth;
+		if (outFrameCount)
+			*outFrameCount = id.frameCount;
 		return id.resource->resource;
 	}
 
@@ -98,7 +104,8 @@ namespace game
 		}
 	}
 
-	TextureStreamer TextureStreamer::Create(jv::Arena& arena, const uint32_t poolChunkSize, const uint32_t idCount, const jv::ge::ImageCreateInfo& imageCreateInfo)
+	TextureStreamer TextureStreamer::Create(jv::Arena& arena, const uint32_t poolChunkSize, const uint32_t idCount, 
+		const jv::ge::ImageCreateInfo& imageCreateInfo, const uint32_t frameWidth)
 	{
 		TextureStreamer texturePool{};
 		texturePool._arena = &arena;
@@ -106,6 +113,7 @@ namespace game
 		texturePool._imageCreateInfo = imageCreateInfo;
 		texturePool._ids = jv::CreateArray<Id>(arena, idCount);
 		texturePool._poolChunkSize = poolChunkSize;
+		texturePool._frameWidth = frameWidth;
 		for (auto& id : texturePool._ids)
 			id = {};
 		return texturePool;

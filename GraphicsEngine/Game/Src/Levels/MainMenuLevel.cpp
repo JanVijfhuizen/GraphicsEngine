@@ -24,12 +24,14 @@ namespace game
 			headerDrawInfo.origin = origin;
 			headerDrawInfo.text = "untitled card game";
 			headerDrawInfo.lineLength = 10;
-			DrawHeader(info, headerDrawInfo);
+			//DrawHeader(info, headerDrawInfo);
 
 			ButtonDrawInfo buttonDrawInfo{};
 			buttonDrawInfo.origin = buttonOrigin;
 			buttonDrawInfo.text = "start";
-			buttonDrawInfo.width = 96;
+			buttonDrawInfo.width = 140;
+			buttonDrawInfo.largeFont = true;
+			buttonDrawInfo.drawLineByDefault = false;
 			if (DrawButton(info, buttonDrawInfo))
 				Load(LevelIndex::newGame, true);
 

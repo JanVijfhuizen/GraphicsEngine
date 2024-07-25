@@ -22,6 +22,8 @@ namespace game
 
 	void Level::Create(const LevelCreateInfo& info)
 	{
+		_buttonHovered = false;
+		_buttonHoveredLastFrame = false;
 		_fullCard = nullptr;
 		_timeSinceOpened = 0;
 		_timeSinceLoading = 0;
@@ -71,6 +73,16 @@ namespace game
 
 	void Level::PostUpdate(const LevelUpdateInfo& info)
 	{
+		if (!_buttonHovered)
+		{
+			_buttonLifetime = 0;
+			_buttonHoveredLastFrame = false;
+			_buttonLifetime = 0;
+		}
+		else
+			_buttonLifetime += info.deltaTime;
+		_buttonHovered = false;
+
 		const auto atlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::mouse)];
 
 		jv::ge::SubTexture subTextures[2];
@@ -108,14 +120,14 @@ namespace game
 
 				PixelPerfectRenderTask bgRenderTask{};
 				bgRenderTask.position = SIMULATED_RESOLUTION / 2;
-				bgRenderTask.scale = glm::ivec2(SIMULATED_RESOLUTION.x, lineCount * alphabetTexture.resolution.y + 6);
+				bgRenderTask.scale = glm::ivec2(SIMULATED_RESOLUTION.x, lineCount * alphabetTexture.resolution.y + 6 + 13);
 				bgRenderTask.scale.y *= lerp;
 				bgRenderTask.subTexture = emptyTexture.subTexture;
 				bgRenderTask.xCenter = true;
 				bgRenderTask.yCenter = true;
 				bgRenderTask.priority = true;
 				info.renderTasks.Push(bgRenderTask);
-
+				
 				if(bgRenderTask.scale.y > 2)
 				{
 					bgRenderTask.scale.y -= 2;
@@ -133,7 +145,7 @@ namespace game
 				cardDrawInfo.priority = true;
 				cardDrawInfo.selectable = false;
 				cardDrawInfo.scale = 2;
-				cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
+				//cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
 
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
@@ -168,8 +180,10 @@ namespace game
 
 				if(type == Card::Type::spell)
 				{
+					/*
 					const auto c = static_cast<SpellCard*>(_fullCard);
 					cardDrawInfo.cost = c->cost;
+					*/
 				}
 				else if (type == Card::Type::monster)
 				{
@@ -205,6 +219,8 @@ namespace game
 						}
 						tagsText = txt;
 					}
+
+					cardDrawInfo.large = (c->tags & TAG_BOSS) != 0;
 				}
 
 				if (l >= 0)
@@ -215,12 +231,15 @@ namespace game
 					titleTextTask.position = bgRenderTask.position;
 					titleTextTask.position.x += textOffsetX;
 					titleTextTask.position.y += off + alphabetTexture.resolution.y / 2;
+					titleTextTask.position.y -= 17;
 					titleTextTask.text = _fullCard->name;
 					titleTextTask.lifetime = l * 4;
 					titleTextTask.center = true;
 					titleTextTask.priority = true;
-					titleTextTask.scale = 2;
+					//titleTextTask.scale = 2;
+					titleTextTask.largeFont = true;
 					info.textTasks.Push(titleTextTask);
+					titleTextTask.largeFont = false;
 
 					if(tagsText)
 					{
@@ -243,6 +262,7 @@ namespace game
 					auto ruleTextTask = titleTextTask;
 					ruleTextTask.position = bgRenderTask.position;
 					ruleTextTask.position.x += textOffsetX;
+					ruleTextTask.position.y -= 11;
 					ruleTextTask.text = text;
 					ruleTextTask.position.y += alphabetTexture.resolution.y * (lineCount - 1) / 2;
 					ruleTextTask.position.y -= alphabetTexture.resolution.y / 2;
@@ -270,7 +290,7 @@ namespace game
 		LightTask lightTask{};
 		lightTask.pos = LightTask::ToLightTaskPos(renderTask.position);
 		lightTask.pos.z = .2f;
-		lightTask.intensity = 10;
+		lightTask.intensity = 4;
 		lightTask.fallOf = 8;
 		info.lightTasks.Push(lightTask);
 	}
@@ -287,14 +307,14 @@ namespace game
 		info.textTasks.Push(titleTextTask);
 	}
 
-	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo, float overrideLifetime) const
+	bool Level::DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo, float overrideLifetime)
 	{
 		constexpr float BUTTON_SPAWN_ANIM_DURATION = .4f;
 
 		const auto& buttonTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::empty)];
 		uint32_t textMaxLen = -1;
 
-		const float lifeTime = overrideLifetime < -1e-5f  ? GetTime() : overrideLifetime;
+		const float lifeTime = overrideLifetime < -1e-5f ? GetTime() : overrideLifetime;
 		float l = 1;
 		if (lifeTime <= BUTTON_SPAWN_ANIM_DURATION)
 			l = lifeTime / BUTTON_SPAWN_ANIM_DURATION;
@@ -314,22 +334,28 @@ namespace game
 		buttonTextTask.lifetime = lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
 		buttonTextTask.center = drawInfo.centerText;
+		buttonTextTask.largeFont = drawInfo.largeFont;
 
 		buttonRenderTask.scale.x *= l;
 		bool pressed = false;
 		const bool collided = _loading ? false : CollidesShapeInt(drawInfo.origin - 
 			glm::ivec2(buttonRenderTask.scale.x / 2, 0) * static_cast<int32_t>(drawInfo.center),
-			buttonRenderTask.scale + glm::ivec2(0, 9), info.inputState.mousePos);
+			buttonRenderTask.scale + glm::ivec2(0, drawInfo.largeFont ? 17 : 9), info.inputState.mousePos);
 		if (collided)
 		{
 			buttonTextTask.loop = true;
 			buttonRenderTask.color = glm::vec4(1, 0, 0, 1);
+			info.renderTasks.Push(buttonRenderTask);
+			buttonTextTask.lifetime = _buttonLifetime;
+			buttonTextTask.fadeIn = false;
+			_buttonHovered = true;
 		}
+		else if(drawInfo.drawLineByDefault)
+			info.renderTasks.Push(buttonRenderTask);
 		if (collided && info.inputState.lMouse.ReleaseEvent())
 			pressed = true;
 
 		info.textTasks.Push(buttonTextTask);
-		info.renderTasks.Push(buttonRenderTask);
 		return pressed;
 	}
 
@@ -389,8 +415,9 @@ namespace game
 			cardDrawInfo.activationLerp = drawInfo.activationIndex == i ? drawInfo.activationLerp : -1;
 			cardDrawInfo.lifeTime = drawInfo.lifeTime;
 			cardDrawInfo.priority = false;
-			cardDrawInfo.scale = scale;
 			cardDrawInfo.target = drawInfo.targets ? drawInfo.targets[i] : -1;
+			cardDrawInfo.large = drawInfo.containsBoss && i == 0;
+			cardDrawInfo.scale = scale;
 
 			if(drawInfo.damagedIndex == i)
 			{
@@ -530,7 +557,6 @@ namespace game
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
 				stackedDrawInfo.origin.x += stackWidth * ((stackedCount - stackedSelected - 1) % 2 == 0);
-				stackedDrawInfo.scale = scale;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -613,23 +639,47 @@ namespace game
 		// Draw image.
 		if (!drawInfo.ignoreAnim && drawInfo.card)
 		{
-			jv::ge::SubTexture animFrames[CARD_ART_LENGTH];
-			Divide({}, animFrames, CARD_ART_LENGTH);
-
-			auto i = static_cast<uint32_t>(GetTime() / CARD_ANIM_SPEED);
-			i %= CARD_ART_LENGTH;
-
 			PixelPerfectRenderTask imageRenderTask{};
 			imageRenderTask.position = origin;
-			imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex);
-			imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex);
+
+			uint32_t frameCount;
+
+			if(!drawInfo.large)
+			{
+				imageRenderTask.normalImage = info.textureStreamer.Get(drawInfo.card->normalAnimIndex, &frameCount);
+				imageRenderTask.image = info.textureStreamer.Get(drawInfo.card->animIndex, &frameCount);
+			}
+			else
+			{
+				imageRenderTask.normalImage = info.largeTextureStreamer.Get(drawInfo.card->normalAnimIndex, &frameCount);
+				imageRenderTask.image = info.largeTextureStreamer.Get(drawInfo.card->animIndex, &frameCount);
+			}
+
+			auto i = static_cast<uint32_t>(GetTime() * CARD_ANIM_SPEED);
+			i %= frameCount;
+			
+			const uint32_t ml = drawInfo.large ? LARGE_CARD_ART_MAX_LENGTH : CARD_ART_MAX_LENGTH;
+
+			jv::ge::SubTexture animFrames[CARD_ART_MAX_LENGTH > LARGE_CARD_ART_MAX_LENGTH ? CARD_ART_MAX_LENGTH : LARGE_CARD_ART_MAX_LENGTH];
+			Divide({}, animFrames, ml);
+			
 			imageRenderTask.scale = CARD_ART_SHAPE;
-			imageRenderTask.scale *= drawInfo.scale * 2; // temp
+			imageRenderTask.scale *= drawInfo.scale;
 			imageRenderTask.xCenter = drawInfo.center;
 			imageRenderTask.yCenter = drawInfo.center;
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			imageRenderTask.priority = drawInfo.priority;
+
+			// Hover anim.
+			if(drawInfo.metaData && !drawInfo.large)
+				if(drawInfo.metaData->hoverDuration > 0)
+				{
+					const auto c = je::CreateCurveOvershooting();
+					const auto c2 = je::CreateCurveDecelerate();
+					const float eval = DoubleCurveEvaluate(fmodf(drawInfo.lifeTime, 1), c, c2);
+					imageRenderTask.position.y += eval * 2;
+				}
 
 			const uint32_t shadowLerpDis = 16 * drawInfo.scale;
 			const glm::vec2 off = origin - info.inputState.mousePos;

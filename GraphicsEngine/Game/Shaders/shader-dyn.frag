@@ -46,7 +46,7 @@ void main()
         discard;
 
     vec4 n = texture(normal, fragPos);
-    vec3 norm = (CalculateNormal() + n.xyz) / 2;
+    vec3 norm = n.xyz; //(CalculateNormal() + n.xyz);
 
     vec3 lightMul = vec3(0);
 

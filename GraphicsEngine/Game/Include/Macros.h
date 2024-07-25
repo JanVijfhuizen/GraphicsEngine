@@ -47,12 +47,18 @@ constexpr uint32_t META_DATA_HAND_INDEX = META_DATA_EVENT_INDEX + EVENT_CARD_MAX
 constexpr uint32_t META_DATA_ALLY_INDEX = META_DATA_HAND_INDEX + HAND_MAX_SIZE;
 constexpr uint32_t META_DATA_ENEMY_INDEX = META_DATA_ALLY_INDEX + BOARD_CAPACITY_PER_SIDE;
 
-constexpr glm::ivec2 CARD_ART_SHAPE{ 16 };
-constexpr uint32_t CARD_ART_LENGTH = 2;
-constexpr float CARD_ANIM_SPEED = .5f;
+constexpr glm::ivec2 CARD_ART_SHAPE{ 32 };
+constexpr glm::ivec2 LARGE_CARD_ART_SHAPE = CARD_ART_SHAPE * 2;
+constexpr uint32_t CARD_ART_MAX_LENGTH = 12;
+constexpr uint32_t LARGE_CARD_ART_MAX_LENGTH = 12;
+constexpr float CARD_ANIM_SPEED = 8.f;
 
 constexpr float CARD_HORIZONTAL_MOVE_SPEED = 1.f / (ACTION_STATE_DEFAULT_DURATION / 2);
 constexpr float CARD_VERTICAL_MOVE_SPEED = ACTION_STATE_DEFAULT_DURATION / 2;
+
+const constexpr char* SOUND_BACKGROUND_MUSIC = "Audio/Level1.wav";
+const constexpr char* SOUND_CLICK = "Audio/Bullet.wav";
+const constexpr char* SOUND_ATTACK = "Audio/Bullet.wav";
 
 struct MONSTER_IDS
 {
@@ -177,21 +183,21 @@ struct ARTIFACT_IDS
 {
 	enum
 	{
-		AMULET_OF_ARCANE_ACUITY,
+		ARCANE_AMULET,
 		THORNMAIL,
 		REVERSE_CARD,
 		FALSE_ARMOR,
 		MAGE_ARMOR,
 		MASK_OF_ETERNAL_YOUTH,
 		CORRUPTING_KNIFE,
-		SACRIFICIAL_ALTAR,
+		CUP_OF_BLOOD,
 		BLOOD_AXE,
 		RUSTY_CLAW,
 		BLOOD_HAMMER,
 		SPIKEY_COLLAR,
 		BOOTS_OF_SWIFTNESS,
 		BLESSED_RING,
-		MANAMUNE,
+		MAGE_SWORD,
 		THORN_WHIP,
 		RED_CLOTH,
 		HELMET_OF_THE_HOST,
@@ -250,11 +256,11 @@ enum class LevelIndex
 enum class TextureId
 {
 	alphabet,
+	largeAlphabet,
 	numbers,
 	symbols,
 	mouse,
 	card,
-	button,
 	stats,
 	flowers,
 	fallback,

@@ -28,6 +28,7 @@
 
 #include "JLib/Math.h"
 #include "RenderGraph/RenderGraph.h"
+#include "miniaudio.h"
 
 namespace game 
 {
@@ -130,6 +131,7 @@ namespace game
 		std::chrono::time_point<std::chrono::steady_clock> prevTime{};
 
 		TextureStreamer textureStreamer;
+		TextureStreamer largeTextureStreamer;
 		float pixelation = 1;
 
 		bool activePlayer;
@@ -137,12 +139,16 @@ namespace game
 		float p1Lerp, p2Lerp;
 		bool restart;
 
+		ma_engine audioEngine;
+		ma_sound audioBackground;
+
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
-		static void Destroy(const CardGame& cardGame);
+		static void Destroy(CardGame& cardGame);
 
 		[[nodiscard]] static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<const char*> GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena);
+		[[nodiscard]] static jv::Array<const char*> GetDynamicBossTexturePaths(jv::Arena& arena, jv::Arena& frameArena);
 		[[nodiscard]] static jv::Array<MonsterCard> GetMonsterCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<ArtifactCard> GetArtifactCards(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<uint32_t> GetBossCards(jv::Arena& arena);
@@ -272,11 +278,13 @@ namespace game
 			*lightTasks,
 			dt,
 			textureStreamer,
+			largeTextureStreamer,
 			screenShakeInfo,
 			pixelation,
 			activePlayer,
 			inCombat,
-			fullscreen
+			fullscreen,
+			cardGame.audioEngine
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -383,6 +391,16 @@ namespace game
 			outCardGame->engine = Engine::Create(engineCreateInfo);
 		}
 		outCardGame->restart = false;
+
+		auto engineConfig = ma_engine_config_init();
+		auto result = ma_engine_init(nullptr, &outCardGame->audioEngine);
+		assert(result == MA_SUCCESS);
+
+		result = ma_sound_init_from_file(&outCardGame->audioEngine, SOUND_BACKGROUND_MUSIC,
+			MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->audioBackground);
+		assert(result == MA_SUCCESS);
+		ma_sound_set_looping(&outCardGame->audioBackground, true);
+		ma_sound_start(&outCardGame->audioBackground);
 
 		res = Engine::GetResolution();
 		outCardGame->resolution = res;
@@ -573,6 +591,7 @@ namespace game
 
 			TextInterpreterCreateInfo textInterpreterCreateInfo{};
 			textInterpreterCreateInfo.alphabetAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::alphabet)];
+			textInterpreterCreateInfo.largeAlphabetAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::largeAlphabet)];
 			textInterpreterCreateInfo.symbolAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)];
 			textInterpreterCreateInfo.numberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
@@ -604,13 +623,21 @@ namespace game
 		outCardGame->prevTime = outCardGame->timer.now();
 
 		jv::ge::ImageCreateInfo imageCreateInfo{};
-		imageCreateInfo.resolution = CARD_ART_SHAPE * glm::ivec2(CARD_ART_LENGTH, 1);
+		imageCreateInfo.resolution = CARD_ART_SHAPE * glm::ivec2(CARD_ART_MAX_LENGTH, 1);
 		imageCreateInfo.scene = outCardGame->scene;
 
-		outCardGame->textureStreamer = TextureStreamer::Create(outCardGame->arena, 32, 256, imageCreateInfo);
+		outCardGame->textureStreamer = TextureStreamer::Create(outCardGame->arena, 32, 256, imageCreateInfo, CARD_ART_SHAPE.x);
 		const auto dynTexts = GetDynamicTexturePaths(outCardGame->engine.GetMemory().arena, outCardGame->engine.GetMemory().frameArena);
 		for (const auto& dynText : dynTexts)
 			outCardGame->textureStreamer.DefineTexturePath(dynText);
+		
+		imageCreateInfo.resolution = LARGE_CARD_ART_SHAPE * glm::ivec2(LARGE_CARD_ART_MAX_LENGTH, 1);
+		imageCreateInfo.scene = outCardGame->scene;
+
+		outCardGame->largeTextureStreamer = TextureStreamer::Create(outCardGame->arena, 8, 32, imageCreateInfo, LARGE_CARD_ART_SHAPE.x);
+		const auto dynBossTexts = GetDynamicBossTexturePaths(outCardGame->engine.GetMemory().arena, outCardGame->engine.GetMemory().frameArena);
+		for (const auto& dynText : dynBossTexts)
+			outCardGame->largeTextureStreamer.DefineTexturePath(dynText);
 
 		// Render graph.
 		/*
@@ -646,8 +673,9 @@ namespace game
 		*/
 	}
 
-	void CardGame::Destroy(const CardGame& cardGame)
+	void CardGame::Destroy(CardGame& cardGame)
 	{
+		ma_engine_uninit(&cardGame.audioEngine);
 		jv::Arena::Destroy(cardGame.arena);
 		Engine::Destroy(cardGame.engine);
 	}
@@ -656,11 +684,11 @@ namespace game
 	{
 		const auto arr = jv::CreateArray<const char*>(arena, static_cast<uint32_t>(TextureId::length));
 		arr[0] = "Art/alphabet.png";
-		arr[1] = "Art/numbers.png";
-		arr[2] = "Art/symbols.png";
-		arr[3] = "Art/mouse.png";
-		arr[4] = "Art/card.png";
-		arr[5] = "Art/button.png";
+		arr[1] = "Art/largealphabet.png";
+		arr[2] = "Art/numbers.png";
+		arr[3] = "Art/symbols.png";
+		arr[4] = "Art/mouse.png";
+		arr[5] = "Art/card.png";
 		arr[6] = "Art/stats.png";
 		arr[7] = "Art/flowers.png";
 		arr[8] = "Art/fallback.png";
@@ -672,15 +700,55 @@ namespace game
 
 	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		constexpr uint32_t l = 45;
-		const auto arr = jv::CreateArray<const char*>(frameArena, l * 2);
-		for (uint32_t i = 0; i < l; ++i)
+		const auto arr = jv::CreateArray<const char*>(frameArena, MONSTER_IDS::LENGTH + ARTIFACT_IDS::LENGTH);
+		for (uint32_t i = 0; i < arr.length; ++i)
 		{
+			/*
 			const char* prefix = "Art/Monsters/";
 			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
+			*/
+			if(i < MONSTER_IDS::LENGTH)
+				arr[i] = "Art/Monsters/Goblin_King.png";
+			else
+				arr[i] = "Art/Artifacts/Blessed_Ring.png";
 		}
+
+		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/Slime_Soldier.png";
+		arr[MONSTER_IDS::DAISY] = "Art/Monsters/Fire_Elemental.png"; // Temp.
+		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/Knife_Juggler.png";
+		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/Elven_Sage.png";
+		arr[MONSTER_IDS::LIBRARIAN] = "Art/Monsters/Librarian.png";
+		arr[MONSTER_IDS::GOBLIN_KING] = "Art/Monsters/Goblin_King.png";
+		arr[MONSTER_IDS::GOBLIN_BOMB] = "Art/Monsters/Goblin_Bomber.png";
+
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::BLESSED_RING] = "Art/Artifacts/Blessed_Ring.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifacts/Arcane_Amulet.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::BLOOD_AXE] = "Art/Artifacts/Bloody_Axe.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::STAFF_OF_SUMMONING] = "Art/Artifacts/Demonic_Staff.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MANA_RING] = "Art/Artifacts/Mana_Ring.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MAGE_ARMOR] = "Art/Artifacts/Mage_Armor.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifacts/Mage_Sword.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::RED_CLOTH] = "Art/Artifacts/Red_Cloth.png";
+		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::CUP_OF_BLOOD] = "Art/Artifacts/Cup_Of_Blood.png";
+		return arr;
+	}
+
+	jv::Array<const char*> CardGame::GetDynamicBossTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
+	{
+		const auto arr = jv::CreateArray<const char*>(frameArena, 3 * TOTAL_BOSS_COUNT);
+		for (uint32_t i = 0; i < arr.length; ++i)
+		{
+			/*
+			const char* prefix = "Art/Monsters/B";
+			arr[i] = arr[i + l] = TextInterpreter::Concat(prefix, TextInterpreter::IntToConstCharPtr(i + 1, frameArena), frameArena);
+			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
+			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
+			*/
+			arr[i] = "Art/Monsters/Slime_King.png";
+		}
+		arr[0] = "Art/Monsters/Slime_King.png";
 
 		return arr;
 	}
@@ -826,8 +894,6 @@ namespace game
 		daisy.attack = 3;
 		daisy.health = 3;
 		daisy.unique = true;
-		daisy.animIndex = 2;
-		daisy.normalAnimIndex = 47;
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
 		god.attack = 0;
@@ -884,11 +950,12 @@ namespace game
 				}
 				return false;
 			};
+		greatTroll.animIndex = 0;
 		auto& slimeQueen = arr[MONSTER_IDS::SLIME_QUEEN];
 		slimeQueen.name = "slime queen";
 		slimeQueen.attack = 2;
 		slimeQueen.health = 35;
-		slimeQueen.ruleText = "[end of turn] summon a copy.";
+		slimeQueen.ruleText = "[end of turn] summon a slime soldier with my stats.";
 		slimeQueen.unique = true;
 		slimeQueen.tags = TAG_SLIME | TAG_BOSS;
 		slimeQueen.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -901,7 +968,7 @@ namespace game
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_QUEEN;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::SLIME_SOLDIER;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
 					summonState.values[ActionState::VSummon::health] = stats.health + stats.tempHealth;
 					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
@@ -910,6 +977,7 @@ namespace game
 				}
 				return false;
 			};
+		slimeQueen.animIndex = 0;
 		auto& lichKing = arr[MONSTER_IDS::LICH_KING];
 		lichKing.name = "lich king";
 		lichKing.attack = 0;
@@ -933,6 +1001,7 @@ namespace game
 				return false;
 			};
 		lichKing.tags = TAG_BOSS;
+		lichKing.animIndex = 0;
 		auto& mirrorKnight = arr[MONSTER_IDS::MIRROR_KNIGHT];
 		mirrorKnight.name = "mirror knight";
 		mirrorKnight.attack = 6;
@@ -1789,13 +1858,13 @@ namespace game
 	{
 		const auto arr = jv::CreateArray<ArtifactCard>(arena, ARTIFACT_IDS::LENGTH);
 
-		uint32_t c = 0;
+		uint32_t c = MONSTER_IDS::LENGTH;
 		for (auto& card : arr)
 			card.animIndex = c++;
 
-		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].name = "arcane amulet";
-		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].ruleText = "[start of turn] +1 mana.";
-		arr[ARTIFACT_IDS::AMULET_OF_ARCANE_ACUITY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::ARCANE_AMULET].name = "arcane amulet";
+		arr[ARTIFACT_IDS::ARCANE_AMULET].ruleText = "[start of turn] +1 mana.";
+		arr[ARTIFACT_IDS::ARCANE_AMULET].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 		{
 			if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 			{
@@ -1938,9 +2007,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].name = "the brand";
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].ruleText = "[start of turn] die. all allies gain 6 health.";
-		arr[ARTIFACT_IDS::SACRIFICIAL_ALTAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].name = "the brand";
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].ruleText = "[start of turn] die. all allies gain 6 health.";
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
@@ -2066,9 +2135,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::MANAMUNE].name = "manamune";
-		arr[ARTIFACT_IDS::MANAMUNE].ruleText = "[cast] +2 bonus attack.";
-		arr[ARTIFACT_IDS::MANAMUNE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::MAGE_SWORD].name = "manamune";
+		arr[ARTIFACT_IDS::MAGE_SWORD].ruleText = "[cast] +2 bonus attack.";
+		arr[ARTIFACT_IDS::MAGE_SWORD].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
@@ -2303,7 +2372,7 @@ namespace game
 		const auto arr = jv::CreateArray<RoomCard>(arena, ROOM_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		auto& fieldOfVengeance = arr[ROOM_IDS::FIELD_OF_VENGEANCE];
 		fieldOfVengeance.name = "field of violence";
@@ -2489,7 +2558,7 @@ namespace game
 		const auto arr = jv::CreateArray<SpellCard>(arena, SPELL_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		auto& arcaneIntellect = arr[SPELL_IDS::ARCANE_INTELLECT];
 		arcaneIntellect.name = "arcane intellect";
@@ -3363,7 +3432,7 @@ namespace game
 		const auto arr = jv::CreateArray<CurseCard>(arena, CURSE_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		arr[CURSE_IDS::FADING].name = "fading";
 		arr[CURSE_IDS::FADING].ruleText = "[end of turn] take one damage.";
@@ -3514,7 +3583,7 @@ namespace game
 		const auto arr = jv::CreateArray<EventCard>(arena, EVENT_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = c++;
+			card.animIndex = 0;
 
 		auto& aetherSurge = arr[EVENT_IDS::AETHER_SURGE];
 		aetherSurge.name = "aether surge";

@@ -65,6 +65,7 @@ namespace game
 	void TextInterpreter::OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<TextTask>>& tasks)
 	{
 		const float symbolPctSize = static_cast<float>(_createInfo.symbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
+		const float largeSymbolPctSize = static_cast<float>(_createInfo.largeSymbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
 		
 		PixelPerfectRenderTask task{};
 
@@ -80,12 +81,17 @@ namespace game
 				const auto len = static_cast<uint32_t>(strlen(job.text));
 				auto maxLen = job.maxLength == -1 ? len : job.maxLength;
 
-				const bool fadeIn = job.lifetime >= 0 && job.lifetime < _createInfo.fadeInSpeed * static_cast<float>(len);
+				bool fadeIn = job.lifetime >= 0 && job.lifetime < _createInfo.fadeInSpeed * static_cast<float>(len);
+				if (!job.fadeIn)
+					fadeIn = false;
 				if(fadeIn)
 					maxLen = jv::Min<uint32_t>(maxLen, static_cast<uint32_t>(job.lifetime * _createInfo.fadeInSpeed));
+				
+				const float size = job.largeFont ? _createInfo.largeSymbolSize : _createInfo.symbolSize;
+				const float pctSize = job.largeFont ? largeSymbolPctSize : symbolPctSize;
 
-				const auto s = glm::ivec2(static_cast<int32_t>(_createInfo.symbolSize)) * glm::ivec2(static_cast<int32_t>(job.scale));
-				const auto spacing = (_createInfo.spacing + job.spacing + _createInfo.symbolSize) * job.scale;
+				const auto s = glm::ivec2(static_cast<int32_t>(size)) * glm::ivec2(static_cast<int32_t>(job.scale));
+				const auto spacing = (_createInfo.spacing + job.spacing + size) * job.scale;
 
 				task.position = job.position;
 				task.scale = s;
@@ -95,7 +101,7 @@ namespace game
 				uint32_t xStart = 0;
 
 				bool isInBrackets = false;
-
+				
 				for (uint32_t i = 0; i < len; ++i)
 				{
 					if (i == maxLen)
@@ -123,14 +129,14 @@ namespace game
 						lineLength = 0;
 						if(job.center)
 						{
-							xStart = (nextLineStart - i) * (_createInfo.symbolSize + _createInfo.spacing) * job.scale / 2;
-							xStart += _createInfo.symbolSize / 4 * job.scale;
+							xStart = (nextLineStart - i) * (size + _createInfo.spacing) * job.scale / 2;
+							xStart += size / 4 * job.scale;
 						}
 						task.position.x = static_cast<int32_t>(job.position.x - xStart);
 
 						if(i != 0)
 						{
-							task.position.y -= static_cast<int32_t>(_createInfo.symbolSize * job.scale);
+							task.position.y -= static_cast<int32_t>(size * job.scale);
 							task.position.x -= static_cast<int32_t>(spacing);
 						}
 					}
@@ -150,9 +156,9 @@ namespace game
 						constexpr uint32_t secondRow = '[' - 5;
 						auto position = c - (isInteger ? '0' : isSymbol ? isSymbol2ndRow ? secondRow : '+' : 'a');
 						auto subTexture = isInteger ? _createInfo.numberAtlasTexture.subTexture : isSymbol ? 
-							_createInfo.symbolAtlasTexture.subTexture : _createInfo.alphabetAtlasTexture.subTexture;
-						subTexture.lTop.x += symbolPctSize * static_cast<float>(position);
-						subTexture.rBot.x = subTexture.lTop.x + symbolPctSize;
+							_createInfo.symbolAtlasTexture.subTexture : (job.largeFont ? _createInfo.largeAlphabetAtlasTexture : _createInfo.alphabetAtlasTexture).subTexture;
+						subTexture.lTop.x += pctSize * static_cast<float>(position);
+						subTexture.rBot.x = subTexture.lTop.x + pctSize;
 
 						task.subTexture = subTexture;
 
@@ -168,6 +174,7 @@ namespace game
 
 						PixelPerfectRenderTask cpyTask = task;
 						cpyTask.priority = job.priority;
+						cpyTask.front = job.front;
 						cpyTask.position.y += static_cast<int32_t>(yMod * _createInfo.bounceHeight);
 						if (isInBrackets)
 							cpyTask.color = { 0, 1, 0, 1 };

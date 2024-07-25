@@ -234,7 +234,7 @@ namespace jv::ge
 	[[nodiscard]] Resource CreateScene();
 	void ClearScene(Resource scene);
 	[[nodiscard]] Resource AddImage(const ImageCreateInfo& info);
-	void FillImage(Resource image, unsigned char* pixels);
+	void FillImage(Resource image, unsigned char* pixels, glm::ivec2* overrideResolution = nullptr);
 	[[nodiscard]] Resource AddMesh(MeshCreateInfo& info);
 	[[nodiscard]] Resource AddBuffer(const BufferCreateInfo& info);
 	[[nodiscard]] Resource AddSampler(const SamplerCreateInfo& info);

@@ -13,6 +13,8 @@
 #include "Tasks/TextTask.h"
 #include "Tasks/PixelPerfectRenderTask.h"
 
+struct ma_engine;
+
 namespace jv::ge
 {
 	struct AtlasTexture;
@@ -67,11 +69,13 @@ namespace game
 		TaskSystem<LightTask>& lightTasks;
 		float deltaTime;
 		TextureStreamer& textureStreamer;
+		TextureStreamer& largeTextureStreamer;
 		ScreenShakeInfo& screenShakeInfo;
 		float& pixelation;
 		bool& activePlayer;
 		bool& inCombat;
 		bool& isFullScreen;
+		ma_engine& audioEngine;
 	};
 
 	struct Level
@@ -93,6 +97,8 @@ namespace game
 			bool center = false;
 			bool centerText = false;
 			uint32_t width = 64;
+			bool largeFont = false;
+			bool drawLineByDefault = true;
 		};
 
 		struct CardDrawMetaData final
@@ -120,6 +126,7 @@ namespace game
 			bool priority = false;
 			uint32_t scale = 1;
 			uint32_t target = -1;
+			bool large = false;
 		};
 
 		struct CardSelectionDrawInfo final
@@ -177,7 +184,7 @@ namespace game
 		virtual void PostUpdate(const LevelUpdateInfo& info);
 
 		void DrawHeader(const LevelUpdateInfo& info, const HeaderDrawInfo& drawInfo) const;
-		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo, float overrideLifetime = -1) const;
+		[[nodiscard]] bool DrawButton(const LevelUpdateInfo& info, const ButtonDrawInfo& drawInfo, float overrideLifetime = -1);
 		[[nodiscard]] static glm::ivec2 GetCardShape(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
 		[[nodiscard]] static glm::ivec2 GetCardPosition(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo, uint32_t i);
 		uint32_t DrawCardSelection(const LevelUpdateInfo& info, const CardSelectionDrawInfo& drawInfo);
@@ -207,6 +214,9 @@ namespace game
 
 		Card* _selectedCard;
 		float _selectedCardLifeTime;
+		float _buttonLifetime;
+		bool _buttonHovered;
+		bool _buttonHoveredLastFrame;
 
 		CardDrawMetaData _cardDrawMetaDatas[PARTY_CAPACITY];
 	};

@@ -13,9 +13,11 @@ namespace game
 		uint32_t maxLength = -1;
 		bool center = false;
 		bool priority = false;
+		bool front = false;
 
 		float lifetime = -1;
 		bool loop = false;
-		bool fadingOut = false;
+		bool fadeIn = true;
+		bool largeFont = false;
 	};
 }

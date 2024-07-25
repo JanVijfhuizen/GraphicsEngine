@@ -1,6 +1,8 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainLevel.h"
 #include <Levels/LevelUtils.h>
+
+#include "miniaudio.h"
 #include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Curve.h"
@@ -10,6 +12,7 @@
 #include "States/BoardState.h"
 #include "Utils/Shuffle.h"
 #include "JLib/VectorUtils.h"
+#include "Levels/GameOverLevel.h"
 #include "Utils/SubTextureUtils.h"
 
 namespace game
@@ -351,7 +354,7 @@ namespace game
 			lineRenderTask.scale.x = SIMULATED_RESOLUTION.x;
 			lineRenderTask.scale.y = 1;
 			lineRenderTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT);
-			lineRenderTask.priority = true;
+			lineRenderTask.front = true;
 
 			const float l = GetActionStateLerp(*level, START_OF_TURN_ACTION_STATE_DURATION);
 			const auto curve = je::CreateCurvePauseInMiddle();
@@ -373,7 +376,7 @@ namespace game
 				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 3);
 				textTask.scale = 2;
 				textTask.center = true;
-				textTask.priority = true;
+				textTask.front = true;
 
 				info.textTasks.Push(textTask);
 				textTask.text = TextInterpreter::IntToConstCharPtr(state.turn, info.frameArena);
@@ -381,7 +384,7 @@ namespace game
 				info.textTasks.Push(textTask);
 
 				LightTask lightTask{};
-				lightTask.intensity = 20;
+				lightTask.intensity = 4;
 				lightTask.fallOf = 8;
 				lightTask.pos = LightTask::ToLightTaskPos(textTask.position);
 				lightTask.pos.z = .2f;
@@ -1893,6 +1896,8 @@ namespace game
 		{
 			ingameMenuOpened = !ingameMenuOpened;
 			timeSinceIngameMenuOpened = GetTime();
+			const auto result = ma_engine_play_sound(&info.audioEngine, SOUND_CLICK, 0);
+			assert(result == MA_SUCCESS);
 		}
 
 		if (ingameMenuOpened)
