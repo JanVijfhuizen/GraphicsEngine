@@ -146,6 +146,7 @@
     <ClCompile Include="Src\Levels\MainLevel.cpp" />
     <ClCompile Include="Src\Levels\MainMenuLevel.cpp" />
     <ClCompile Include="Src\Levels\NewGameLevel.cpp" />
+    <ClCompile Include="Src\miniaudio.cpp" />
     <ClCompile Include="Src\States\CombatState.cpp" />
     <ClCompile Include="Src\States\GameState.cpp" />
     <ClCompile Include="Src\Tasks\PixelPerfectRenderTask.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="Include\Levels\MainMenuLevel.h" />
     <ClInclude Include="Include\Levels\NewGameLevel.h" />
     <ClInclude Include="Include\Macros.h" />
+    <ClInclude Include="Include\miniaudio.h" />
     <ClInclude Include="Include\States\BoardState.h" />
     <ClInclude Include="Include\States\CombatState.h" />
     <ClInclude Include="Include\States\GameState.h" />

@@ -28,6 +28,7 @@
 
 #include "JLib/Math.h"
 #include "RenderGraph/RenderGraph.h"
+#include "miniaudio.h"
 
 namespace game 
 {
@@ -138,9 +139,11 @@ namespace game
 		float p1Lerp, p2Lerp;
 		bool restart;
 
+		ma_engine audioEngine;
+
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
-		static void Destroy(const CardGame& cardGame);
+		static void Destroy(CardGame& cardGame);
 
 		[[nodiscard]] static jv::Array<const char*> GetTexturePaths(jv::Arena& arena);
 		[[nodiscard]] static jv::Array<const char*> GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena);
@@ -279,7 +282,8 @@ namespace game
 			pixelation,
 			activePlayer,
 			inCombat,
-			fullscreen
+			fullscreen,
+			cardGame.audioEngine
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -386,6 +390,13 @@ namespace game
 			outCardGame->engine = Engine::Create(engineCreateInfo);
 		}
 		outCardGame->restart = false;
+
+		auto engineConfig = ma_engine_config_init();
+		auto result = ma_engine_init(nullptr, &outCardGame->audioEngine);
+		assert(result == MA_SUCCESS);
+
+		result = ma_engine_play_sound(&outCardGame->audioEngine, "Audio/Level1.wav", 0);
+		assert(result == MA_SUCCESS);
 
 		res = Engine::GetResolution();
 		outCardGame->resolution = res;
@@ -658,8 +669,9 @@ namespace game
 		*/
 	}
 
-	void CardGame::Destroy(const CardGame& cardGame)
+	void CardGame::Destroy(CardGame& cardGame)
 	{
+		ma_engine_uninit(&cardGame.audioEngine);
 		jv::Arena::Destroy(cardGame.arena);
 		Engine::Destroy(cardGame.engine);
 	}

@@ -13,6 +13,8 @@
 #include "Tasks/TextTask.h"
 #include "Tasks/PixelPerfectRenderTask.h"
 
+struct ma_engine;
+
 namespace jv::ge
 {
 	struct AtlasTexture;
@@ -73,6 +75,7 @@ namespace game
 		bool& activePlayer;
 		bool& inCombat;
 		bool& isFullScreen;
+		ma_engine& audioEngine;
 	};
 
 	struct Level

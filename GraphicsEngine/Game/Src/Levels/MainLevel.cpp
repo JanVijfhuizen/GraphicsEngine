@@ -1,6 +1,8 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainLevel.h"
 #include <Levels/LevelUtils.h>
+
+#include "miniaudio.h"
 #include "GE/AtlasGenerator.h"
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Curve.h"
@@ -10,6 +12,7 @@
 #include "States/BoardState.h"
 #include "Utils/Shuffle.h"
 #include "JLib/VectorUtils.h"
+#include "Levels/GameOverLevel.h"
 #include "Utils/SubTextureUtils.h"
 
 namespace game
@@ -1893,6 +1896,8 @@ namespace game
 		{
 			ingameMenuOpened = !ingameMenuOpened;
 			timeSinceIngameMenuOpened = GetTime();
+			const auto result = ma_engine_play_sound(&info.audioEngine, "Audio/Bullet.wav", 0);
+			assert(result == MA_SUCCESS);
 		}
 
 		if (ingameMenuOpened)
