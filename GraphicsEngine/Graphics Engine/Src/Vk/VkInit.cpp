@@ -54,7 +54,7 @@ namespace jv::vk::init
 	bool CheckValidationSupport(Arena& tempArena, const Array<const char*>& validationLayers)
 	{
 #ifdef NDEBUG
-		return;
+		return false;
 #endif
 		
 		const auto scope = tempArena.CreateScope();
