@@ -6,6 +6,7 @@
 #include "JLib/MapUtils.h"
 #include "JLib/VectorUtils.h"
 
+
 namespace jv::vk::init
 {
 	SwapChainSupportDetails::operator bool() const
@@ -50,7 +51,7 @@ namespace jv::vk::init
 		return deviceFeatures;
 	}
 
-	void CheckValidationSupport(Arena& tempArena, const Array<const char*>& validationLayers)
+	bool CheckValidationSupport(Arena& tempArena, const Array<const char*>& validationLayers)
 	{
 #ifdef NDEBUG
 		return;
@@ -70,15 +71,22 @@ namespace jv::vk::init
 			bool layerFound = false;
 
 			for (const auto& layerProperties : availableLayers)
+			{
 				if (strcmp(layer, layerProperties.layerName) == 0)
 				{
 					layerFound = true;
 					break;
 				}
-			assert(layerFound);
+			}
+			if (!layerFound)
+			{
+				return false;
+			}
+
 		}
 
 		tempArena.DestroyScope(scope);
+		return true; 
 	}
 
 	VkApplicationInfo CreateApplicationInfo()
@@ -116,7 +124,7 @@ namespace jv::vk::init
 		return info;
 	}
 
-	VkInstance CreateInstance(const Array<const char*>& validationLayers, const Array<const char*>& instanceExtensions)
+	VkInstance CreateInstance(const Array<const char*>& validationLayers, const Array<const char*>& instanceExtensions, bool validationSupported)
 	{
 		const auto appInfo = CreateApplicationInfo();
 
@@ -130,14 +138,17 @@ namespace jv::vk::init
 
 		createInfo.enabledLayerCount = 0;
 #ifdef _DEBUG
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.length);
-		createInfo.ppEnabledLayerNames = reinterpret_cast<const char**>(validationLayers.ptr);
-		createInfo.pNext = &validationCreateInfo;
+		if (validationSupported)
+		{
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.length);
+			createInfo.ppEnabledLayerNames = reinterpret_cast<const char**>(validationLayers.ptr);
+			createInfo.pNext = &validationCreateInfo;
+		}
 #endif
 
 		VkInstance instance;
 		const auto result = vkCreateInstance(&createInfo, nullptr, &instance);
-		assert(!result);
+		assert(!result); // DRAGOS
 
 		return instance;
 	}
@@ -454,8 +465,8 @@ namespace jv::vk::init
 		updatedInfo.instanceExtensions = instanceExtensions;
 		updatedInfo.deviceExtensions = deviceExtensions;
 
-		CheckValidationSupport(*updatedInfo.tempArena, validationLayers);
-		app.instance = CreateInstance(validationLayers, instanceExtensions);
+		bool validationSupport = CheckValidationSupport(*updatedInfo.tempArena, validationLayers);
+		app.instance = CreateInstance(validationLayers, instanceExtensions, validationSupport);
 		app.debugger = CreateDebugger(app.instance);
 		app.surface = updatedInfo.createSurface(app.instance, info.userPtr);
 		app.physicalDevice = SelectPhysicalDevice(updatedInfo, app.instance, app.surface);
