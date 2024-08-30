@@ -347,3 +347,7 @@ healthchecksdb
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
+
+cardgame.zip
+cardgame-debug.zip
+cardgame-release.zip
