@@ -5,6 +5,17 @@
 #include "JLib/HeapUtils.h"
 #include "JLib/MapUtils.h"
 #include "JLib/VectorUtils.h"
+#include <stdlib.h>
+#include <Windows.h>
+
+// TODO(DRAGOS): FORCE DEDICATED GRAPHICS CARD
+// set DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1=1
+
+extern "C"
+{
+	__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
 
 
 namespace jv::vk::init
@@ -287,6 +298,14 @@ namespace jv::vk::init
 
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+		if (deviceCount == 0)
+		{
+			// Try a weird fix for laptops
+			SetEnvironmentVariableA("DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1", "1");
+			vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+			// Note(Dragos): it did not work
+
+		}
 		assert(deviceCount);
 
 		const auto devices = CreateArray<VkPhysicalDevice>(arena, deviceCount);
@@ -332,7 +351,7 @@ namespace jv::vk::init
 		return candidates.Peek();
 	}
 
-	void CreateLogicalDevice(App& app, const Info& info, Arena& arena, const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
+	void CreateLogicalDevice(App& app, const Info& info, Arena& arena, const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface, bool validationSupport)
 	{
 		const auto scope = arena.CreateScope();
 		const auto queueFamilies = GetQueueFamilies(arena, physicalDevice, surface);
@@ -376,9 +395,12 @@ namespace jv::vk::init
 
 		createInfo.enabledLayerCount = 0;
 #ifdef _DEBUG
-		const auto& validationLayers = info.validationLayers;
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.length);
-		createInfo.ppEnabledLayerNames = reinterpret_cast<const char**>(validationLayers.ptr);
+		if (validationSupport)
+		{
+			const auto& validationLayers = info.validationLayers;
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.length);
+			createInfo.ppEnabledLayerNames = reinterpret_cast<const char**>(validationLayers.ptr);
+		}
 #endif
 
 		const auto result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &app.device);
@@ -470,7 +492,7 @@ namespace jv::vk::init
 		app.debugger = CreateDebugger(app.instance);
 		app.surface = updatedInfo.createSurface(app.instance, info.userPtr);
 		app.physicalDevice = SelectPhysicalDevice(updatedInfo, app.instance, app.surface);
-		CreateLogicalDevice(app, updatedInfo, *updatedInfo.tempArena, app.physicalDevice, app.surface);
+		CreateLogicalDevice(app, updatedInfo, *updatedInfo.tempArena, app.physicalDevice, app.surface, validationSupport);
 		app.commandPool = CreateCommandPool(*updatedInfo.tempArena, app.physicalDevice, app.surface, app.device);
 		
 		info.tempArena->DestroyScope(scope);

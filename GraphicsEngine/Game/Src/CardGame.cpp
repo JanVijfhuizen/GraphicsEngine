@@ -399,8 +399,8 @@ namespace game
 		result = ma_sound_init_from_file(&outCardGame->audioEngine, SOUND_BACKGROUND_MUSIC,
 			MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->audioBackground);
 		assert(result == MA_SUCCESS);
-		ma_sound_set_looping(&outCardGame->audioBackground, true);
-		ma_sound_start(&outCardGame->audioBackground);
+		//ma_sound_set_looping(&outCardGame->audioBackground, true);
+		//ma_sound_start(&outCardGame->audioBackground);
 
 		res = Engine::GetResolution();
 		outCardGame->resolution = res;
