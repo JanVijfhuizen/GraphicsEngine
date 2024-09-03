@@ -1193,6 +1193,15 @@ namespace jv::ge
 		return ge.swapChain.GetIndex();
 	}
 
+	uint32_t GetMinUniformOffset(const size_t s)
+	{
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(ge.app.physicalDevice, &properties);
+		const uint32_t m = properties.limits.minUniformBufferOffsetAlignment;
+		const uint32_t res = static_cast<uint32_t>(ceil(static_cast<float>(s) / static_cast<float>(m)));
+		return res * m;
+	}
+
 	void DeviceWaitIdle()
 	{
 		assert(ge.initialized);

@@ -1,14 +1,20 @@
 #include "pch.h"
 #include "VkHL/VkMesh.h"
 #include "JLib/ArrayUtils.h"
+#include "JLib/Math.h"
 #include "Vk/VkApp.h"
 #include "Vk/VkFreeArena.h"
 
 namespace jv::vk
 {
 	Buffer CreateVertexBuffer(Arena& arena, const FreeArena& freeArena, const App& app,
-		void* data, const uint32_t size, const VkBufferUsageFlags usageFlags)
+		void* data, uint32_t size, const VkBufferUsageFlags usageFlags)
 	{
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(app.physicalDevice, &properties);
+		const auto minSize = static_cast<uint32_t>(properties.limits.minUniformBufferOffsetAlignment);
+		size = Max<uint32_t>(size, minSize);
+
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = size;
@@ -76,7 +82,7 @@ namespace jv::vk
 		VkBufferCopy region{};
 		region.srcOffset = 0;
 		region.dstOffset = 0;
-		region.size = mem.size;
+		region.size = size;
 		vkCmdCopyBuffer(cmdBuffer, stagingBuffer, buffer, 1, &region);
 
 		result = vkEndCommandBuffer(cmdBuffer);

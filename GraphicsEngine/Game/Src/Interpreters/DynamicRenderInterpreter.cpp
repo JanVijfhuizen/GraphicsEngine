@@ -4,6 +4,7 @@
 
 #include "GE/GraphicsEngine.h"
 #include "JLib/FileLoader.h"
+#include "JLib/Math.h"
 
 namespace game
 {
@@ -68,13 +69,14 @@ namespace game
 		_pool = AddDescriptorPool(poolCreateInfo);
 		_frameCapacity = info.capacity;
 
+		const auto lightTaskSize = jv::ge::GetMinUniformOffset(sizeof(LightTask));
+		const uint32_t lightBufferSize = lightTaskSize * LIGHT_CAPACITY;
+
 		jv::ge::BufferCreateInfo lightInfoBufferCreateInfo{};
-		lightInfoBufferCreateInfo.size = sizeof(LightInfo) * jv::ge::GetFrameCount();
+		lightInfoBufferCreateInfo.size = lightTaskSize * jv::ge::GetFrameCount();
 		lightInfoBufferCreateInfo.scene = info.scene;
 		lightInfoBufferCreateInfo.type = jv::ge::BufferCreateInfo::Type::uniform;
 		_lightInfoBuffer = AddBuffer(lightInfoBufferCreateInfo);
-
-		constexpr uint32_t lightBufferSize = static_cast<uint32_t>(sizeof(LightTask)) * LIGHT_CAPACITY;
 
 		jv::ge::BufferCreateInfo lightsBufferCreateInfo{};
 		lightsBufferCreateInfo.size = lightBufferSize * jv::ge::GetFrameCount();
@@ -89,15 +91,15 @@ namespace game
 			auto& uniformWriteBindingInfo = writeInfos[0];
 			uniformWriteBindingInfo.type = jv::ge::BindingType::uniformBuffer;
 			uniformWriteBindingInfo.buffer.buffer = _lightInfoBuffer;
-			uniformWriteBindingInfo.buffer.offset = sizeof(LightInfo) * i;
-			uniformWriteBindingInfo.buffer.range = sizeof(LightInfo);
+			uniformWriteBindingInfo.buffer.offset = lightTaskSize * i;
+			uniformWriteBindingInfo.buffer.range = lightTaskSize;
 			uniformWriteBindingInfo.index = 2;
 
 			auto& storageWriteBindingInfo = writeInfos[1];
 			storageWriteBindingInfo.type = jv::ge::BindingType::storageBuffer;
 			storageWriteBindingInfo.buffer.buffer = _lightsBuffer;
 			storageWriteBindingInfo.buffer.offset = lightBufferSize * i;
-			storageWriteBindingInfo.buffer.range = sizeof(LightTask) * LIGHT_CAPACITY;
+			storageWriteBindingInfo.buffer.range = lightTaskSize * LIGHT_CAPACITY;
 			storageWriteBindingInfo.index = 3;
 
 			jv::ge::WriteInfo writeInfo{};

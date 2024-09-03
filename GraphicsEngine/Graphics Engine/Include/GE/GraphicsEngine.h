@@ -253,6 +253,7 @@ namespace jv::ge
 	[[nodiscard]] bool RenderFrame(const RenderFrameInfo& info);
 	[[nodiscard]] uint32_t GetFrameCount();
 	[[nodiscard]] uint32_t GetFrameIndex();
+	[[nodiscard]] uint32_t GetMinUniformOffset(size_t s);
 	void DeviceWaitIdle();
 	void Shutdown();
 }

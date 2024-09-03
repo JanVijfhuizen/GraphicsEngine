@@ -66,6 +66,7 @@ namespace game
 
 		int texWidth, texHeight, texChannels2;
 		stbi_uc* pixels = stbi_load(id.path, &texWidth, &texHeight, &texChannels2, STBI_rgb_alpha);
+		assert(pixels);
 		glm::ivec2 resolution{ texWidth, texHeight };
 		jv::ge::FillImage(id.resource->resource, pixels, &resolution);
 		stbi_image_free(pixels);
