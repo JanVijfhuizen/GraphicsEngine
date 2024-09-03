@@ -16,6 +16,7 @@ struct Light
     float fallOf;
     float size;
     float specularity;
+    float pad[4];
 };
 
 layout(std140, set=0, binding = 2) uniform LightInfo

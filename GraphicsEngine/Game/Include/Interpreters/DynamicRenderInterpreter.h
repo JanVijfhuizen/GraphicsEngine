@@ -64,6 +64,9 @@ namespace game
 		jv::ge::Resource _lightInfoBuffer;
 		jv::ge::Resource _lightsBuffer;
 
+		uint32_t _lightInfoSize;
+		uint32_t _lightBufferSize;
+
 		void OnStart(const DynamicRenderInterpreterCreateInfo& createInfo, const EngineMemory& memory) override;
 		void OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<DynamicRenderTask>>& tasks) override;
 		void OnExit(const EngineMemory& memory) override;

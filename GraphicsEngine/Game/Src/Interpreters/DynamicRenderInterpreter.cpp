@@ -69,17 +69,17 @@ namespace game
 		_pool = AddDescriptorPool(poolCreateInfo);
 		_frameCapacity = info.capacity;
 
-		const auto lightTaskSize = jv::ge::GetMinUniformOffset(sizeof(LightTask));
-		const uint32_t lightBufferSize = lightTaskSize * LIGHT_CAPACITY;
+		_lightInfoSize = jv::ge::GetMinUniformOffset(sizeof(LightInfo));
+		_lightBufferSize = jv::ge::GetMinUniformOffset(sizeof(LightTask) * LIGHT_CAPACITY);
 
 		jv::ge::BufferCreateInfo lightInfoBufferCreateInfo{};
-		lightInfoBufferCreateInfo.size = lightTaskSize * jv::ge::GetFrameCount();
+		lightInfoBufferCreateInfo.size = _lightInfoSize * jv::ge::GetFrameCount();
 		lightInfoBufferCreateInfo.scene = info.scene;
 		lightInfoBufferCreateInfo.type = jv::ge::BufferCreateInfo::Type::uniform;
 		_lightInfoBuffer = AddBuffer(lightInfoBufferCreateInfo);
 
 		jv::ge::BufferCreateInfo lightsBufferCreateInfo{};
-		lightsBufferCreateInfo.size = lightBufferSize * jv::ge::GetFrameCount();
+		lightsBufferCreateInfo.size = _lightBufferSize * jv::ge::GetFrameCount();
 		lightsBufferCreateInfo.scene = info.scene;
 		lightsBufferCreateInfo.type = jv::ge::BufferCreateInfo::Type::storage;
 		_lightsBuffer = AddBuffer(lightsBufferCreateInfo);
@@ -91,15 +91,15 @@ namespace game
 			auto& uniformWriteBindingInfo = writeInfos[0];
 			uniformWriteBindingInfo.type = jv::ge::BindingType::uniformBuffer;
 			uniformWriteBindingInfo.buffer.buffer = _lightInfoBuffer;
-			uniformWriteBindingInfo.buffer.offset = lightTaskSize * i;
-			uniformWriteBindingInfo.buffer.range = lightTaskSize;
+			uniformWriteBindingInfo.buffer.offset = _lightInfoSize * i;
+			uniformWriteBindingInfo.buffer.range = _lightInfoSize;
 			uniformWriteBindingInfo.index = 2;
 
 			auto& storageWriteBindingInfo = writeInfos[1];
 			storageWriteBindingInfo.type = jv::ge::BindingType::storageBuffer;
 			storageWriteBindingInfo.buffer.buffer = _lightsBuffer;
-			storageWriteBindingInfo.buffer.offset = lightBufferSize * i;
-			storageWriteBindingInfo.buffer.range = lightTaskSize * LIGHT_CAPACITY;
+			storageWriteBindingInfo.buffer.offset = _lightBufferSize * i;
+			storageWriteBindingInfo.buffer.range = _lightBufferSize;
 			storageWriteBindingInfo.index = 3;
 
 			jv::ge::WriteInfo writeInfo{};
@@ -186,17 +186,17 @@ namespace game
 
 			jv::ge::BufferUpdateInfo bufferUpdateInfo{};
 			bufferUpdateInfo.buffer = _lightInfoBuffer;
-			bufferUpdateInfo.size = sizeof(LightInfo);
-			bufferUpdateInfo.offset = sizeof(LightInfo) * frameIndex;
-			bufferUpdateInfo.data = &lightInfo;
+			bufferUpdateInfo.size = _lightInfoSize;
+			bufferUpdateInfo.offset = _lightInfoSize * frameIndex;
+			bufferUpdateInfo.data = &lightInfo; 
 			UpdateBuffer(bufferUpdateInfo);
 
 			if(lightTasks.count > 0)
 			{
 				jv::ge::BufferUpdateInfo storageBufferUpdateInfo{};
 				storageBufferUpdateInfo.buffer = _lightsBuffer;
-				storageBufferUpdateInfo.size = sizeof(LightTask) * lightTasks.count;
-				storageBufferUpdateInfo.offset = sizeof(LightTask) * LIGHT_CAPACITY * frameIndex;
+				storageBufferUpdateInfo.size = _lightBufferSize;
+				storageBufferUpdateInfo.offset = _lightBufferSize * frameIndex;
 				storageBufferUpdateInfo.data = lightTasks.ptr;
 				UpdateBuffer(storageBufferUpdateInfo);
 			}
