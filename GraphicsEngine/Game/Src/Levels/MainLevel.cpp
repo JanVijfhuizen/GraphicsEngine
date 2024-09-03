@@ -796,6 +796,9 @@ namespace game
 		playerCardSelectionDrawInfo.offsetMod = 16;
 		playerCardSelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
 		playerCardSelectionDrawInfo.draggable = playerCardSelectionDrawInfo.selectable;
+		if(enemyResult != UINT32_MAX)
+			playerCardSelectionDrawInfo.redHighlight = static_cast<int32_t>(targets[enemyResult]);
+
 		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
 		DrawDamageAnimation(info, *level, playerCardSelectionDrawInfo, true);

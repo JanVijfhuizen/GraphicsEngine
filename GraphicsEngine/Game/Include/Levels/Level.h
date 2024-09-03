@@ -163,6 +163,7 @@ namespace game
 			bool draggable = false;
 			bool selectable = true;
 			bool containsBoss = false;
+			int32_t redHighlight = -1;
 		};
 
 		struct PartyDrawInfo final

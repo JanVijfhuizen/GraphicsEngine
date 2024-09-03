@@ -538,6 +538,8 @@ namespace game
 				}
 			}
 
+			if(drawInfo.redHighlight - 1 == i)
+				cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
 			if(drawInfo.combatStats)
 				cardDrawInfo.combatStats = &drawInfo.combatStats[i];
 			cardDrawInfo.ignoreAnim = stackedSelected != -1;
