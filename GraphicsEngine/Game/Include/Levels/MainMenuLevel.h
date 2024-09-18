@@ -7,6 +7,7 @@ namespace game
 	{
 		bool saveDataValid;
 		bool inTutorial;
+		bool inResolutionSelect;
 
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;

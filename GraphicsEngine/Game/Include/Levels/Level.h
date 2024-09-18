@@ -63,6 +63,7 @@ namespace game
 		};
 
 		glm::ivec2 resolution;
+		glm::ivec2& requestedResolution;
 		const InputState& inputState;
 		TaskSystem<TextTask>& textTasks;
 		TaskSystem<PixelPerfectRenderTask>& renderTasks;

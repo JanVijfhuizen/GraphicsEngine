@@ -182,7 +182,7 @@ namespace game
 		inFile.open(RESOLUTION_DATA_PATH);
 		if (!inFile.is_open())
 		{
-			glm::ivec2 res = SIMULATED_RESOLUTION * 3;
+			constexpr glm::ivec2 res = SIMULATED_RESOLUTION * 3;
 			SaveResolution(res, false);
 			inFile.close();
 			
@@ -255,6 +255,7 @@ namespace game
 		p2Lerp = jv::Clamp<float>(p2Lerp, 0.5, 1);
 
 		bool fullscreen = isFullScreen;
+		glm::ivec2 requestedResolution{};
 		
 		const LevelUpdateInfo info
 		{
@@ -272,6 +273,7 @@ namespace game
 			curses,
 			events,
 			resolution,
+			requestedResolution,
 			inputState,
 			*textTasks,
 			*pixelPerfectRenderTasks,
@@ -306,6 +308,12 @@ namespace game
 			bool fs;
 			LoadResolution(res, fs);
 			SaveResolution(res, fullscreen);
+			restart = true;
+			return false;
+		}
+		if(requestedResolution != glm::ivec2(0))
+		{
+			SaveResolution(requestedResolution, false);
 			restart = true;
 			return false;
 		}
@@ -710,13 +718,16 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 			if(i < MONSTER_IDS::LENGTH)
-				arr[i] = "Art/Monsters/goblin.png";
+				arr[i] = "Art/Monsters/demon.png";
 			else
-				arr[i] = "Art/Artifacts/Blessed_Ring.png";
+				arr[i] = "Art/Monsters/elf.png";
 		}
 
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
 		arr[MONSTER_IDS::GOBLIN] = "Art/Monsters/goblin.png";
+		arr[MONSTER_IDS::VULTURE] = "Art/Monsters/vulture.png";
+		arr[MONSTER_IDS::DEMON] = "Art/Monsters/demon.png";
+		arr[MONSTER_IDS::ELF] = "Art/Monsters/elf.png";
 
 		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/Slime_Soldier.png";
 		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/Knife_Juggler.png";
