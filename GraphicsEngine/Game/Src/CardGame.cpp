@@ -716,7 +716,7 @@ namespace game
 		}
 
 		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/Slime_Soldier.png";
-		arr[MONSTER_IDS::DAISY] = "Art/Monsters/Fire_Elemental.png"; // Temp.
+		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
 		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/Knife_Juggler.png";
 		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/Elven_Sage.png";
 		arr[MONSTER_IDS::LIBRARIAN] = "Art/Monsters/Librarian.png";
@@ -894,6 +894,7 @@ namespace game
 		daisy.attack = 3;
 		daisy.health = 3;
 		daisy.unique = true;
+		daisy.normalAnimIndex = daisy.animIndex;
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
 		god.attack = 0;
