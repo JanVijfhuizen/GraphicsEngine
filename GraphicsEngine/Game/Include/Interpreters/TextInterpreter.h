@@ -18,7 +18,7 @@ namespace game
 		jv::ge::AtlasTexture numberAtlasTexture;
 		jv::ge::AtlasTexture symbolAtlasTexture;
 		uint32_t symbolSize = 9;
-		uint32_t largeSymbolSize = 13;
+		uint32_t largeSymbolSize = 11;
 		int32_t spacing = -2;
 		uint32_t bounceHeight = 3;
 		float fadeInSpeed = 40;
