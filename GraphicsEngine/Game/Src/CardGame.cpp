@@ -407,8 +407,8 @@ namespace game
 		result = ma_sound_init_from_file(&outCardGame->audioEngine, SOUND_BACKGROUND_MUSIC,
 			MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->audioBackground);
 		assert(result == MA_SUCCESS);
-		//ma_sound_set_looping(&outCardGame->audioBackground, true);
-		//ma_sound_start(&outCardGame->audioBackground);
+		ma_sound_set_looping(&outCardGame->audioBackground, true);
+		ma_sound_start(&outCardGame->audioBackground);
 
 		res = Engine::GetResolution();
 		outCardGame->resolution = res;
@@ -717,12 +717,10 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			if(i < MONSTER_IDS::LENGTH)
-				arr[i] = "Art/Monsters/demon.png";
-			else
-				arr[i] = "Art/Monsters/elf.png";
+			arr[i] = "Art/Monsters/daisy.png";
 		}
 
+		/*
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
 		arr[MONSTER_IDS::GOBLIN] = "Art/Monsters/goblin.png";
 		arr[MONSTER_IDS::VULTURE] = "Art/Monsters/vulture.png";
@@ -745,6 +743,7 @@ namespace game
 		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifacts/Mage_Sword.png";
 		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::RED_CLOTH] = "Art/Artifacts/Red_Cloth.png";
 		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::CUP_OF_BLOOD] = "Art/Artifacts/Cup_Of_Blood.png";
+		*/
 		return arr;
 	}
 
@@ -810,7 +809,10 @@ namespace game
 
 		uint32_t c = 0;
 		for (auto& card : arr)
+		{
+			card.normalAnimIndex = c;
 			card.animIndex = c++;
+		}
 
 		auto& vulture = arr[MONSTER_IDS::VULTURE];
 		vulture.name = "vulture";
