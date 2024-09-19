@@ -717,33 +717,19 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/daisy.png";
+			arr[i] = "Art/Monsters/elven_sage.png";
 		}
 
-		/*
+		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
 		arr[MONSTER_IDS::GOBLIN] = "Art/Monsters/goblin.png";
 		arr[MONSTER_IDS::VULTURE] = "Art/Monsters/vulture.png";
 		arr[MONSTER_IDS::DEMON] = "Art/Monsters/demon.png";
 		arr[MONSTER_IDS::ELF] = "Art/Monsters/elf.png";
+		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/knife_juggler.png";
+		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/elven_sage.png";
+		arr[MONSTER_IDS::MAIDEN_OF_THE_MOON] = "Art/Monsters/maiden_of_the_moon.png";
 
-		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/Slime_Soldier.png";
-		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/Knife_Juggler.png";
-		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/Elven_Sage.png";
-		arr[MONSTER_IDS::LIBRARIAN] = "Art/Monsters/Librarian.png";
-		arr[MONSTER_IDS::GOBLIN_KING] = "Art/Monsters/Goblin_King.png";
-		arr[MONSTER_IDS::GOBLIN_BOMB] = "Art/Monsters/Goblin_Bomber.png";
-
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::BLESSED_RING] = "Art/Artifacts/Blessed_Ring.png";
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifacts/Arcane_Amulet.png";
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::BLOOD_AXE] = "Art/Artifacts/Bloody_Axe.png";
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::STAFF_OF_SUMMONING] = "Art/Artifacts/Demonic_Staff.png";
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MANA_RING] = "Art/Artifacts/Mana_Ring.png";
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MAGE_ARMOR] = "Art/Artifacts/Mage_Armor.png";
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifacts/Mage_Sword.png";
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::RED_CLOTH] = "Art/Artifacts/Red_Cloth.png";
-		arr[MONSTER_IDS::LENGTH + ARTIFACT_IDS::CUP_OF_BLOOD] = "Art/Artifacts/Cup_Of_Blood.png";
-		*/
 		return arr;
 	}
 
@@ -810,7 +796,7 @@ namespace game
 		uint32_t c = 0;
 		for (auto& card : arr)
 		{
-			card.normalAnimIndex = c;
+			//card.normalAnimIndex = c;
 			card.animIndex = c++;
 		}
 
