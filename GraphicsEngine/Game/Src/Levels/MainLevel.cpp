@@ -627,12 +627,16 @@ namespace game
 		// Check for new turn.
 		if(state.stack.count == 0 && !activeStateValid)
 		{
+			// Draw end turn button.
 			ButtonDrawInfo buttonDrawInfo{};
-			buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x - 64, 6);
-			buttonDrawInfo.text = "end turn";
-			buttonDrawInfo.width = 64;
+			buttonDrawInfo.center = true;
 			buttonDrawInfo.centerText = true;
-			const bool endTurn = false;//level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
+			buttonDrawInfo.text = "end";
+			buttonDrawInfo.largeFont = true;
+			buttonDrawInfo.drawLineByDefault = false;
+			buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x - 32, 4);
+			buttonDrawInfo.showLine = false;
+			const bool endTurn = level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
 
 			// Manually end turn.
 			if (endTurn || info.inputState.enter.PressEvent())

@@ -75,7 +75,8 @@ namespace game
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)
 			{
-				assert(job.text);
+				if (!job.text)
+					continue;
 
 				task.color = job.color;
 				const auto len = static_cast<uint32_t>(strlen(job.text));

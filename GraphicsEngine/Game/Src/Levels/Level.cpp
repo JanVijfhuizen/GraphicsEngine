@@ -324,6 +324,7 @@ namespace game
 		buttonRenderTask.scale = glm::ivec2(drawInfo.width, 2);
 		buttonRenderTask.subTexture = buttonTexture.subTexture;
 		buttonRenderTask.xCenter = drawInfo.center;
+		buttonRenderTask.priority = drawInfo.priority;
 
 		TextTask buttonTextTask{};
 		buttonTextTask.position = buttonRenderTask.position;
@@ -335,6 +336,7 @@ namespace game
 		buttonTextTask.maxLength = textMaxLen;
 		buttonTextTask.center = drawInfo.centerText;
 		buttonTextTask.largeFont = drawInfo.largeFont;
+		buttonRenderTask.priority = drawInfo.priority;
 
 		buttonRenderTask.scale.x *= l;
 		bool pressed = false;
@@ -345,12 +347,13 @@ namespace game
 		{
 			buttonTextTask.loop = true;
 			buttonRenderTask.color = glm::vec4(1, 0, 0, 1);
-			info.renderTasks.Push(buttonRenderTask);
+			if(drawInfo.showLine)
+				info.renderTasks.Push(buttonRenderTask);
 			buttonTextTask.lifetime = _buttonLifetime;
 			buttonTextTask.fadeIn = false;
 			_buttonHovered = true;
 		}
-		else if(drawInfo.drawLineByDefault)
+		else if(drawInfo.showLine && drawInfo.drawLineByDefault)
 			info.renderTasks.Push(buttonRenderTask);
 		if (collided && info.inputState.lMouse.ReleaseEvent())
 			pressed = true;

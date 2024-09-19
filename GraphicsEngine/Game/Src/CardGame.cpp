@@ -702,7 +702,8 @@ namespace game
 		arr[8] = "Art/fallback.png";
 		arr[9] = "Art/empty.png";
 		arr[10] = "Art/manabar.png";
-		arr[11] = "Art/manacrystal.png";
+		arr[11] = "Art/manabar_hollow.png";
+		arr[12] = "Art/manacrystal.png";
 		return arr;
 	}
 

@@ -100,6 +100,8 @@ namespace game
 			uint32_t width = 64;
 			bool largeFont = false;
 			bool drawLineByDefault = true;
+			bool priority = false;
+			bool showLine = true;
 		};
 
 		struct CardDrawMetaData final
