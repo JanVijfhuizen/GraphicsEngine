@@ -720,7 +720,7 @@ namespace game
 			arr[i] = "Art/Monsters/demon.png";
 
 			// testing.
-			uint32_t j = i % 6;
+			uint32_t j = i % 7;
 			if(j == 1)
 				arr[i] = "Art/Monsters/goblin.png";
 			if (j == 2)
@@ -731,8 +731,9 @@ namespace game
 				arr[i] = "Art/Monsters/chaos_clown.png";
 			if (j == 5)
 				arr[i] = "Art/Monsters/phantasm.png";
+			if (j == 6)
+				arr[i] = "Art/Monsters/mana_shade.png";
 		}
-
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
 		arr[MONSTER_IDS::GOBLIN] = "Art/Monsters/goblin.png";
@@ -741,6 +742,7 @@ namespace game
 		arr[MONSTER_IDS::MAD_PYROMANCER] = "Art/Monsters/mad_pyromancer.png";
 		arr[MONSTER_IDS::CHAOS_CLOWN] = "Art/Monsters/chaos_clown.png";
 		arr[MONSTER_IDS::PHANTASM] = "Art/Monsters/phantasm.png";
+		arr[MONSTER_IDS::MANA_SHADE] = "Art/Monsters/mana_shade.png";
 
 		return arr;
 	}
@@ -1521,8 +1523,8 @@ namespace game
 				}
 				return false;
 			};
-		auto& manaCyclone = arr[MONSTER_IDS::MANA_CYCLONE];
-		manaCyclone.name = "mana cyclone";
+		auto& manaCyclone = arr[MONSTER_IDS::MANA_SHADE];
+		manaCyclone.name = "mana shade";
 		manaCyclone.attack = 1;
 		manaCyclone.health = 20;
 		manaCyclone.ruleText = "[end of turn] gain 3 attack per unspent mana.";
