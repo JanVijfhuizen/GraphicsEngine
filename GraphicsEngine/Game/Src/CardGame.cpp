@@ -718,11 +718,17 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 			arr[i] = "Art/Monsters/demon.png";
+			if(i % 2 == 1)
+				arr[i] = "Art/Monsters/goblin.png";
+			if (i % 3 == 2)
+				arr[i] = "Art/Monsters/librarian.png";
 		}
 
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
 		arr[MONSTER_IDS::GOBLIN] = "Art/Monsters/goblin.png";
+		arr[MONSTER_IDS::DEMON] = "Art/Monsters/demon.png";
+		arr[MONSTER_IDS::LIBRARIAN] = "Art/Monsters/librarian.png";
 
 		return arr;
 	}
@@ -856,11 +862,11 @@ namespace game
 				}
 				return false;
 			};
-		auto& treasure = arr[MONSTER_IDS::TREASURE];
-		treasure.name = "treasure";
+		auto& treasure = arr[MONSTER_IDS::TREASURE_GOBLIN];
+		treasure.name = "treasure goblin";
 		treasure.health = 1;
 		treasure.attack = 0;
-		treasure.tags = TAG_TOKEN;
+		treasure.tags = TAG_TOKEN | TAG_GOBLIN;
 		treasure.unique = true;
 		treasure.ruleText = "[death] +1 mana.";
 		treasure.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1646,12 +1652,12 @@ namespace game
 				}
 				return false;
 			};
-		auto& obnoxiousFan = arr[MONSTER_IDS::OBNOXIOUS_FAN];
-		obnoxiousFan.name = "lich";
-		obnoxiousFan.attack = 3;
-		obnoxiousFan.health = 2;
-		obnoxiousFan.ruleText = "[death] if there is another allied monster, summon a lich with my attack.";
-		obnoxiousFan.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& lich = arr[MONSTER_IDS::LICH];
+		lich.name = "lich";
+		lich.attack = 3;
+		lich.health = 2;
+		lich.ruleText = "[death] if there is another allied monster, summon a lich with my attack.";
+		lich.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
@@ -1668,7 +1674,7 @@ namespace game
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::OBNOXIOUS_FAN;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::LICH;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
 					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
 					state.TryAddToStack(summonState);
@@ -1830,7 +1836,6 @@ namespace game
 		librarian.attack = 1;
 		librarian.health = 20;
 		librarian.ruleText = "[draw] +1 mana. take 1 damage.";
-		librarian.tags = TAG_HUMAN;
 		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDraw)
@@ -3021,7 +3026,7 @@ namespace game
 			};
 		auto& treasureHunt = arr[SPELL_IDS::TREASURE_HUNT];
 		treasureHunt.name = "treasure hunt";
-		treasureHunt.ruleText = "summon 3 treasures for your opponent.";
+		treasureHunt.ruleText = "summon 3 treasure goblins for your opponent.";
 		treasureHunt.cost = 1;
 		treasureHunt.type = SpellCard::Type::all;
 		treasureHunt.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -3032,7 +3037,7 @@ namespace game
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::isAlly] = 0;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::TREASURE;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::TREASURE_GOBLIN;
 					for (uint32_t i = 0; i < 3; ++i)
 						state.TryAddToStack(summonState);
 					return true;
