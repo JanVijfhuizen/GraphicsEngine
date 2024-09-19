@@ -717,7 +717,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/elven_sage.png";
+			arr[i] = "Art/Monsters/goblin.png";
 		}
 
 		
@@ -728,7 +728,8 @@ namespace game
 		arr[MONSTER_IDS::ELF] = "Art/Monsters/elf.png";
 		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/knife_juggler.png";
 		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/elven_sage.png";
-		arr[MONSTER_IDS::MAIDEN_OF_THE_MOON] = "Art/Monsters/maiden_of_the_moon.png";
+		arr[MONSTER_IDS::MOON_ACOLYTE] = "Art/Monsters/moon_acolyte.png";
+		arr[MONSTER_IDS::BERSERKER] = "Art/Monsters/berserker.png";
 
 		return arr;
 	}
@@ -1440,7 +1441,7 @@ namespace game
 		unstableGolem.health = 20;
 		unstableGolem.tags = TAG_TOKEN;
 
-		auto& maidenOfTheMoon = arr[MONSTER_IDS::MAIDEN_OF_THE_MOON];
+		auto& maidenOfTheMoon = arr[MONSTER_IDS::MOON_ACOLYTE];
 		maidenOfTheMoon.name = "moon acolyte";
 		maidenOfTheMoon.attack = 1;
 		maidenOfTheMoon.health = 20;
@@ -1464,7 +1465,7 @@ namespace game
 				}
 				return false;
 			};
-		auto& fleetingSoldier = arr[MONSTER_IDS::FLEETING_SOLDIER];
+		auto& fleetingSoldier = arr[MONSTER_IDS::BERSERKER];
 		fleetingSoldier.name = "berserker";
 		fleetingSoldier.attack = 1;
 		fleetingSoldier.health = 20;
