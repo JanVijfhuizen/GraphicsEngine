@@ -720,7 +720,7 @@ namespace game
 			arr[i] = "Art/Monsters/demon.png";
 
 			// testing.
-			uint32_t j = i % 7;
+			uint32_t j = i % 8;
 			if(j == 1)
 				arr[i] = "Art/Monsters/goblin.png";
 			if (j == 2)
@@ -733,6 +733,8 @@ namespace game
 				arr[i] = "Art/Monsters/phantasm.png";
 			if (j == 6)
 				arr[i] = "Art/Monsters/mana_shade.png";
+			if (j == 7)
+				arr[i] = "Art/Monsters/slime.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -743,6 +745,7 @@ namespace game
 		arr[MONSTER_IDS::CHAOS_CLOWN] = "Art/Monsters/chaos_clown.png";
 		arr[MONSTER_IDS::PHANTASM] = "Art/Monsters/phantasm.png";
 		arr[MONSTER_IDS::MANA_SHADE] = "Art/Monsters/mana_shade.png";
+		arr[MONSTER_IDS::SLIME] = "Art/Monsters/slime.png";
 
 		return arr;
 	}
