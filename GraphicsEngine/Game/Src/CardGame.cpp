@@ -720,7 +720,7 @@ namespace game
 			arr[i] = "Art/Monsters/demon.png";
 
 			// testing.
-			uint32_t j = i % 8;
+			uint32_t j = i % 9;
 			if(j == 1)
 				arr[i] = "Art/Monsters/goblin.png";
 			if (j == 2)
@@ -732,9 +732,11 @@ namespace game
 			if (j == 5)
 				arr[i] = "Art/Monsters/phantasm.png";
 			if (j == 6)
-				arr[i] = "Art/Monsters/mana_shade.png";
+				arr[i] = "Art/Monsters/mana_devourer.png";
 			if (j == 7)
 				arr[i] = "Art/Monsters/slime.png";
+			if (j == 8)
+				arr[i] = "Art/Monsters/slime_soldier.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -744,8 +746,9 @@ namespace game
 		arr[MONSTER_IDS::MAD_PYROMANCER] = "Art/Monsters/mad_pyromancer.png";
 		arr[MONSTER_IDS::CHAOS_CLOWN] = "Art/Monsters/chaos_clown.png";
 		arr[MONSTER_IDS::PHANTASM] = "Art/Monsters/phantasm.png";
-		arr[MONSTER_IDS::MANA_SHADE] = "Art/Monsters/mana_shade.png";
+		arr[MONSTER_IDS::MANA_DEVOURER] = "Art/Monsters/mana_devourer.png";
 		arr[MONSTER_IDS::SLIME] = "Art/Monsters/slime.png";
+		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/slime_soldier.png";
 
 		return arr;
 	}
@@ -1526,8 +1529,8 @@ namespace game
 				}
 				return false;
 			};
-		auto& manaCyclone = arr[MONSTER_IDS::MANA_SHADE];
-		manaCyclone.name = "mana shade";
+		auto& manaCyclone = arr[MONSTER_IDS::MANA_DEVOURER];
+		manaCyclone.name = "mana devourer";
 		manaCyclone.attack = 1;
 		manaCyclone.health = 20;
 		manaCyclone.ruleText = "[end of turn] gain 3 attack per unspent mana.";
