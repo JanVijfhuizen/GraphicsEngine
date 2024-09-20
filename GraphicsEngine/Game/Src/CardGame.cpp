@@ -721,7 +721,7 @@ namespace game
 			arr[i] = "Art/Monsters/demon.png";
 
 			// testing.
-			uint32_t j = rand() % 10;
+			uint32_t j = rand() % 13;
 			if(j == 1)
 				arr[i] = "Art/Monsters/goblin.png";
 			if (j == 2)
@@ -740,6 +740,12 @@ namespace game
 				arr[i] = "Art/Monsters/slime_soldier.png";
 			if (j == 9)
 				arr[i] = "Art/Monsters/goblin_champion.png";
+			if (j == 10)
+				arr[i] = "Art/Monsters/goblin_king.png";
+			if (j == 11)
+				arr[i] = "Art/Monsters/goblin_bomber.png";
+			if (j == 12)
+				arr[i] = "Art/Monsters/knife_juggler.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -753,6 +759,9 @@ namespace game
 		arr[MONSTER_IDS::SLIME] = "Art/Monsters/slime.png";
 		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/slime_soldier.png";
 		arr[MONSTER_IDS::GOBLIN_CHAMPION] = "Art/Monsters/goblin_champion.png";
+		arr[MONSTER_IDS::GOBLIN_KING] = "Art/Monsters/goblin_king.png";
+		arr[MONSTER_IDS::GOBLIN_BOMB] = "Art/Monsters/goblin_bomber.png";
+		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/knife_juggler.png";
 
 		return arr;
 	}
