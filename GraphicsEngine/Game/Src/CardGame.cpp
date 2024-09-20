@@ -721,7 +721,7 @@ namespace game
 			arr[i] = "Art/Monsters/demon.png";
 
 			// testing.
-			uint32_t j = rand() % 14;
+			uint32_t j = rand() % 16;
 			if(j == 1)
 				arr[i] = "Art/Monsters/goblin.png";
 			if (j == 2)
@@ -748,6 +748,10 @@ namespace game
 				arr[i] = "Art/Monsters/knife_juggler.png";
 			if (j == 13)
 				arr[i] = "Art/Monsters/elven_sage.png";
+			if (j == 14)
+				arr[i] = "Art/Monsters/treasure_goblin.png";
+			if (j == 15)
+				arr[i] = "Art/Monsters/goblin_princess.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -765,6 +769,8 @@ namespace game
 		arr[MONSTER_IDS::GOBLIN_BOMB] = "Art/Monsters/goblin_bomber.png";
 		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/knife_juggler.png";
 		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/elven_sage.png";
+		arr[MONSTER_IDS::TREASURE_GOBLIN] = "Art/Monsters/treasure_goblin.png";
+		arr[MONSTER_IDS::GOBLIN_PRINCESS] = "Art/Monsters/goblin_princess.png";
 		return arr;
 	}
 
@@ -1664,7 +1670,7 @@ namespace game
 				
 				return false;
 			};
-		auto& goblinPartyStarter = arr[MONSTER_IDS::GOBLIN_PARTY_STARTER];
+		auto& goblinPartyStarter = arr[MONSTER_IDS::GOBLIN_PRINCESS];
 		goblinPartyStarter.name = "goblin princess";
 		goblinPartyStarter.attack = 1;
 		goblinPartyStarter.health = 14;
