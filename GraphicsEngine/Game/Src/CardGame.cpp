@@ -718,40 +718,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/demon.png";
-
-			// testing.
-			uint32_t j = rand() % 16;
-			if(j == 1)
-				arr[i] = "Art/Monsters/goblin.png";
-			if (j == 2)
-				arr[i] = "Art/Monsters/librarian.png";
-			if (j == 3)
-				arr[i] = "Art/Monsters/mad_pyromancer.png";
-			if (j == 4)
-				arr[i] = "Art/Monsters/chaos_clown.png";
-			if (j == 5)
-				arr[i] = "Art/Monsters/phantasm.png";
-			if (j == 6)
-				arr[i] = "Art/Monsters/mana_devourer.png";
-			if (j == 7)
-				arr[i] = "Art/Monsters/slime.png";
-			if (j == 8)
-				arr[i] = "Art/Monsters/slime_soldier.png";
-			if (j == 9)
-				arr[i] = "Art/Monsters/goblin_champion.png";
-			if (j == 10)
-				arr[i] = "Art/Monsters/goblin_king.png";
-			if (j == 11)
-				arr[i] = "Art/Monsters/goblin_bomber.png";
-			if (j == 12)
-				arr[i] = "Art/Monsters/knife_juggler.png";
-			if (j == 13)
-				arr[i] = "Art/Monsters/elven_sage.png";
-			if (j == 14)
-				arr[i] = "Art/Monsters/treasure_goblin.png";
-			if (j == 15)
-				arr[i] = "Art/Monsters/goblin_princess.png";
+			arr[i] = "Art/Monsters/goblin_scout.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -771,6 +738,7 @@ namespace game
 		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/elven_sage.png";
 		arr[MONSTER_IDS::TREASURE_GOBLIN] = "Art/Monsters/treasure_goblin.png";
 		arr[MONSTER_IDS::GOBLIN_PRINCESS] = "Art/Monsters/goblin_princess.png";
+		arr[MONSTER_IDS::GOBLIN_SCOUT] = "Art/Monsters/goblin_scout.png";
 		return arr;
 	}
 
