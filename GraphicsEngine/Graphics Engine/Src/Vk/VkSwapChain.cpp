@@ -7,7 +7,7 @@
 
 namespace jv::vk
 {
-	constexpr uint32_t SWAPCHAIN_MAX_FRAMES_IN_FLIGHT = 4;
+	constexpr uint32_t SWAPCHAIN_MAX_FRAMES_IN_FLIGHT = 2;
 
 	VkSurfaceFormatKHR ChooseSurfaceFormat(const Array<VkSurfaceFormatKHR>& availableFormats)
 	{

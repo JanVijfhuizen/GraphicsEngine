@@ -193,7 +193,7 @@ namespace jv::vk
 		imageCreateInfo.mipLevels = 1;
 		imageCreateInfo.arrayLayers = 1;
 		imageCreateInfo.format = info.format;
-		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		imageCreateInfo.tiling = VK_IMAGE_TILING_LINEAR;
 		imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageCreateInfo.usage = info.usageFlags;
 		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;

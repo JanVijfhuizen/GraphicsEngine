@@ -349,8 +349,8 @@ namespace game
 			buttonRenderTask.color = glm::vec4(1, 0, 0, 1);
 			if(drawInfo.showLine)
 				info.renderTasks.Push(buttonRenderTask);
-			buttonTextTask.lifetime = _buttonLifetime;
-			buttonTextTask.fadeIn = false;
+			//buttonTextTask.lifetime = _buttonLifetime;
+			//buttonTextTask.fadeIn = false;
 			_buttonHovered = true;
 		}
 		else if(drawInfo.showLine && drawInfo.drawLineByDefault)
