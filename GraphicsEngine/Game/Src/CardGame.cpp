@@ -718,7 +718,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/storm_elemental.png";
+			arr[i] = "Art/Monsters/unstable_creation.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -744,6 +744,7 @@ namespace game
 		arr[MONSTER_IDS::MOSSY_ELEMENTAL] = "Art/Monsters/mossy_elemental.png";
 		arr[MONSTER_IDS::ELF] = "Art/Monsters/elf.png";
 		arr[MONSTER_IDS::PESKY_PARASITE] = "Art/Monsters/pesky_parasite.png";
+		arr[MONSTER_IDS::UNSTABLE_CREATION] = "Art/Monsters/unstable_creation.png";
 		return arr;
 	}
 
@@ -1452,7 +1453,7 @@ namespace game
 		unstableCreation.name = "unstable creation";
 		unstableCreation.attack = 3;
 		unstableCreation.health = 20;
-		unstableCreation.tags = TAG_TOKEN;
+		unstableCreation.tags = TAG_TOKEN | TAG_ELEMENTAL;
 
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MOON_ACOLYTE];
 		maidenOfTheMoon.name = "moon acolyte";
