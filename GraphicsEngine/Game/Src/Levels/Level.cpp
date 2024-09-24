@@ -862,7 +862,7 @@ namespace game
 		case HeaderSpacing::close:
 			yOffset = 64;
 			break;
-		case HeaderSpacing::far:
+		case HeaderSpacing::farr:
 			yOffset = 12;
 			break;
 		default:

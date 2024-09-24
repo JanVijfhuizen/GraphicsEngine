@@ -1662,10 +1662,10 @@ namespace game
 			discoverOption = choice == discoverOption ? -1 : choice;
 
 		const char* text = "select a card to replace, if any.";
-		level->DrawTopCenterHeader(info, HeaderSpacing::far, text);
+		level->DrawTopCenterHeader(info, HeaderSpacing::farr, text);
 		const float f = level->GetTime() - static_cast<float>(strlen(text)) / TEXT_DRAW_SPEED;
 		if (f >= 0)
-			level->DrawPressEnterToContinue(info, HeaderSpacing::far, f);
+			level->DrawPressEnterToContinue(info, HeaderSpacing::farr, f);
 		
 		if (!level->GetIsLoading() && info.inputState.enter.PressEvent())
 		{

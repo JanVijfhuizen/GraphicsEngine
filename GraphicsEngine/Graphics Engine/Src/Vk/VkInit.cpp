@@ -159,8 +159,11 @@ namespace jv::vk::init
 
 		VkInstance instance;
 		const auto result = vkCreateInstance(&createInfo, nullptr, &instance);
-		assert(!result); // DRAGOS
 
+		if(result)
+			MessageBoxA(NULL, "A graphics related error occurred. Check if your graphics drivers are up to date. If they are, my bad.", "Error!", MB_OK);
+
+		assert(!result);
 		return instance;
 	}
 

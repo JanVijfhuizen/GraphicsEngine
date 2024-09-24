@@ -180,7 +180,7 @@ namespace game
 		{
 			normal,
 			close,
-			far
+			farr
 		};
 
 		virtual void Create(const LevelCreateInfo& info);

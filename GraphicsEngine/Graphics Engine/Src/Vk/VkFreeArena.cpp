@@ -13,9 +13,9 @@ namespace jv::vk
 		uint32_t id = 0;
 		for (const auto& pool : arena.pools)
 		{
-			if (typeFilter & 1 << id)
-				if ((pool.memPropertyFlags & properties) == properties)
-					return id;
+			bool typeValid = typeFilter & 1 << id, flagsValid = (pool.memPropertyFlags & properties) == properties;
+			if (typeValid && flagsValid)
+				return id;
 			++id;
 		}
 
