@@ -718,7 +718,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/unstable_creation.png";
+			arr[i] = "Art/Monsters/wounded_troll.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -745,6 +745,7 @@ namespace game
 		arr[MONSTER_IDS::ELF] = "Art/Monsters/elf.png";
 		arr[MONSTER_IDS::PESKY_PARASITE] = "Art/Monsters/pesky_parasite.png";
 		arr[MONSTER_IDS::UNSTABLE_CREATION] = "Art/Monsters/unstable_creation.png";
+		arr[MONSTER_IDS::WOUNDED_TROLL] = "Art/Monsters/wounded_troll.png";
 		return arr;
 	}
 
@@ -1451,8 +1452,8 @@ namespace game
 			};
 		auto& unstableCreation = arr[MONSTER_IDS::UNSTABLE_CREATION];
 		unstableCreation.name = "unstable creation";
-		unstableCreation.attack = 3;
-		unstableCreation.health = 20;
+		unstableCreation.attack = 4;
+		unstableCreation.health = 16;
 		unstableCreation.tags = TAG_TOKEN | TAG_ELEMENTAL;
 
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MOON_ACOLYTE];
@@ -1546,23 +1547,21 @@ namespace game
 				return false;
 			};
 		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_TROLL];
-		woundedTroll.name = "wounded troll";
+		woundedTroll.name = "wounded pandawan";
 		woundedTroll.attack = 3;
 		woundedTroll.health = 20;
-		woundedTroll.ruleText = "[death] all monsters gain +3 health.";
+		woundedTroll.ruleText = "[end of turn] take 1 damage.";
 		woundedTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onDeath)
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
-					if (actionState.dst != self)
-						return false;
-
-					ActionState buffState{};
-					buffState.trigger = ActionState::Trigger::onStatBuff;
-					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::health] = 3;
-					TargetOfType(info, state, buffState, self, -1, TypeTarget::all);
-					return true;
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = 1;
+					damageState.dst = self;
+					damageState.dstUniqueId = state.boardState.uniqueIds[self];
+					state.TryAddToStack(damageState);
 				}
 				return false;
 			};
