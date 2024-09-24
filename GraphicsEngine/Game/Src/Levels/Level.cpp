@@ -145,7 +145,6 @@ namespace game
 				cardDrawInfo.priority = true;
 				cardDrawInfo.selectable = false;
 				cardDrawInfo.scale = 2;
-				//cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
 
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
