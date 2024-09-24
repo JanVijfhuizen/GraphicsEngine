@@ -718,7 +718,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/elf.png";
+			arr[i] = "Art/Monsters/pesky_parasite.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -742,7 +742,8 @@ namespace game
 		arr[MONSTER_IDS::VULTURE] = "Art/Monsters/vulture.png";
 		arr[MONSTER_IDS::STORM_ELEMENTAL] = "Art/Monsters/storm_elemental.png";
 		arr[MONSTER_IDS::MOSSY_ELEMENTAL] = "Art/Monsters/mossy_elemental.png";
-		arr[MONSTER_IDS::MOSSY_ELEMENTAL] = "Art/Monsters/elf.png";
+		arr[MONSTER_IDS::ELF] = "Art/Monsters/elf.png";
+		arr[MONSTER_IDS::PESKY_PARASITE] = "Art/Monsters/pesky_parasite.png";
 		return arr;
 	}
 
@@ -1383,13 +1384,13 @@ namespace game
 				}
 				return false;
 			};
-		auto& stoneElemental = arr[MONSTER_IDS::STONE_ELEMENTAL];
-		stoneElemental.name = "stone elemental";
-		stoneElemental.attack = 1;
-		stoneElemental.health = 20;
-		stoneElemental.ruleText = "[cast] +2 bonus attack and health.";
-		stoneElemental.tags = TAG_ELEMENTAL;
-		stoneElemental.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& lich = arr[MONSTER_IDS::LICH];
+		lich.name = "lich";
+		lich.attack = 1;
+		lich.health = 20;
+		lich.ruleText = "[cast] +2 bonus attack and health.";
+		lich.tags = TAG_ELEMENTAL;
+		lich.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
@@ -1665,12 +1666,12 @@ namespace game
 				}
 				return false;
 			};
-		auto& lich = arr[MONSTER_IDS::LICH];
-		lich.name = "lich";
-		lich.attack = 3;
-		lich.health = 2;
-		lich.ruleText = "[death] if there is another allied monster, summon a lich with my attack.";
-		lich.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& peskyParasite = arr[MONSTER_IDS::PESKY_PARASITE];
+		peskyParasite.name = "pesky parasite";
+		peskyParasite.attack = 3;
+		peskyParasite.health = 2;
+		peskyParasite.ruleText = "[death] if there is another allied monster, summon a pesky parasite with my attack.";
+		peskyParasite.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
@@ -1687,7 +1688,7 @@ namespace game
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::LICH;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::PESKY_PARASITE;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
 					summonState.values[ActionState::VSummon::attack] = stats.attack + stats.tempAttack;
 					state.TryAddToStack(summonState);
