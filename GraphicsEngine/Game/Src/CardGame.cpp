@@ -718,7 +718,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/pesky_parasite.png";
+			arr[i] = "Art/Monsters/storm_elemental.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -1448,11 +1448,11 @@ namespace game
 				}
 				return false;
 			};
-		auto& unstableGolem = arr[MONSTER_IDS::UNSTABLE_GOLEM];
-		unstableGolem.name = "unstable golem";
-		unstableGolem.attack = 3;
-		unstableGolem.health = 20;
-		unstableGolem.tags = TAG_TOKEN;
+		auto& unstableCreation = arr[MONSTER_IDS::UNSTABLE_CREATION];
+		unstableCreation.name = "unstable creation";
+		unstableCreation.attack = 3;
+		unstableCreation.health = 20;
+		unstableCreation.tags = TAG_TOKEN;
 
 		auto& maidenOfTheMoon = arr[MONSTER_IDS::MOON_ACOLYTE];
 		maidenOfTheMoon.name = "moon acolyte";
