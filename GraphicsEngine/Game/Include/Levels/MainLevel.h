@@ -59,6 +59,12 @@ namespace game
 				hand
 			} selectionState;
 
+			enum class BackgroundType
+			{
+				moonLight,
+				count
+			};
+
 			float time;
 			uint32_t eventCards[EVENT_CARD_MAX_COUNT];
 			uint32_t previousEventCards[EVENT_CARD_MAX_COUNT];
@@ -78,6 +84,7 @@ namespace game
 			float timeSinceStackOverloaded;
 			float timeSinceEmptyStack;
 			bool overloaded;
+			BackgroundType backgroundType;
 
 			void Reset(State& state, const LevelInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;
@@ -100,7 +107,7 @@ namespace game
 			[[nodiscard]] static uint32_t GetEventCardCount(const State& state);
 			static void Shake(const LevelUpdateInfo& info);
 			void OnExit(State& state, const LevelInfo& info) override;
-			static void DrawParallaxBackground(const LevelUpdateInfo& info, bool mirror);
+			void DrawParallaxBackground(const LevelUpdateInfo& info, bool mirror) const;
 		};
 
 		struct RewardMagicCardState final : LevelState<State>

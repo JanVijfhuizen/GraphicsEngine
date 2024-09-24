@@ -704,6 +704,7 @@ namespace game
 		arr[10] = "Art/manabar.png";
 		arr[11] = "Art/manabar_hollow.png";
 		arr[12] = "Art/manacrystal.png";
+		arr[13] = "Art/moon.png";
 		return arr;
 	}
 

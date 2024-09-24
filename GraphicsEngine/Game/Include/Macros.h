@@ -266,5 +266,6 @@ enum class TextureId
 	manabar,
 	manabarHollow,
 	manacrystal,
+	moon,
 	length
 };

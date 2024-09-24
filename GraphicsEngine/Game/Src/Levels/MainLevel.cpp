@@ -142,6 +142,8 @@ namespace game
 
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
 	{
+		backgroundType = static_cast<BackgroundType>(rand() % static_cast<int>(BackgroundType::count));
+
 		const bool bossPresent = (state.depth + 1) % ROOM_COUNT_BEFORE_BOSS == 0;
 		const auto& gameState = info.gameState;
 
@@ -1562,9 +1564,19 @@ namespace game
 		++state.depth;
 	}
 
-	void MainLevel::CombatState::DrawParallaxBackground(const LevelUpdateInfo& info, const bool mirror)
+	void MainLevel::CombatState::DrawParallaxBackground(const LevelUpdateInfo& info, const bool mirror) const
 	{
 		glm::vec2 mouseOffset = info.inputState.mousePos - SIMULATED_RESOLUTION / 2;
+
+		if(backgroundType == BackgroundType::moonLight)
+		{
+			auto subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::moon)].subTexture;
+
+			PixelPerfectRenderTask renderTask{};
+			renderTask.scale = SIMULATED_RESOLUTION;
+			renderTask.subTexture = subTexture;
+			info.renderTasks.Push(renderTask);
+		}
 
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = glm::ivec2(64);
@@ -1891,8 +1903,6 @@ namespace game
 		states[4] = info.arena.New<RewardFlawCardState>();
 		states[5] = info.arena.New<RewardArtifactState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		stateMachine.state.depth = 99;
-		stateMachine.next = stateMachine.current;
 		ingameMenuOpened = false;
 	}
 
