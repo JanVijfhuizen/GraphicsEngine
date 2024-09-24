@@ -549,6 +549,7 @@ namespace game
 				cardDrawInfo.cost = drawInfo.costs[i];
 			if(drawInfo.metaDatas && !stackedSelected != -1)
 				cardDrawInfo.metaData = &drawInfo.metaDatas[i];
+			cardDrawInfo.cost = stackedSelected == -1 ? cardDrawInfo.cost : -1;
 			DrawCard(info, cardDrawInfo);
 			cardDrawInfo.combatStats = nullptr;
 			cardDrawInfo.cost = -1;

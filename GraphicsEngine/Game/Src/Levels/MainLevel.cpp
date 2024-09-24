@@ -84,6 +84,7 @@ namespace game
 		uint32_t stacksCounts[DISCOVER_LENGTH]{};
 		for (auto& c : stacksCounts)
 			c = 2;
+		uint32_t costs[3];
 
 		const uint32_t count = 1 + (state.depth >= ROOMS_BEFORE_ROOM_EFFECTS);
 		for (uint32_t i = 0; i < DISCOVER_LENGTH; ++i)
@@ -91,8 +92,10 @@ namespace game
 			const auto& stack = stacks[i];
 			const auto& path = state.paths[i];
 
-			cards[i] = &info.spells[path.spell];
+			auto& spell = info.spells[path.spell];
+			cards[i] = &spell;
 			stack[0] = &info.rooms[path.room];
+			costs[i] = spell.cost;
 
 			if (flawPresent)
 				stack[count - 1] = &info.curses[path.curse];
@@ -111,6 +114,7 @@ namespace game
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.offsetMod += 12;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
+		cardSelectionDrawInfo.costs = costs;
 		uint32_t selected = level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
