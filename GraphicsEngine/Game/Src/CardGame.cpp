@@ -719,9 +719,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/slime_head.png";
 		}
-		return arr;
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
 		arr[MONSTER_IDS::GOBLIN] = "Art/Monsters/goblin.png";
@@ -753,6 +751,7 @@ namespace game
 		arr[MONSTER_IDS::BEAST_SPIRIT] = "Art/Monsters/beast_spirit.png";
 		arr[MONSTER_IDS::DUNG_LOBBER] = "Art/Monsters/dung_lobber.png";
 		arr[MONSTER_IDS::SLIME_HEAD] = "Art/Monsters/slime_head.png";
+		arr[MONSTER_IDS::FOREST_SPIRIT] = "Art/Monsters/forest_spirit.png";
 		return arr;
 	}
 
@@ -1394,13 +1393,13 @@ namespace game
 				}
 				return false;
 			};
-		auto& lich = arr[MONSTER_IDS::LICH];
-		lich.name = "lich";
-		lich.attack = 1;
-		lich.health = 20;
-		lich.ruleText = "[cast] +2 bonus attack and health.";
-		lich.tags = TAG_ELEMENTAL;
-		lich.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& forestSpirit = arr[MONSTER_IDS::FOREST_SPIRIT];
+		forestSpirit.name = "forest spirit";
+		forestSpirit.attack = 1;
+		forestSpirit.health = 20;
+		forestSpirit.ruleText = "[cast] +2 bonus attack and health.";
+		forestSpirit.tags = TAG_ELEMENTAL;
+		forestSpirit.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
@@ -1677,7 +1676,7 @@ namespace game
 			};
 		auto& peskyParasite = arr[MONSTER_IDS::PESKY_PARASITE];
 		peskyParasite.name = "pesky parasite";
-		peskyParasite.attack = 3;
+		peskyParasite.attack = 1;
 		peskyParasite.health = 2;
 		peskyParasite.ruleText = "[death] if there is another allied monster, summon a pesky parasite with my attack.";
 		peskyParasite.tags = TAG_BEAST;
@@ -1858,14 +1857,15 @@ namespace game
 			};
 		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
 		librarian.name = "librarian";
-		librarian.attack = 1;
-		librarian.health = 20;
-		librarian.ruleText = "[draw] +1 mana. take 1 damage.";
+		librarian.attack = 0;
+		librarian.health = 7;
+		librarian.ruleText = "[draw] +1 mana.";
 		librarian.tags = TAG_HUMAN;
 		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDraw)
 				{
+					/*
 					ActionState damageState{};
 					damageState.trigger = ActionState::Trigger::onDamage;
 					damageState.source = ActionState::Source::other;
@@ -1873,6 +1873,7 @@ namespace game
 					damageState.dst = self;
 					damageState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(damageState);
+					*/
 					++state.mana;
 					return true;
 				}
