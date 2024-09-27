@@ -719,7 +719,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/beast_spirit.png";
+			arr[i] = "Art/Monsters/dung_lobber.png";
 		}
 		return arr;
 		
@@ -751,6 +751,7 @@ namespace game
 		arr[MONSTER_IDS::MOON_ACOLYTE] = "Art/Monsters/moon_acolyte.png";
 		arr[MONSTER_IDS::BERSERKER] = "Art/Monsters/berserker.png";
 		arr[MONSTER_IDS::BEAST_SPIRIT] = "Art/Monsters/beast_spirit.png";
+		arr[MONSTER_IDS::DUNG_LOBBER] = "Art/Monsters/dung_lobber.png";
 		return arr;
 	}
 
@@ -1599,13 +1600,13 @@ namespace game
 				}
 				return false;
 			};
-		auto& goblinSlinger = arr[MONSTER_IDS::GOBLIN_SLINGER];
-		goblinSlinger.name = "goblin slinger";
-		goblinSlinger.attack = 1;
-		goblinSlinger.health = 20;
-		goblinSlinger.ruleText = "[ally attack] the attacked monster takes damage equal to my bonus attack.";
-		goblinSlinger.tags = TAG_GOBLIN;
-		goblinSlinger.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& dungLobber = arr[MONSTER_IDS::DUNG_LOBBER];
+		dungLobber.name = "dung lobber";
+		dungLobber.attack = 1;
+		dungLobber.health = 20;
+		dungLobber.ruleText = "[ally attack] the attacked monster takes damage equal to my bonus attack.";
+		dungLobber.tags = TAG_BEAST;
+		dungLobber.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
