@@ -719,7 +719,7 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/dung_lobber.png";
+			arr[i] = "Art/Monsters/slime_head.png";
 		}
 		return arr;
 		
@@ -747,11 +747,12 @@ namespace game
 		arr[MONSTER_IDS::ELF] = "Art/Monsters/elf.png";
 		arr[MONSTER_IDS::PESKY_PARASITE] = "Art/Monsters/pesky_parasite.png";
 		arr[MONSTER_IDS::UNSTABLE_CREATION] = "Art/Monsters/unstable_creation.png";
-		arr[MONSTER_IDS::WOUNDED_PANDAWAN] = "Art/Monsters/wounded_troll.png";
+		arr[MONSTER_IDS::WOUNDED_PANDANA] = "Art/Monsters/wounded_troll.png";
 		arr[MONSTER_IDS::MOON_ACOLYTE] = "Art/Monsters/moon_acolyte.png";
 		arr[MONSTER_IDS::BERSERKER] = "Art/Monsters/berserker.png";
 		arr[MONSTER_IDS::BEAST_SPIRIT] = "Art/Monsters/beast_spirit.png";
 		arr[MONSTER_IDS::DUNG_LOBBER] = "Art/Monsters/dung_lobber.png";
+		arr[MONSTER_IDS::SLIME_HEAD] = "Art/Monsters/slime_head.png";
 		return arr;
 	}
 
@@ -1553,8 +1554,8 @@ namespace game
 				}
 				return false;
 			};
-		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_PANDAWAN];
-		woundedTroll.name = "wounded pandawan";
+		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_PANDANA];
+		woundedTroll.name = "wounded pandana";
 		woundedTroll.attack = 3;
 		woundedTroll.health = 20;
 		woundedTroll.ruleText = "[end of turn] take 1 damage.";
@@ -1808,13 +1809,13 @@ namespace game
 				}
 				return false;
 			};
-		auto& acolyteOfPain = arr[MONSTER_IDS::ACOLYTE_OF_PAIN];
-		acolyteOfPain.name = "acolyte of pain";
-		acolyteOfPain.attack = 1;
-		acolyteOfPain.health = 13;
-		acolyteOfPain.ruleText = "[damaged] draw.";
-		acolyteOfPain.tags = TAG_HUMAN;
-		acolyteOfPain.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& slimeHead = arr[MONSTER_IDS::SLIME_HEAD];
+		slimeHead.name = "slime head";
+		slimeHead.attack = 1;
+		slimeHead.health = 13;
+		slimeHead.ruleText = "[damaged] draw.";
+		slimeHead.tags = TAG_SLIME;
+		slimeHead.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
