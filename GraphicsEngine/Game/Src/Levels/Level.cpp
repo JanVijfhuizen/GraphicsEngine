@@ -202,6 +202,8 @@ namespace game
 						Add(info.frameArena, tags) = "goblin";
 					if (c->tags & TAG_ELEMENTAL)
 						Add(info.frameArena, tags) = "elemental";
+					if (c->tags & TAG_BEAST)
+						Add(info.frameArena, tags) = "beast";
 					if (c->tags & TAG_BOSS)
 						Add(info.frameArena, tags) = "boss";
 

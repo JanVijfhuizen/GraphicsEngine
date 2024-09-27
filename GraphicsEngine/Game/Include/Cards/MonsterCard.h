@@ -11,6 +11,7 @@ namespace game
 	constexpr uint32_t TAG_GOBLIN = 0b100000;
 	constexpr uint32_t TAG_ELEMENTAL = 0b1000000;
 	constexpr uint32_t TAG_BOSS = 0b10000000;
+	constexpr uint32_t TAG_BEAST = 0b100000000;
 
 	struct MonsterCard final : Card
 	{

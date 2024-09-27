@@ -719,9 +719,9 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/berserker.png";
+			arr[i] = "Art/Monsters/beast_spirit.png";
 		}
-		//return arr;
+		return arr;
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
 		arr[MONSTER_IDS::GOBLIN] = "Art/Monsters/goblin.png";
@@ -735,7 +735,7 @@ namespace game
 		arr[MONSTER_IDS::SLIME_SOLDIER] = "Art/Monsters/slime_soldier.png";
 		arr[MONSTER_IDS::GOBLIN_CHAMPION] = "Art/Monsters/goblin_champion.png";
 		arr[MONSTER_IDS::GOBLIN_KING] = "Art/Monsters/goblin_king.png";
-		arr[MONSTER_IDS::GOBLIN_BOMB] = "Art/Monsters/goblin_bomber.png";
+		arr[MONSTER_IDS::GOBLIN_BOMBER] = "Art/Monsters/goblin_bomber.png";
 		arr[MONSTER_IDS::KNIFE_JUGGLER] = "Art/Monsters/knife_juggler.png";
 		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/elven_sage.png";
 		arr[MONSTER_IDS::TREASURE_GOBLIN] = "Art/Monsters/treasure_goblin.png";
@@ -750,6 +750,7 @@ namespace game
 		arr[MONSTER_IDS::WOUNDED_PANDAWAN] = "Art/Monsters/wounded_troll.png";
 		arr[MONSTER_IDS::MOON_ACOLYTE] = "Art/Monsters/moon_acolyte.png";
 		arr[MONSTER_IDS::BERSERKER] = "Art/Monsters/berserker.png";
+		arr[MONSTER_IDS::BEAST_SPIRIT] = "Art/Monsters/beast_spirit.png";
 		return arr;
 	}
 
@@ -824,7 +825,7 @@ namespace game
 		vulture.name = "vulture";
 		vulture.health = 1;
 		vulture.attack = 1;
-		vulture.tags = TAG_TOKEN;
+		vulture.tags = TAG_TOKEN | TAG_BEAST;
 		vulture.unique = true;
 		auto& goblin = arr[MONSTER_IDS::GOBLIN];
 		goblin.name = "goblin";
@@ -882,14 +883,14 @@ namespace game
 				}
 				return false;
 			};
-		auto& treasure = arr[MONSTER_IDS::TREASURE_GOBLIN];
-		treasure.name = "treasure goblin";
-		treasure.health = 1;
-		treasure.attack = 0;
-		treasure.tags = TAG_TOKEN | TAG_GOBLIN;
-		treasure.unique = true;
-		treasure.ruleText = "[death] +1 mana.";
-		treasure.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& treasureGoblin = arr[MONSTER_IDS::TREASURE_GOBLIN];
+		treasureGoblin.name = "treasure goblin";
+		treasureGoblin.health = 1;
+		treasureGoblin.attack = 0;
+		treasureGoblin.tags = TAG_TOKEN | TAG_GOBLIN;
+		treasureGoblin.unique = true;
+		treasureGoblin.ruleText = "[death] +1 mana.";
+		treasureGoblin.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
@@ -916,6 +917,7 @@ namespace game
 		daisy.health = 3;
 		daisy.unique = true;
 		daisy.normalAnimIndex = daisy.animIndex;
+		daisy.tags = TAG_BEAST;
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
 		god.attack = 0;
@@ -1460,13 +1462,13 @@ namespace game
 		unstableCreation.health = 16;
 		unstableCreation.tags = TAG_TOKEN | TAG_ELEMENTAL;
 
-		auto& maidenOfTheMoon = arr[MONSTER_IDS::MOON_ACOLYTE];
-		maidenOfTheMoon.name = "moon acolyte";
-		maidenOfTheMoon.attack = 1;
-		maidenOfTheMoon.health = 20;
-		maidenOfTheMoon.ruleText = "[any death] +2 attack and +2 bonus attack.";
-		maidenOfTheMoon.tags = TAG_ELF;
-		maidenOfTheMoon.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& moonAcolyte = arr[MONSTER_IDS::MOON_ACOLYTE];
+		moonAcolyte.name = "moon acolyte";
+		moonAcolyte.attack = 1;
+		moonAcolyte.health = 20;
+		moonAcolyte.ruleText = "[any death] +2 attack and +2 bonus attack.";
+		moonAcolyte.tags = TAG_BEAST;
+		moonAcolyte.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
@@ -1484,13 +1486,13 @@ namespace game
 				}
 				return false;
 			};
-		auto& fleetingSoldier = arr[MONSTER_IDS::BERSERKER];
-		fleetingSoldier.name = "berserker";
-		fleetingSoldier.attack = 1;
-		fleetingSoldier.health = 20;
-		fleetingSoldier.ruleText = "[damaged] attack the lowest health enemy.";
-		fleetingSoldier.tags = TAG_HUMAN;
-		fleetingSoldier.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& berserker = arr[MONSTER_IDS::BERSERKER];
+		berserker.name = "berserker";
+		berserker.attack = 1;
+		berserker.health = 20;
+		berserker.ruleText = "[damaged] attack the lowest health enemy.";
+		berserker.tags = TAG_BEAST;
+		berserker.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
@@ -1529,13 +1531,13 @@ namespace game
 				}
 				return false;
 			};
-		auto& manaCyclone = arr[MONSTER_IDS::MANA_DEVOURER];
-		manaCyclone.name = "mana devourer";
-		manaCyclone.attack = 1;
-		manaCyclone.health = 20;
-		manaCyclone.ruleText = "[end of turn] gain 3 attack per unspent mana.";
-		manaCyclone.tags = TAG_ELEMENTAL;
-		manaCyclone.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& manaDevourer = arr[MONSTER_IDS::MANA_DEVOURER];
+		manaDevourer.name = "mana devourer";
+		manaDevourer.attack = 1;
+		manaDevourer.health = 20;
+		manaDevourer.ruleText = "[end of turn] gain 3 attack per unspent mana.";
+		manaDevourer.tags = TAG_ELEMENTAL;
+		manaDevourer.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
@@ -1555,6 +1557,7 @@ namespace game
 		woundedTroll.attack = 3;
 		woundedTroll.health = 20;
 		woundedTroll.ruleText = "[end of turn] take 1 damage.";
+		woundedTroll.tags = TAG_BEAST;
 		woundedTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
@@ -1625,13 +1628,13 @@ namespace game
 				}
 				return false;
 			};
-		auto& goblinBomb = arr[MONSTER_IDS::GOBLIN_BOMB];
-		goblinBomb.name = "goblin bomber";
-		goblinBomb.attack = 1;
-		goblinBomb.health = 20;
-		goblinBomb.ruleText = "[any attack] the attacker takes 1 damage.";
-		goblinBomb.tags = TAG_GOBLIN;
-		goblinBomb.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& goblinBomber = arr[MONSTER_IDS::GOBLIN_BOMBER];
+		goblinBomber.name = "goblin bomber";
+		goblinBomber.attack = 1;
+		goblinBomber.health = 20;
+		goblinBomber.ruleText = "[any attack] the attacker takes 1 damage.";
+		goblinBomber.tags = TAG_GOBLIN;
+		goblinBomber.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if(actionState.trigger == ActionState::Trigger::onAttack)
 				{
@@ -1647,13 +1650,13 @@ namespace game
 				
 				return false;
 			};
-		auto& goblinPartyStarter = arr[MONSTER_IDS::GOBLIN_PRINCESS];
-		goblinPartyStarter.name = "goblin princess";
-		goblinPartyStarter.attack = 1;
-		goblinPartyStarter.health = 14;
-		goblinPartyStarter.ruleText = "[damaged] summon a goblin.";
-		goblinPartyStarter.tags = TAG_GOBLIN;
-		goblinPartyStarter.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& goblinPrincess = arr[MONSTER_IDS::GOBLIN_PRINCESS];
+		goblinPrincess.name = "goblin princess";
+		goblinPrincess.attack = 1;
+		goblinPrincess.health = 14;
+		goblinPrincess.ruleText = "[damaged] summon a goblin.";
+		goblinPrincess.tags = TAG_GOBLIN;
+		goblinPrincess.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
@@ -1675,6 +1678,7 @@ namespace game
 		peskyParasite.attack = 3;
 		peskyParasite.health = 2;
 		peskyParasite.ruleText = "[death] if there is another allied monster, summon a pesky parasite with my attack.";
+		peskyParasite.tags = TAG_BEAST;
 		peskyParasite.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
@@ -1748,6 +1752,7 @@ namespace game
 		phantasm.attack = 3;
 		phantasm.health = 1;
 		phantasm.ruleText = "[start of turn] +9 bonus health. [attack] bonus health becomes 0.";
+		phantasm.tags = TAG_ELEMENTAL;
 		phantasm.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
@@ -1823,13 +1828,13 @@ namespace game
 				}
 				return false;
 			};
-		auto& beastMaster = arr[MONSTER_IDS::BEAST_MASTER];
-		beastMaster.name = "beast master";
-		beastMaster.attack = 1;
-		beastMaster.health = 20;
-		beastMaster.ruleText = "[token attack] draw.";
-		beastMaster.tags = TAG_HUMAN;
-		beastMaster.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& beastSpirit = arr[MONSTER_IDS::BEAST_SPIRIT];
+		beastSpirit.name = "beast spirit";
+		beastSpirit.attack = 1;
+		beastSpirit.health = 20;
+		beastSpirit.ruleText = "[token attack] draw.";
+		beastSpirit.tags = TAG_BEAST | TAG_ELEMENTAL;
+		beastSpirit.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
@@ -1854,6 +1859,7 @@ namespace game
 		librarian.attack = 1;
 		librarian.health = 20;
 		librarian.ruleText = "[draw] +1 mana. take 1 damage.";
+		librarian.tags = TAG_HUMAN;
 		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDraw)
