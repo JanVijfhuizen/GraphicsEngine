@@ -721,7 +721,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Monsters/elven_sage.png";
+			arr[i] = "Art/Monsters/librarian.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -741,7 +741,7 @@ namespace game
 		arr[MONSTER_IDS::ELVEN_SAGE] = "Art/Monsters/elven_sage.png";
 		arr[MONSTER_IDS::TREASURE_GOBLIN] = "Art/Monsters/treasure_goblin.png";
 		arr[MONSTER_IDS::GOBLIN_PRINCESS] = "Art/Monsters/goblin_princess.png";
-		arr[MONSTER_IDS::GOBLIN_SCOUT] = "Art/Monsters/goblin_scout.png";
+		arr[MONSTER_IDS::GNOME_SCOUT] = "Art/Monsters/goblin_scout.png";
 		arr[MONSTER_IDS::VULTURE] = "Art/Monsters/vulture.png";
 		arr[MONSTER_IDS::STORM_ELEMENTAL] = "Art/Monsters/storm_elemental.png";
 		arr[MONSTER_IDS::MOSSY_ELEMENTAL] = "Art/Monsters/mossy_elemental.png";
@@ -1790,12 +1790,12 @@ namespace game
 				}
 				return false;
 			};
-		auto& goblinScout = arr[MONSTER_IDS::GOBLIN_SCOUT];
-		goblinScout.name = "goblin scout";
+		auto& goblinScout = arr[MONSTER_IDS::GNOME_SCOUT];
+		goblinScout.name = "gnome scout";
 		goblinScout.attack = 1;
 		goblinScout.health = 16;
-		goblinScout.ruleText = "[attack] all other goblins gain bonus attack equal to my attack.";
-		goblinScout.tags = TAG_GOBLIN;
+		goblinScout.ruleText = "[attack] all other beasts gain bonus attack equal to my attack.";
+		goblinScout.tags = TAG_BEAST;
 		goblinScout.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
@@ -1810,7 +1810,7 @@ namespace game
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
 					buffState.values[ActionState::VStatBuff::tempAttack] = stats.attack + stats.tempAttack;
-					TargetOfType(info, state, buffState, self, TAG_GOBLIN, TypeTarget::all, true);
+					TargetOfType(info, state, buffState, self, TAG_BEAST, TypeTarget::all, true);
 					return true;
 				}
 				return false;
