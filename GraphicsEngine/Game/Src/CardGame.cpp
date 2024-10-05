@@ -1,4 +1,4 @@
-﻿#include "pch_game.h"
+#include "pch_game.h"
 #include "CardGame.h"
 
 #include <chrono>
