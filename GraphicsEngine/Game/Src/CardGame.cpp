@@ -721,7 +721,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Monsters/moon_acolyte.png";
+			arr[i] = "Art/Monsters/phantasm.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -1864,8 +1864,8 @@ namespace game
 			};
 		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
 		librarian.name = "librarian";
-		librarian.attack = 0;
-		librarian.health = 7;
+		librarian.attack = 1;
+		librarian.health = 20;
 		librarian.ruleText = "[draw] +1 mana.";
 		librarian.tags = TAG_HUMAN;
 		librarian.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
