@@ -722,7 +722,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Spells/ascension.png";
+			arr[i] = "Art/Spells/dark_ritual.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -757,8 +757,6 @@ namespace game
 		arr[MONSTER_IDS::SLIME_HEAD] = "Art/Monsters/slime_head.png";
 		arr[MONSTER_IDS::FOREST_SPIRIT] = "Art/Monsters/forest_spirit.png";
 
-		arr[SPELL_ID_START + SPELL_IDS::ENRAGE] = "Art/Spells/enrage.png";
-		arr[SPELL_ID_START + SPELL_IDS::SHOCK] = "Art/Spells/shock.png";
 		arr[SPELL_ID_START + SPELL_IDS::PROTECT] = "Art/Spells/protect.png";
 		arr[SPELL_ID_START + SPELL_IDS::ARCANE_INTELLECT] = "Art/Spells/arcane_intellect.png";
 		arr[SPELL_ID_START + SPELL_IDS::DREAD_SACRIFICE] = "Art/Spells/dread_sacrifice.png";
@@ -772,6 +770,17 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::ENLIGHTENMENT] = "Art/Spells/enlightenment.png";
 		arr[SPELL_ID_START + SPELL_IDS::DRUIDIC_RITUAL] = "Art/Spells/druidic_ritual.png";
 		arr[SPELL_ID_START + SPELL_IDS::ASCENSION] = "Art/Spells/ascension.png";
+		arr[SPELL_ID_START + SPELL_IDS::STAMPEDE] = "Art/Spells/stampede.png";
+		arr[SPELL_ID_START + SPELL_IDS::ENRAGE] = "Art/Spells/enrage.png";
+		arr[SPELL_ID_START + SPELL_IDS::INFURIATE] = "Art/Spells/infuriate.png";
+		arr[SPELL_ID_START + SPELL_IDS::GOBLIN_CHANT] = "Art/Spells/goblin_chant.png";
+		arr[SPELL_ID_START + SPELL_IDS::TREASURE_HUNT] = "Art/Spells/treasure_hunt.png";
+		arr[SPELL_ID_START + SPELL_IDS::REWIND] = "Art/Spells/rewind.png";
+		arr[SPELL_ID_START + SPELL_IDS::MANA_SURGE] = "Art/Spells/mana_surge.png";
+		arr[SPELL_ID_START + SPELL_IDS::DARK_RITUAL] = "Art/Spells/dark_ritual.png";
+		arr[SPELL_ID_START + SPELL_IDS::FLAME_BOLT] = "Art/Spells/flame_bolt.png";
+		arr[SPELL_ID_START + SPELL_IDS::SHOCK] = "Art/Spells/shock.png";
+		arr[SPELL_ID_START + SPELL_IDS::PYROBLAST] = "Art/Spells/pyroblast.png";
 
 		arr[SPELL_ID_START + SPELL_IDS::UNSTABLE_COPY] = "Art/Spells/unstable_copy.png";
 		return arr;
@@ -3156,7 +3165,7 @@ namespace game
 				}
 				return false;
 			};
-		auto& pyroblast = arr[SPELL_IDS::PYROBlAST];
+		auto& pyroblast = arr[SPELL_IDS::PYROBLAST];
 		pyroblast.name = "pyro blast";
 		pyroblast.ruleText = "deal 10 damage.";
 		pyroblast.cost = 3;
