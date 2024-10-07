@@ -757,9 +757,15 @@ namespace game
 		arr[MONSTER_IDS::SLIME_HEAD] = "Art/Monsters/slime_head.png";
 		arr[MONSTER_IDS::FOREST_SPIRIT] = "Art/Monsters/forest_spirit.png";
 
-		arr[MONSTER_IDS::LENGTH + SPELL_IDS::ENRAGE] = "Art/Spells/enrage.png";
-		arr[MONSTER_IDS::LENGTH + SPELL_IDS::SHOCK] = "Art/Spells/shock.png";
-		arr[MONSTER_IDS::LENGTH + SPELL_IDS::PROTECT] = "Art/Spells/protect.png";
+		arr[SPELL_ID_START + SPELL_IDS::ENRAGE] = "Art/Spells/enrage.png";
+		arr[SPELL_ID_START + SPELL_IDS::SHOCK] = "Art/Spells/shock.png";
+		arr[SPELL_ID_START + SPELL_IDS::PROTECT] = "Art/Spells/protect.png";
+		arr[SPELL_ID_START + SPELL_IDS::ARCANE_INTELLECT] = "Art/Spells/arcane_intellect.png";
+		arr[SPELL_ID_START + SPELL_IDS::DREAD_SACRIFICE] = "Art/Spells/dread_sacrifice.png";
+		arr[SPELL_ID_START + SPELL_IDS::TRANQUILIZE] = "Art/Spells/tranquilize.png";
+		arr[SPELL_ID_START + SPELL_IDS::DOUBLE_TROUBLE] = "Art/Spells/double_trouble.png";
+
+		arr[SPELL_ID_START + SPELL_IDS::UNSTABLE_COPY] = "Art/Spells/unstable_copy.png";
 		return arr;
 	}
 
@@ -1896,7 +1902,7 @@ namespace game
 
 		uint32_t c = ARTIFACT_IDS::LENGTH;
 		for (auto& card : arr)
-			card.animIndex = MONSTER_IDS::LENGTH + SPELL_IDS::LENGTH + c++;
+			card.animIndex = ARTIFACT_ID_START + c++;
 
 		arr[ARTIFACT_IDS::ARCANE_AMULET].name = "arcane amulet";
 		arr[ARTIFACT_IDS::ARCANE_AMULET].ruleText = "[start of turn] +1 mana.";
@@ -2409,7 +2415,7 @@ namespace game
 
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = MONSTER_IDS::LENGTH + ARTIFACT_IDS::LENGTH + SPELL_IDS::LENGTH + c++;
+			card.animIndex = ROOM_ID_START + c++;
 
 		auto& fieldOfVengeance = arr[ROOM_IDS::FIELD_OF_VENGEANCE];
 		fieldOfVengeance.name = "field of violence";
@@ -2595,7 +2601,7 @@ namespace game
 		const auto arr = jv::CreateArray<SpellCard>(arena, SPELL_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = MONSTER_IDS::LENGTH + c++;
+			card.animIndex = SPELL_ID_START + c++;
 
 		auto& arcaneIntellect = arr[SPELL_IDS::ARCANE_INTELLECT];
 		arcaneIntellect.name = "arcane intellect";
@@ -3469,7 +3475,7 @@ namespace game
 		const auto arr = jv::CreateArray<CurseCard>(arena, CURSE_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = MONSTER_IDS::LENGTH + ARTIFACT_IDS::LENGTH + SPELL_IDS::LENGTH + ROOM_IDS::LENGTH + c++;
+			card.animIndex = CURSE_ID_START + c++;
 
 		arr[CURSE_IDS::FADING].name = "fading";
 		arr[CURSE_IDS::FADING].ruleText = "[end of turn] take one damage.";
@@ -3620,7 +3626,7 @@ namespace game
 		const auto arr = jv::CreateArray<EventCard>(arena, EVENT_IDS::LENGTH);
 		uint32_t c = 0;
 		for (auto& card : arr)
-			card.animIndex = MONSTER_IDS::LENGTH + ARTIFACT_IDS::LENGTH + SPELL_IDS::LENGTH + ROOM_IDS::LENGTH + CURSE_IDS::LENGTH + c++;
+			card.animIndex = EVENT_ID_START + c++;
 
 		auto& aetherSurge = arr[EVENT_IDS::AETHER_SURGE];
 		aetherSurge.name = "aether surge";

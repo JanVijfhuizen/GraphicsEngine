@@ -146,6 +146,8 @@ namespace game
 				cardDrawInfo.priority = true;
 				cardDrawInfo.selectable = false;
 				cardDrawInfo.scale = 2;
+				//cardDrawInfo.upscaleImage = true;
+				cardDrawInfo.isSmall = true;
 
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
@@ -165,6 +167,8 @@ namespace game
 						break;
 					case Card::Type::monster:
 						cardType = "[monster] ";
+						cardDrawInfo.upscaleImage = false;
+						cardDrawInfo.isSmall = false;
 						break;
 					case Card::Type::room:
 						cardType = "[room] ";
@@ -685,7 +689,7 @@ namespace game
 			imageRenderTask.scale *= (drawInfo.upscaleImage ? 2 : 1);
 
 			// Hover anim.
-			if(drawInfo.metaData && !drawInfo.large)
+			if(drawInfo.metaData && !drawInfo.large && !drawInfo.upscaleImage && !drawInfo.isSmall)
 				if(drawInfo.metaData->hoverDuration > 0)
 				{
 					const auto c = je::CreateCurveOvershooting();

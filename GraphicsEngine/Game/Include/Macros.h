@@ -242,6 +242,12 @@ struct EVENT_IDS
 	};
 };
 
+constexpr uint32_t SPELL_ID_START = MONSTER_IDS::LENGTH;
+constexpr uint32_t ARTIFACT_ID_START = SPELL_ID_START + SPELL_IDS::LENGTH;
+constexpr uint32_t ROOM_ID_START = ARTIFACT_ID_START + ARTIFACT_IDS::LENGTH;
+constexpr uint32_t CURSE_ID_START = ROOM_ID_START + ROOM_IDS::LENGTH;
+constexpr uint32_t EVENT_ID_START = CURSE_ID_START + CURSE_IDS::LENGTH;
+
 enum class LevelIndex
 {
 	mainMenu,
