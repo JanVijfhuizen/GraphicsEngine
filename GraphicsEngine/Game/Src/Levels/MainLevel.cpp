@@ -598,7 +598,7 @@ namespace game
 
 				eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
 				eventSelectionDrawInfo.activationIndex = -1;
-				eventSelectionDrawInfo.centerOffset += 26;// *= -1;
+				eventSelectionDrawInfo.centerOffset += 28;// *= -1;
 				eventSelectionDrawInfo.length = cards.count;
 
 				// Draw additional events.
@@ -756,7 +756,7 @@ namespace game
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_HAND_INDEX];
-		handSelectionDrawInfo.offsetMod = -14;
+		handSelectionDrawInfo.offsetMod = -12;
 		handSelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
 		handSelectionDrawInfo.draggable = handSelectionDrawInfo.selectable;
 		handSelectionDrawInfo.isSmall = true;

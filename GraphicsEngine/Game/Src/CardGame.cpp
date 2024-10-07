@@ -722,7 +722,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Spells/enrage.png";
+			arr[i] = "Art/Spells/ascension.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -766,6 +766,12 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::DOUBLE_TROUBLE] = "Art/Spells/double_trouble.png";
 		arr[SPELL_ID_START + SPELL_IDS::GOBLIN_AMBUSH] = "Art/Spells/goblin_ambush.png";
 		arr[SPELL_ID_START + SPELL_IDS::WINDFALL] = "Art/Spells/windfall.png";
+		arr[SPELL_ID_START + SPELL_IDS::RALLY] = "Art/Spells/rally.png";
+		arr[SPELL_ID_START + SPELL_IDS::HOLD_THE_LINE] = "Art/Spells/hold_the_line.png";
+		arr[SPELL_ID_START + SPELL_IDS::RAMPANT_GROWTH] = "Art/Spells/rampant_growth.png";
+		arr[SPELL_ID_START + SPELL_IDS::ENLIGHTENMENT] = "Art/Spells/enlightenment.png";
+		arr[SPELL_ID_START + SPELL_IDS::DRUIDIC_RITUAL] = "Art/Spells/druidic_ritual.png";
+		arr[SPELL_ID_START + SPELL_IDS::ASCENSION] = "Art/Spells/ascension.png";
 
 		arr[SPELL_ID_START + SPELL_IDS::UNSTABLE_COPY] = "Art/Spells/unstable_copy.png";
 		return arr;
