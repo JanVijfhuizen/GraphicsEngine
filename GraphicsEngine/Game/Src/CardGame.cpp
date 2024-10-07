@@ -722,7 +722,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Spells/dark_ritual.png";
+			arr[i] = "Art/Spells/stall.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -757,7 +757,6 @@ namespace game
 		arr[MONSTER_IDS::SLIME_HEAD] = "Art/Monsters/slime_head.png";
 		arr[MONSTER_IDS::FOREST_SPIRIT] = "Art/Monsters/forest_spirit.png";
 
-		arr[SPELL_ID_START + SPELL_IDS::PROTECT] = "Art/Spells/protect.png";
 		arr[SPELL_ID_START + SPELL_IDS::ARCANE_INTELLECT] = "Art/Spells/arcane_intellect.png";
 		arr[SPELL_ID_START + SPELL_IDS::DREAD_SACRIFICE] = "Art/Spells/dread_sacrifice.png";
 		arr[SPELL_ID_START + SPELL_IDS::TRANQUILIZE] = "Art/Spells/tranquilize.png";
@@ -781,8 +780,26 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::FLAME_BOLT] = "Art/Spells/flame_bolt.png";
 		arr[SPELL_ID_START + SPELL_IDS::SHOCK] = "Art/Spells/shock.png";
 		arr[SPELL_ID_START + SPELL_IDS::PYROBLAST] = "Art/Spells/pyroblast.png";
-
 		arr[SPELL_ID_START + SPELL_IDS::UNSTABLE_COPY] = "Art/Spells/unstable_copy.png";
+		arr[SPELL_ID_START + SPELL_IDS::PERFECT_COPY] = "Art/Spells/perfect_copy.png";
+		arr[SPELL_ID_START + SPELL_IDS::PAIN_FOR_GAIN] = "Art/Spells/pain_for_gain.png";
+		arr[SPELL_ID_START + SPELL_IDS::BETRAYAL] = "Art/Spells/betrayal.png";
+		arr[SPELL_ID_START + SPELL_IDS::INCANTATION_OF_DOOM] = "Art/Spells/incantation_of_doom.png";
+		arr[SPELL_ID_START + SPELL_IDS::PROTECT] = "Art/Spells/protect.png";
+		arr[SPELL_ID_START + SPELL_IDS::SHIELD] = "Art/Spells/shield.png";
+		arr[SPELL_ID_START + SPELL_IDS::GROUP_HUG] = "Art/Spells/group_hug.png";
+		arr[SPELL_ID_START + SPELL_IDS::STALL] = "Art/Spells/stall.png";
+		arr[SPELL_ID_START + SPELL_IDS::BALANCE] = "Art/Spells/balance.png";
+		arr[SPELL_ID_START + SPELL_IDS::COUNTER_BALANCE] = "Art/Spells/counter_balance.png";
+		arr[SPELL_ID_START + SPELL_IDS::GRIT] = "Art/Spells/grit.png";
+		arr[SPELL_ID_START + SPELL_IDS::PARIAH] = "Art/Spells/pariah.png";
+		arr[SPELL_ID_START + SPELL_IDS::FIRE_STORM] = "Art/Spells/fire_storm.png";
+		arr[SPELL_ID_START + SPELL_IDS::UNITY] = "Art/Spells/unity.png";
+		arr[SPELL_ID_START + SPELL_IDS::TRIBALISM] = "Art/Spells/tribalism.png";
+		arr[SPELL_ID_START + SPELL_IDS::LOYAL_WORKFORCE] = "Art/Spells/loyal_workforce.png";
+		arr[SPELL_ID_START + SPELL_IDS::PICK] = "Art/Spells/pick.png";
+		arr[SPELL_ID_START + SPELL_IDS::CYCLE] = "Art/Spells/cycle.png";
+
 		return arr;
 	}
 
