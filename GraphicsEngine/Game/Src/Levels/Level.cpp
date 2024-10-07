@@ -146,8 +146,6 @@ namespace game
 				cardDrawInfo.priority = true;
 				cardDrawInfo.selectable = false;
 				cardDrawInfo.scale = 2;
-				//cardDrawInfo.upscaleImage = true;
-				cardDrawInfo.isSmall = true;
 
 				const char* text = _fullCard->ruleText;
 				jv::LinkedList<const char*> tags{};
@@ -167,8 +165,6 @@ namespace game
 						break;
 					case Card::Type::monster:
 						cardType = "[monster] ";
-						cardDrawInfo.upscaleImage = false;
-						cardDrawInfo.isSmall = false;
 						break;
 					case Card::Type::room:
 						cardType = "[room] ";
@@ -399,7 +395,6 @@ namespace game
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
 		cardDrawInfo.isSmall = drawInfo.isSmall;
-		cardDrawInfo.upscaleImage = drawInfo.upscaleImage;
 		
 		uint32_t choice = -1;
 		if(drawInfo.outStackSelected)
@@ -541,7 +536,6 @@ namespace game
 				for (uint32_t j = 0; j < stackedCount; ++j)
 				{
 					auto stackedDrawInfo = cardDrawInfo;
-					stackedDrawInfo.upscaleImage = true;
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
 					stackedDrawInfo.origin.x += stackWidth * ((stackedCount - j - 1) % 2 == 0);
@@ -550,8 +544,12 @@ namespace game
 				}
 			}
 
-			if(drawInfo.redHighlight - 1 == i)
-				cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
+			if (drawInfo.redHighlight - 1 == i)
+			{
+				drawInfo.metaDatas[i].hoverDuration = drawInfo.redHighlightTime;
+				//cardDrawInfo.bgColor = glm::vec4(1, 0, 0, 1);
+			}
+				
 			if(drawInfo.combatStats)
 				cardDrawInfo.combatStats = &drawInfo.combatStats[i];
 			cardDrawInfo.ignoreAnim = stackedSelected != -1;
@@ -686,10 +684,9 @@ namespace game
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			imageRenderTask.priority = drawInfo.priority;
-			imageRenderTask.scale *= (drawInfo.upscaleImage ? 2 : 1);
 
 			// Hover anim.
-			if(drawInfo.metaData && !drawInfo.large && !drawInfo.upscaleImage && !drawInfo.isSmall)
+			if(drawInfo.metaData && !drawInfo.large && !drawInfo.isSmall)
 				if(drawInfo.metaData->hoverDuration > 0)
 				{
 					const auto c = je::CreateCurveOvershooting();
@@ -698,7 +695,7 @@ namespace game
 					imageRenderTask.position.y += eval * 2;
 				}
 
-			if (!drawInfo.upscaleImage && !drawInfo.isSmall)
+			if (!drawInfo.isSmall)
 			{
 				const uint32_t shadowLerpDis = 16 * drawInfo.scale;
 				const glm::vec2 off = origin - info.inputState.mousePos;
@@ -740,12 +737,27 @@ namespace game
 			//info.renderTasks.Push(costRenderTask);
 
 			TextTask textTask{};
-			textTask.position = costRenderTask.position;
-			textTask.center = drawInfo.center;
-			textTask.position.y -= 2 * drawInfo.scale;
-			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
-			textTask.priority = priority;
-			textTask.lifetime = textLifeTime;
+			if (!drawInfo.isSmall)
+			{
+				textTask.position = costRenderTask.position;
+				textTask.center = drawInfo.center;
+				textTask.position.y -= 11 * drawInfo.scale;
+				textTask.position.x += 13 * drawInfo.scale;
+				textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
+				textTask.priority = priority;
+				textTask.lifetime = textLifeTime;
+				//textTask.scale *= 2;
+			}
+			else 
+			{
+				textTask.position = costRenderTask.position;
+				textTask.center = drawInfo.center;
+				textTask.position.y -= 2 * drawInfo.scale;
+				textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
+				textTask.priority = priority;
+				textTask.lifetime = textLifeTime;
+			}
+			
 			info.textTasks.Push(textTask);
 		}
 

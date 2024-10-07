@@ -115,7 +115,6 @@ namespace game
 		cardSelectionDrawInfo.offsetMod += 12;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		cardSelectionDrawInfo.costs = costs;
-		cardSelectionDrawInfo.upscaleImage = true;
 		uint32_t selected = level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
@@ -599,7 +598,7 @@ namespace game
 
 				eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
 				eventSelectionDrawInfo.activationIndex = -1;
-				eventSelectionDrawInfo.centerOffset += 24;// *= -1;
+				eventSelectionDrawInfo.centerOffset += 26;// *= -1;
 				eventSelectionDrawInfo.length = cards.count;
 
 				// Draw additional events.
@@ -757,7 +756,7 @@ namespace game
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_HAND_INDEX];
-		handSelectionDrawInfo.offsetMod = -16;
+		handSelectionDrawInfo.offsetMod = -14;
 		handSelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
 		handSelectionDrawInfo.draggable = handSelectionDrawInfo.selectable;
 		handSelectionDrawInfo.isSmall = true;
@@ -815,8 +814,12 @@ namespace game
 		playerCardSelectionDrawInfo.offsetMod = 16;
 		playerCardSelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
 		playerCardSelectionDrawInfo.draggable = playerCardSelectionDrawInfo.selectable;
-		if(enemyResult != UINT32_MAX)
+
+		if (enemyResult != UINT32_MAX)
+		{
 			playerCardSelectionDrawInfo.redHighlight = static_cast<int32_t>(targets[enemyResult]);
+			playerCardSelectionDrawInfo.redHighlightTime = metaDatas[META_DATA_ENEMY_INDEX + enemyResult].hoverDuration;
+		}
 
 		DrawActivationAnimation(playerCardSelectionDrawInfo, Activation::monster, 0);
 		DrawAttackAnimation(state, info, *level, playerCardSelectionDrawInfo, true);
@@ -1669,7 +1672,6 @@ namespace game
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		cardSelectionDrawInfo.rowCutoff = 6;
-		cardSelectionDrawInfo.upscaleImage = true;
 		const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		const auto& path = state.paths[state.chosenPath];
@@ -1779,7 +1781,6 @@ namespace game
 			cardSelectionDrawInfo.combatStats = combatStats;
 			cardSelectionDrawInfo.metaDatas = metaDatas;
 			cardSelectionDrawInfo.lifeTime = level->GetTime();
-			cardSelectionDrawInfo.upscaleImage = true;
 			const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 			
 			const auto& path = state.paths[state.chosenPath];
@@ -1878,7 +1879,6 @@ namespace game
 		cardSelectionDrawInfo.combatStats = combatStats;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
-		cardSelectionDrawInfo.upscaleImage = true;
 		const auto choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		auto& path = state.paths[state.chosenPath];
@@ -1922,8 +1922,7 @@ namespace game
 		ingameMenuOpened = false;
 		
 		stateMachine.state.depth = 99;
-		stateMachine.next = stateMachine.current;
-		
+		stateMachine.next = stateMachine.current;	
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

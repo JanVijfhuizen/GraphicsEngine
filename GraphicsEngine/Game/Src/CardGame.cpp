@@ -765,6 +765,7 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::TRANQUILIZE] = "Art/Spells/tranquilize.png";
 		arr[SPELL_ID_START + SPELL_IDS::DOUBLE_TROUBLE] = "Art/Spells/double_trouble.png";
 		arr[SPELL_ID_START + SPELL_IDS::GOBLIN_AMBUSH] = "Art/Spells/goblin_ambush.png";
+		arr[SPELL_ID_START + SPELL_IDS::WINDFALL] = "Art/Spells/windfall.png";
 
 		arr[SPELL_ID_START + SPELL_IDS::UNSTABLE_COPY] = "Art/Spells/unstable_copy.png";
 		return arr;
