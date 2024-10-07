@@ -17,7 +17,7 @@ namespace game
 		glm::ivec2 fullScreenMousePos{};
 		State lMouse{};
 		State rMouse{};
-		State esc{};
+		State esc;
 		float scroll = 0;
 		State enter{};
 	};

@@ -632,23 +632,25 @@ namespace game
 			}
 		}
 
+		// Draw end turn button.
+		ButtonDrawInfo buttonDrawInfo{};
+		buttonDrawInfo.center = true;
+		buttonDrawInfo.centerText = true;
+		buttonDrawInfo.text = "mnu";
+		buttonDrawInfo.largeFont = true;
+		buttonDrawInfo.drawLineByDefault = false;
+		buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x / 2 - 32, -2);
+		buttonDrawInfo.showLine = false;
+		const bool openMenu = level->DrawButton(info, buttonDrawInfo, level->GetTime());
+		if (openMenu)
+			level->pauseRequest = true;
+
 		// Check for new turn.
 		if(state.stack.count == 0 && !activeStateValid)
 		{
-			// Draw end turn button.
-			ButtonDrawInfo buttonDrawInfo{};
-			buttonDrawInfo.center = true;
-			buttonDrawInfo.centerText = true;
-			buttonDrawInfo.text = "end";
-			buttonDrawInfo.largeFont = true;
-			buttonDrawInfo.drawLineByDefault = false;
-			buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x / 2 + 32, -2);
-			buttonDrawInfo.showLine = false;
-			const bool endTurn = level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
-
 			buttonDrawInfo.origin.x = SIMULATED_RESOLUTION.x - buttonDrawInfo.origin.x;
-			buttonDrawInfo.text = "opt";
-			const bool options = level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
+			buttonDrawInfo.text = "end";
+			const bool endTurn = level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
 
 			// Manually end turn.
 			if (endTurn || info.inputState.enter.PressEvent())
@@ -1929,10 +1931,11 @@ namespace game
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
 
-		if (info.inputState.esc.PressEvent())
+		if (info.inputState.esc.PressEvent() || pauseRequest)
 		{
 			ingameMenuOpened = !ingameMenuOpened;
 			timeSinceIngameMenuOpened = GetTime();
+			pauseRequest = false;
 		}
 
 		if (ingameMenuOpened)

@@ -286,7 +286,7 @@ namespace game
 			activePlayer,
 			inCombat,
 			fullscreen,
-			cardGame.audioEngine
+			cardGame.audioEngine,
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();

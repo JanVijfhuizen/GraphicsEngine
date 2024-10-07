@@ -187,6 +187,8 @@ namespace game
 			farr
 		};
 
+		bool pauseRequest;
+
 		virtual void Create(const LevelCreateInfo& info);
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
 		virtual void PostUpdate(const LevelUpdateInfo& info);

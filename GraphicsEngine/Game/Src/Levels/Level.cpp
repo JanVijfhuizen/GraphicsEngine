@@ -22,6 +22,7 @@ namespace game
 
 	void Level::Create(const LevelCreateInfo& info)
 	{
+		pauseRequest = false;
 		_buttonHovered = false;
 		_buttonHoveredLastFrame = false;
 		_fullCard = nullptr;
