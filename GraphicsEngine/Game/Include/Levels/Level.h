@@ -130,6 +130,8 @@ namespace game
 			uint32_t scale = 1;
 			uint32_t target = -1;
 			bool large = false;
+			bool isSmall = false;
+			bool upscaleImage = false;
 		};
 
 		struct CardSelectionDrawInfo final
@@ -167,6 +169,8 @@ namespace game
 			bool selectable = true;
 			bool containsBoss = false;
 			int32_t redHighlight = -1;
+			bool isSmall = false;
+			bool upscaleImage = false;
 		};
 
 		struct PartyDrawInfo final

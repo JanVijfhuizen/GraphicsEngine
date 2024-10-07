@@ -705,6 +705,7 @@ namespace game
 		arr[11] = "Art/manabar_hollow.png";
 		arr[12] = "Art/manacrystal.png";
 		arr[13] = "Art/moon.png";
+		arr[14] = "Art/card_small.png";
 		return arr;
 	}
 
@@ -721,7 +722,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Monsters/slime.png";
+			arr[i] = "Art/Spells/enrage.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -1543,7 +1544,7 @@ namespace game
 		manaDevourer.name = "mana devourer";
 		manaDevourer.attack = 1;
 		manaDevourer.health = 20;
-		manaDevourer.ruleText = "[end of turn] gain 3 attack per unspent mana.";
+		manaDevourer.ruleText = "[end of turn] gain 2 attack per unspent mana.";
 		manaDevourer.tags = TAG_ELEMENTAL;
 		manaDevourer.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -1552,7 +1553,7 @@ namespace game
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
 					buffState.source = ActionState::Source::other;
-					buffState.values[ActionState::VStatBuff::attack] = state.mana * 3;
+					buffState.values[ActionState::VStatBuff::attack] = state.mana * 2;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
 					state.TryAddToStack(buffState);

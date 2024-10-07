@@ -393,6 +393,8 @@ namespace game
 
 		CardDrawInfo cardDrawInfo{};
 		cardDrawInfo.center = true;
+		cardDrawInfo.isSmall = drawInfo.isSmall;
+		cardDrawInfo.upscaleImage = drawInfo.upscaleImage;
 		
 		uint32_t choice = -1;
 		if(drawInfo.outStackSelected)
@@ -534,6 +536,7 @@ namespace game
 				for (uint32_t j = 0; j < stackedCount; ++j)
 				{
 					auto stackedDrawInfo = cardDrawInfo;
+					stackedDrawInfo.upscaleImage = true;
 					stackedDrawInfo.card = drawInfo.stacks[i][j];
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
 					stackedDrawInfo.origin.x += stackWidth * ((stackedCount - j - 1) % 2 == 0);
@@ -593,7 +596,8 @@ namespace game
 
 	bool Level::DrawCard(const LevelUpdateInfo& info, const CardDrawInfo& drawInfo)
 	{
-		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::card)];
+		const auto& cardTexture = info.atlasTextures[static_cast<uint32_t>(
+			drawInfo.isSmall ? TextureId::cardSmall : TextureId::card)];
 		jv::ge::SubTexture cardFrames[CARD_FRAME_COUNT];
 		Divide(cardTexture.subTexture, cardFrames, CARD_FRAME_COUNT);
 
@@ -677,6 +681,7 @@ namespace game
 			imageRenderTask.subTexture = animFrames[i];
 			imageRenderTask.color *= glm::vec4(fadeMod, 1);
 			imageRenderTask.priority = drawInfo.priority;
+			imageRenderTask.scale *= (drawInfo.upscaleImage ? 2 : 1);
 
 			// Hover anim.
 			if(drawInfo.metaData && !drawInfo.large)
@@ -688,16 +693,19 @@ namespace game
 					imageRenderTask.position.y += eval * 2;
 				}
 
-			const uint32_t shadowLerpDis = 16 * drawInfo.scale;
-			const glm::vec2 off = origin - info.inputState.mousePos;
-			const float dis = length(off);
-			const float shadowLerp = dis > shadowLerpDis ? 0 : 1.f - dis / shadowLerpDis;
+			if (!drawInfo.upscaleImage && !drawInfo.isSmall)
+			{
+				const uint32_t shadowLerpDis = 16 * drawInfo.scale;
+				const glm::vec2 off = origin - info.inputState.mousePos;
+				const float dis = length(off);
+				const float shadowLerp = dis > shadowLerpDis ? 0 : 1.f - dis / shadowLerpDis;
 
-			auto shadowTask = imageRenderTask;
-			shadowTask.color = glm::vec4(0, 0, 0, 1);
-			shadowTask.position += off * shadowLerp;
+				auto shadowTask = imageRenderTask;
+				shadowTask.color = glm::vec4(0, 0, 0, 1);
+				shadowTask.position += off * shadowLerp;
+				info.renderTasks.Push(shadowTask);
+			}
 			
-			info.renderTasks.Push(shadowTask);
 			info.renderTasks.Push(imageRenderTask);
 		}
 
@@ -716,7 +724,7 @@ namespace game
 
 			PixelPerfectRenderTask costRenderTask{};
 			costRenderTask.position = origin + glm::ivec2(0, bgRenderTask.scale.y / 2 + 10 * drawInfo.scale);
-			costRenderTask.position.y -= 16 * drawInfo.scale;
+			costRenderTask.position.y -= 13 * drawInfo.scale;
 			costRenderTask.scale = manaCrystalTexture.resolution;
 			costRenderTask.scale *= drawInfo.scale;
 			costRenderTask.xCenter = drawInfo.center;
@@ -724,7 +732,7 @@ namespace game
 			costRenderTask.color = fgRenderTask.color;
 			costRenderTask.subTexture = manaCrystalTexture.subTexture;
 			costRenderTask.priority = priority;
-			info.renderTasks.Push(costRenderTask);
+			//info.renderTasks.Push(costRenderTask);
 
 			TextTask textTask{};
 			textTask.position = costRenderTask.position;
@@ -733,7 +741,6 @@ namespace game
 			textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
 			textTask.priority = priority;
 			textTask.lifetime = textLifeTime;
-			textTask.scale *= drawInfo.scale;
 			info.textTasks.Push(textTask);
 		}
 

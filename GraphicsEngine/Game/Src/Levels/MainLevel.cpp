@@ -115,6 +115,7 @@ namespace game
 		cardSelectionDrawInfo.offsetMod += 12;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		cardSelectionDrawInfo.costs = costs;
+		cardSelectionDrawInfo.upscaleImage = true;
 		uint32_t selected = level->DrawCardSelection(info, cardSelectionDrawInfo);
 
 		if (!level->GetIsLoading() && info.inputState.lMouse.PressEvent())
@@ -569,11 +570,12 @@ namespace game
 			CardSelectionDrawInfo eventSelectionDrawInfo{};
 			eventSelectionDrawInfo.lifeTime = level->GetTime();
 			eventSelectionDrawInfo.cards = cards.ptr;
-			eventSelectionDrawInfo.height = HAND_HEIGHT;
+			eventSelectionDrawInfo.height = HAND_HEIGHT / 2 + 2;
 			eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_ROOM_INDEX];
 			eventSelectionDrawInfo.offsetMod = -4;
 			eventSelectionDrawInfo.length = 1;
 			eventSelectionDrawInfo.centerOffset = -SIMULATED_RESOLUTION.x / 2 + 32;
+			eventSelectionDrawInfo.isSmall = true;
 
 			// Draws room.
 			if(state.depth >= ROOMS_BEFORE_ROOM_EFFECTS)
@@ -597,7 +599,7 @@ namespace game
 
 				eventSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_EVENT_INDEX];
 				eventSelectionDrawInfo.activationIndex = -1;
-				eventSelectionDrawInfo.centerOffset *= -1;
+				eventSelectionDrawInfo.centerOffset += 24;// *= -1;
 				eventSelectionDrawInfo.length = cards.count;
 
 				// Draw additional events.
@@ -640,9 +642,13 @@ namespace game
 			buttonDrawInfo.text = "end";
 			buttonDrawInfo.largeFont = true;
 			buttonDrawInfo.drawLineByDefault = false;
-			buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x - 32, 4);
+			buttonDrawInfo.origin = glm::ivec2(SIMULATED_RESOLUTION.x / 2 + 32, -2);
 			buttonDrawInfo.showLine = false;
 			const bool endTurn = level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
+
+			buttonDrawInfo.origin.x = SIMULATED_RESOLUTION.x - buttonDrawInfo.origin.x;
+			buttonDrawInfo.text = "opt";
+			const bool options = level->DrawButton(info, buttonDrawInfo, level->GetTime() - timeSinceEmptyStack);
 
 			// Manually end turn.
 			if (endTurn || info.inputState.enter.PressEvent())
@@ -749,9 +755,10 @@ namespace game
 		handSelectionDrawInfo.costs = costs;
 		handSelectionDrawInfo.combatStats = nullptr;
 		handSelectionDrawInfo.metaDatas = &metaDatas[META_DATA_HAND_INDEX];
-		handSelectionDrawInfo.offsetMod = 4;
+		handSelectionDrawInfo.offsetMod = -16;
 		handSelectionDrawInfo.selectable = state.stack.count == 0 && !activeStateValid;
 		handSelectionDrawInfo.draggable = handSelectionDrawInfo.selectable;
+		handSelectionDrawInfo.isSmall = true;
 		DrawActivationAnimation(handSelectionDrawInfo, Activation::spell, 0);
 		DrawCardPlayAnimation(*level, handSelectionDrawInfo);
 		if(activeStateValid && activeState.trigger == ActionState::Trigger::onDraw)
@@ -1660,6 +1667,7 @@ namespace game
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
 		cardSelectionDrawInfo.rowCutoff = 6;
+		cardSelectionDrawInfo.upscaleImage = true;
 		const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		const auto& path = state.paths[state.chosenPath];
@@ -1769,6 +1777,7 @@ namespace game
 			cardSelectionDrawInfo.combatStats = combatStats;
 			cardSelectionDrawInfo.metaDatas = metaDatas;
 			cardSelectionDrawInfo.lifeTime = level->GetTime();
+			cardSelectionDrawInfo.upscaleImage = true;
 			const uint32_t choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 			
 			const auto& path = state.paths[state.chosenPath];
@@ -1867,6 +1876,7 @@ namespace game
 		cardSelectionDrawInfo.combatStats = combatStats;
 		cardSelectionDrawInfo.metaDatas = metaDatas;
 		cardSelectionDrawInfo.lifeTime = level->GetTime();
+		cardSelectionDrawInfo.upscaleImage = true;
 		const auto choice = level->DrawCardSelection(info, cardSelectionDrawInfo);
 		
 		auto& path = state.paths[state.chosenPath];
@@ -1911,6 +1921,7 @@ namespace game
 		
 		stateMachine.state.depth = 99;
 		stateMachine.next = stateMachine.current;
+		
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
