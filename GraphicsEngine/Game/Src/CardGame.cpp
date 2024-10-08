@@ -800,6 +800,14 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::PICK] = "Art/Spells/pick.png";
 		arr[SPELL_ID_START + SPELL_IDS::CYCLE] = "Art/Spells/cycle.png";
 
+		arr[CURSE_ID_START + CURSE_IDS::FADING] = "Art/Curses/fading.png";
+		arr[CURSE_ID_START + CURSE_IDS::WEAKNESS] = "Art/Curses/weakness.png";
+		arr[CURSE_ID_START + CURSE_IDS::COWARDICE] = "Art/Curses/cowardice.png";
+		arr[CURSE_ID_START + CURSE_IDS::DUM_DUM] = "Art/Curses/dum_dum.png";
+		arr[CURSE_ID_START + CURSE_IDS::HATE] = "Art/Curses/hate.png";
+		arr[CURSE_ID_START + CURSE_IDS::HAUNTING] = "Art/Curses/haunting.png";
+		arr[CURSE_ID_START + CURSE_IDS::TIME] = "Art/Curses/time.png";
+		arr[CURSE_ID_START + CURSE_IDS::VULNERABILITY] = "Art/Curses/vulnerability.png";
 		return arr;
 	}
 
@@ -962,8 +970,8 @@ namespace game
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
 		daisy.ruleText = "loyal until the very end.";
-		daisy.attack = 3;
-		daisy.health = 3;
+		daisy.attack = DAISY_MOD_STATS;
+		daisy.health = DAISY_MOD_STATS;
 		daisy.unique = true;
 		daisy.normalAnimIndex = daisy.animIndex;
 		daisy.tags = TAG_BEAST;
