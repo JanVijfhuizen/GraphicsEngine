@@ -711,8 +711,7 @@ namespace game
 
 	jv::Array<const char*> CardGame::GetDynamicTexturePaths(jv::Arena& arena, jv::Arena& frameArena)
 	{
-		const auto arr = jv::CreateArray<const char*>(frameArena, 
-			MONSTER_IDS::LENGTH + SPELL_IDS::LENGTH + ARTIFACT_IDS::LENGTH + EVENT_IDS::LENGTH + ROOM_IDS::LENGTH + CURSE_IDS::LENGTH);
+		const auto arr = jv::CreateArray<const char*>(frameArena, ALL_ID_COUNT);
 		for (uint32_t i = 0; i < arr.length; ++i)
 		{
 			/*
@@ -722,7 +721,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Spells/stall.png";
+			arr[i] = "Art/Artifacts/arcane_amulet.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -799,6 +798,12 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::LOYAL_WORKFORCE] = "Art/Spells/loyal_workforce.png";
 		arr[SPELL_ID_START + SPELL_IDS::PICK] = "Art/Spells/pick.png";
 		arr[SPELL_ID_START + SPELL_IDS::CYCLE] = "Art/Spells/cycle.png";
+
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifacts/arcane_amulet.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORNMAIL] = "Art/Artifacts/thorn_mail.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::REVERSE_CARD] = "Art/Artifacts/reverse_card.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::FALSE_ARMOR] = "Art/Artifacts/false_armor.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifacts/corrupting_knife.png";
 
 		arr[CURSE_ID_START + CURSE_IDS::FADING] = "Art/Curses/fading.png";
 		arr[CURSE_ID_START + CURSE_IDS::WEAKNESS] = "Art/Curses/weakness.png";
@@ -1961,7 +1966,7 @@ namespace game
 	{
 		const auto arr = jv::CreateArray<ArtifactCard>(arena, ARTIFACT_IDS::LENGTH);
 
-		uint32_t c = ARTIFACT_IDS::LENGTH;
+		uint32_t c = 0;
 		for (auto& card : arr)
 			card.animIndex = ARTIFACT_ID_START + c++;
 
