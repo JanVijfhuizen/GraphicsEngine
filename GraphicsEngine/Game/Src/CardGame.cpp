@@ -803,6 +803,8 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORNMAIL] = "Art/Artifact/thorn_mail.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::REVERSE_CARD] = "Art/Artifact/reverse_card.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::FALSE_ARMOR] = "Art/Artifact/false_armor.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_HAT] = "Art/Artifact/mage_hat.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH] = "Art/Artifact/mask_of_eternal_youth.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifact/corrupting_knife.png";
 
 		arr[CURSE_ID_START + CURSE_IDS::FADING] = "Art/Curses/fading.png";
@@ -1981,7 +1983,7 @@ namespace game
 			}
 			return false;
 		};
-		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "repulsion armor";
+		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "glimmering gear";
 		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[attack] the attacked monster takes damage equal to my bonus health.";
 		arr[ARTIFACT_IDS::FALSE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2045,9 +2047,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::MAGE_ARMOR].name = "mage armor";
-		arr[ARTIFACT_IDS::MAGE_ARMOR].ruleText = "[cast] +2 bonus health.";
-		arr[ARTIFACT_IDS::MAGE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::MAGE_HAT].name = "mage hat";
+		arr[ARTIFACT_IDS::MAGE_HAT].ruleText = "[cast] +2 bonus health.";
+		arr[ARTIFACT_IDS::MAGE_HAT].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
