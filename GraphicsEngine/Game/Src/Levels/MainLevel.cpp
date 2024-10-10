@@ -1921,8 +1921,8 @@ namespace game
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
 		
-		//stateMachine.state.depth = 99;
-		//stateMachine.next = stateMachine.current;	
+		stateMachine.state.depth = 99;
+		stateMachine.next = stateMachine.current;	
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

@@ -787,7 +787,7 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::INCANTATION_OF_DOOM] = "Art/Spells/incantation_of_doom.png";
 		arr[SPELL_ID_START + SPELL_IDS::PROTECT] = "Art/Spells/protect.png";
 		arr[SPELL_ID_START + SPELL_IDS::SHIELD] = "Art/Spells/shield.png";
-		arr[SPELL_ID_START + SPELL_IDS::GROUP_HUG] = "Art/Spells/group_hug.png";
+		arr[SPELL_ID_START + SPELL_IDS::ENCITEMENT] = "Art/Spells/encitement.png";
 		arr[SPELL_ID_START + SPELL_IDS::STALL] = "Art/Spells/stall.png";
 		arr[SPELL_ID_START + SPELL_IDS::BALANCE] = "Art/Spells/balance.png";
 		arr[SPELL_ID_START + SPELL_IDS::COUNTER_BALANCE] = "Art/Spells/counter_balance.png";
@@ -808,6 +808,25 @@ namespace game
 		arr[CURSE_ID_START + CURSE_IDS::HAUNTING] = "Art/Curses/haunting.png";
 		arr[CURSE_ID_START + CURSE_IDS::TIME] = "Art/Curses/time.png";
 		arr[CURSE_ID_START + CURSE_IDS::VULNERABILITY] = "Art/Curses/vulnerability.png";
+
+		arr[EVENT_ID_START + EVENT_IDS::AETHER_SURGE] = "Art/Spells/arcane_intellect.png";
+		arr[EVENT_ID_START + EVENT_IDS::DOPPLEGANGSTERS] = "Art/Spells/unstable_copy.png";
+		arr[EVENT_ID_START + EVENT_IDS::GATHERING_STORM] = "Art/Spells/counter_balance.png";
+		arr[EVENT_ID_START + EVENT_IDS::RETRIBUTION] = "Art/Spells/hold_the_line.png";
+		arr[EVENT_ID_START + EVENT_IDS::GOBLIN_PLAGUE] = "Art/Spells/goblin_ambush.png";
+		arr[EVENT_ID_START + EVENT_IDS::WHIRLWIND] = "Art/Spells/windfall.png";
+		arr[EVENT_ID_START + EVENT_IDS::HEALING_WORD] = "Art/Spells/protect.png";
+		arr[EVENT_ID_START + EVENT_IDS::BRIEF_RESPISE] = "Art/Spells/balance.png";
+		arr[EVENT_ID_START + EVENT_IDS::CHASE_THE_DRAGON] = "Art/Spells/stampede.png";
+
+		arr[ROOM_ID_START + ROOM_IDS::FIELD_OF_VENGEANCE] = "Art/Spells/goblin_chant.png";
+		arr[ROOM_ID_START + ROOM_IDS::FORSAKEN_BATTLEFIELD] = "Art/Spells/dread_sacrifice.png";
+		arr[ROOM_ID_START + ROOM_IDS::BLESSED_HALLS] = "Art/Spells/perfect_copy.png";
+		arr[ROOM_ID_START + ROOM_IDS::KHAALS_DOMAIN] = "Art/Spells/incantation_of_doom.png";
+		arr[ROOM_ID_START + ROOM_IDS::ARENA_OF_THE_DAMNED] = "Art/Spells/rally.png";
+		arr[ROOM_ID_START + ROOM_IDS::TRANQUIL_WATERS] = "Art/Spells/pick.png";
+		arr[ROOM_ID_START + ROOM_IDS::PLAIN_MEADOWS] = "Art/Spells/rampant_growth.png";
+		arr[ROOM_ID_START + ROOM_IDS::PRISON_OF_ETERNITY] = "Art/Spells/stall.png";
 		return arr;
 	}
 
@@ -2957,8 +2976,8 @@ namespace game
 				}
 				return false;
 			};
-		auto& groupHug = arr[SPELL_IDS::GROUP_HUG];
-		groupHug.name = "group hug";
+		auto& groupHug = arr[SPELL_IDS::ENCITEMENT];
+		groupHug.name = "encitement";
 		groupHug.ruleText = "all allies gain bonus health equal to my bonus health.";
 		groupHug.cost = 1;
 		groupHug.type = SpellCard::Type::target;
@@ -3727,8 +3746,8 @@ namespace game
 				return true;
 			};
 
-		auto& noYou = arr[EVENT_IDS::NO_YOU];
-		noYou.name = "repercussion";
+		auto& noYou = arr[EVENT_IDS::RETRIBUTION];
+		noYou.name = "retribution";
 		noYou.ruleText = "[enemy attacked] attack back.";
 		noYou.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
