@@ -540,6 +540,7 @@ namespace game
 					stackedDrawInfo.origin.y += static_cast<int32_t>(CARD_STACKED_SPACING * (stackedCount - j));
 					stackedDrawInfo.origin.x += stackWidth * ((stackedCount - j - 1) % 2 == 0);
 					stackedDrawInfo.selectable = drawInfo.selectable && !dragged && !collides && stackedSelected == j;
+					stackedDrawInfo.drawShadow = false;
 					DrawCard(info, stackedDrawInfo);
 				}
 			}
@@ -570,6 +571,7 @@ namespace game
 				stackedDrawInfo.ignoreAnim = false;
 				stackedDrawInfo.metaData = nullptr;
 				stackedDrawInfo.origin.x += stackWidth * ((stackedCount - stackedSelected - 1) % 2 == 0);
+				stackedDrawInfo.drawShadow = false;
 				DrawCard(info, stackedDrawInfo);
 				cardDrawInfo.selectable = false;
 			}
@@ -695,7 +697,7 @@ namespace game
 					imageRenderTask.position.y += eval * 2;
 				}
 
-			if (!drawInfo.isSmall)
+			if (!drawInfo.isSmall && drawInfo.drawShadow)
 			{
 				const uint32_t shadowLerpDis = 16 * drawInfo.scale;
 				const glm::vec2 off = origin - info.inputState.mousePos;

@@ -721,7 +721,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Artifact/arcane_amulet.png";
+			arr[i] = "Art/Artifact/mage_hat.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -806,6 +806,19 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_HAT] = "Art/Artifact/mage_hat.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH] = "Art/Artifact/mask_of_eternal_youth.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifact/corrupting_knife.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CUP_OF_BLOOD] = "Art/Artifact/cup_of_blood.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BLOOD_AXE] = "Art/Artifact/blood_axe.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::INSECT_CLAW] = "Art/Artifact/insect_claw.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MOON_SCYTE] = "Art/Artifact/moon_scyte.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::SPIKEY_COLLAR] = "Art/Artifact/spikey_collar.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BOOTS_OF_SWIFTNESS] = "Art/Artifact/boots_of_swiftness.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BLESSED_RING] = "Art/Artifact/blessed_ring.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifact/mage_sword.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORN_WHIP] = "Art/Artifact/thorn_whip.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::RED_CLOTH] = "Art/Artifact/red_cloth.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::HELMET_OF_THE_HOST] = "Art/Artifact/helm_of_the_host.png";
+
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THE_BRAND] = "Art/Artifact/the_brand.png";
 
 		arr[CURSE_ID_START + CURSE_IDS::FADING] = "Art/Curses/fading.png";
 		arr[CURSE_ID_START + CURSE_IDS::WEAKNESS] = "Art/Curses/weakness.png";
@@ -2117,9 +2130,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::CUP_OF_BLOOD].name = "the brand";
-		arr[ARTIFACT_IDS::CUP_OF_BLOOD].ruleText = "[start of turn] die. all allies gain 6 health.";
-		arr[ARTIFACT_IDS::CUP_OF_BLOOD].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::THE_BRAND].name = "the brand";
+		arr[ARTIFACT_IDS::THE_BRAND].ruleText = "[start of turn] die. all allies gain 6 health.";
+		arr[ARTIFACT_IDS::THE_BRAND].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
@@ -2167,9 +2180,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::RUSTY_CLAW].name = "rusty claw";
-		arr[ARTIFACT_IDS::RUSTY_CLAW].ruleText = "[any death] draw.";
-		arr[ARTIFACT_IDS::RUSTY_CLAW].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::INSECT_CLAW].name = "insect claw";
+		arr[ARTIFACT_IDS::INSECT_CLAW].ruleText = "[any death] draw.";
+		arr[ARTIFACT_IDS::INSECT_CLAW].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
@@ -2181,9 +2194,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::BLOOD_HAMMER].name = "blood hammer";
-		arr[ARTIFACT_IDS::BLOOD_HAMMER].ruleText = "[any death] +4 bonus attack.";
-		arr[ARTIFACT_IDS::BLOOD_HAMMER].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::MOON_SCYTE].name = "moon scyte";
+		arr[ARTIFACT_IDS::MOON_SCYTE].ruleText = "[any death] +4 bonus attack.";
+		arr[ARTIFACT_IDS::MOON_SCYTE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
@@ -2217,7 +2230,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "cup of blood";
+		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].name = "boots of swiftness";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].ruleText = "[ally death] untap.";
 		arr[ARTIFACT_IDS::BOOTS_OF_SWIFTNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2354,9 +2367,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::RUSTY_COLLAR].name = "rusty collar";
-		arr[ARTIFACT_IDS::RUSTY_COLLAR].ruleText = "[on bonus attack buffed] gain that much attack.";
-		arr[ARTIFACT_IDS::RUSTY_COLLAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].name = "cup of blood";
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].ruleText = "[on bonus attack buffed] gain that much attack.";
+		arr[ARTIFACT_IDS::CUP_OF_BLOOD].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStatBuff)
 				{

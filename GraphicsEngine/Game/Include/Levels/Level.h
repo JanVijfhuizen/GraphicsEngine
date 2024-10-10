@@ -131,6 +131,7 @@ namespace game
 			uint32_t target = -1;
 			bool large = false;
 			bool isSmall = false;
+			bool drawShadow = true;
 		};
 
 		struct CardSelectionDrawInfo final
