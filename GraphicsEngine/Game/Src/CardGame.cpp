@@ -721,7 +721,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Artifacts/arcane_amulet.png";
+			arr[i] = "Art/Artifact/arcane_amulet.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -799,11 +799,11 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::PICK] = "Art/Spells/pick.png";
 		arr[SPELL_ID_START + SPELL_IDS::CYCLE] = "Art/Spells/cycle.png";
 
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifacts/arcane_amulet.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORNMAIL] = "Art/Artifacts/thorn_mail.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::REVERSE_CARD] = "Art/Artifacts/reverse_card.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::FALSE_ARMOR] = "Art/Artifacts/false_armor.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifacts/corrupting_knife.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifact/arcane_amulet.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORNMAIL] = "Art/Artifact/thorn_mail.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::REVERSE_CARD] = "Art/Artifact/reverse_card.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::FALSE_ARMOR] = "Art/Artifact/false_armor.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifact/corrupting_knife.png";
 
 		arr[CURSE_ID_START + CURSE_IDS::FADING] = "Art/Curses/fading.png";
 		arr[CURSE_ID_START + CURSE_IDS::WEAKNESS] = "Art/Curses/weakness.png";
