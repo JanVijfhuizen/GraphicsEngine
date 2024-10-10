@@ -817,8 +817,12 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORN_WHIP] = "Art/Artifact/thorn_whip.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::RED_CLOTH] = "Art/Artifact/red_cloth.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::HELMET_OF_THE_HOST] = "Art/Artifact/helm_of_the_host.png";
-
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::RUSTY_SPEAR] = "Art/Artifact/rusty_spear.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THE_BRAND] = "Art/Artifact/the_brand.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::SWORD_OF_SPELLCASTING] = "Art/Artifact/sword_of_spellcasting.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_AEONS] = "Art/Artifact/staff_of_aeons.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_SUMMONING] = "Art/Artifact/staff_of_summoning.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MANA_RING] = "Art/Artifact/mana_ring.png";
 
 		arr[CURSE_ID_START + CURSE_IDS::FADING] = "Art/Curses/fading.png";
 		arr[CURSE_ID_START + CURSE_IDS::WEAKNESS] = "Art/Curses/weakness.png";
