@@ -1071,17 +1071,17 @@ namespace game
 		slime.health = 0;
 		slime.unique = true;
 		slime.tags = TAG_TOKEN | TAG_SLIME;
-		elf.onStartOfTurn = "hhhprpr";
-		elf.onSummonText = "prrh";
-		elf.onCastText = "ppphhhzz";
-		elf.onBuffedText = "prhrh";
-		elf.onDamagedText = "phzzzhzhzhhz";
-		elf.onAttackText = "pzz";
-		elf.onAttackedText = "phhhhhrz";
-		elf.onAllySummonText = "phrzhzhz";
-		elf.onEnemySummonText = "hzhrhzh";
-		elf.onAllyDeathText = "hzr";
-		elf.onEnemyDeathText = "rrrrrhz";
+		slime.onStartOfTurn = "hhhprpr";
+		slime.onSummonText = "prrh";
+		slime.onCastText = "ppphhhzz";
+		slime.onBuffedText = "prhrh";
+		slime.onDamagedText = "phzzzhzhzhhz";
+		slime.onAttackText = "pzz";
+		slime.onAttackedText = "phhhhhrz";
+		slime.onAllySummonText = "phrzhzhz";
+		slime.onEnemySummonText = "hzhrhzh";
+		slime.onAllyDeathText = "hzr";
+		slime.onEnemyDeathText = "rrrrrhz";
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
 		daisy.ruleText = "[summon] heal to full.";
@@ -1734,11 +1734,34 @@ namespace game
 				}
 				return false;
 			};
+		goblinChampion.onStartOfTurn = "for my king";
+		goblinChampion.onSummonText = "i am the strongest";
+		goblinChampion.onCastText = "magic sucks";
+		goblinChampion.onBuffedText = "good..make me stronger";
+		goblinChampion.onDamagedText = "you think this hurts";
+		goblinChampion.onAttackText = "be crushed";
+		goblinChampion.onAttackedText = "ahahahah";
+		goblinChampion.onAllySummonText = "more fodder";
+		goblinChampion.onEnemySummonText = "good...i needed practice";
+		goblinChampion.onAllyDeathText = "hm";
+		goblinChampion.onEnemyDeathText = "another challenger beaten";
+
 		auto& unstableCreation = arr[MONSTER_IDS::UNSTABLE_CREATION];
 		unstableCreation.name = "unstable creation";
 		unstableCreation.attack = 4;
 		unstableCreation.health = 16;
 		unstableCreation.tags = TAG_TOKEN | TAG_ELEMENTAL;
+		unstableCreation.onStartOfTurn = "aaaaaaaaaaah";
+		unstableCreation.onSummonText = "aaaaaaaah";
+		unstableCreation.onCastText = "aaah";
+		unstableCreation.onBuffedText = "uuuuugh";
+		unstableCreation.onDamagedText = "uuuauauah";
+		unstableCreation.onAttackText = "uuughh....";
+		unstableCreation.onAttackedText = "aghh";
+		unstableCreation.onAllySummonText = "hhhhh....";
+		unstableCreation.onEnemySummonText = "hhhhhh....";
+		unstableCreation.onAllyDeathText = "uuuahh";
+		unstableCreation.onEnemyDeathText = "uuh...uuuuh";
 
 		auto& moonAcolyte = arr[MONSTER_IDS::MOON_ACOLYTE];
 		moonAcolyte.name = "moon acolyte";
@@ -1764,6 +1787,18 @@ namespace game
 				}
 				return false;
 			};
+		moonAcolyte.onStartOfTurn = "i serve the great wheel of cheese";
+		moonAcolyte.onSummonText = "the yellow god commands";
+		moonAcolyte.onCastText = "moon magic guide you";
+		moonAcolyte.onBuffedText = "the moon speaks";
+		moonAcolyte.onDamagedText = "eek";
+		moonAcolyte.onAttackText = "moon goddess smite thee";
+		moonAcolyte.onAttackedText = "aah";
+		moonAcolyte.onAllySummonText = "serve the moon maiden";
+		moonAcolyte.onEnemySummonText = "heretic";
+		moonAcolyte.onAllyDeathText = "you will serve in death";
+		moonAcolyte.onEnemyDeathText = "a sacrifice to the great wheel of cheese";
+
 		auto& berserker = arr[MONSTER_IDS::BERSERKER];
 		berserker.name = "berserker";
 		berserker.attack = 1;
@@ -1809,6 +1844,18 @@ namespace game
 				}
 				return false;
 			};
+		berserker.onStartOfTurn = "blood...give me blood";
+		berserker.onSummonText = "mother...i crave violence";
+		berserker.onCastText = "pathetic";
+		berserker.onBuffedText = "more...stronger";
+		berserker.onDamagedText = "yes...this ecstacy";
+		berserker.onAttackText = "die die die die die die die die die die die die die die";
+		berserker.onAttackedText = "good...again";
+		berserker.onAllySummonText = "step aside";
+		berserker.onEnemySummonText = "more meat for the grinder";
+		berserker.onAllyDeathText = "weak";
+		berserker.onEnemyDeathText = "more skulls for my throne";
+
 		auto& manaDevourer = arr[MONSTER_IDS::MANA_DEVOURER];
 		manaDevourer.name = "mana devourer";
 		manaDevourer.attack = 1;
@@ -1830,6 +1877,18 @@ namespace game
 				}
 				return false;
 			};
+		manaDevourer.onStartOfTurn = "ma...naaa...";
+		manaDevourer.onSummonText = "mmaa..na..";
+		manaDevourer.onCastText = "ma..giiic...";
+		manaDevourer.onBuffedText = "mmm...ooore";
+		manaDevourer.onDamagedText = "mhhaaaaa...";
+		manaDevourer.onAttackText = "mmmiiiineee..";
+		manaDevourer.onAttackedText = "hhhhh...";
+		manaDevourer.onAllySummonText = "mmmmmaaa...nnna";
+		manaDevourer.onEnemySummonText = "mmman...aaa";
+		manaDevourer.onAllyDeathText = "mmmm....";
+		manaDevourer.onEnemyDeathText = "aaaan...naaa...";
+
 		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_PANDANA];
 		woundedTroll.name = "wounded pandana";
 		woundedTroll.attack = 3;
@@ -1850,6 +1909,18 @@ namespace game
 				}
 				return false;
 			};
+		woundedTroll.onStartOfTurn = "i really need to get this looked at";
+		woundedTroll.onSummonText = "im bleeding";
+		woundedTroll.onCastText = "thats a healing spell right";
+		woundedTroll.onBuffedText = "im still bleeding";
+		woundedTroll.onDamagedText = "owww... right on the sore spot";
+		woundedTroll.onAttackText = "dont hurt or be hurt";
+		woundedTroll.onAttackedText = "owwwwww againnnn";
+		woundedTroll.onAllySummonText = "do you have a first aid kit with you";
+		woundedTroll.onEnemySummonText = "man i just want to go home";
+		woundedTroll.onAllyDeathText = "oh no im next";
+		woundedTroll.onEnemyDeathText = "thats what you get for hurting me";
+
 		auto& chaosClown = arr[MONSTER_IDS::CHAOS_CLOWN];
 		chaosClown.name = "mad clown";
 		chaosClown.attack = 1;
@@ -1877,6 +1948,18 @@ namespace game
 				}
 				return false;
 			};
+		chaosClown.onStartOfTurn = "im playing both sides so that i always come out on top";
+		chaosClown.onSummonText = "i like to fight on the losing side";
+		chaosClown.onCastText = "chaos";
+		chaosClown.onBuffedText = "you know im gonna die anyway right";
+		chaosClown.onDamagedText = "my nose...my nose";
+		chaosClown.onAttackText = "you get what you fluckin deserve";
+		chaosClown.onAttackedText = "teeheeehee";
+		chaosClown.onAllySummonText = "an ally...or an enemy";
+		chaosClown.onEnemySummonText = "one more to clown on";
+		chaosClown.onAllyDeathText = "sad clown noises";
+		chaosClown.onEnemyDeathText = "guess were both clowns";
+
 		auto& dungLobber = arr[MONSTER_IDS::DUNG_LOBBER];
 		dungLobber.name = "dung lobber";
 		dungLobber.attack = 1;
@@ -1906,6 +1989,18 @@ namespace game
 				}
 				return false;
 			};
+		dungLobber.onStartOfTurn = "poop throwing noises";
+		dungLobber.onSummonText = "angry monkey sounds";
+		dungLobber.onCastText = "confused monkey stare";
+		dungLobber.onBuffedText = "happy monkey noises";
+		dungLobber.onDamagedText = "screaching noises";
+		dungLobber.onAttackText = "the poop plane has left the poop airport";
+		dungLobber.onAttackedText = "poop shield activated";
+		dungLobber.onAllySummonText = "waves in monkey";
+		dungLobber.onEnemySummonText = "yells in monkey";
+		dungLobber.onAllyDeathText = "sad monkey noises";
+		dungLobber.onEnemyDeathText = "monkey victorious";
+
 		auto& goblinBomber = arr[MONSTER_IDS::GOBLIN_BOMBER];
 		goblinBomber.name = "goblin bomber";
 		goblinBomber.attack = 1;
@@ -1928,6 +2023,18 @@ namespace game
 				
 				return false;
 			};
+		goblinBomber.onStartOfTurn = "get ready to be blown away";
+		goblinBomber.onSummonText = "i have so many bomb jokes";
+		goblinBomber.onCastText = "and boom it goes";
+		goblinBomber.onBuffedText = "that feels explosive";
+		goblinBomber.onDamagedText = "like a bomb just went off";
+		goblinBomber.onAttackText = "catch this";
+		goblinBomber.onAttackedText = "boom...owww";
+		goblinBomber.onAllySummonText = "here...take these bombs";
+		goblinBomber.onEnemySummonText = "catch";
+		goblinBomber.onAllyDeathText = "what an explosive end";
+		goblinBomber.onEnemyDeathText = "explode";
+
 		auto& goblinPrincess = arr[MONSTER_IDS::GOBLIN_PRINCESS];
 		goblinPrincess.name = "goblin princess";
 		goblinPrincess.attack = 1;
@@ -1951,6 +2058,18 @@ namespace game
 				}
 				return false;
 			};
+		goblinPrincess.onStartOfTurn = "i need a strong goblin to protect me";
+		goblinPrincess.onSummonText = "pretty and i know it";
+		goblinPrincess.onCastText = "eeek";
+		goblinPrincess.onBuffedText = "i feel empowered";
+		goblinPrincess.onDamagedText = "where are those simps when you need them";
+		goblinPrincess.onAttackText = "im not just pretty";
+		goblinPrincess.onAttackedText = "you wouldnt hit a lady";
+		goblinPrincess.onAllySummonText = "another one to swoon over me";
+		goblinPrincess.onEnemySummonText = "protect me";
+		goblinPrincess.onAllyDeathText = "oh well...anyway";
+		goblinPrincess.onEnemyDeathText = "i should have looked away";
+
 		auto& peskyParasite = arr[MONSTER_IDS::PESKY_PARASITE];
 		peskyParasite.name = "pesky parasite";
 		peskyParasite.attack = 1;
@@ -1982,6 +2101,18 @@ namespace game
 				}
 				return false;
 			};
+		peskyParasite.onStartOfTurn = "skrrt";
+		peskyParasite.onSummonText = "skiii";
+		peskyParasite.onCastText = "skkk";
+		peskyParasite.onBuffedText = "skkrtkt";
+		peskyParasite.onDamagedText = "skkrkrkrkrkrk";
+		peskyParasite.onAttackText = "skr skrss";
+		peskyParasite.onAttackedText = "srrtsksk";
+		peskyParasite.onAllySummonText = "srktsk";
+		peskyParasite.onEnemySummonText = "ksrkkts";
+		peskyParasite.onAllyDeathText = "ksrktks";
+		peskyParasite.onEnemyDeathText = "ktskrksts";
+
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
 		slimeSoldier.attack = 1;
