@@ -933,6 +933,17 @@ namespace game
 		vulture.attack = 1;
 		vulture.tags = TAG_TOKEN | TAG_BEAST;
 		vulture.unique = true;
+		vulture.onStartOfTurn = "kiii";
+		vulture.onSummonText = "khyaaaa";
+		vulture.onCastText = "keh...";
+		vulture.onBuffedText = "khe khe khe";
+		vulture.onDamagedText = "kaaaaah";
+		vulture.onAttackText = "kah";
+		vulture.onAttackedText = "kaaaah";
+		vulture.onAllySummonText = "ki ki ki";
+		vulture.onEnemySummonText = "khuuh";
+		vulture.onEnemyDeathText = "kyheheheh";
+		vulture.onAllyDeathText = "kyhahahah";
 		auto& goblin = arr[MONSTER_IDS::GOBLIN];
 		goblin.name = "goblin";
 		goblin.attack = 2;
@@ -967,12 +978,34 @@ namespace game
 				}
 				return false;
 			};
+		goblin.onStartOfTurn = "eheheh";
+		goblin.onSummonText = "loot where";
+		goblin.onCastText = "ma...magic..";
+		goblin.onBuffedText = "king goblin me";
+		goblin.onDamagedText = "run";
+		goblin.onAttackText = "taste stabby";
+		goblin.onAttackedText = "hide";
+		goblin.onAllySummonText = "more goblin";
+		goblin.onEnemySummonText = "ambush";
+		goblin.onAllyDeathText = "more meat";
+		goblin.onEnemyDeathText = "get em";
 		auto& demon = arr[MONSTER_IDS::DEMON];
 		demon.name = "demon";
 		demon.health = 0;
 		demon.attack = 0;
 		demon.tags = TAG_TOKEN;
 		demon.unique = true;
+		demon.onStartOfTurn = "greetings";
+		demon.onSummonText = "i have been summoned";
+		demon.onCastText = "this dark magic...";
+		demon.onBuffedText = "yes....yeees";
+		demon.onDamagedText = "you dare";
+		demon.onAttackText = "become fear";
+		demon.onAttackedText = "fool";
+		demon.onAllySummonText = "more souls to bind";
+		demon.onEnemySummonText = "they will know fear";
+		demon.onAllyDeathText = "a pity";
+		demon.onEnemyDeathText = "fall with shame";
 		auto& elf = arr[MONSTER_IDS::ELF];
 		elf.name = "elf";
 		elf.health = 1;
@@ -989,6 +1022,17 @@ namespace game
 				}
 				return false;
 			};
+		elf.onStartOfTurn = "wanna play";
+		elf.onSummonText = "heyo";
+		elf.onCastText = "ooh...sparkles";
+		elf.onBuffedText = "that tickles";
+		elf.onDamagedText = "thats not fun";
+		elf.onAttackText = "adult attack";
+		elf.onAttackedText = "aaaah stop it";
+		elf.onAllySummonText = "more friends";
+		elf.onEnemySummonText = "they dont look friendly";
+		elf.onAllyDeathText = "dont go";
+		elf.onEnemyDeathText = "good job guys";
 		auto& treasureGoblin = arr[MONSTER_IDS::TREASURE_GOBLIN];
 		treasureGoblin.name = "treasure goblin";
 		treasureGoblin.health = 1;
@@ -1010,12 +1054,34 @@ namespace game
 				}
 				return false;
 			};
+		elf.onStartOfTurn = "you no take loot";
+		elf.onSummonText = "gold...my gold";
+		elf.onCastText = "spell shiny...like loot";
+		elf.onBuffedText = "loot shine harder now";
+		elf.onDamagedText = "my gold...my gold";
+		elf.onAttackText = "give me loot";
+		elf.onAttackedText = "thieves...thieves";
+		elf.onAllySummonText = "i no share gold";
+		elf.onEnemySummonText = "more thieves";
+		elf.onAllyDeathText = "all gold mine now";
+		elf.onEnemyDeathText = "you drop gold";
 		auto& slime = arr[MONSTER_IDS::SLIME];
 		slime.name = "slime";
 		slime.attack = 0;
 		slime.health = 0;
 		slime.unique = true;
 		slime.tags = TAG_TOKEN | TAG_SLIME;
+		elf.onStartOfTurn = "hhhprpr";
+		elf.onSummonText = "prrh";
+		elf.onCastText = "ppphhhzz";
+		elf.onBuffedText = "prhrh";
+		elf.onDamagedText = "phzzzhzhzhhz";
+		elf.onAttackText = "pzz";
+		elf.onAttackedText = "phhhhhrz";
+		elf.onAllySummonText = "phrzhzhz";
+		elf.onEnemySummonText = "hzhrhzh";
+		elf.onAllyDeathText = "hzr";
+		elf.onEnemyDeathText = "rrrrrhz";
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
 		daisy.ruleText = "[summon] heal to full.";
@@ -1046,6 +1112,17 @@ namespace game
 				}
 				return false;
 			};
+		daisy.onStartOfTurn = "you and me... we can do this";
+		daisy.onSummonText = "we stand together";
+		daisy.onCastText = "good call";
+		daisy.onBuffedText = "i will become strong";
+		daisy.onDamagedText = "aah that hurts";
+		daisy.onAttackText = "stand down";
+		daisy.onAttackedText = "stop it";
+		daisy.onAllySummonText = "together we will win";
+		daisy.onEnemySummonText = "that wont be enough";
+		daisy.onAllyDeathText = "nooooooooooo oooooooooooo oooooooooooo";
+		daisy.onEnemyDeathText = "we did what we had to";
 		
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
@@ -1456,6 +1533,18 @@ namespace game
 				}
 				return false;
 			};
+		knifeJuggler.onStartOfTurn = "wanna see my knifes";
+		knifeJuggler.onSummonText = "knifes out";
+		knifeJuggler.onCastText = "draw cards already";
+		knifeJuggler.onBuffedText = "not my speciality but sure";
+		knifeJuggler.onDamagedText = "hey...protect me";
+		knifeJuggler.onAttackText = "now...stand still";
+		knifeJuggler.onAttackedText = "dont take my knifes";
+		knifeJuggler.onAllySummonText = "want to take a turn throwing";
+		knifeJuggler.onEnemySummonText = "more target practice";
+		knifeJuggler.onAllyDeathText = "a shame";
+		knifeJuggler.onEnemyDeathText = "headshot";
+
 		auto& elvenSage = arr[MONSTER_IDS::ELVEN_SAGE];
 		elvenSage.name = "elven sage";
 		elvenSage.attack = 1;
@@ -1476,6 +1565,18 @@ namespace game
 				}
 				return false;
 			};
+		elvenSage.onStartOfTurn = "nature grows";
+		elvenSage.onSummonText = "i will guide you";
+		elvenSage.onCastText = "become enlightened";
+		elvenSage.onBuffedText = "a strong temple for a strong mind";
+		elvenSage.onDamagedText = "i...feel weak";
+		elvenSage.onAttackText = "feel the power of nature";
+		elvenSage.onAttackedText = "you stand no chance";
+		elvenSage.onAllySummonText = "now serve the forest";
+		elvenSage.onEnemySummonText = "you do not understand";
+		elvenSage.onAllyDeathText = "and so they return to the cycle";
+		elvenSage.onEnemyDeathText = "nature is healing";
+
 		auto& stormElemental = arr[MONSTER_IDS::STORM_ELEMENTAL];
 		stormElemental.name = "storm elemental";
 		stormElemental.attack = 1;
@@ -1497,6 +1598,18 @@ namespace game
 				}
 				return false;
 			};
+		stormElemental.onStartOfTurn = "a storm gathers";
+		stormElemental.onSummonText = "there is a tempest in me";
+		stormElemental.onCastText = "a wind blows";
+		stormElemental.onBuffedText = "grow my fury";
+		stormElemental.onDamagedText = "you cannot hurt a storm";
+		stormElemental.onAttackText = "feel the power of a thousand storms";
+		stormElemental.onAttackedText = "i will weather the storm";
+		stormElemental.onAllySummonText = "a new wind blows";
+		stormElemental.onEnemySummonText = "you will be swept away";
+		stormElemental.onAllyDeathText = "and so the storm taketh";
+		stormElemental.onEnemyDeathText = "become one with the storm";
+
 		auto& mossyElemental = arr[MONSTER_IDS::MOSSY_ELEMENTAL];
 		mossyElemental.name = "mossy elemental";
 		mossyElemental.attack = 1;
@@ -1521,6 +1634,18 @@ namespace game
 				}
 				return false;
 			};
+		mossyElemental.onStartOfTurn = "...i...feel...";
+		mossyElemental.onSummonText = "...already...";
+		mossyElemental.onCastText = "...hmm...";
+		mossyElemental.onBuffedText = "...good...";
+		mossyElemental.onDamagedText = "...hurt...";
+		mossyElemental.onAttackText = "...deliver...";
+		mossyElemental.onAttackedText = "...pointless...";
+		mossyElemental.onAllySummonText = "...friend...";
+		mossyElemental.onEnemySummonText = "...threat...";
+		mossyElemental.onAllyDeathText = "...sleep...";
+		mossyElemental.onEnemyDeathText = "...become...dust...";
+
 		auto& forestSpirit = arr[MONSTER_IDS::FOREST_SPIRIT];
 		forestSpirit.name = "forest spirit";
 		forestSpirit.attack = 1;
@@ -1543,6 +1668,18 @@ namespace game
 				}
 				return false;
 			};
+		forestSpirit.onStartOfTurn = "i feel like dancing";
+		forestSpirit.onSummonText = "dance with me";
+		forestSpirit.onCastText = "a magical song";
+		forestSpirit.onBuffedText = "i can feel that";
+		forestSpirit.onDamagedText = "ow...why did you do that";
+		forestSpirit.onAttackText = "dance...or be danced on";
+		forestSpirit.onAttackedText = "you stepped on my toes";
+		forestSpirit.onAllySummonText = "time for a duet";
+		forestSpirit.onEnemySummonText = "a dance off it is";
+		forestSpirit.onAllyDeathText = "no more dancing";
+		forestSpirit.onEnemyDeathText = "you have danced your last...dance";
+
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
 		goblinKing.attack = 1;
@@ -1563,6 +1700,18 @@ namespace game
 				}
 				return false;
 			};
+		goblinKing.onStartOfTurn = "bow before me";
+		goblinKing.onSummonText = "your king has arrived";
+		goblinKing.onCastText = "magic is beneath me";
+		goblinKing.onBuffedText = "feed your king";
+		goblinKing.onDamagedText = "you dare strike a king";
+		goblinKing.onAttackText = "feel the strike of a king";
+		goblinKing.onAttackedText = "you face a king";
+		goblinKing.onAllySummonText = "now serve";
+		goblinKing.onEnemySummonText = "bow";
+		goblinKing.onAllyDeathText = "a sacrifice i was willing to make";
+		goblinKing.onEnemyDeathText = "fall before me";
+
 		auto& goblinChampion = arr[MONSTER_IDS::GOBLIN_CHAMPION];
 		goblinChampion.name = "goblin champion";
 		goblinChampion.attack = 1;

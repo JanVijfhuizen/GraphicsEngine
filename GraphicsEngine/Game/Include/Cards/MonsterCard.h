@@ -28,17 +28,17 @@ namespace game
 		uint32_t health = 2;
 		uint32_t tags = 0;
 
-		const char* onStartOfTurn = "lets go";
-		const char* onSummonText = "here i am";
-		const char* onCastText = "magic word";
-		const char* onBuffedText = "thanks";
-		const char* onDamagedText = "that hurts";
-		const char* onAttackText = "take this";
-		const char* onAttackedText = "damn";
-		const char* onAllySummonText = "good to have you";
-		const char* onEnemySummonText = "there are more now";
-		const char* onAllyDeathText = "a pity";
-		const char* onEnemyDeathText = "good work";
+		const char* onStartOfTurn = nullptr;
+		const char* onSummonText = nullptr;
+		const char* onCastText = nullptr;
+		const char* onBuffedText = nullptr;
+		const char* onDamagedText = nullptr;
+		const char* onAttackText = nullptr;
+		const char* onAttackedText = nullptr;
+		const char* onAllySummonText = nullptr;
+		const char* onEnemySummonText = nullptr;
+		const char* onAllyDeathText = nullptr;
+		const char* onEnemyDeathText = nullptr;
 
 		[[nodiscard]] Type GetType() override
 		{
