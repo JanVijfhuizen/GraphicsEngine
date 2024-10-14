@@ -653,20 +653,23 @@ namespace game
 
 		if(drawInfo.metaData && drawInfo.metaData->textBubbleDuration > -.1f && !info.inputState.rMouse.pressed)
 		{
+			auto& duration = drawInfo.metaData->textBubbleDuration;
+
 			TextTask textTask{};
 			textTask.position = origin + glm::ivec2(5, 5 + bgRenderTask.scale.y / 3);
 			textTask.xCenter = false;
 			textTask.yCenter = true;
 			textTask.text = drawInfo.metaData->textBubble;
 			textTask.priority = true;
-			textTask.lineLength = 20;
-			textTask.lifetime = drawInfo.metaData->textBubbleDuration;
+			textTask.lineLength = 10;
+			textTask.lifetime = duration;
 			textTask.textBubble = true;
 			textTask.textBubbleTail = true;
 			info.textTasks.Push(textTask);
 
-			if (drawInfo.metaData->textBubbleDuration > drawInfo.metaData->textBubbleMaxDuration)
-				drawInfo.metaData->textBubbleDuration = -1;
+			duration += info.deltaTime;
+			if (duration > drawInfo.metaData->textBubbleMaxDuration)
+				duration = -1;
 		}
 
 		// Draw image.

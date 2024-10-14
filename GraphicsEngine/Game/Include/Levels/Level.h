@@ -112,7 +112,7 @@ namespace game
 			glm::ivec2 mouseOffset{};
 			bool dragging = false;
 			float textBubbleDuration = -1;
-			float textBubbleMaxDuration = 3;
+			float textBubbleMaxDuration = 2;
 			const char* textBubble = nullptr;
 		};
 

@@ -27,6 +27,8 @@ namespace game
 
 	bool NewGameLevel::PartySelectState::Create(State& state, const LevelCreateInfo& info)
 	{
+		timeUntilTextBubble = 10;
+		textBubbleIndex = 0;
 		monsterChoice = -1;
 		timeSinceFirstChoicesMade = -1;
 		for (auto& metaData : metaDatas)
@@ -49,6 +51,30 @@ namespace game
 
 	bool NewGameLevel::PartySelectState::Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex)
 	{
+		const char* pickLines[]
+		{
+			"pick me",
+			"no me",
+			"im stronger",
+			"im op i swear",
+			"dont pick them",
+			"me me me"
+		};
+
+		timeUntilTextBubble -= info.deltaTime;
+		if (timeUntilTextBubble < 0)
+		{
+			timeUntilTextBubble = 8;
+			auto& metaData = metaDatas[rand() % 3];
+			metaData.textBubble = pickLines[textBubbleIndex];
+			metaData.textBubbleDuration = 0;
+			metaData.textBubbleMaxDuration = 1.5f;
+
+			textBubbleIndex++;
+			if (textBubbleIndex >= 6)
+				textBubbleIndex = 0;
+		}
+			
 		level->DrawTopCenterHeader(info, HeaderSpacing::close, "choose your starting monster.");
 
 		if (monsterChoice != -1)

@@ -18,6 +18,8 @@ namespace game
 			uint32_t monsterChoice;
 			float timeSinceFirstChoicesMade;
 			CardDrawMetaData metaDatas[DISCOVER_LENGTH];
+			float timeUntilTextBubble;
+			uint32_t textBubbleIndex;
 
 			bool Create(State& state, const LevelCreateInfo& info) override;
 			bool Update(State& state, Level* level, const LevelUpdateInfo& info, uint32_t& stateIndex, LevelIndex& loadLevelIndex) override;

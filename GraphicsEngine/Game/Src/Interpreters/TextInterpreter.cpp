@@ -213,7 +213,7 @@ namespace game
 			lineLength++;
 		}
 
-		if (job.textBubble)
+		if (job.textBubble && maxLen > 0)
 		{
 			jv::ge::SubTexture bubbleFrames[9];
 			Divide2d(_createInfo.textBubbleAtlasTexture.subTexture, bubbleFrames, 3);
