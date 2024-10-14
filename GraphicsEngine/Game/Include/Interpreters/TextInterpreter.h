@@ -40,7 +40,7 @@ namespace game
 	public:
 		[[nodiscard]] static const char* Concat(const char* a, const char* b, jv::Arena& arena);
 		[[nodiscard]] static const char* IntToConstCharPtr(uint32_t i, jv::Arena& arena);
-		[[nodiscard]] static uint32_t GetLineCount(const char* str, uint32_t lineLength);
+		[[nodiscard]] static uint32_t GetLineCount(const char* str, uint32_t lineLength, uint32_t maxLength = -1);
 
 	private:
 		TextInterpreterCreateInfo _createInfo;

@@ -10,7 +10,8 @@ namespace game
 		int32_t spacing = 0;
 		uint32_t lineLength = 96;
 		uint32_t maxLength = -1;
-		bool center = false;
+		bool xCenter = false;
+		bool yCenter = false;
 		bool priority = false;
 		bool front = false;
 

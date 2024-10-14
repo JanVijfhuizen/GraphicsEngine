@@ -29,10 +29,12 @@ namespace game
 		return ptr;
 	}
 
-	uint32_t TextInterpreter::GetLineCount(const char* str, const uint32_t lineLength)
+	uint32_t TextInterpreter::GetLineCount(const char* str, const uint32_t lineLength, const uint32_t maxLength)
 	{
 		uint32_t lineCount = 1;
-		const uint32_t l = strlen(str);
+		uint32_t l = strlen(str);
+		if (maxLength != -1)
+			l = jv::Min<uint32_t>(l, maxLength);
 
 		uint32_t lineStart = 0;
 		uint32_t lastBreakPointFound = -1;
@@ -109,6 +111,9 @@ namespace game
 		ret.rBot = { -9999, 9999 };
 
 		task.position = job.position;
+		if (job.yCenter)
+			task.position.y += size * (GetLineCount(job.text, job.lineLength, maxLen) - 1);
+
 		task.scale = s;
 
 		uint32_t lineLength = 0;
@@ -142,7 +147,7 @@ namespace game
 					nextLineStart = len;
 
 				lineLength = 0;
-				if (job.center)
+				if (job.xCenter)
 				{
 					xStart = (nextLineStart - i) * (size + _createInfo.spacing) / 2;
 					xStart += size / 4;

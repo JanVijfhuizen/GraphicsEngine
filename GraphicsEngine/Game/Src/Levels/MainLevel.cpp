@@ -69,7 +69,7 @@ namespace game
 		depthTextTask.text = TextInterpreter::IntToConstCharPtr(state.depth + 1, info.frameArena);
 		depthTextTask.text = TextInterpreter::Concat("depth-", depthTextTask.text, info.frameArena);
 		depthTextTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, SIMULATED_RESOLUTION.y / 2 + 72);
-		depthTextTask.center = true;
+		depthTextTask.xCenter = true;
 		depthTextTask.lifetime = level->GetTime();
 		info.textTasks.Push(depthTextTask);
 
@@ -294,7 +294,7 @@ namespace game
 		{
 			TextTask textTask{};
 			textTask.position = SIMULATED_RESOLUTION / 2;
-			textTask.center = true;
+			textTask.xCenter = true;
 			textTask.text = "combo finisher";
 			textTask.priority = true;
 			textTask.color = glm::vec4(1, 0, 0, 1);
@@ -381,7 +381,7 @@ namespace game
 				textTask.text = "turn";
 				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 3);
 				textTask.largeFont = true;
-				textTask.center = true;
+				textTask.xCenter = true;
 				textTask.front = true;
 
 				info.textTasks.Push(textTask);
@@ -844,7 +844,7 @@ namespace game
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, "/", info.frameArena);
 			manaTextTask.text = TextInterpreter::Concat(manaTextTask.text, TextInterpreter::IntToConstCharPtr(state.maxMana, info.frameArena), info.frameArena);
 			manaTextTask.lifetime = level->GetTime();
-			manaTextTask.center = true;
+			manaTextTask.xCenter = true;
 			manaTextTask.priority = true;
 			info.textTasks.Push(manaTextTask);
 
@@ -1381,7 +1381,7 @@ namespace game
 		const auto pos = GetCardPosition(info, drawInfo, activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
 
 		TextTask textTask{};
-		textTask.center = true;
+		textTask.xCenter = true;
 		textTask.position = pos;
 		textTask.priority = true;
 
@@ -1414,7 +1414,7 @@ namespace game
 		const auto pos = GetCardPosition(info, drawInfo, activeState.dst - !allied * BOARD_CAPACITY_PER_SIDE);
 
 		TextTask textTask{};
-		textTask.center = true;
+		textTask.xCenter = true;
 		textTask.position = pos;
 		textTask.priority = true;
 

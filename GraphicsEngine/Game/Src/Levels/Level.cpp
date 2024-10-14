@@ -236,7 +236,7 @@ namespace game
 					titleTextTask.position.y -= 17;
 					titleTextTask.text = _fullCard->name;
 					titleTextTask.lifetime = l * 4;
-					titleTextTask.center = true;
+					titleTextTask.xCenter = true;
 					titleTextTask.priority = true;
 					//titleTextTask.scale = 2;
 					titleTextTask.largeFont = true;
@@ -302,8 +302,9 @@ namespace game
 		titleTextTask.position = drawInfo.origin;
 		titleTextTask.text = drawInfo.text;
 		titleTextTask.lifetime = drawInfo.overrideLifeTime < 0 ? GetTime() : drawInfo.overrideLifeTime;
-		titleTextTask.center = drawInfo.center;
+		titleTextTask.xCenter = drawInfo.center;
 		titleTextTask.textBubble = drawInfo.border;
+		titleTextTask.priority = true;
 		info.textTasks.Push(titleTextTask);
 	}
 
@@ -334,7 +335,7 @@ namespace game
 		buttonTextTask.text = drawInfo.text;
 		buttonTextTask.lifetime = lifeTime;
 		buttonTextTask.maxLength = textMaxLen;
-		buttonTextTask.center = drawInfo.centerText;
+		buttonTextTask.xCenter = drawInfo.centerText;
 		buttonTextTask.largeFont = drawInfo.largeFont;
 		buttonRenderTask.priority = drawInfo.priority;
 
@@ -586,7 +587,7 @@ namespace game
 					textTask.position.y += static_cast<int32_t>(CARD_STACKED_SPACING * stackedCount);
 				textTask.text = drawInfo.texts[i];
 				textTask.lifetime = cardDrawInfo.lifeTime;
-				textTask.center = true;
+				textTask.xCenter = true;
 				info.textTasks.Push(textTask);
 			}
 
@@ -649,6 +650,21 @@ namespace game
 		fgRenderTask.subTexture = cardFrames[1];
 		fgRenderTask.color = drawInfo.fgColor * glm::vec4(fadeMod, 1);
 		info.renderTasks.Push(fgRenderTask);
+
+		// temp.
+		{
+			TextTask textTask{};
+			textTask.position = origin + glm::ivec2(5, 5 + bgRenderTask.scale.y / 3);
+			textTask.xCenter = false;
+			textTask.yCenter = true;
+			textTask.text = "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello";
+			textTask.priority = true;
+			textTask.lineLength = 10;
+			textTask.lifetime = drawInfo.lifeTime;
+			textTask.textBubble = true;
+			textTask.textBubbleTail = true;
+			info.textTasks.Push(textTask);
+		}
 
 		// Draw image.
 		if (!drawInfo.ignoreAnim && drawInfo.card)
@@ -740,7 +756,7 @@ namespace game
 			if (!drawInfo.isSmall)
 			{
 				textTask.position = costRenderTask.position;
-				textTask.center = drawInfo.center;
+				textTask.xCenter = drawInfo.center;
 				textTask.position.y -= 11 * drawInfo.scale;
 				textTask.position.x += 13 * drawInfo.scale;
 				textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
@@ -751,7 +767,7 @@ namespace game
 			else 
 			{
 				textTask.position = costRenderTask.position;
-				textTask.center = drawInfo.center;
+				textTask.xCenter = drawInfo.center;
 				textTask.position.y -= 2 * drawInfo.scale;
 				textTask.text = TextInterpreter::IntToConstCharPtr(drawInfo.cost, info.frameArena);
 				textTask.priority = priority;
