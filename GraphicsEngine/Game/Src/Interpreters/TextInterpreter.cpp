@@ -3,6 +3,7 @@
 #include "JLib/Curve.h"
 #include "JLib/Math.h"
 #include "GE/SubTexture.h"
+#include <Utils/SubTextureUtils.h>
 
 namespace game
 {
@@ -207,16 +208,53 @@ namespace game
 			lineLength++;
 		}
 
-		// text bubble
-		task.position = ret.Center() + glm::vec2(size / 2);
-		task.scale = ret.Size() + glm::vec2(10);
-		task.image = nullptr;
-		task.subTexture = _createInfo.textBubbleAtlasTexture.subTexture;
-		task.color = glm::vec4(1, 1, 0, 1);
-		task.xCenter = true;
-		task.yCenter = true;
-		task.priority = false;
-		_createInfo.renderTasks->Push(task);
+		if (!job.textBubble)
+		{
+			jv::ge::SubTexture bubbleFrames[9];
+			Divide2d(_createInfo.textBubbleAtlasTexture.subTexture, bubbleFrames, 3);
+
+			const glm::ivec2 scale = ret.Size() + glm::vec2(size * 2);
+
+			// Create text bubble.
+			task.position = ret.Center() + glm::vec2(size / 2);
+			task.scale = scale;
+			task.image = nullptr;
+			task.subTexture = bubbleFrames[4];
+			task.position -= task.scale / 2;
+			task.priority = false;
+			_createInfo.renderTasks->Push(task);
+
+			const uint32_t BORDER_SCALE = 5;
+
+			task.scale = { BORDER_SCALE, BORDER_SCALE };
+
+			// Right top.
+			task.subTexture = bubbleFrames[8];
+			task.position += scale;
+			_createInfo.renderTasks->Push(task);
+
+			// Left top.
+			task.subTexture = bubbleFrames[2];
+			task.position.x -= scale.x + BORDER_SCALE;
+			_createInfo.renderTasks->Push(task);
+
+			auto cpyTask = task;
+
+			// Left bot.
+			task.subTexture = bubbleFrames[0];
+			task.position.y -= scale.y + BORDER_SCALE;
+			_createInfo.renderTasks->Push(task);
+
+			// Right bot.
+			task.subTexture = bubbleFrames[6];
+			task.position.x += scale.x + BORDER_SCALE;
+			_createInfo.renderTasks->Push(task);
+
+			cpyTask.scale.x = scale.x;
+			cpyTask.position.x += BORDER_SCALE;
+			cpyTask.subTexture = bubbleFrames[5];
+			_createInfo.renderTasks->Push(cpyTask);
+		}
 
 		return ret;
 	}
