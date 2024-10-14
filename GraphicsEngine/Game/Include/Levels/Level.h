@@ -89,6 +89,7 @@ namespace game
 			uint32_t lineLength = 32;
 			uint32_t scale = 2;
 			float overrideLifeTime = -1;
+			bool border = false;
 		};
 
 		struct ButtonDrawInfo final

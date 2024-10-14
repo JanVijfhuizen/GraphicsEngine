@@ -7,7 +7,6 @@ namespace game
 		const char* text = nullptr;
 		glm::ivec2 position{};
 		glm::vec4 color{1};
-		uint32_t scale = 1;
 		int32_t spacing = 0;
 		uint32_t lineLength = 96;
 		uint32_t maxLength = -1;
@@ -21,6 +20,6 @@ namespace game
 		bool largeFont = false;
 
 		bool textBubble = false;
-		glm::ivec2 textBubbleOrigin;
+		bool textBubbleTail = false;
 	};
 }

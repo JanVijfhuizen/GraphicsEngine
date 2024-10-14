@@ -101,8 +101,8 @@ namespace game
 		const float size = job.largeFont ? _createInfo.largeSymbolSize : _createInfo.symbolSize;
 		const float pctSize = job.largeFont ? largeSymbolPctSize : symbolPctSize;
 
-		const auto s = glm::ivec2(static_cast<int32_t>(size)) * glm::ivec2(static_cast<int32_t>(job.scale));
-		const auto spacing = (_createInfo.spacing + job.spacing + size) * job.scale;
+		const auto s = glm::ivec2(static_cast<int32_t>(size));
+		const auto spacing = (_createInfo.spacing + job.spacing + size);
 
 		jv::ge::SubTexture ret{};
 		ret.lTop = {9999, -9999 };
@@ -144,14 +144,14 @@ namespace game
 				lineLength = 0;
 				if (job.center)
 				{
-					xStart = (nextLineStart - i) * (size + _createInfo.spacing) * job.scale / 2;
-					xStart += size / 4 * job.scale;
+					xStart = (nextLineStart - i) * (size + _createInfo.spacing) / 2;
+					xStart += size / 4;
 				}
 				task.position.x = static_cast<int32_t>(job.position.x - xStart);
 
 				if (i != 0)
 				{
-					task.position.y -= static_cast<int32_t>(size * job.scale);
+					task.position.y -= static_cast<int32_t>(size);
 					task.position.x -= static_cast<int32_t>(spacing);
 				}
 			}
@@ -208,7 +208,7 @@ namespace game
 			lineLength++;
 		}
 
-		if (!job.textBubble)
+		if (job.textBubble)
 		{
 			jv::ge::SubTexture bubbleFrames[9];
 			Divide2d(_createInfo.textBubbleAtlasTexture.subTexture, bubbleFrames, 3);
@@ -239,11 +239,14 @@ namespace game
 			_createInfo.renderTasks->Push(task);
 
 			auto cpyTask = task;
+			auto cpyTask2 = task;
 
 			// Left bot.
 			task.subTexture = bubbleFrames[0];
 			task.position.y -= scale.y + BORDER_SCALE;
 			_createInfo.renderTasks->Push(task);
+
+			auto cpyTask3 = task;
 
 			// Right bot.
 			task.subTexture = bubbleFrames[6];
@@ -254,6 +257,28 @@ namespace game
 			cpyTask.position.x += BORDER_SCALE;
 			cpyTask.subTexture = bubbleFrames[5];
 			_createInfo.renderTasks->Push(cpyTask);
+
+			cpyTask.position.y -= scale.y + BORDER_SCALE;
+			cpyTask.subTexture = bubbleFrames[3];
+			_createInfo.renderTasks->Push(cpyTask);
+
+			cpyTask2.scale.y = scale.y;
+			cpyTask2.position.y -= scale.y;
+			cpyTask2.subTexture = bubbleFrames[1];
+			_createInfo.renderTasks->Push(cpyTask2);
+
+			cpyTask2.position.x += scale.x + BORDER_SCALE;
+			cpyTask2.subTexture = bubbleFrames[7];
+			_createInfo.renderTasks->Push(cpyTask2);
+
+			// Tail.
+			if (job.textBubbleTail)
+			{
+				cpyTask3.subTexture = _createInfo.textBubbleTailAtlasTexture.subTexture;
+				cpyTask3.scale = _createInfo.textBubbleTailAtlasTexture.resolution;
+				cpyTask3.position.y -= cpyTask3.scale.y - 2;
+				_createInfo.renderTasks->Push(cpyTask3);
+			}
 		}
 
 		return ret;

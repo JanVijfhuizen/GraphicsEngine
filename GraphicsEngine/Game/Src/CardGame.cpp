@@ -603,6 +603,7 @@ namespace game
 			textInterpreterCreateInfo.symbolAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)];
 			textInterpreterCreateInfo.numberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)];
 			textInterpreterCreateInfo.textBubbleAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::textBubble)];
+			textInterpreterCreateInfo.textBubbleTailAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::textBubbleTail)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
 			textInterpreterCreateInfo.fadeInSpeed = TEXT_DRAW_SPEED;
 
@@ -708,6 +709,7 @@ namespace game
 		arr[13] = "Art/moon.png";
 		arr[14] = "Art/card_small.png";
 		arr[15] = "Art/text_bubble.png";
+		arr[16] = "Art/text_bubble_tail.png";
 		return arr;
 	}
 

@@ -15,7 +15,7 @@ namespace game
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
 
-		constexpr glm::ivec2 origin = { 9, SIMULATED_RESOLUTION.y - 36 };
+		constexpr glm::ivec2 origin = { 18, SIMULATED_RESOLUTION.y - 36 };
 		constexpr auto buttonOrigin = origin - glm::ivec2(-4, 36);
 		constexpr uint32_t BUTTON_OFFSET = 20;
 		constexpr uint32_t SMALL_BUTTON_OFFSET = 12;
@@ -27,6 +27,7 @@ namespace game
 			headerDrawInfo.origin = origin;
 			headerDrawInfo.text = "you can set a custom resolution by changing the resolution text file that comes with the game. the game is made with a specific resolution in mind so graphical errors may occur if a custom resolution is set.";
 			headerDrawInfo.overrideLifeTime = 99;
+			headerDrawInfo.border = true;
 			DrawHeader(info, headerDrawInfo);
 
 			ButtonDrawInfo buttonDrawInfo{};
@@ -96,6 +97,7 @@ namespace game
 			headerDrawInfo.scale = 1;
 			headerDrawInfo.text = "you start out with some monsters and a deck of spells. your goal is to get as far as possible while collecting new monsters, spells and artifacts along the way.";
 			headerDrawInfo.overrideLifeTime = 99;
+			headerDrawInfo.border = true;
 			DrawHeader(info, headerDrawInfo);
 
 			TextTask textTask{};
@@ -122,7 +124,7 @@ namespace game
 
 			ButtonDrawInfo buttonDrawInfo{};
 			buttonDrawInfo.origin = textTask.position;
-			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET * 5;
+			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET * 6;
 			buttonDrawInfo.text = "back";
 			buttonDrawInfo.width = 96;
 			if (DrawButton(info, buttonDrawInfo))

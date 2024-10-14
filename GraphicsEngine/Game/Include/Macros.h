@@ -278,5 +278,6 @@ enum class TextureId
 	moon,
 	cardSmall,
 	textBubble,
+	textBubbleTail,
 	length
 };

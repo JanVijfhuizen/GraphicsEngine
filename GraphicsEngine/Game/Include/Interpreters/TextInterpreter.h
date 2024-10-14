@@ -26,6 +26,7 @@ namespace game
 		jv::ge::AtlasTexture numberAtlasTexture;
 		jv::ge::AtlasTexture symbolAtlasTexture;
 		jv::ge::AtlasTexture textBubbleAtlasTexture;
+		jv::ge::AtlasTexture textBubbleTailAtlasTexture;
 		uint32_t symbolSize = 9;
 		uint32_t largeSymbolSize = 11;
 		int32_t spacing = -2;

@@ -299,7 +299,7 @@ namespace game
 			textTask.priority = true;
 			textTask.color = glm::vec4(1, 0, 0, 1);
 			textTask.lifetime = level->GetTime() - timeSinceStackOverloaded;
-			textTask.scale = 2;
+			textTask.largeFont = true;
 			info.textTasks.Push(textTask);
 
 			info.screenShakeInfo.fallOfThreshold = 1;
@@ -380,7 +380,7 @@ namespace game
 				TextTask textTask{};
 				textTask.text = "turn";
 				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) + glm::ivec2(off2, 3);
-				textTask.scale = 2;
+				textTask.largeFont = true;
 				textTask.center = true;
 				textTask.front = true;
 

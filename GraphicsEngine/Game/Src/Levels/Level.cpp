@@ -249,7 +249,6 @@ namespace game
 						footerTextTask.position.y = SIMULATED_RESOLUTION.y / 2 - off - alphabetTexture.resolution.y + 3;
 						footerTextTask.text = tagsText;
 						footerTextTask.color = glm::vec4(0, 1, 0, 1);
-						footerTextTask.scale = 1;
 						info.textTasks.Push(footerTextTask);
 
 						const uint32_t footerYScale = 12 * lerp;
@@ -268,7 +267,6 @@ namespace game
 					ruleTextTask.text = text;
 					ruleTextTask.position.y += alphabetTexture.resolution.y * (lineCount - 1) / 2;
 					ruleTextTask.position.y -= alphabetTexture.resolution.y / 2;
-					ruleTextTask.scale = 1;
 					ruleTextTask.lineLength = FULL_CARD_LINE_LENGTH;
 					ruleTextTask.color = glm::vec4(1);
 					info.textTasks.Push(ruleTextTask);
@@ -303,9 +301,9 @@ namespace game
 		titleTextTask.lineLength = drawInfo.lineLength;
 		titleTextTask.position = drawInfo.origin;
 		titleTextTask.text = drawInfo.text;
-		titleTextTask.scale = drawInfo.scale;
 		titleTextTask.lifetime = drawInfo.overrideLifeTime < 0 ? GetTime() : drawInfo.overrideLifeTime;
 		titleTextTask.center = drawInfo.center;
+		titleTextTask.textBubble = drawInfo.border;
 		info.textTasks.Push(titleTextTask);
 	}
 
@@ -814,7 +812,6 @@ namespace game
 
 				textTask.lifetime = textLifeTime;
 				textTask.priority = priority;
-				textTask.scale *= drawInfo.scale;
 				info.textTasks.Push(textTask);
 			}
 		}
