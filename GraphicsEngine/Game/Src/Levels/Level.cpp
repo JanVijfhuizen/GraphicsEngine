@@ -838,6 +838,7 @@ namespace game
 
 				textTask.lifetime = textLifeTime;
 				textTask.priority = priority;
+				textTask.scale *= drawInfo.scale;
 				info.textTasks.Push(textTask);
 			}
 		}
