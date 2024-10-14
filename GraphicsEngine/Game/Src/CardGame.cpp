@@ -602,6 +602,7 @@ namespace game
 			textInterpreterCreateInfo.largeAlphabetAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::largeAlphabet)];
 			textInterpreterCreateInfo.symbolAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)];
 			textInterpreterCreateInfo.numberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)];
+			textInterpreterCreateInfo.largeNumberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::largeNumbers)];
 			textInterpreterCreateInfo.textBubbleAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::textBubble)];
 			textInterpreterCreateInfo.textBubbleTailAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::textBubbleTail)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
@@ -710,6 +711,7 @@ namespace game
 		arr[14] = "Art/card_small.png";
 		arr[15] = "Art/text_bubble.png";
 		arr[16] = "Art/text_bubble_tail.png";
+		arr[17] = "Art/large_numbers.png";
 		return arr;
 	}
 
@@ -1016,12 +1018,35 @@ namespace game
 		slime.tags = TAG_TOKEN | TAG_SLIME;
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
-		daisy.ruleText = "loyal until the very end.";
+		daisy.ruleText = "[summon] heal to full.";
 		daisy.attack = DAISY_MOD_STATS;
 		daisy.health = DAISY_MOD_STATS;
 		daisy.unique = true;
 		daisy.normalAnimIndex = daisy.animIndex;
 		daisy.tags = TAG_BEAST;
+		daisy.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+			{
+				if (actionState.trigger == ActionState::Trigger::onSummon)
+				{
+					if (actionState.dst != self)
+						return false;
+					const auto& boardState = state.boardState;
+					
+					ActionState buffState{};
+					buffState.trigger = ActionState::Trigger::onStatSet;
+					buffState.source = ActionState::Source::board;
+					buffState.src = self;
+					buffState.srcUniqueId = state.boardState.uniqueIds[self];
+					buffState.dst = self;
+					buffState.dstUniqueId = buffState.srcUniqueId;
+					buffState.values[ActionState::VStatSet::health] = DAISY_MOD_STATS;
+					state.TryAddToStack(buffState);
+
+					return true;
+				}
+				return false;
+			};
+		
 		auto& god = arr[MONSTER_IDS::GOD];
 		god.name = "god";
 		god.attack = 0;

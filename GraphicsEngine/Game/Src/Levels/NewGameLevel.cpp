@@ -27,7 +27,7 @@ namespace game
 
 	bool NewGameLevel::PartySelectState::Create(State& state, const LevelCreateInfo& info)
 	{
-		timeUntilTextBubble = 10;
+		timeUntilTextBubble = 20;
 		textBubbleIndex = 0;
 		monsterChoice = -1;
 		timeSinceFirstChoicesMade = -1;
@@ -56,23 +56,34 @@ namespace game
 			"pick me",
 			"no me",
 			"im stronger",
-			"im op i swear",
 			"dont pick them",
-			"me me me"
+			"im op i swear"
+		};
+
+		const uint32_t pickIndexes[]
+		{
+			0,
+			1,
+			0,
+			2,
+			1,
 		};
 
 		timeUntilTextBubble -= info.deltaTime;
 		if (timeUntilTextBubble < 0)
 		{
-			timeUntilTextBubble = 8;
-			auto& metaData = metaDatas[rand() % 3];
+			timeUntilTextBubble = 3;
+			auto& metaData = metaDatas[pickIndexes[textBubbleIndex]];
 			metaData.textBubble = pickLines[textBubbleIndex];
 			metaData.textBubbleDuration = 0;
 			metaData.textBubbleMaxDuration = 1.5f;
 
 			textBubbleIndex++;
-			if (textBubbleIndex >= 6)
+			if (textBubbleIndex >= 5)
+			{
+				timeUntilTextBubble = 99;
 				textBubbleIndex = 0;
+			}
 		}
 			
 		level->DrawTopCenterHeader(info, HeaderSpacing::close, "choose your starting monster.");

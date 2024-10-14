@@ -103,8 +103,8 @@ namespace game
 		const float size = job.largeFont ? _createInfo.largeSymbolSize : _createInfo.symbolSize;
 		const float pctSize = job.largeFont ? largeSymbolPctSize : symbolPctSize;
 
-		const auto s = glm::ivec2(static_cast<int32_t>(size));
-		const auto spacing = (_createInfo.spacing + job.spacing + size);
+		const auto s = glm::ivec2(static_cast<int32_t>(size)) * glm::ivec2(static_cast<int32_t>(job.scale));
+		const auto spacing = (_createInfo.spacing + job.spacing + size) * job.scale;
 
 		jv::ge::SubTexture ret{};
 		ret.lTop = {9999, -9999 };
@@ -152,14 +152,14 @@ namespace game
 				lineLength = 0;
 				if (job.xCenter)
 				{
-					xStart = (nextLineStart - i) * (size + _createInfo.spacing) / 2;
-					xStart += size / 4;
+					xStart = (nextLineStart - i) * (size + _createInfo.spacing) * job.scale / 2;
+					xStart += size / 4 * job.scale;
 				}
 				task.position.x = static_cast<int32_t>(job.position.x - xStart);
 
 				if (i != 0)
 				{
-					task.position.y -= static_cast<int32_t>(size);
+					task.position.y -= static_cast<int32_t>(size * job.scale);
 					task.position.x -= static_cast<int32_t>(spacing);
 				}
 			}
@@ -170,7 +170,7 @@ namespace game
 				isInBrackets = false;
 
 			if (c != ' ')
-			{
+				{
 				const bool isSymbol2ndRow = c > '9' && c < 'a';
 				const bool isSymbol = c < '0' || isSymbol2ndRow;
 				const bool isInteger = !isSymbol && c < 'a';
@@ -178,7 +178,7 @@ namespace game
 				// Assert if it's a valid character.
 				constexpr uint32_t secondRow = '[' - 5;
 				auto position = c - (isInteger ? '0' : isSymbol ? isSymbol2ndRow ? secondRow : '+' : 'a');
-				auto subTexture = isInteger ? _createInfo.numberAtlasTexture.subTexture : isSymbol ?
+				auto subTexture = isInteger ? (job.largeFont ? _createInfo.largeNumberAtlasTexture.subTexture : _createInfo.numberAtlasTexture.subTexture) : isSymbol ?
 					_createInfo.symbolAtlasTexture.subTexture : (job.largeFont ? _createInfo.largeAlphabetAtlasTexture : _createInfo.alphabetAtlasTexture).subTexture;
 				subTexture.lTop.x += pctSize * static_cast<float>(position);
 				subTexture.rBot.x = subTexture.lTop.x + pctSize;
@@ -292,9 +292,7 @@ namespace game
 				cpyTask3.position.y += (cpyTask3.scale.y - 2) * (job.inverseTail ? 1 : -1);
 
 				if (job.inverseTail)
-				{
 					cpyTask3.position.y += ret.Size().y + BORDER_SCALE * 2 + 2;
-				}
 				_createInfo.renderTasks->Push(cpyTask3);
 			}
 		}

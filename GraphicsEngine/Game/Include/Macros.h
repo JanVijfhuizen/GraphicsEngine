@@ -279,5 +279,6 @@ enum class TextureId
 	cardSmall,
 	textBubble,
 	textBubbleTail,
+	largeNumbers,
 	length
 };

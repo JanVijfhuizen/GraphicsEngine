@@ -146,6 +146,8 @@ namespace game
 
 	void MainLevel::CombatState::Reset(State& state, const LevelInfo& info)
 	{
+		previousDialogueTime = 0;
+		previousDialogueDuration = 0;
 		backgroundType = static_cast<BackgroundType>(rand() % static_cast<int>(BackgroundType::count));
 
 		const bool bossPresent = (state.depth + 1) % ROOM_COUNT_BEFORE_BOSS == 0;
@@ -383,10 +385,11 @@ namespace game
 				textTask.largeFont = true;
 				textTask.xCenter = true;
 				textTask.front = true;
+				textTask.scale = 2;
 
 				info.textTasks.Push(textTask);
 				textTask.text = TextInterpreter::IntToConstCharPtr(state.turn, info.frameArena);
-				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 19);
+				textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x / 2, CENTER_HEIGHT) - glm::ivec2(off2, 11);
 				info.textTasks.Push(textTask);
 
 				LightTask lightTask{};
@@ -701,12 +704,12 @@ namespace game
 		memcpy(targets, state.targets, sizeof(uint32_t) * BOARD_CAPACITY_PER_SIDE);
 		for (auto& target : targets)
 			++target;
-
+		/*
 		metaDatas[META_DATA_ENEMY_INDEX].textBubble = "taste my steel, jij debiel";
 		if(metaDatas[META_DATA_ENEMY_INDEX].textBubbleDuration < 0)
 			metaDatas[META_DATA_ENEMY_INDEX].textBubbleDuration = 0;
 		metaDatas[META_DATA_ENEMY_INDEX].textBubbleMaxDuration = 2.5f;
-
+		*/
 		// Draw enemies.
 		CardSelectionDrawInfo enemySelectionDrawInfo{};
 		enemySelectionDrawInfo.lifeTime = level->GetTime();
@@ -1102,6 +1105,8 @@ namespace game
 	{
 		auto& boardState = state.boardState;
 
+		PickRandomMonsterDialogue(state, info, level, actionState);
+
 		if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 		{
 			// Set new random enemy targets.
@@ -1264,6 +1269,78 @@ namespace game
 			for (uint32_t i = 0; i < HAND_MAX_SIZE - 1; ++i)
 				metaDatas[META_DATA_HAND_INDEX + i] = metaDatas[META_DATA_HAND_INDEX + i + 1];
 		}
+	}
+
+	void MainLevel::CombatState::PickRandomMonsterDialogue(State& state, const LevelUpdateInfo& info, const Level* level, const ActionState& actionState)
+	{
+		if ((level->GetTime() - previousDialogueTime) < (previousDialogueDuration + 1))
+			return;
+		if (state.boardState.allyCount == 0 || state.boardState.enemyCount == 0)
+			return;
+
+		if (rand() % 5 != 0)
+			return;
+
+		uint32_t allied = rand() % 2;
+		uint32_t target = (rand() % (allied ? state.boardState.allyCount : state.boardState.enemyCount)) + (allied == 0) * BOARD_CAPACITY_PER_SIDE;
+	
+		auto& card = info.monsters[state.boardState.ids[target]];	
+		auto& metaData = metaDatas[META_DATA_ALLY_INDEX + target];
+		if (metaData.textBubbleDuration > -.1f)
+			return; 
+
+		metaData.textBubble = nullptr;
+		bool actionStateAllied = target < BOARD_CAPACITY_PER_SIDE && actionState.dst < BOARD_CAPACITY_PER_SIDE ||
+			target >= BOARD_CAPACITY_PER_SIDE && actionState.dst >= BOARD_CAPACITY_PER_SIDE;
+
+		switch (actionState.trigger)
+		{
+		case ActionState::Trigger::onStartOfTurn:
+			metaData.textBubble = card.onStartOfTurn;
+			break;
+		case ActionState::Trigger::onSummon:
+			if(actionState.dst == target)
+				metaData.textBubble = card.onSummonText;
+			else if (actionStateAllied)
+				metaData.textBubble = card.onAllySummonText;
+			else
+				metaData.textBubble = card.onEnemySummonText;
+			break;
+		case ActionState::Trigger::onCast:
+			metaData.textBubble = card.onCastText;
+			break;
+		case ActionState::Trigger::onStatBuff:
+			if (actionState.dst == target)
+				metaData.textBubble = card.onBuffedText;
+			break;
+		case ActionState::Trigger::onDamage:
+			if (actionState.dst == target)
+				metaData.textBubble = card.onDamagedText;
+			break;
+		case ActionState::Trigger::onAttack:
+			if (actionState.dst == target)
+				metaData.textBubble = card.onAttackedText;
+			else if(actionState.src == target)
+				metaData.textBubble = card.onAttackText;
+			break;
+		case ActionState::Trigger::onDeath:
+			if (actionStateAllied)
+				metaData.textBubble = card.onAllyDeathText;
+			else
+				metaData.textBubble = card.onEnemyDeathText;
+			break;
+		default:
+			break;
+		}
+
+		if (!metaData.textBubble)
+			return;
+
+		previousDialogueTime = level->GetTime();
+
+		metaData.textBubbleDuration = 0;
+		metaData.textBubbleMaxDuration = .5f + .1f * strlen(metaData.textBubble);
+		previousDialogueDuration = metaData.textBubbleMaxDuration;
 	}
 
 	bool MainLevel::CombatState::ValidateActionState(const State& state, const ActionState& actionState)

@@ -24,6 +24,7 @@ namespace game
 		jv::ge::AtlasTexture alphabetAtlasTexture;
 		jv::ge::AtlasTexture largeAlphabetAtlasTexture;
 		jv::ge::AtlasTexture numberAtlasTexture;
+		jv::ge::AtlasTexture largeNumberAtlasTexture;
 		jv::ge::AtlasTexture symbolAtlasTexture;
 		jv::ge::AtlasTexture textBubbleAtlasTexture;
 		jv::ge::AtlasTexture textBubbleTailAtlasTexture;

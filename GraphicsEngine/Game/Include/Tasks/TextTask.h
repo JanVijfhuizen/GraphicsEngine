@@ -23,5 +23,6 @@ namespace game
 		bool textBubble = false;
 		bool textBubbleTail = false;
 		bool inverseTail = false;
+		uint32_t scale = 1;
 	};
 }
