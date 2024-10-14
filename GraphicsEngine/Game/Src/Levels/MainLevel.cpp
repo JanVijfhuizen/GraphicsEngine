@@ -702,6 +702,11 @@ namespace game
 		for (auto& target : targets)
 			++target;
 
+		metaDatas[META_DATA_ENEMY_INDEX].textBubble = "taste my steel, jij debiel";
+		if(metaDatas[META_DATA_ENEMY_INDEX].textBubbleDuration < 0)
+			metaDatas[META_DATA_ENEMY_INDEX].textBubbleDuration = 0;
+		metaDatas[META_DATA_ENEMY_INDEX].textBubbleMaxDuration = 2.5f;
+
 		// Draw enemies.
 		CardSelectionDrawInfo enemySelectionDrawInfo{};
 		enemySelectionDrawInfo.lifeTime = level->GetTime();

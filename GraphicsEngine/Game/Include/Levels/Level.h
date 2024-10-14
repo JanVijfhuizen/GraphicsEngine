@@ -113,6 +113,7 @@ namespace game
 			bool dragging = false;
 			float textBubbleDuration = -1;
 			float textBubbleMaxDuration = 2;
+			bool textBubbleInversed = false;
 			const char* textBubble = nullptr;
 		};
 

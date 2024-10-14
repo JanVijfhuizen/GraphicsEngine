@@ -655,16 +655,20 @@ namespace game
 		{
 			auto& duration = drawInfo.metaData->textBubbleDuration;
 
+			const int32_t dir = bgRenderTask.position.y > SIMULATED_RESOLUTION.y / 2 ? -1 : 1;
+
 			TextTask textTask{};
-			textTask.position = origin + glm::ivec2(5, 5 + bgRenderTask.scale.y / 3);
+			textTask.position = origin + glm::ivec2(5, (5 + bgRenderTask.scale.y / 3) * dir);
 			textTask.xCenter = false;
-			textTask.yCenter = true;
+			textTask.yCenter = dir == 1 ? true : false;
+			textTask.position.y -= bgRenderTask.scale.y / 2 * (dir == -1);
 			textTask.text = drawInfo.metaData->textBubble;
 			textTask.priority = true;
 			textTask.lineLength = 10;
 			textTask.lifetime = duration;
 			textTask.textBubble = true;
 			textTask.textBubbleTail = true;
+			textTask.inverseTail = dir == -1;
 			info.textTasks.Push(textTask);
 
 			duration += info.deltaTime;

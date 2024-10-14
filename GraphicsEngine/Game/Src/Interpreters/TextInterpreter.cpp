@@ -112,8 +112,11 @@ namespace game
 
 		task.position = job.position;
 		if (job.yCenter)
-			task.position.y += size * (GetLineCount(job.text, job.lineLength, maxLen) - 1);
-
+		{
+			const auto offset = size * (GetLineCount(job.text, job.lineLength, maxLen) - 1);
+			task.position.y += offset;
+		}
+			
 		task.scale = s;
 
 		uint32_t lineLength = 0;
@@ -279,9 +282,19 @@ namespace game
 			// Tail.
 			if (job.textBubbleTail)
 			{
-				cpyTask3.subTexture = _createInfo.textBubbleTailAtlasTexture.subTexture;
+				jv::ge::SubTexture tailFrames[2];
+				Divide(_createInfo.textBubbleTailAtlasTexture.subTexture, tailFrames, 2);
+
+				cpyTask3.subTexture = tailFrames[job.inverseTail ? 1 : 0];
 				cpyTask3.scale = _createInfo.textBubbleTailAtlasTexture.resolution;
-				cpyTask3.position.y -= cpyTask3.scale.y - 2;
+				cpyTask3.scale.x /= 2;
+				cpyTask3.position.x += 2;
+				cpyTask3.position.y += (cpyTask3.scale.y - 2) * (job.inverseTail ? 1 : -1);
+
+				if (job.inverseTail)
+				{
+					cpyTask3.position.y += ret.Size().y + BORDER_SCALE * 2 + 2;
+				}
 				_createInfo.renderTasks->Push(cpyTask3);
 			}
 		}
