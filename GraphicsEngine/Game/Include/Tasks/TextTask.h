@@ -19,5 +19,8 @@ namespace game
 		bool loop = false;
 		bool fadeIn = true;
 		bool largeFont = false;
+
+		bool textBubble = false;
+		glm::ivec2 textBubbleOrigin;
 	};
 }

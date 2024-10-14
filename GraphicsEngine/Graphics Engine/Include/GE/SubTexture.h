@@ -14,5 +14,15 @@ namespace jv::ge
 			ret.rBot.x = lTop.x;
 			return ret;
 		}
+
+		[[nodiscard]] glm::vec2 Center() const 
+		{
+			return { lTop.x + (rBot.x - lTop.x) / 2, rBot.y + (lTop.y - rBot.y) / 2 };
+		}
+
+		[[nodiscard]] glm::vec2 Size() const
+		{
+			return glm::vec2(rBot.x - lTop.x, lTop.y - rBot.y);
+		}
 	};
 }

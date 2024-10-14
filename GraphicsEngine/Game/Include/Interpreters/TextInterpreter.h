@@ -4,6 +4,14 @@
 #include "Tasks/PixelPerfectRenderTask.h"
 #include "Tasks/TextTask.h"
 
+namespace jv
+{
+	namespace ge
+	{
+		struct SubTexture;
+	}
+}
+
 namespace game
 {
 	template <typename T>
@@ -17,6 +25,7 @@ namespace game
 		jv::ge::AtlasTexture largeAlphabetAtlasTexture;
 		jv::ge::AtlasTexture numberAtlasTexture;
 		jv::ge::AtlasTexture symbolAtlasTexture;
+		jv::ge::AtlasTexture textBubbleAtlasTexture;
 		uint32_t symbolSize = 9;
 		uint32_t largeSymbolSize = 11;
 		int32_t spacing = -2;
@@ -38,5 +47,6 @@ namespace game
 		void OnStart(const TextInterpreterCreateInfo& createInfo, const EngineMemory& memory) override;
 		void OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<TextTask>>& tasks) override;
 		void OnExit(const EngineMemory& memory) override;
+		jv::ge::SubTexture Draw(const EngineMemory& memory, TextTask job);
 	};
 }

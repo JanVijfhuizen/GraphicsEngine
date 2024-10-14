@@ -2,6 +2,7 @@
 #include "Interpreters/TextInterpreter.h"
 #include "JLib/Curve.h"
 #include "JLib/Math.h"
+#include "GE/SubTexture.h"
 
 namespace game
 {
@@ -64,134 +65,159 @@ namespace game
 
 	void TextInterpreter::OnUpdate(const EngineMemory& memory, const jv::LinkedList<jv::Vector<TextTask>>& tasks)
 	{
-		const float symbolPctSize = static_cast<float>(_createInfo.symbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
-		const float largeSymbolPctSize = static_cast<float>(_createInfo.largeSymbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
-		
-		PixelPerfectRenderTask task{};
-
-		const auto bounceUpCurve = je::CreateCurveOvershooting();
-		const auto bounceDownCurve = je::CreateCurveDecelerate();
-		
 		for (const auto& batch : tasks)
 			for (const auto& job : batch)
-			{
-				if (!job.text)
-					continue;
-
-				task.color = job.color;
-				const auto len = static_cast<uint32_t>(strlen(job.text));
-				auto maxLen = job.maxLength == -1 ? len : job.maxLength;
-
-				bool fadeIn = job.lifetime >= 0 && job.lifetime < _createInfo.fadeInSpeed * static_cast<float>(len);
-				if (!job.fadeIn)
-					fadeIn = false;
-				if(fadeIn)
-					maxLen = jv::Min<uint32_t>(maxLen, static_cast<uint32_t>(job.lifetime * _createInfo.fadeInSpeed));
-				
-				const float size = job.largeFont ? _createInfo.largeSymbolSize : _createInfo.symbolSize;
-				const float pctSize = job.largeFont ? largeSymbolPctSize : symbolPctSize;
-
-				const auto s = glm::ivec2(static_cast<int32_t>(size)) * glm::ivec2(static_cast<int32_t>(job.scale));
-				const auto spacing = (_createInfo.spacing + job.spacing + size) * job.scale;
-
-				task.position = job.position;
-				task.scale = s;
-
-				uint32_t lineLength = 0;
-				uint32_t nextLineStart = 0;
-				uint32_t xStart = 0;
-
-				bool isInBrackets = false;
-				
-				for (uint32_t i = 0; i < len; ++i)
-				{
-					if (i == maxLen)
-						break;
-
-					if (nextLineStart == i)
-					{
-						uint32_t previousBreak = i;
-
-						// Define line length.
-						for (uint32_t j = i + 1; j < len; ++j)
-						{
-							const auto& c = job.text[j];
-							if (c == ' ')
-								previousBreak = j;
-							if (j - i >= job.lineLength && previousBreak != i)
-							{
-								nextLineStart = previousBreak;
-								break;
-							}
-						}
-						if (nextLineStart == i)
-							nextLineStart = len;
-						
-						lineLength = 0;
-						if(job.center)
-						{
-							xStart = (nextLineStart - i) * (size + _createInfo.spacing) * job.scale / 2;
-							xStart += size / 4 * job.scale;
-						}
-						task.position.x = static_cast<int32_t>(job.position.x - xStart);
-
-						if(i != 0)
-						{
-							task.position.y -= static_cast<int32_t>(size * job.scale);
-							task.position.x -= static_cast<int32_t>(spacing);
-						}
-					}
-
-					auto c = job.text[i];
-
-					if (c == ']')
-						isInBrackets = false;
-
-					if (c != ' ')
-					{
-						const bool isSymbol2ndRow = c > '9' && c < 'a';
-						const bool isSymbol = c < '0' || isSymbol2ndRow;
-						const bool isInteger = !isSymbol && c < 'a';
-
-						// Assert if it's a valid character.
-						constexpr uint32_t secondRow = '[' - 5;
-						auto position = c - (isInteger ? '0' : isSymbol ? isSymbol2ndRow ? secondRow : '+' : 'a');
-						auto subTexture = isInteger ? _createInfo.numberAtlasTexture.subTexture : isSymbol ? 
-							_createInfo.symbolAtlasTexture.subTexture : (job.largeFont ? _createInfo.largeAlphabetAtlasTexture : _createInfo.alphabetAtlasTexture).subTexture;
-						subTexture.lTop.x += pctSize * static_cast<float>(position);
-						subTexture.rBot.x = subTexture.lTop.x + pctSize;
-
-						task.subTexture = subTexture;
-
-						float yMod = 0;
-
-						float lifeTime = job.lifetime;
-						if (job.loop)
-							lifeTime = fmodf(lifeTime, (static_cast<float>(len) + _createInfo.bounceDuration) / _createInfo.fadeInSpeed);
-
-						const float timeDiff = lifeTime * _createInfo.fadeInSpeed - static_cast<float>(i);
-						if(fadeIn || job.loop && timeDiff > 0 && timeDiff < _createInfo.bounceDuration)
-							yMod = DoubleCurveEvaluate(timeDiff / _createInfo.bounceDuration, bounceUpCurve, bounceDownCurve);
-
-						PixelPerfectRenderTask cpyTask = task;
-						cpyTask.priority = job.priority;
-						cpyTask.front = job.front;
-						cpyTask.position.y += static_cast<int32_t>(yMod * _createInfo.bounceHeight);
-						if (isInBrackets)
-							cpyTask.color = { 0, 1, 0, 1 };
-						_createInfo.renderTasks->Push(cpyTask);
-					}
-
-					if (c == '[')
-						isInBrackets = true;
-
-					task.position.x += static_cast<int32_t>(spacing);
-					lineLength++;
-				}
-			}
+				Draw(memory, job);
 	}
 
 	void TextInterpreter::OnExit(const EngineMemory& memory)
 	{
+	}
+
+	jv::ge::SubTexture TextInterpreter::Draw(const EngineMemory& memory, TextTask job)
+	{
+		const float symbolPctSize = static_cast<float>(_createInfo.symbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
+		const float largeSymbolPctSize = static_cast<float>(_createInfo.largeSymbolSize) / static_cast<float>(_createInfo.atlasResolution.x);
+
+		PixelPerfectRenderTask task{};
+
+		const auto bounceUpCurve = je::CreateCurveOvershooting();
+		const auto bounceDownCurve = je::CreateCurveDecelerate();
+
+		if (!job.text)
+			return {};
+
+		task.color = job.color;
+		const auto len = static_cast<uint32_t>(strlen(job.text));
+		auto maxLen = job.maxLength == -1 ? len : job.maxLength;
+
+		bool fadeIn = job.lifetime >= 0 && job.lifetime < _createInfo.fadeInSpeed * static_cast<float>(len);
+		if (!job.fadeIn)
+			fadeIn = false;
+		if (fadeIn)
+			maxLen = jv::Min<uint32_t>(maxLen, static_cast<uint32_t>(job.lifetime * _createInfo.fadeInSpeed));
+
+		const float size = job.largeFont ? _createInfo.largeSymbolSize : _createInfo.symbolSize;
+		const float pctSize = job.largeFont ? largeSymbolPctSize : symbolPctSize;
+
+		const auto s = glm::ivec2(static_cast<int32_t>(size)) * glm::ivec2(static_cast<int32_t>(job.scale));
+		const auto spacing = (_createInfo.spacing + job.spacing + size) * job.scale;
+
+		jv::ge::SubTexture ret{};
+		ret.lTop = {9999, -9999 };
+		ret.rBot = { -9999, 9999 };
+
+		task.position = job.position;
+		task.scale = s;
+
+		uint32_t lineLength = 0;
+		uint32_t nextLineStart = 0;
+		uint32_t xStart = 0;
+
+		bool isInBrackets = false;
+
+		for (uint32_t i = 0; i < len; ++i)
+		{
+			if (i == maxLen)
+				break;
+
+			if (nextLineStart == i)
+			{
+				uint32_t previousBreak = i;
+
+				// Define line length.
+				for (uint32_t j = i + 1; j < len; ++j)
+				{
+					const auto& c = job.text[j];
+					if (c == ' ')
+						previousBreak = j;
+					if (j - i >= job.lineLength && previousBreak != i)
+					{
+						nextLineStart = previousBreak;
+						break;
+					}
+				}
+				if (nextLineStart == i)
+					nextLineStart = len;
+
+				lineLength = 0;
+				if (job.center)
+				{
+					xStart = (nextLineStart - i) * (size + _createInfo.spacing) * job.scale / 2;
+					xStart += size / 4 * job.scale;
+				}
+				task.position.x = static_cast<int32_t>(job.position.x - xStart);
+
+				if (i != 0)
+				{
+					task.position.y -= static_cast<int32_t>(size * job.scale);
+					task.position.x -= static_cast<int32_t>(spacing);
+				}
+			}
+
+			auto c = job.text[i];
+
+			if (c == ']')
+				isInBrackets = false;
+
+			if (c != ' ')
+			{
+				const bool isSymbol2ndRow = c > '9' && c < 'a';
+				const bool isSymbol = c < '0' || isSymbol2ndRow;
+				const bool isInteger = !isSymbol && c < 'a';
+
+				// Assert if it's a valid character.
+				constexpr uint32_t secondRow = '[' - 5;
+				auto position = c - (isInteger ? '0' : isSymbol ? isSymbol2ndRow ? secondRow : '+' : 'a');
+				auto subTexture = isInteger ? _createInfo.numberAtlasTexture.subTexture : isSymbol ?
+					_createInfo.symbolAtlasTexture.subTexture : (job.largeFont ? _createInfo.largeAlphabetAtlasTexture : _createInfo.alphabetAtlasTexture).subTexture;
+				subTexture.lTop.x += pctSize * static_cast<float>(position);
+				subTexture.rBot.x = subTexture.lTop.x + pctSize;
+
+				task.subTexture = subTexture;
+
+				float yMod = 0;
+
+				float lifeTime = job.lifetime;
+				if (job.loop)
+					lifeTime = fmodf(lifeTime, (static_cast<float>(len) + _createInfo.bounceDuration) / _createInfo.fadeInSpeed);
+
+				const float timeDiff = lifeTime * _createInfo.fadeInSpeed - static_cast<float>(i);
+				if (fadeIn || job.loop && timeDiff > 0 && timeDiff < _createInfo.bounceDuration)
+					yMod = DoubleCurveEvaluate(timeDiff / _createInfo.bounceDuration, bounceUpCurve, bounceDownCurve);
+
+				PixelPerfectRenderTask cpyTask = task;
+				cpyTask.priority = job.priority;
+				cpyTask.front = job.front;
+				cpyTask.position.y += static_cast<int32_t>(yMod * _createInfo.bounceHeight);
+				if (isInBrackets)
+					cpyTask.color = { 0, 1, 0, 1 };
+				_createInfo.renderTasks->Push(cpyTask);
+
+				ret.lTop.x = jv::Min<float>(ret.lTop.x, task.position.x);
+				ret.lTop.y = jv::Max<float>(ret.lTop.y, task.position.y);
+				ret.rBot.x = jv::Max<float>(ret.rBot.x, task.position.x);
+				ret.rBot.y = jv::Min<float>(ret.rBot.y, task.position.y);
+			}
+
+			if (c == '[')
+				isInBrackets = true;
+
+			task.position.x += static_cast<int32_t>(spacing);
+			lineLength++;
+		}
+
+		// text bubble
+		task.position = ret.Center() + glm::vec2(size / 2);
+		task.scale = ret.Size() + glm::vec2(10);
+		task.image = nullptr;
+		task.subTexture = _createInfo.textBubbleAtlasTexture.subTexture;
+		task.color = glm::vec4(1, 1, 0, 1);
+		task.xCenter = true;
+		task.yCenter = true;
+		task.priority = false;
+		_createInfo.renderTasks->Push(task);
+
+		return ret;
 	}
 }

@@ -602,6 +602,7 @@ namespace game
 			textInterpreterCreateInfo.largeAlphabetAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::largeAlphabet)];
 			textInterpreterCreateInfo.symbolAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::symbols)];
 			textInterpreterCreateInfo.numberAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::numbers)];
+			textInterpreterCreateInfo.textBubbleAtlasTexture = outCardGame->atlasTextures[static_cast<uint32_t>(TextureId::textBubble)];
 			textInterpreterCreateInfo.atlasResolution = glm::ivec2(texWidth, texHeight);
 			textInterpreterCreateInfo.fadeInSpeed = TEXT_DRAW_SPEED;
 
@@ -706,6 +707,7 @@ namespace game
 		arr[12] = "Art/manacrystal.png";
 		arr[13] = "Art/moon.png";
 		arr[14] = "Art/card_small.png";
+		arr[15] = "Art/text_bubble.png";
 		return arr;
 	}
 
@@ -817,7 +819,7 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORN_WHIP] = "Art/Artifact/thorn_whip.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::RED_CLOTH] = "Art/Artifact/red_cloth.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::HELMET_OF_THE_HOST] = "Art/Artifact/helm_of_the_host.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::RUSTY_SPEAR] = "Art/Artifact/rusty_spear.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MOANING_ORB] = "Art/Artifact/moaning_orb.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THE_BRAND] = "Art/Artifact/the_brand.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::SWORD_OF_SPELLCASTING] = "Art/Artifact/sword_of_spellcasting.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_AEONS] = "Art/Artifact/staff_of_aeons.png";
@@ -846,7 +848,7 @@ namespace game
 		arr[ROOM_ID_START + ROOM_IDS::FIELD_OF_VENGEANCE] = "Art/Spells/goblin_chant.png";
 		arr[ROOM_ID_START + ROOM_IDS::FORSAKEN_BATTLEFIELD] = "Art/Spells/dread_sacrifice.png";
 		arr[ROOM_ID_START + ROOM_IDS::BLESSED_HALLS] = "Art/Spells/perfect_copy.png";
-		arr[ROOM_ID_START + ROOM_IDS::KHAALS_DOMAIN] = "Art/Spells/incantation_of_doom.png";
+		arr[ROOM_ID_START + ROOM_IDS::DOMAIN_OF_PAIN] = "Art/Spells/incantation_of_doom.png";
 		arr[ROOM_ID_START + ROOM_IDS::ARENA_OF_THE_DAMNED] = "Art/Spells/rally.png";
 		arr[ROOM_ID_START + ROOM_IDS::TRANQUIL_WATERS] = "Art/Spells/pick.png";
 		arr[ROOM_ID_START + ROOM_IDS::PLAIN_MEADOWS] = "Art/Spells/rampant_growth.png";
@@ -2360,9 +2362,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::RUSTY_SPEAR].name = "moaning orb";
-		arr[ARTIFACT_IDS::RUSTY_SPEAR].ruleText = "[any death] +1 mana.";
-		arr[ARTIFACT_IDS::RUSTY_SPEAR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::MOANING_ORB].name = "moaning orb";
+		arr[ARTIFACT_IDS::MOANING_ORB].ruleText = "[any death] +1 mana.";
+		arr[ARTIFACT_IDS::MOANING_ORB].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
@@ -2566,10 +2568,10 @@ namespace game
 				}
 				return false;
 			};
-		auto& khaalsDomain = arr[ROOM_IDS::KHAALS_DOMAIN];
-		khaalsDomain.name = "domain of pain";
-		khaalsDomain.ruleText = "[end of turn] all monsters take 1 damage.";
-		khaalsDomain.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& domainOfPain = arr[ROOM_IDS::DOMAIN_OF_PAIN];
+		domainOfPain.name = "domain of pain";
+		domainOfPain.ruleText = "[end of turn] all monsters take 1 damage.";
+		domainOfPain.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
