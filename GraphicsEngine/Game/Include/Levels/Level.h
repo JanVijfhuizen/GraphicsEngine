@@ -111,6 +111,9 @@ namespace game
 			float timeSinceStatsChanged = -1;
 			glm::ivec2 mouseOffset{};
 			bool dragging = false;
+			float textBubbleDuration = -1;
+			float textBubbleMaxDuration = 3;
+			const char* textBubble = nullptr;
 		};
 
 		struct CardDrawInfo final

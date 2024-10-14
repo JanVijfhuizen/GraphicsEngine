@@ -651,19 +651,22 @@ namespace game
 		fgRenderTask.color = drawInfo.fgColor * glm::vec4(fadeMod, 1);
 		info.renderTasks.Push(fgRenderTask);
 
-		// temp.
+		if(drawInfo.metaData && drawInfo.metaData->textBubbleDuration > -.1f && !info.inputState.rMouse.pressed)
 		{
 			TextTask textTask{};
 			textTask.position = origin + glm::ivec2(5, 5 + bgRenderTask.scale.y / 3);
 			textTask.xCenter = false;
 			textTask.yCenter = true;
-			textTask.text = "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello";
+			textTask.text = drawInfo.metaData->textBubble;
 			textTask.priority = true;
-			textTask.lineLength = 10;
-			textTask.lifetime = drawInfo.lifeTime;
+			textTask.lineLength = 20;
+			textTask.lifetime = drawInfo.metaData->textBubbleDuration;
 			textTask.textBubble = true;
 			textTask.textBubbleTail = true;
 			info.textTasks.Push(textTask);
+
+			if (drawInfo.metaData->textBubbleDuration > drawInfo.metaData->textBubbleMaxDuration)
+				drawInfo.metaData->textBubbleDuration = -1;
 		}
 
 		// Draw image.
