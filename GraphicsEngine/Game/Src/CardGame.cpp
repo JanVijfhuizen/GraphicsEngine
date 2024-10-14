@@ -2137,6 +2137,18 @@ namespace game
 				}
 				return false;
 			};
+		slimeSoldier.onStartOfTurn = "i am my best friend";
+		slimeSoldier.onSummonText = "the power of one...the power of many";
+		slimeSoldier.onCastText = "a spell like that gave me the power to talk once";
+		slimeSoldier.onBuffedText = "i see you understand why im strong";
+		slimeSoldier.onDamagedText = "you know this will make my clones weaker right";
+		slimeSoldier.onAttackText = "for the slime emperor";
+		slimeSoldier.onAttackedText = "slime shield activated";
+		slimeSoldier.onAllySummonText = "another me";
+		slimeSoldier.onEnemySummonText = "i will slime you";
+		slimeSoldier.onAllyDeathText = "goodbye mini me";
+		slimeSoldier.onEnemyDeathText = "ahhh...nutrients";
+
 		auto& madPyromancer = arr[MONSTER_IDS::MAD_PYROMANCER];
 		madPyromancer.name = "mad pyromancer";
 		madPyromancer.attack = 1;
@@ -2156,6 +2168,18 @@ namespace game
 				}
 				return false;
 			};
+		madPyromancer.onStartOfTurn = "ahahahahahah";
+		madPyromancer.onSummonText = "burn them all";
+		madPyromancer.onCastText = "aaaaahhhh buuuuurn";
+		madPyromancer.onBuffedText = "hahahaahaaaa";
+		madPyromancer.onDamagedText = "we will all burn";
+		madPyromancer.onAttackText = "burn in my hell";
+		madPyromancer.onAttackedText = "flame take me";
+		madPyromancer.onAllySummonText = "i will burn you as well";
+		madPyromancer.onEnemySummonText = "all will be ashes soon";
+		madPyromancer.onAllyDeathText = "now serve as fuel for my flames";
+		madPyromancer.onEnemyDeathText = "yesssss buuuuuurnnn";
+
 		auto& phantasm = arr[MONSTER_IDS::PHANTASM];
 		phantasm.name = "phantasm";
 		phantasm.attack = 3;
@@ -2191,13 +2215,25 @@ namespace game
 				}
 				return false;
 			};
-		auto& goblinScout = arr[MONSTER_IDS::GNOME_SCOUT];
-		goblinScout.name = "gnome scout";
-		goblinScout.attack = 1;
-		goblinScout.health = 16;
-		goblinScout.ruleText = "[attack] all other beasts gain bonus attack equal to my attack.";
-		goblinScout.tags = TAG_BEAST;
-		goblinScout.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		phantasm.onStartOfTurn = "follow my light";
+		phantasm.onSummonText = "the dead rise";
+		phantasm.onCastText = "feel the cold of death";
+		phantasm.onBuffedText = "i have become immortal";
+		phantasm.onDamagedText = "futile";
+		phantasm.onAttackText = "i am not sure why im doing this";
+		phantasm.onAttackedText = "you cannot hurt me";
+		phantasm.onAllySummonText = "another one to follow the light";
+		phantasm.onEnemySummonText = "you will soon join me in the afterlife";
+		phantasm.onAllyDeathText = "i will guide your spirit";
+		phantasm.onEnemyDeathText = "i will guide your spirit the wrong way on purpose";
+
+		auto& gnomeScout = arr[MONSTER_IDS::GNOME_SCOUT];
+		gnomeScout.name = "gnome scout";
+		gnomeScout.attack = 1;
+		gnomeScout.health = 16;
+		gnomeScout.ruleText = "[attack] all other beasts gain bonus attack equal to my attack.";
+		gnomeScout.tags = TAG_BEAST;
+		gnomeScout.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
@@ -2216,6 +2252,18 @@ namespace game
 				}
 				return false;
 			};
+		gnomeScout.onStartOfTurn = "heeehhehehe";
+		gnomeScout.onSummonText = "hahahahah";
+		gnomeScout.onCastText = "sjahahahah";
+		gnomeScout.onBuffedText = "ahahahah";
+		gnomeScout.onDamagedText = "hee hee...";
+		gnomeScout.onAttackText = "hahahahahah";
+		gnomeScout.onAttackedText = "heh...";
+		gnomeScout.onAllySummonText = "hihihi";
+		gnomeScout.onEnemySummonText = "heh heh heh";
+		gnomeScout.onAllyDeathText = "ha";
+		gnomeScout.onEnemyDeathText = "haha";
+
 		auto& slimeHead = arr[MONSTER_IDS::SLIME_HEAD];
 		slimeHead.name = "slime head";
 		slimeHead.attack = 1;
@@ -2237,6 +2285,18 @@ namespace game
 				}
 				return false;
 			};
+		slimeHead.onStartOfTurn = "what do you think of my head";
+		slimeHead.onSummonText = "my mother was a slime and my dad was a plant";
+		slimeHead.onCastText = "wowzers";
+		slimeHead.onBuffedText = "my head is growing";
+		slimeHead.onDamagedText = "i blocked that with my head";
+		slimeHead.onAttackText = "head butt";
+		slimeHead.onAttackedText = "head shield";
+		slimeHead.onAllySummonText = "i see you looking at my head";
+		slimeHead.onEnemySummonText = "youd wish youd have a head like this";
+		slimeHead.onAllyDeathText = "my hat off to you";
+		slimeHead.onEnemyDeathText = "head shot";
+
 		auto& beastSpirit = arr[MONSTER_IDS::BEAST_SPIRIT];
 		beastSpirit.name = "beast spirit";
 		beastSpirit.attack = 1;
@@ -2263,6 +2323,18 @@ namespace game
 				}
 				return false;
 			};
+		beastSpirit.onStartOfTurn = "...";
+		beastSpirit.onSummonText = "...";
+		beastSpirit.onCastText = "...";
+		beastSpirit.onBuffedText = "...";
+		beastSpirit.onDamagedText = "...";
+		beastSpirit.onAttackText = "...";
+		beastSpirit.onAttackedText = "...";
+		beastSpirit.onAllySummonText = "...";
+		beastSpirit.onEnemySummonText = "...";
+		beastSpirit.onAllyDeathText = "...";
+		beastSpirit.onEnemyDeathText = "...";
+
 		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
 		librarian.name = "librarian";
 		librarian.attack = 1;
@@ -2287,6 +2359,17 @@ namespace game
 				}
 				return false;
 			};
+		librarian.onStartOfTurn = "and so the next chapter begins";
+		librarian.onSummonText = "the text has been written";
+		librarian.onCastText = "i read about this";
+		librarian.onBuffedText = "knowledge overflows";
+		librarian.onDamagedText = "insolent fool";
+		librarian.onAttackText = "i know your true name...demon";
+		librarian.onAttackedText = "the books...protect the books";
+		librarian.onAllySummonText = "another student";
+		librarian.onEnemySummonText = "barbarians...";
+		librarian.onAllyDeathText = "i will write your name in my book";
+		librarian.onEnemyDeathText = "another one wiped from the history books";
 		return arr;
 	}
 
