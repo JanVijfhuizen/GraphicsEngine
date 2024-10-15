@@ -1281,13 +1281,13 @@ namespace game
 		if (rand() % 5 != 0)
 			return;
 
-		uint32_t allied = rand() % 2;
-		uint32_t target = (rand() % (allied ? state.boardState.allyCount : state.boardState.enemyCount)) + (allied == 0) * BOARD_CAPACITY_PER_SIDE;
-	
+		bool allied = rand() % 2 == 0;
+		uint32_t target = (rand() % (allied ? state.boardState.allyCount : state.boardState.enemyCount)) + !allied * BOARD_CAPACITY_PER_SIDE;
+
 		auto& card = info.monsters[state.boardState.ids[target]];	
 		auto& metaData = metaDatas[META_DATA_ALLY_INDEX + target];
 		if (metaData.textBubbleDuration > -.1f)
-			return; 
+			return;
 
 		metaData.textBubble = nullptr;
 		bool actionStateAllied = target < BOARD_CAPACITY_PER_SIDE && actionState.dst < BOARD_CAPACITY_PER_SIDE ||
@@ -1295,16 +1295,14 @@ namespace game
 
 		switch (actionState.trigger)
 		{
-		case ActionState::Trigger::onStartOfTurn:
-			metaData.textBubble = card.onStartOfTurn;
-			break;
 		case ActionState::Trigger::onSummon:
-			if(actionState.dst == target)
-				metaData.textBubble = card.onSummonText;
-			else if (actionStateAllied)
-				metaData.textBubble = card.onAllySummonText;
-			else
-				metaData.textBubble = card.onEnemySummonText;
+			if (actionState.dst != target)
+			{
+				if (actionStateAllied)
+					metaData.textBubble = card.onAllySummonText;
+				else
+					metaData.textBubble = card.onEnemySummonText;
+			}
 			break;
 		case ActionState::Trigger::onCast:
 			metaData.textBubble = card.onCastText;
@@ -1318,9 +1316,7 @@ namespace game
 				metaData.textBubble = card.onDamagedText;
 			break;
 		case ActionState::Trigger::onAttack:
-			if (actionState.dst == target)
-				metaData.textBubble = card.onAttackedText;
-			else if(actionState.src == target)
+			if(actionState.src == target)
 				metaData.textBubble = card.onAttackText;
 			break;
 		case ActionState::Trigger::onDeath:
@@ -1339,7 +1335,7 @@ namespace game
 		previousDialogueTime = level->GetTime();
 
 		metaData.textBubbleDuration = 0;
-		metaData.textBubbleMaxDuration = .5f + .1f * strlen(metaData.textBubble);
+		metaData.textBubbleMaxDuration = .5f + .05f * strlen(metaData.textBubble);
 		previousDialogueDuration = metaData.textBubbleMaxDuration;
 	}
 
@@ -2002,9 +1998,9 @@ namespace game
 		states[5] = info.arena.New<RewardArtifactState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
-		
-		//stateMachine.state.depth = 98;
-		//stateMachine.next = stateMachine.current;	
+
+		//stateMachine.state.depth = 99;
+		//stateMachine.next = stateMachine.current;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

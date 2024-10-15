@@ -305,6 +305,7 @@ namespace game
 		titleTextTask.xCenter = drawInfo.center;
 		titleTextTask.textBubble = drawInfo.border;
 		titleTextTask.priority = true;
+		titleTextTask.scale = drawInfo.scale;
 		info.textTasks.Push(titleTextTask);
 	}
 

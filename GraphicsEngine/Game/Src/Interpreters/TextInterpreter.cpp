@@ -43,7 +43,7 @@ namespace game
 			const auto c = str[i];
 			if (c == ' ')
 			{
-				if (i - lineStart >= lineLength)
+				if (i - lineStart >= lineLength) // todo fix
 				{
 					if (lastBreakPointFound != -1)
 					{
@@ -229,7 +229,7 @@ namespace game
 			task.image = nullptr;
 			task.subTexture = bubbleFrames[4];
 			task.position -= task.scale / 2;
-			task.priority = false;
+			task.priority = true;
 			_createInfo.renderTasks->Push(task);
 
 			const uint32_t BORDER_SCALE = 5;
@@ -295,6 +295,10 @@ namespace game
 					cpyTask3.position.y += ret.Size().y + BORDER_SCALE * 2 + 2;
 				_createInfo.renderTasks->Push(cpyTask3);
 			}
+
+			auto cpyJob = job;
+			cpyJob.textBubble = false;
+			Draw(memory, cpyJob);
 		}
 
 		return ret;
