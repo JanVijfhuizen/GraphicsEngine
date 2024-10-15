@@ -871,9 +871,9 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/Slime_King.png";
+			arr[i] = "Art/Monsters/the_pontiff.png";
 		}
-		arr[0] = "Art/Monsters/Slime_King.png";
+		//arr[0] = "Art/Monsters/Slime_King.png";
 
 		return arr;
 	}
