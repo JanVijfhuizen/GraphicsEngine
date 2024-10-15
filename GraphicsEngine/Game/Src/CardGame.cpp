@@ -873,6 +873,8 @@ namespace game
 			*/
 			arr[i] = "Art/Monsters/the_pontiff.png";
 		}
+
+		arr[MONSTER_IDS::GHOSTFLAME_PONTIFF - BOSS_ID_INDEX_SUB] = "Art/Monsters/the_pontiff.png";
 		//arr[0] = "Art/Monsters/Slime_King.png";
 
 		return arr;
@@ -1187,13 +1189,13 @@ namespace game
 				return false;
 			};
 		slimeQueen.animIndex = 0;
-		auto& lichKing = arr[MONSTER_IDS::LICH_KING];
-		lichKing.name = "lich king";
-		lichKing.attack = 0;
-		lichKing.health = 100;
-		lichKing.ruleText = "[start of turn] +1 attack and +3 bonus health.";
-		lichKing.unique = true;
-		lichKing.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& ghostflamePontiff = arr[MONSTER_IDS::GHOSTFLAME_PONTIFF];
+		ghostflamePontiff.name = "ghostflame pontiff";
+		ghostflamePontiff.attack = 0;
+		ghostflamePontiff.health = 100;
+		ghostflamePontiff.ruleText = "[start of turn] +1 attack and +3 bonus health.";
+		ghostflamePontiff.unique = true;
+		ghostflamePontiff.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
@@ -1209,8 +1211,17 @@ namespace game
 				}
 				return false;
 			};
-		lichKing.tags = TAG_BOSS;
-		lichKing.animIndex = 0;
+		ghostflamePontiff.tags = TAG_BOSS;
+		ghostflamePontiff.animIndex = 0;
+		ghostflamePontiff.onCastText = "your magic...fails you";
+		ghostflamePontiff.onBuffedText = "this power...it flows through me";
+		ghostflamePontiff.onDamagedText = "there is no...hope";
+		ghostflamePontiff.onAttackText = "by ghostflame be...purged";
+		ghostflamePontiff.onAllySummonText = "to me...minions";
+		ghostflamePontiff.onEnemySummonText = "abandon...hope";
+		ghostflamePontiff.onAllyDeathText = "ghostflame consume thee";
+		ghostflamePontiff.onEnemyDeathText = "one less...";
+
 		auto& mirrorKnight = arr[MONSTER_IDS::MIRROR_KNIGHT];
 		mirrorKnight.name = "mirror knight";
 		mirrorKnight.attack = 6;
@@ -2780,7 +2791,7 @@ namespace game
 			a = -1;
 		arr[0] = MONSTER_IDS::GREAT_TROLL;
 		arr[1] = MONSTER_IDS::SLIME_QUEEN;
-		arr[2] = MONSTER_IDS::LICH_KING;
+		arr[2] = MONSTER_IDS::GHOSTFLAME_PONTIFF;
 		arr[3] = MONSTER_IDS::MIRROR_KNIGHT;
 		arr[4] = MONSTER_IDS::BOMBA;
 		arr[5] = MONSTER_IDS::THE_DREAD;
