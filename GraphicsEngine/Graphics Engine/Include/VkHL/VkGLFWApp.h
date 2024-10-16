@@ -15,7 +15,7 @@ namespace jv::vk
 
 		void Resize(glm::ivec2 resolution, bool fullScreen) const;
 
-		static GLFWApp Create(const char* name, glm::ivec2 resolution, bool fullScreen);
+		static GLFWApp Create(const char* name, glm::ivec2 resolution, bool fullScreen, const char* icon);
 		static void Destroy(const GLFWApp& app);
 
 		static VkSurfaceKHR CreateSurface(VkInstance instance, void* userPtr);

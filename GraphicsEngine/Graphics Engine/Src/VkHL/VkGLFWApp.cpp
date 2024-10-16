@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "VkHL/VkGLFWApp.h"
+#include <stb_image.h>
 
 namespace jv::vk
 {
@@ -33,7 +34,7 @@ namespace jv::vk
 		glfwMakeContextCurrent(window);
 	}
 
-	GLFWApp GLFWApp::Create(const char* name, const glm::ivec2 resolution, const bool fullScreen)
+	GLFWApp GLFWApp::Create(const char* name, const glm::ivec2 resolution, const bool fullScreen, const char* icon)
 	{
 		GLFWApp app{};
 
@@ -54,6 +55,12 @@ namespace jv::vk
 			fullScreen ? mode->height : res.y, name,
 			fullScreen ? monitor : nullptr, nullptr);
 		assert(window);
+
+		GLFWimage images[1];
+		images[0].pixels = stbi_load(icon, &images[0].width, &images[0].height, 0, 4);
+		assert(images[0].pixels);
+		glfwSetWindowIcon(window, 1, images);
+		stbi_image_free(images[0].pixels);
 
 		glfwMakeContextCurrent(window);
 

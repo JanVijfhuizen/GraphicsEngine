@@ -54,6 +54,7 @@ namespace jv::ge
 	struct CreateInfo final
 	{
 		const char* name = "Graphics Engine";
+		const char* icon = nullptr;
 		glm::ivec2 resolution{ 800, 600 };
 		bool fullscreen = false;
 

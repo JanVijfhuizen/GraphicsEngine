@@ -237,7 +237,7 @@ namespace jv::ge
 		ge.onMouseCallback = info.onMouseCallback;
 		ge.onScrollCallback = info.onScrollCallback;
 
-		ge.glfwApp = vk::GLFWApp::Create(info.name, info.resolution, info.fullscreen);
+		ge.glfwApp = vk::GLFWApp::Create(info.name, info.resolution, info.fullscreen, info.icon);
 		const auto res = info.fullscreen ? GetMonitorResolution() : info.resolution;
 
 		glfwSetKeyCallback(ge.glfwApp.window, GLFWKeyCallback);

@@ -22,6 +22,8 @@ namespace game
 		uint32_t frameArenaSize = 4096;
 		glm::ivec2 resolution{ 800, 600 };
 		bool fullScreen = false;
+		const char* name = "window";
+		const char* icon = nullptr;
 
 		void (*onKeyCallback)(size_t key, size_t action) = nullptr;
 		void (*onMouseCallback)(size_t key, size_t action) = nullptr;

@@ -396,6 +396,8 @@ namespace game
 			engineCreateInfo.onScrollCallback = OnScrollCallback;
 			engineCreateInfo.resolution = res;
 			engineCreateInfo.fullScreen = fullScreen;
+			engineCreateInfo.name = "Dark Crescent";
+			engineCreateInfo.icon = "Art/icon.png";
 			outCardGame->engine = Engine::Create(engineCreateInfo);
 		}
 		outCardGame->restart = false;

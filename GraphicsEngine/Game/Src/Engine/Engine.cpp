@@ -69,6 +69,8 @@ namespace game
 		createInfo.onScrollCallback = info.onScrollCallback;
 		createInfo.resolution = info.resolution;
 		createInfo.fullscreen = info.fullScreen;
+		createInfo.name = info.name;
+		createInfo.icon = info.icon;
 		Initialize(createInfo);
 
 		Engine engine{};
