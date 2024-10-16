@@ -43,7 +43,7 @@ namespace game
 			const auto c = str[i];
 			if (c == ' ')
 			{
-				if (i - lineStart >= lineLength) // todo fix
+				if (i - lineStart >= lineLength)
 				{
 					if (lastBreakPointFound != -1)
 					{

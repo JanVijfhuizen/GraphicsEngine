@@ -1666,18 +1666,27 @@ namespace game
 			if(backgroundType == BackgroundType::moonLight)
 			{
 				auto& atlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::moon)];
-				auto subTexture = atlasTexture.subTexture;
+				jv::ge::SubTexture moonFrames[5];
+				Divide(atlasTexture.subTexture, moonFrames, 5);
 
-				glm::ivec2 positionOffsets[3]{
+				glm::ivec2 positionOffsets[5]{
 					glm::ivec2(90, 10),
 					glm::ivec2(60, 30),
-					glm::ivec2(0, 80)
+					glm::ivec2(0, 60),
+					glm::ivec2(-60, 30),
+					glm::ivec2(-90, 10)
 				};
 
+				// temp.
+				static float f = 0;
+				f += info.deltaTime * 2;
+
+				uint32_t index = static_cast<uint32_t>(floor(fmodf(f, 5)));
+
 				PixelPerfectRenderTask renderTask{};
-				renderTask.scale = atlasTexture.resolution;
-				renderTask.subTexture = subTexture;
-				renderTask.position = glm::ivec2(SIMULATED_RESOLUTION / 2) + glm::ivec2(0, 80);
+				renderTask.scale = atlasTexture.resolution / glm::ivec2(5, 1);
+				renderTask.subTexture = moonFrames[index];
+				renderTask.position = glm::ivec2(SIMULATED_RESOLUTION / 2) + positionOffsets[index];
 				renderTask.xCenter = true;
 				info.renderTasks.Push(renderTask);
 			}
