@@ -21,7 +21,7 @@ namespace game
 		uint32_t index = floor(fmodf(GetTime() * 6, 4));
 
 		PixelPerfectRenderTask titleTask;
-		titleTask.position = glm::ivec2(0, SIMULATED_RESOLUTION.y - 64);
+		titleTask.position = glm::ivec2(-6, SIMULATED_RESOLUTION.y - 64);
 		titleTask.scale = titleAtlasTexture.resolution / glm::ivec2(4, 1);
 		titleTask.subTexture = titleFrames[index];
 		info.renderTasks.Push(titleTask);
@@ -42,11 +42,7 @@ namespace game
 			DrawTitle(info);
 
 			TextTask textTask{};
-			textTask.position = buttonOrigin + glm::ivec2(0, 3);
-			textTask.text = "credits";
-			info.textTasks.Push(textTask);
-
-			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
+			textTask.position = buttonOrigin + glm::ivec2(0, 3);;
 			textTask.text = "jan vijfhuizen - most stuff";
 			info.textTasks.Push(textTask);
 
