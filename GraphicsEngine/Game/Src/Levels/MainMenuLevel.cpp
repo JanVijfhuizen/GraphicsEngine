@@ -10,6 +10,7 @@ namespace game
 		inTutorial = false;
 		inResolutionSelect = false;
 		inCredits = false;
+		openTime = 0;
 	}
 
 	void MainMenuLevel::DrawTitle(const LevelUpdateInfo& info)
@@ -31,6 +32,7 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
+		openTime += info.deltaTime;
 
 		constexpr glm::ivec2 origin = { 18, SIMULATED_RESOLUTION.y - 36 };
 		constexpr auto buttonOrigin = origin - glm::ivec2(-4, 36);
@@ -44,6 +46,7 @@ namespace game
 			TextTask textTask{};
 			textTask.position = buttonOrigin + glm::ivec2(0, 3);;
 			textTask.text = "jan vijfhuizen - most stuff";
+			textTask.lifetime = openTime;
 			info.textTasks.Push(textTask);
 
 			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
@@ -65,8 +68,12 @@ namespace game
 			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET * 2;
 			buttonDrawInfo.text = "back";
 			buttonDrawInfo.drawLineByDefault = true;
-			if (DrawButton(info, buttonDrawInfo))
+			if (DrawButton(info, buttonDrawInfo, openTime))
+			{
 				inCredits = false;
+				openTime = 0;
+			}
+				
 			return true;
 		}
 
@@ -86,7 +93,7 @@ namespace game
 
 			buttonDrawInfo.text = "320x240";
 			buttonDrawInfo.origin = origin - glm::ivec2(0, SMALL_BUTTON_OFFSET * 8);
-			if (DrawButton(info, buttonDrawInfo))
+			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(320, 240);
 				return true;
@@ -94,7 +101,7 @@ namespace game
 
 			buttonDrawInfo.text = "640x480";
 			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
-			if (DrawButton(info, buttonDrawInfo))
+			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(640, 480);
 				return true;
@@ -102,7 +109,7 @@ namespace game
 
 			buttonDrawInfo.text = "960x720 - recommended";
 			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
-			if (DrawButton(info, buttonDrawInfo))
+			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(960, 720);
 				return true;
@@ -110,7 +117,7 @@ namespace game
 
 			buttonDrawInfo.text = "1280x720";
 			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
-			if (DrawButton(info, buttonDrawInfo))
+			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(1280, 720);
 				return true;
@@ -118,7 +125,7 @@ namespace game
 
 			buttonDrawInfo.text = "1920x1080";
 			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
-			if (DrawButton(info, buttonDrawInfo))
+			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(1920, 1080);
 				return true;
@@ -128,15 +135,19 @@ namespace game
 			{
 				buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 				buttonDrawInfo.text = "to fullscreen";
-				if (DrawButton(info, buttonDrawInfo))
+				if (DrawButton(info, buttonDrawInfo, openTime))
 					info.isFullScreen = true;
 			}
 
 			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET * 2;
 			buttonDrawInfo.text = "back";
 			buttonDrawInfo.drawLineByDefault = true;
-			if (DrawButton(info, buttonDrawInfo))
+			if (DrawButton(info, buttonDrawInfo, openTime))
+			{
 				inResolutionSelect = false;
+				openTime = 0;
+			}
+				
 			return true;
 		}
 
@@ -153,6 +164,7 @@ namespace game
 			TextTask textTask{};
 			textTask.position = origin - glm::ivec2(0, SMALL_BUTTON_OFFSET * 6);
 			textTask.text = "mouse left - select and drag cards.";
+			textTask.lifetime = openTime;
 			info.textTasks.Push(textTask);
 
 			textTask.position.y -= SMALL_BUTTON_OFFSET;
@@ -170,6 +182,7 @@ namespace game
 			headerDrawInfo.text = "drag a monster to an enemy monster to attack it. drag a spell to cast it.";
 			headerDrawInfo.origin = textTask.position;
 			headerDrawInfo.origin.y -= SMALL_BUTTON_OFFSET * 2;
+			headerDrawInfo.overrideLifeTime = openTime;
 			DrawHeader(info, headerDrawInfo);
 
 			ButtonDrawInfo buttonDrawInfo{};
@@ -177,8 +190,12 @@ namespace game
 			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET * 6;
 			buttonDrawInfo.text = "back";
 			buttonDrawInfo.width = 96;
-			if (DrawButton(info, buttonDrawInfo))
+			if (DrawButton(info, buttonDrawInfo, openTime))
+			{
 				inTutorial = false;
+				openTime = 0;
+			}
+				
 			return true;
 		}
 
@@ -189,33 +206,42 @@ namespace game
 		buttonDrawInfo.text = "start";
 		buttonDrawInfo.width = 140;
 		buttonDrawInfo.drawLineByDefault = false;
-		if (DrawButton(info, buttonDrawInfo))
+		if (DrawButton(info, buttonDrawInfo, openTime))
+		{
 			Load(LevelIndex::newGame, true);
+			return true;
+		}
 
 		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 		buttonDrawInfo.text = "change resolution";
-		if (DrawButton(info, buttonDrawInfo))
+		if (DrawButton(info, buttonDrawInfo, openTime))
+		{
 			inResolutionSelect = true;
+			openTime = 0;
+			return true;
+		}
 
 		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 		buttonDrawInfo.text = "how to play";
-		if (DrawButton(info, buttonDrawInfo))
+		if (DrawButton(info, buttonDrawInfo, openTime))
 		{
 			inTutorial = true;
+			openTime = 0;
 			return true;
 		}
 
 		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 		buttonDrawInfo.text = "credits";
-		if (DrawButton(info, buttonDrawInfo))
+		if (DrawButton(info, buttonDrawInfo, openTime))
 		{
 			inCredits = true;
+			openTime = 0;
 			return true;
 		}
 
 		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 		buttonDrawInfo.text = "exit";
-		if (DrawButton(info, buttonDrawInfo))
+		if (DrawButton(info, buttonDrawInfo, openTime))
 			return false;
 		return true;
 	}

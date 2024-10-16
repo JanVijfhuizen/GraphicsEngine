@@ -9,6 +9,7 @@ namespace game
 		bool inTutorial;
 		bool inResolutionSelect;
 		bool inCredits;
+		float openTime;
 
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
