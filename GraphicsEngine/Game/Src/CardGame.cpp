@@ -875,6 +875,7 @@ namespace game
 			arr[i] = "Art/Monsters/the_pontiff.png";
 		}
 
+		arr[MONSTER_IDS::DARK_CRESCENT - BOSS_ID_INDEX_SUB] = "Art/Monsters/dark_crescent.png";
 		arr[MONSTER_IDS::GHOSTFLAME_PONTIFF - BOSS_ID_INDEX_SUB] = "Art/Monsters/the_pontiff.png";
 		//arr[0] = "Art/Monsters/Slime_King.png";
 
@@ -1106,13 +1107,13 @@ namespace game
 		daisy.onAllyDeathText = "noooooooooooooooooo oooooooooooooooooo oooooooooooooooooo";
 		daisy.onEnemyDeathText = "lets go";
 		
-		auto& god = arr[MONSTER_IDS::GOD];
-		god.name = "god";
-		god.attack = 0;
-		god.health = 999;
-		god.unique = true;
-		god.ruleText = "[attacked, cast] deal 1 damage to all enemies and gain 1 attack.";
-		god.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& darkCrescent = arr[MONSTER_IDS::DARK_CRESCENT];
+		darkCrescent.name = "dark crescent";
+		darkCrescent.attack = 0;
+		darkCrescent.health = 999;
+		darkCrescent.unique = true;
+		darkCrescent.ruleText = "[attacked, cast] deal 1 damage to all enemies and gain 1 attack.";
+		darkCrescent.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast || actionState.trigger == ActionState::Trigger::onAttack)
 				{
@@ -1121,8 +1122,10 @@ namespace game
 
 					ActionState buffState{};
 					buffState.trigger = ActionState::Trigger::onStatBuff;
-					buffState.source = ActionState::Source::other;
-					buffState.dst = buffState.src;
+					buffState.source = ActionState::Source::board;
+					buffState.src = self;
+					buffState.dst = self;
+					buffState.srcUniqueId = state.boardState.uniqueIds[self];
 					buffState.dstUniqueId = buffState.srcUniqueId;
 					buffState.values[ActionState::VStatBuff::attack] = 1;
 					state.TryAddToStack(buffState);
@@ -1136,7 +1139,9 @@ namespace game
 				}
 				return false;
 			};
-		god.tags = TAG_BOSS;
+		darkCrescent.tags = TAG_BOSS;
+		darkCrescent.animIndex = 0;
+
 		auto& greatTroll = arr[MONSTER_IDS::GREAT_TROLL];
 		greatTroll.name = "great troll";
 		greatTroll.attack = 5;
@@ -1162,7 +1167,8 @@ namespace game
 				}
 				return false;
 			};
-		greatTroll.animIndex = 0;
+		greatTroll.animIndex = 1;
+
 		auto& slimeQueen = arr[MONSTER_IDS::SLIME_QUEEN];
 		slimeQueen.name = "slime queen";
 		slimeQueen.attack = 2;
@@ -1189,7 +1195,8 @@ namespace game
 				}
 				return false;
 			};
-		slimeQueen.animIndex = 0;
+		slimeQueen.animIndex = 2;
+
 		auto& ghostflamePontiff = arr[MONSTER_IDS::GHOSTFLAME_PONTIFF];
 		ghostflamePontiff.name = "ghostflame pontiff";
 		ghostflamePontiff.attack = 0;
@@ -1222,6 +1229,7 @@ namespace game
 		ghostflamePontiff.onEnemySummonText = "abandon...hope";
 		ghostflamePontiff.onAllyDeathText = "ghostflame consume thee";
 		ghostflamePontiff.onEnemyDeathText = "one less...";
+		ghostflamePontiff.animIndex = 3;
 
 		auto& mirrorKnight = arr[MONSTER_IDS::MIRROR_KNIGHT];
 		mirrorKnight.name = "mirror knight";
@@ -1251,6 +1259,8 @@ namespace game
 				return false;
 			};
 		mirrorKnight.tags = TAG_BOSS;
+		mirrorKnight.animIndex = 4;
+
 		auto& bomba = arr[MONSTER_IDS::BOMBA];
 		bomba.name = "bomba";
 		bomba.attack = 10;
@@ -1274,6 +1284,8 @@ namespace game
 				return false;
 			};
 		bomba.tags = TAG_BOSS;
+		bomba.animIndex = 5;
+
 		auto& bomb = arr[MONSTER_IDS::BOMB];
 		bomb.name = "bomb";
 		bomb.attack = 0;
@@ -1300,6 +1312,7 @@ namespace game
 				}
 				return false;
 			};
+
 		auto& theDread = arr[MONSTER_IDS::THE_DREAD];
 		theDread.name = "the dread";
 		theDread.attack = 5;
@@ -1334,6 +1347,8 @@ namespace game
 				return false;
 			};
 		theDread.tags = TAG_BOSS;
+		theDread.animIndex = 6;
+
 		auto& archmage = arr[MONSTER_IDS::ARCHMAGE];
 		archmage.name = "archmage";
 		archmage.attack = 8;
@@ -1364,6 +1379,8 @@ namespace game
 				}
 				return false;
 			};
+		archmage.animIndex = 7;
+
 		auto& shelly = arr[MONSTER_IDS::SHELLY];
 		shelly.name = "shelly";
 		shelly.attack = 0;
@@ -1392,6 +1409,8 @@ namespace game
 				return false;
 			};
 		shelly.tags = TAG_BOSS;
+		shelly.animIndex = 8;
+
 		auto& goblinQueen = arr[MONSTER_IDS::GOBLIN_QUEEN];
 		goblinQueen.name = "goblin queen";
 		goblinQueen.attack = 0;
@@ -1427,6 +1446,8 @@ namespace game
 				}
 				return false;
 			};
+		goblinQueen.animIndex = 9;
+		
 		auto& masterLich = arr[MONSTER_IDS::MASTER_LICH];
 		masterLich.name = "master lich";
 		masterLich.attack = 10;
@@ -1455,6 +1476,8 @@ namespace game
 				return false;
 			};
 		masterLich.tags = TAG_BOSS;
+		masterLich.animIndex = 10;
+
 		auto& theCollector = arr[MONSTER_IDS::THE_COLLECTOR];
 		theCollector.name = "the collector";
 		theCollector.attack = 15;
@@ -1478,6 +1501,8 @@ namespace game
 				return false;
 			};
 		theCollector.tags = TAG_BOSS;
+		theCollector.animIndex = 11;
+
 		auto& slimeEmperor = arr[MONSTER_IDS::SLIME_EMPEROR];
 		slimeEmperor.name = "slime emperor";
 		slimeEmperor.attack = 10;
@@ -1505,6 +1530,8 @@ namespace game
 				}
 				return false;
 			};
+		slimeEmperor.animIndex = 12;
+
 		auto& knifeJuggler = arr[MONSTER_IDS::KNIFE_JUGGLER];
 		knifeJuggler.name = "knife juggler";
 		knifeJuggler.attack = 1;

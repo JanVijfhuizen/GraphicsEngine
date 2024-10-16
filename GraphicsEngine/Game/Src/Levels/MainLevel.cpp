@@ -26,7 +26,7 @@ namespace game
 			if (state.depth < SUB_BOSS_COUNT * ROOM_COUNT_BEFORE_BOSS)
 				path.boss = state.GetBoss(info, i);
 			if(path.boss == -1)
-				path.boss = MONSTER_IDS::GOD;
+				path.boss = MONSTER_IDS::DARK_CRESCENT;
 			++i;
 		}
 		for (auto& metaData : metaDatas)
@@ -547,8 +547,8 @@ namespace game
 			}
 		}
 
-		DrawParallaxBackground(info, false);
-		DrawParallaxBackground(info, true);
+		DrawParallaxBackground(state, info, false);
+		DrawParallaxBackground(state, info, true);
 		
 		{
 			const float l = jv::Min(1.f, level->GetTime() * 3);
@@ -1658,7 +1658,7 @@ namespace game
 		++state.depth;
 	}
 
-	void MainLevel::CombatState::DrawParallaxBackground(const LevelUpdateInfo& info, const bool mirror) const
+	void MainLevel::CombatState::DrawParallaxBackground(State& state, const LevelUpdateInfo& info, const bool mirror) const
 	{
 		glm::vec2 mouseOffset = info.inputState.mousePos - SIMULATED_RESOLUTION / 2;
 
@@ -1677,18 +1677,18 @@ namespace game
 					glm::ivec2(-90, 10)
 				};
 
-				// temp.
-				static float f = 0;
-				f += info.deltaTime * 2;
+				uint32_t index = state.depth / ROOM_COUNT_BEFORE_BOSS;
+				index %= 5;
 
-				uint32_t index = static_cast<uint32_t>(floor(fmodf(f, 5)));
-
-				PixelPerfectRenderTask renderTask{};
-				renderTask.scale = atlasTexture.resolution / glm::ivec2(5, 1);
-				renderTask.subTexture = moonFrames[index];
-				renderTask.position = glm::ivec2(SIMULATED_RESOLUTION / 2) + positionOffsets[index];
-				renderTask.xCenter = true;
-				info.renderTasks.Push(renderTask);
+				if (state.depth + 1 < ROOM_COUNT_BEFORE_BOSS * TOTAL_BOSS_COUNT) 
+				{
+					PixelPerfectRenderTask renderTask{};
+					renderTask.scale = atlasTexture.resolution / glm::ivec2(5, 1);
+					renderTask.subTexture = moonFrames[index];
+					renderTask.position = glm::ivec2(SIMULATED_RESOLUTION / 2) + positionOffsets[index];
+					renderTask.xCenter = true;
+					info.renderTasks.Push(renderTask);
+				}	
 			}
 
 		PixelPerfectRenderTask renderTask{};
@@ -2018,7 +2018,7 @@ namespace game
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
 
-		//stateMachine.state.depth = 5;
+		//stateMachine.state.depth = 2999;
 		//stateMachine.next = stateMachine.current;
 	}
 
