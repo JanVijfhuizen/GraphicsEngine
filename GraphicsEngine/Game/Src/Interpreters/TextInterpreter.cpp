@@ -47,7 +47,7 @@ namespace game
 				{
 					if (lastBreakPointFound != -1)
 					{
-						lineStart = lastBreakPointFound;
+						lineStart = lastBreakPointFound + 1;
 						++lineCount;
 						i = lineStart - 1;
 					}

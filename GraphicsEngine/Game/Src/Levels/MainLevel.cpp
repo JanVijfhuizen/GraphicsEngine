@@ -1662,15 +1662,25 @@ namespace game
 	{
 		glm::vec2 mouseOffset = info.inputState.mousePos - SIMULATED_RESOLUTION / 2;
 
-		if(backgroundType == BackgroundType::moonLight)
-		{
-			auto subTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::moon)].subTexture;
+		if(!mirror)
+			if(backgroundType == BackgroundType::moonLight)
+			{
+				auto& atlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::moon)];
+				auto subTexture = atlasTexture.subTexture;
 
-			PixelPerfectRenderTask renderTask{};
-			renderTask.scale = SIMULATED_RESOLUTION;
-			renderTask.subTexture = subTexture;
-			info.renderTasks.Push(renderTask);
-		}
+				glm::ivec2 positionOffsets[3]{
+					glm::ivec2(90, 10),
+					glm::ivec2(60, 30),
+					glm::ivec2(0, 80)
+				};
+
+				PixelPerfectRenderTask renderTask{};
+				renderTask.scale = atlasTexture.resolution;
+				renderTask.subTexture = subTexture;
+				renderTask.position = glm::ivec2(SIMULATED_RESOLUTION / 2) + glm::ivec2(0, 80);
+				renderTask.xCenter = true;
+				info.renderTasks.Push(renderTask);
+			}
 
 		PixelPerfectRenderTask renderTask{};
 		renderTask.scale = glm::ivec2(64);
@@ -1999,8 +2009,8 @@ namespace game
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
 
-		stateMachine.state.depth = 5;
-		stateMachine.next = stateMachine.current;
+		//stateMachine.state.depth = 5;
+		//stateMachine.next = stateMachine.current;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

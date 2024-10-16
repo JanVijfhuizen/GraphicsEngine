@@ -1,5 +1,6 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainMenuLevel.h"
+#include <Utils/SubTextureUtils.h>
 
 namespace game
 {
@@ -133,13 +134,15 @@ namespace game
 		}
 
 		const auto& titleAtlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::title)];
+		jv::ge::SubTexture titleFrames[4];
+		Divide(titleAtlasTexture.subTexture, titleFrames, 4);
+
+		uint32_t index = floor(fmodf(GetTime() * 6, 4));
 
 		PixelPerfectRenderTask titleTask;
-		titleTask.position = glm::ivec2(0, SIMULATED_RESOLUTION.y - titleAtlasTexture.resolution.y);
-		titleTask.scale = titleAtlasTexture.resolution;
-		titleTask.subTexture = titleAtlasTexture.subTexture;
-		//titleTask.xCenter = true;
-		//titleTask.yCenter = true;
+		titleTask.position = glm::ivec2(0, SIMULATED_RESOLUTION.y - 64);
+		titleTask.scale = titleAtlasTexture.resolution / glm::ivec2(4, 1);
+		titleTask.subTexture = titleFrames[index];
 		info.renderTasks.Push(titleTask);
 		
 		HeaderDrawInfo headerDrawInfo{};
