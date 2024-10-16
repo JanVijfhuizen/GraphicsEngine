@@ -9,6 +9,22 @@ namespace game
 		Level::Create(info);
 		inTutorial = false;
 		inResolutionSelect = false;
+		inCredits = false;
+	}
+
+	void MainMenuLevel::DrawTitle(const LevelUpdateInfo& info)
+	{
+		const auto& titleAtlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::title)];
+		jv::ge::SubTexture titleFrames[4];
+		Divide(titleAtlasTexture.subTexture, titleFrames, 4);
+
+		uint32_t index = floor(fmodf(GetTime() * 6, 4));
+
+		PixelPerfectRenderTask titleTask;
+		titleTask.position = glm::ivec2(0, SIMULATED_RESOLUTION.y - 64);
+		titleTask.scale = titleAtlasTexture.resolution / glm::ivec2(4, 1);
+		titleTask.subTexture = titleFrames[index];
+		info.renderTasks.Push(titleTask);
 	}
 
 	bool MainMenuLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -20,6 +36,43 @@ namespace game
 		constexpr auto buttonOrigin = origin - glm::ivec2(-4, 36);
 		constexpr uint32_t BUTTON_OFFSET = 20;
 		constexpr uint32_t SMALL_BUTTON_OFFSET = 12;
+
+		if (inCredits)
+		{
+			DrawTitle(info);
+
+			TextTask textTask{};
+			textTask.position = buttonOrigin + glm::ivec2(0, 3);
+			textTask.text = "credits";
+			info.textTasks.Push(textTask);
+
+			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
+			textTask.text = "jan vijfhuizen - most stuff";
+			info.textTasks.Push(textTask);
+
+			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
+			textTask.text = "tristan ten cate - audio";
+			info.textTasks.Push(textTask);
+
+			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
+			textTask.text = "dragos popescu - programming help";
+			info.textTasks.Push(textTask);
+
+			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
+			textTask.text = "ana dirica - art help";
+			info.textTasks.Push(textTask);
+
+			ButtonDrawInfo buttonDrawInfo{};
+			buttonDrawInfo.width = 140;
+			buttonDrawInfo.drawLineByDefault = false;
+			buttonDrawInfo.origin = textTask.position;
+			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET * 2;
+			buttonDrawInfo.text = "back";
+			buttonDrawInfo.drawLineByDefault = true;
+			if (DrawButton(info, buttonDrawInfo))
+				inCredits = false;
+			return true;
+		}
 
 		if (inResolutionSelect)
 		{
@@ -103,19 +156,19 @@ namespace game
 
 			TextTask textTask{};
 			textTask.position = origin - glm::ivec2(0, SMALL_BUTTON_OFFSET * 6);
-			textTask.text = "[mouse left] select and drag cards.";
+			textTask.text = "mouse left - select and drag cards.";
 			info.textTasks.Push(textTask);
 
 			textTask.position.y -= SMALL_BUTTON_OFFSET;
-			textTask.text = "[mouse right] look at the card text.";
+			textTask.text = "mouse right - look at the card text.";
 			info.textTasks.Push(textTask);
 
 			textTask.position.y -= SMALL_BUTTON_OFFSET;
-			textTask.text = "[space] end turn.";
+			textTask.text = "space - end turn.";
 			info.textTasks.Push(textTask);
 
 			textTask.position.y -= SMALL_BUTTON_OFFSET;
-			textTask.text = "[esc] open menu.";
+			textTask.text = "esc - open menu.";
 			info.textTasks.Push(textTask);
 
 			headerDrawInfo.text = "drag a monster to an enemy monster to attack it. drag a spell to cast it.";
@@ -133,39 +186,22 @@ namespace game
 			return true;
 		}
 
-		const auto& titleAtlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::title)];
-		jv::ge::SubTexture titleFrames[4];
-		Divide(titleAtlasTexture.subTexture, titleFrames, 4);
-
-		uint32_t index = floor(fmodf(GetTime() * 6, 4));
-
-		PixelPerfectRenderTask titleTask;
-		titleTask.position = glm::ivec2(0, SIMULATED_RESOLUTION.y - 64);
-		titleTask.scale = titleAtlasTexture.resolution / glm::ivec2(4, 1);
-		titleTask.subTexture = titleFrames[index];
-		info.renderTasks.Push(titleTask);
-		
-		HeaderDrawInfo headerDrawInfo{};
-		headerDrawInfo.origin = origin;
-		headerDrawInfo.text = "untitled card game";
-		headerDrawInfo.lineLength = 10;
-		//DrawHeader(info, headerDrawInfo);
+		DrawTitle(info);
 
 		ButtonDrawInfo buttonDrawInfo{};
 		buttonDrawInfo.origin = buttonOrigin;
 		buttonDrawInfo.text = "start";
 		buttonDrawInfo.width = 140;
-		buttonDrawInfo.largeFont = true;
 		buttonDrawInfo.drawLineByDefault = false;
 		if (DrawButton(info, buttonDrawInfo))
 			Load(LevelIndex::newGame, true);
 
-		buttonDrawInfo.origin.y -= BUTTON_OFFSET;
+		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 		buttonDrawInfo.text = "change resolution";
 		if (DrawButton(info, buttonDrawInfo))
 			inResolutionSelect = true;
 
-		buttonDrawInfo.origin.y -= BUTTON_OFFSET;
+		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 		buttonDrawInfo.text = "how to play";
 		if (DrawButton(info, buttonDrawInfo))
 		{
@@ -173,7 +209,15 @@ namespace game
 			return true;
 		}
 
-		buttonDrawInfo.origin.y -= BUTTON_OFFSET;
+		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
+		buttonDrawInfo.text = "credits";
+		if (DrawButton(info, buttonDrawInfo))
+		{
+			inCredits = true;
+			return true;
+		}
+
+		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 		buttonDrawInfo.text = "exit";
 		if (DrawButton(info, buttonDrawInfo))
 			return false;
