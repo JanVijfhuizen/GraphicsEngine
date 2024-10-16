@@ -712,6 +712,7 @@ namespace game
 		arr[15] = "Art/text_bubble.png";
 		arr[16] = "Art/text_bubble_tail.png";
 		arr[17] = "Art/large_numbers.png";
+		arr[18] = "Art/title.png";
 		return arr;
 	}
 
@@ -2225,7 +2226,7 @@ namespace game
 		beastSpirit.name = "beast spirit";
 		beastSpirit.attack = 1;
 		beastSpirit.health = 20;
-		beastSpirit.ruleText = "[token attack] draw.";
+		beastSpirit.ruleText = "[beast attack] draw.";
 		beastSpirit.tags = TAG_BEAST | TAG_ELEMENTAL;
 		beastSpirit.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -2236,7 +2237,7 @@ namespace game
 						return false;
 
 					const auto& monster = info.monsters[boardState.ids[actionState.src]];
-					if ((monster.tags & TAG_TOKEN) == 0)
+					if ((monster.tags & TAG_BEAST) == 0)
 						return false;
 
 					ActionState drawState{};

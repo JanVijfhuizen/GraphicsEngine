@@ -132,6 +132,15 @@ namespace game
 			return true;
 		}
 
+		const auto& titleAtlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::title)];
+
+		PixelPerfectRenderTask titleTask;
+		titleTask.position = glm::ivec2(0, SIMULATED_RESOLUTION.y - titleAtlasTexture.resolution.y);
+		titleTask.scale = titleAtlasTexture.resolution;
+		titleTask.subTexture = titleAtlasTexture.subTexture;
+		//titleTask.xCenter = true;
+		//titleTask.yCenter = true;
+		info.renderTasks.Push(titleTask);
 		
 		HeaderDrawInfo headerDrawInfo{};
 		headerDrawInfo.origin = origin;

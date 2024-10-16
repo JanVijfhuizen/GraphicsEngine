@@ -282,5 +282,6 @@ enum class TextureId
 	textBubble,
 	textBubbleTail,
 	largeNumbers,
+	title,
 	length
 };
