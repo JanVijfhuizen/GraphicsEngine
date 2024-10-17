@@ -259,7 +259,8 @@ enum class LevelIndex
 	newGame,
 	main,
 	gameOver,
-	animOnly
+	animOnly,
+	animOnlyNoTimeReset
 };
 
 enum class TextureId

@@ -2032,6 +2032,7 @@ namespace game
 			ingameMenuOpened = !ingameMenuOpened;
 			timeSinceIngameMenuOpened = GetTime();
 			pauseRequest = false;
+			Load(LevelIndex::animOnlyNoTimeReset, true);
 		}
 
 		if (ingameMenuOpened)
@@ -2064,6 +2065,7 @@ namespace game
 			if(DrawButton(info, buttonDrawInfo, lifetime))
 			{
 				ingameMenuOpened = false;
+				Load(LevelIndex::animOnlyNoTimeReset, true);
 				return true;
 			}
 

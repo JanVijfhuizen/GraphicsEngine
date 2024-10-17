@@ -51,6 +51,13 @@ namespace game
 
 			if (_timeSinceLoading > _LOAD_DURATION)
 			{
+				if (_loadingLevelIndex == LevelIndex::animOnlyNoTimeReset)
+				{
+					_timeSinceLoading = 0;
+					_loading = false;
+					return true;
+				}
+
 				if(_loadingLevelIndex == LevelIndex::animOnly)
 				{
 					_timeSinceOpened = 0;
