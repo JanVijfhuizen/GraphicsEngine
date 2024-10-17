@@ -2063,7 +2063,7 @@ namespace game
 			}
 
 			buttonDrawInfo.text = "main menu";
-			buttonDrawInfo.origin.y -= 20;
+			buttonDrawInfo.origin.y -= 12;
 			if (DrawButton(info, buttonDrawInfo, lifetime))
 			{
 				loadLevelIndex = LevelIndex::mainMenu;
@@ -2071,7 +2071,7 @@ namespace game
 			}
 
 			buttonDrawInfo.text = "exit game";
-			buttonDrawInfo.origin.y -= 20;
+			buttonDrawInfo.origin.y -= 12;
 			if (DrawButton(info, buttonDrawInfo, lifetime))
 			{
 				return false;
