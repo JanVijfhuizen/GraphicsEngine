@@ -2037,9 +2037,14 @@ namespace game
 		if (ingameMenuOpened)
 		{
 			const auto& pauseMenuTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::pauseMenu)];
+			jv::ge::SubTexture pauseMenuFrames[4];
+			Divide(pauseMenuTexture.subTexture, pauseMenuFrames, 4);
+			
+			const uint32_t index = floor(fmodf(GetTime() * 4, 4));
+
 			PixelPerfectRenderTask pauseMenuRenderTask{};
-			pauseMenuRenderTask.subTexture = pauseMenuTexture.subTexture;
-			pauseMenuRenderTask.scale = pauseMenuTexture.resolution;
+			pauseMenuRenderTask.subTexture = pauseMenuFrames[index];
+			pauseMenuRenderTask.scale = pauseMenuTexture.resolution / glm::ivec2(4, 1);
 			pauseMenuRenderTask.position = SIMULATED_RESOLUTION / 2;
 			pauseMenuRenderTask.xCenter = true;
 			pauseMenuRenderTask.yCenter = true;
