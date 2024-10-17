@@ -2036,6 +2036,15 @@ namespace game
 
 		if (ingameMenuOpened)
 		{
+			const auto& pauseMenuTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::pauseMenu)];
+			PixelPerfectRenderTask pauseMenuRenderTask{};
+			pauseMenuRenderTask.subTexture = pauseMenuTexture.subTexture;
+			pauseMenuRenderTask.scale = pauseMenuTexture.resolution;
+			pauseMenuRenderTask.position = SIMULATED_RESOLUTION / 2;
+			pauseMenuRenderTask.xCenter = true;
+			pauseMenuRenderTask.yCenter = true;
+			info.renderTasks.Push(pauseMenuRenderTask);
+
 			info.inCombat = false;
 			const float lifetime = GetTime() - timeSinceIngameMenuOpened;
 
