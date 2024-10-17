@@ -2048,11 +2048,12 @@ namespace game
 			info.inCombat = false;
 			const float lifetime = GetTime() - timeSinceIngameMenuOpened;
 
-			DrawTopCenterHeader(info, HeaderSpacing::close, "pause menu", 2, lifetime);
+			//DrawTopCenterHeader(info, HeaderSpacing::close, "pause menu", 2, lifetime);
 
 			ButtonDrawInfo buttonDrawInfo{};
 			buttonDrawInfo.center = true;
 			buttonDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 10);
+			buttonDrawInfo.drawLineByDefault = false;
 			
 			buttonDrawInfo.text = "resume";
 			if(DrawButton(info, buttonDrawInfo, lifetime))
