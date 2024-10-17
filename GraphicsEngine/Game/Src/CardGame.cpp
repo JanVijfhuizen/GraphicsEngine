@@ -1682,8 +1682,8 @@ namespace game
 		forestSpirit.onDamagedText = "ow...you stepped on my toes";
 		forestSpirit.onAttackText = "dance off";
 		forestSpirit.onAllySummonText = "dance with me";
-		forestSpirit.onEnemySummonText = "you dont look like a dancer";
-		forestSpirit.onAllyDeathText = "no more dancing";
+		forestSpirit.onEnemySummonText = "another one";
+		forestSpirit.onAllyDeathText = "no more dancing for you";
 		forestSpirit.onEnemyDeathText = "you have danced your last...dance";
 
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
