@@ -731,7 +731,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Artifact/mage_hat.png";
+			arr[i] = "Art/Artifact/thorn_mail.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -765,7 +765,7 @@ namespace game
 		arr[MONSTER_IDS::DUNG_LOBBER] = "Art/Monsters/dung_lobber.png";
 		arr[MONSTER_IDS::SLIME_HEAD] = "Art/Monsters/slime_head.png";
 		arr[MONSTER_IDS::FOREST_SPIRIT] = "Art/Monsters/forest_spirit.png";
-
+		
 		arr[SPELL_ID_START + SPELL_IDS::ARCANE_INTELLECT] = "Art/Spells/arcane_intellect.png";
 		arr[SPELL_ID_START + SPELL_IDS::DREAD_SACRIFICE] = "Art/Spells/dread_sacrifice.png";
 		arr[SPELL_ID_START + SPELL_IDS::TRANQUILIZE] = "Art/Spells/tranquilize.png";
@@ -808,11 +808,15 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::LOYAL_WORKFORCE] = "Art/Spells/loyal_workforce.png";
 		arr[SPELL_ID_START + SPELL_IDS::PICK] = "Art/Spells/pick.png";
 		arr[SPELL_ID_START + SPELL_IDS::CYCLE] = "Art/Spells/cycle.png";
-
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifact/arcane_amulet.png";
+		
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::HELMET_OF_THE_HOST] = "Art/Artifact/helm_of_the_host.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_THE_EMPEROR] = "Art/Artifact/mask_of_the_emperor.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_CHAOS] = "Art/Artifact/mask_of_chaos.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORNMAIL] = "Art/Artifact/thorn_mail.png";
+
+		/*
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifact/arcane_amulet.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::REVERSE_CARD] = "Art/Artifact/reverse_card.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::FALSE_ARMOR] = "Art/Artifact/false_armor.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_HAT] = "Art/Artifact/mage_hat.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH] = "Art/Artifact/mask_of_eternal_youth.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifact/corrupting_knife.png";
@@ -825,15 +829,13 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BLESSED_RING] = "Art/Artifact/blessed_ring.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifact/mage_sword.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORN_WHIP] = "Art/Artifact/thorn_whip.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::RED_CLOTH] = "Art/Artifact/red_cloth.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::HELMET_OF_THE_HOST] = "Art/Artifact/helm_of_the_host.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MOANING_ORB] = "Art/Artifact/moaning_orb.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THE_BRAND] = "Art/Artifact/the_brand.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::SWORD_OF_SPELLCASTING] = "Art/Artifact/sword_of_spellcasting.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_AEONS] = "Art/Artifact/staff_of_aeons.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_SUMMONING] = "Art/Artifact/staff_of_summoning.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MANA_RING] = "Art/Artifact/mana_ring.png";
-
+		*/
 		arr[CURSE_ID_START + CURSE_IDS::FADING] = "Art/Curses/fading.png";
 		arr[CURSE_ID_START + CURSE_IDS::WEAKNESS] = "Art/Curses/weakness.png";
 		arr[CURSE_ID_START + CURSE_IDS::COWARDICE] = "Art/Curses/cowardice.png";
@@ -2341,9 +2343,9 @@ namespace game
 			}
 			return false;
 		};
-		arr[ARTIFACT_IDS::FALSE_ARMOR].name = "glimmering gear";
-		arr[ARTIFACT_IDS::FALSE_ARMOR].ruleText = "[attack] the attacked monster takes damage equal to my bonus health.";
-		arr[ARTIFACT_IDS::FALSE_ARMOR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::MASK_OF_THE_EMPEROR].name = "mask of the emperor";
+		arr[ARTIFACT_IDS::MASK_OF_THE_EMPEROR].ruleText = "[attack] the attacked monster takes damage equal to my bonus health.";
+		arr[ARTIFACT_IDS::MASK_OF_THE_EMPEROR].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
@@ -2640,9 +2642,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::RED_CLOTH].name = "red cloth";
-		arr[ARTIFACT_IDS::RED_CLOTH].ruleText = "[start of turn] gain 3 bonus health for every enemy. [end of turn] they all attack me.";
-		arr[ARTIFACT_IDS::RED_CLOTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::MASK_OF_CHAOS].name = "mask of chaos";
+		arr[ARTIFACT_IDS::MASK_OF_CHAOS].ruleText = "[start of turn] gain 3 bonus health for every enemy. [end of turn] they all attack me.";
+		arr[ARTIFACT_IDS::MASK_OF_CHAOS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
@@ -2678,7 +2680,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of haste";
+		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of hate";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] all allies gain +1 attack.";
 		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
