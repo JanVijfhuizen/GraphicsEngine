@@ -731,7 +731,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Artifact/corrupting_knife.png";
+			arr[i] = "Art/Artifact/helmet_of_hate.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -809,7 +809,7 @@ namespace game
 		arr[SPELL_ID_START + SPELL_IDS::PICK] = "Art/Spells/pick.png";
 		arr[SPELL_ID_START + SPELL_IDS::CYCLE] = "Art/Spells/cycle.png";
 		
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::HELMET_OF_THE_HOST] = "Art/Artifact/helm_of_the_host.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::HELMET_OF_HATE] = "Art/Artifact/helmet_of_hate.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_THE_EMPEROR] = "Art/Artifact/mask_of_the_emperor.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_CHAOS] = "Art/Artifact/mask_of_chaos.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORNMAIL] = "Art/Artifact/thorn_mail.png";
@@ -2680,9 +2680,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].name = "helmet of hate";
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].ruleText = "[attack] all allies gain +1 attack.";
-		arr[ARTIFACT_IDS::HELMET_OF_THE_HOST].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::HELMET_OF_HATE].name = "helmet of hate";
+		arr[ARTIFACT_IDS::HELMET_OF_HATE].ruleText = "[attack] all allies gain +1 attack.";
+		arr[ARTIFACT_IDS::HELMET_OF_HATE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onAttack)
 				{
