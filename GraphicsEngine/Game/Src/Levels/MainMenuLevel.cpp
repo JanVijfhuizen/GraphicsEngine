@@ -11,6 +11,7 @@ namespace game
 		inResolutionSelect = false;
 		inCredits = false;
 		openTime = 0;
+		changingResolution = false;
 	}
 
 	void MainMenuLevel::DrawTitle(const LevelUpdateInfo& info)
@@ -32,6 +33,9 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
+		if (changingResolution)
+			return true;
+
 		openTime += info.deltaTime;
 
 		constexpr glm::ivec2 origin = { 18, SIMULATED_RESOLUTION.y - 36 };
@@ -96,6 +100,7 @@ namespace game
 			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(320, 240);
+				changingResolution = true;
 				return true;
 			}
 
@@ -104,6 +109,7 @@ namespace game
 			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(640, 480);
+				changingResolution = true;
 				return true;
 			}
 
@@ -112,6 +118,7 @@ namespace game
 			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(960, 720);
+				changingResolution = true;
 				return true;
 			}
 
@@ -120,6 +127,7 @@ namespace game
 			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(1280, 720);
+				changingResolution = true;
 				return true;
 			}
 
@@ -128,6 +136,7 @@ namespace game
 			if (DrawButton(info, buttonDrawInfo, openTime))
 			{
 				info.requestedResolution = glm::ivec2(1920, 1080);
+				changingResolution = true;
 				return true;
 			}
 
@@ -136,7 +145,10 @@ namespace game
 				buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
 				buttonDrawInfo.text = "to fullscreen";
 				if (DrawButton(info, buttonDrawInfo, openTime))
+				{
 					info.isFullScreen = true;
+					changingResolution = true;
+				}
 			}
 
 			buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET * 2;

@@ -10,6 +10,7 @@ namespace game
 		bool inResolutionSelect;
 		bool inCredits;
 		float openTime;
+		bool changingResolution;
 
 		void Create(const LevelCreateInfo& info) override;
 		bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex) override;
