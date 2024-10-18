@@ -583,6 +583,7 @@ namespace game
 				cardDrawInfo.selectable = false;
 			}
 
+			cardDrawInfo.drawShadow = true;
 			if (drawInfo.outStackSelected && stackedSelected != -1)
 				*drawInfo.outStackSelected = stackedSelected;
 
