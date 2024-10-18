@@ -731,7 +731,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Artifact/thorn_mail.png";
+			arr[i] = "Art/Artifact/corrupting_knife.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -813,19 +813,19 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_THE_EMPEROR] = "Art/Artifact/mask_of_the_emperor.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_CHAOS] = "Art/Artifact/mask_of_chaos.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORNMAIL] = "Art/Artifact/thorn_mail.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BOOTS_OF_SWIFTNESS] = "Art/Artifact/boots_of_swiftness.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::REVERSE_CARD] = "Art/Artifact/reverse_card.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_HAT] = "Art/Artifact/mage_hat.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CUP_OF_BLOOD] = "Art/Artifact/cup_of_blood.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifact/corrupting_knife.png";
 
 		/*
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifact/arcane_amulet.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::REVERSE_CARD] = "Art/Artifact/reverse_card.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_HAT] = "Art/Artifact/mage_hat.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH] = "Art/Artifact/mask_of_eternal_youth.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifact/corrupting_knife.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CUP_OF_BLOOD] = "Art/Artifact/cup_of_blood.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BLOOD_AXE] = "Art/Artifact/blood_axe.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::INSECT_CLAW] = "Art/Artifact/insect_claw.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MOON_SCYTE] = "Art/Artifact/moon_scyte.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::SPIKEY_COLLAR] = "Art/Artifact/spikey_collar.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BOOTS_OF_SWIFTNESS] = "Art/Artifact/boots_of_swiftness.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BLESSED_RING] = "Art/Artifact/blessed_ring.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifact/mage_sword.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORN_WHIP] = "Art/Artifact/thorn_whip.png";
