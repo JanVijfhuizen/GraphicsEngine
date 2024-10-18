@@ -3819,7 +3819,7 @@ namespace game
 				return false;
 			};
 		auto& loyalWorkforce = arr[SPELL_IDS::LOYAL_WORKFORCE];
-		loyalWorkforce.name = "loyal workforce";
+		loyalWorkforce.name = "obedience";
 		loyalWorkforce.ruleText = "draw for each allied token.";
 		loyalWorkforce.cost = 1;
 		loyalWorkforce.type = SpellCard::Type::all;
