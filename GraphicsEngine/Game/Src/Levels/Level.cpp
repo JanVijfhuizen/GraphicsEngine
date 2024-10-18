@@ -639,7 +639,8 @@ namespace game
 		const bool collided = drawInfo.selectable ? CollidesShapeInt(drawInfo.origin - 
 			(drawInfo.center ? bgRenderTask.scale / 2 : glm::ivec2(0)), bgRenderTask.scale, info.inputState.mousePos) : false;
 		bgRenderTask.color = drawInfo.card ? drawInfo.bgColor : drawInfo.fgColor * .4f;
-		bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
+		if(drawInfo.drawShadow)
+			bgRenderTask.color = collided && drawInfo.selectable ? glm::vec4(1, 0, 0, 1) : bgRenderTask.color;
 
 		if (drawInfo.metaData)
 		{

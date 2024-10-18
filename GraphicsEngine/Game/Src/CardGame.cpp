@@ -731,7 +731,7 @@ namespace game
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
 
-			arr[i] = "Art/Artifact/helmet_of_hate.png";
+			arr[i] = "Art/Artifact/the_brand.png";
 		}
 		
 		arr[MONSTER_IDS::DAISY] = "Art/Monsters/daisy.png";
@@ -818,10 +818,12 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_HAT] = "Art/Artifact/mage_hat.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CUP_OF_BLOOD] = "Art/Artifact/cup_of_blood.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CORRUPTING_KNIFE] = "Art/Artifact/corrupting_knife.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_YOUTH] = "Art/Artifact/mask_of_youth.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MOANING_ORB] = "Art/Artifact/moaning_orb.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THE_BRAND] = "Art/Artifact/the_brand.png";
 
 		/*
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::ARCANE_AMULET] = "Art/Artifact/arcane_amulet.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH] = "Art/Artifact/mask_of_eternal_youth.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BLOOD_AXE] = "Art/Artifact/blood_axe.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::INSECT_CLAW] = "Art/Artifact/insect_claw.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MOON_SCYTE] = "Art/Artifact/moon_scyte.png";
@@ -829,8 +831,6 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::BLESSED_RING] = "Art/Artifact/blessed_ring.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifact/mage_sword.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORN_WHIP] = "Art/Artifact/thorn_whip.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MOANING_ORB] = "Art/Artifact/moaning_orb.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THE_BRAND] = "Art/Artifact/the_brand.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::SWORD_OF_SPELLCASTING] = "Art/Artifact/sword_of_spellcasting.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_AEONS] = "Art/Artifact/staff_of_aeons.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_SUMMONING] = "Art/Artifact/staff_of_summoning.png";
@@ -2425,9 +2425,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].name = "mask of youth";
-		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].ruleText = "[bonus attack buffed] gain that much bonus health.";
-		arr[ARTIFACT_IDS::MASK_OF_ETERNAL_YOUTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::MASK_OF_YOUTH].name = "mask of youth";
+		arr[ARTIFACT_IDS::MASK_OF_YOUTH].ruleText = "[bonus attack buffed] gain that much bonus health.";
+		arr[ARTIFACT_IDS::MASK_OF_YOUTH].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStatBuff)
 				{
