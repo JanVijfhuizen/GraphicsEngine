@@ -830,12 +830,10 @@ namespace game
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::THORN_WHIP] = "Art/Artifact/thorn_whip.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_SUMMONING] = "Art/Artifact/staff_of_summoning.png";
 		arr[ARTIFACT_ID_START + ARTIFACT_IDS::JESTER_HAT] = "Art/Artifact/jester_hat.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::QUICK_BOW] = "Art/Artifact/quick_bow.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::FORBIDDEN_TOME] = "Art/Artifact/forbidden_tome.png";
+		arr[ARTIFACT_ID_START + ARTIFACT_IDS::CRYSTAL_FLOWER] = "Art/Artifact/crystal_flower.png";
 
-		/*
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::INSECT_CLAW] = "Art/Artifact/insect_claw.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::MAGE_SWORD] = "Art/Artifact/mage_sword.png";
-		arr[ARTIFACT_ID_START + ARTIFACT_IDS::STAFF_OF_AEONS] = "Art/Artifact/staff_of_aeons.png";
-		*/
 		arr[CURSE_ID_START + CURSE_IDS::FADING] = "Art/Curses/fading.png";
 		arr[CURSE_ID_START + CURSE_IDS::WEAKNESS] = "Art/Curses/weakness.png";
 		arr[CURSE_ID_START + CURSE_IDS::COWARDICE] = "Art/Curses/cowardice.png";
@@ -2527,9 +2525,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::INSECT_CLAW].name = "insect claw";
-		arr[ARTIFACT_IDS::INSECT_CLAW].ruleText = "[any death] draw.";
-		arr[ARTIFACT_IDS::INSECT_CLAW].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::QUICK_BOW].name = "quick bow";
+		arr[ARTIFACT_IDS::QUICK_BOW].ruleText = "[any death] draw.";
+		arr[ARTIFACT_IDS::QUICK_BOW].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDeath)
 				{
@@ -2605,9 +2603,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::MAGE_SWORD].name = "manamune";
-		arr[ARTIFACT_IDS::MAGE_SWORD].ruleText = "[cast] +2 bonus attack.";
-		arr[ARTIFACT_IDS::MAGE_SWORD].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::FORBIDDEN_TOME].name = "forbidden tome";
+		arr[ARTIFACT_IDS::FORBIDDEN_TOME].ruleText = "[cast] +2 bonus attack.";
+		arr[ARTIFACT_IDS::FORBIDDEN_TOME].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast)
 				{
@@ -2759,9 +2757,9 @@ namespace game
 				}
 				return false;
 			};
-		arr[ARTIFACT_IDS::STAFF_OF_AEONS].name = "staff of aeons";
-		arr[ARTIFACT_IDS::STAFF_OF_AEONS].ruleText = "[2 or more non combat damage to any target] +1 mana.";
-		arr[ARTIFACT_IDS::STAFF_OF_AEONS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		arr[ARTIFACT_IDS::CRYSTAL_FLOWER].name = "crystal flower";
+		arr[ARTIFACT_IDS::CRYSTAL_FLOWER].ruleText = "[2 or more non combat damage to any target] +1 mana.";
+		arr[ARTIFACT_IDS::CRYSTAL_FLOWER].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onDamage)
 				{
