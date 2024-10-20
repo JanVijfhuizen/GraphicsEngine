@@ -876,11 +876,12 @@ namespace game
 			arr[i + l] = TextInterpreter::Concat(arr[i], "_norm.png", arena);
 			arr[i] = TextInterpreter::Concat(arr[i], ".png", arena);
 			*/
-			arr[i] = "Art/Monsters/the_pontiff.png";
+			arr[i] = "Art/Monsters/lord_of_flame.png";
 		}
 
 		arr[MONSTER_IDS::DARK_CRESCENT - BOSS_ID_INDEX_SUB] = "Art/Monsters/dark_crescent.png";
 		arr[MONSTER_IDS::GHOSTFLAME_PONTIFF - BOSS_ID_INDEX_SUB] = "Art/Monsters/the_pontiff.png";
+		arr[MONSTER_IDS::LORD_OF_FLAME - BOSS_ID_INDEX_SUB] = "Art/Monsters/lord_of_flame.png";
 		//arr[0] = "Art/Monsters/Slime_King.png";
 
 		return arr;
@@ -1146,14 +1147,14 @@ namespace game
 		darkCrescent.tags = TAG_BOSS;
 		darkCrescent.animIndex = 0;
 
-		auto& greatTroll = arr[MONSTER_IDS::GREAT_TROLL];
-		greatTroll.name = "great troll";
-		greatTroll.attack = 5;
-		greatTroll.health = 75;
-		greatTroll.ruleText = "[attacked, cast] +1 bonus attack.";
-		greatTroll.unique = true;
-		greatTroll.tags = TAG_BOSS;
-		greatTroll.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& lordOfFlame = arr[MONSTER_IDS::LORD_OF_FLAME];
+		lordOfFlame.name = "lord of flame";
+		lordOfFlame.attack = 5;
+		lordOfFlame.health = 75;
+		lordOfFlame.ruleText = "[attacked, cast] +1 bonus attack.";
+		lordOfFlame.unique = true;
+		lordOfFlame.tags = TAG_BOSS;
+		lordOfFlame.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onCast || actionState.trigger == ActionState::Trigger::onAttack)
 				{
@@ -1171,7 +1172,7 @@ namespace game
 				}
 				return false;
 			};
-		greatTroll.animIndex = 1;
+		lordOfFlame.animIndex = 1;
 
 		auto& slimeQueen = arr[MONSTER_IDS::SLIME_QUEEN];
 		slimeQueen.name = "slime queen";
@@ -2821,7 +2822,7 @@ namespace game
 		const auto arr = jv::CreateArray<uint32_t>(arena, 12);
 		for (auto& a : arr)
 			a = -1;
-		arr[0] = MONSTER_IDS::GREAT_TROLL;
+		arr[0] = MONSTER_IDS::LORD_OF_FLAME;
 		arr[1] = MONSTER_IDS::SLIME_QUEEN;
 		arr[2] = MONSTER_IDS::GHOSTFLAME_PONTIFF;
 		arr[3] = MONSTER_IDS::MIRROR_KNIGHT;
