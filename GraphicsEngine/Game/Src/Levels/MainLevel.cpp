@@ -1335,7 +1335,7 @@ namespace game
 		previousDialogueTime = level->GetTime();
 
 		metaData.textBubbleDuration = 0;
-		metaData.textBubbleMaxDuration = .5f + .1f * strlen(metaData.textBubble);
+		metaData.textBubbleMaxDuration = 1.5f + .1f * strlen(metaData.textBubble);
 		previousDialogueDuration = metaData.textBubbleMaxDuration;
 	}
 

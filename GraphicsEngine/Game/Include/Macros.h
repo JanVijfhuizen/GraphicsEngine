@@ -285,5 +285,6 @@ enum class TextureId
 	largeNumbers,
 	title,
 	pauseMenu,
+	gameOver,
 	length
 };

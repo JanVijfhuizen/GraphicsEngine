@@ -716,6 +716,7 @@ namespace game
 		arr[17] = "Art/large_numbers.png";
 		arr[18] = "Art/title.png";
 		arr[19] = "Art/pause_menu.png";
+		arr[20] = "Art/game_over.png";
 		return arr;
 	}
 
