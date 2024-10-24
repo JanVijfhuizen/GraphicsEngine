@@ -881,7 +881,7 @@ namespace game
 
 		arr[0] = "Art/Monsters/dark_crescent.png";
 		arr[1] = "Art/Monsters/the_pontiff.png";
-		//arr[2] = "Art/Monsters/Slime_King.png";
+		arr[2] = "Art/Monsters/slime_king.png";
 		arr[3] = "Art/Monsters/lord_of_flame.png";
 
 		arr[9] = "Art/Monsters/goblin_queen.png";
