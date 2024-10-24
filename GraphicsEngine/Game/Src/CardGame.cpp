@@ -932,14 +932,9 @@ namespace game
 		vulture.attack = 1;
 		vulture.tags = TAG_TOKEN | TAG_BEAST;
 		vulture.unique = true;
-		vulture.onCastText = "keh...";
-		vulture.onBuffedText = "khe khe khe";
 		vulture.onDamagedText = "kaaaaah";
 		vulture.onAttackText = "kah";
-		vulture.onAllySummonText = "ki ki ki";
-		vulture.onEnemySummonText = "khuuh";
-		vulture.onEnemyDeathText = "kyheheheh";
-		vulture.onAllyDeathText = "kyhahahah";
+		vulture.onEnemyDeathText = "ki ki ki";
 		auto& goblin = arr[MONSTER_IDS::GOBLIN];
 		goblin.name = "goblin";
 		goblin.attack = 2;
@@ -974,14 +969,9 @@ namespace game
 				}
 				return false;
 			};
-		goblin.onCastText = "magic scary";
-		goblin.onBuffedText = "me strong now";
-		goblin.onDamagedText = "run";
-		goblin.onAttackText = "stabbidy stab";
+		goblin.onDamagedText = "abandon post";
+		goblin.onAttackText = "stab stab stab";
 		goblin.onAllySummonText = "together goblin strong";
-		goblin.onEnemySummonText = "they ambush";
-		goblin.onAllyDeathText = "hide";
-		goblin.onEnemyDeathText = "more meat";
 		auto& demon = arr[MONSTER_IDS::DEMON];
 		demon.name = "demon";
 		demon.health = 0;
@@ -989,13 +979,9 @@ namespace game
 		demon.tags = TAG_TOKEN;
 		demon.unique = true;
 		demon.onCastText = "this dark magic...";
-		demon.onBuffedText = "yes....yeees";
 		demon.onDamagedText = "you dare stand against me";
 		demon.onAttackText = "i am unbound";
-		demon.onAllySummonText = "more souls to harvest";
-		demon.onEnemySummonText = "they will know fear";
-		demon.onAllyDeathText = "a pity";
-		demon.onEnemyDeathText = "a new soul to torment";
+		demon.onEnemySummonText = "more souls to harvest";
 		auto& elf = arr[MONSTER_IDS::ELF];
 		elf.name = "elf";
 		elf.health = 1;
@@ -1012,14 +998,9 @@ namespace game
 				}
 				return false;
 			};
-		elf.onCastText = "ooh...sparkles";
-		elf.onBuffedText = "that tickles";
-		elf.onDamagedText = "thats not fun";
+		elf.onDamagedText = "that tickles";
 		elf.onAttackText = "adult attack";
-		elf.onAllySummonText = "more friends to play with";
 		elf.onEnemySummonText = "they dont look friendly";
-		elf.onAllyDeathText = "i will miss you";
-		elf.onEnemyDeathText = "they got tired of playing";
 		auto& treasureGoblin = arr[MONSTER_IDS::TREASURE_GOBLIN];
 		treasureGoblin.name = "treasure goblin";
 		treasureGoblin.health = 1;
@@ -1041,14 +1022,9 @@ namespace game
 				}
 				return false;
 			};
-		elf.onCastText = "spell shiny...like loot";
-		elf.onBuffedText = "loot shine harder now";
-		elf.onDamagedText = "my gold...my gold";
-		elf.onAttackText = "give me loot";
-		elf.onAllySummonText = "i no share gold";
-		elf.onEnemySummonText = "you no take loot";
-		elf.onAllyDeathText = "all gold mine now";
-		elf.onEnemyDeathText = "thieves...thieves";
+		treasureGoblin.onDamagedText = "my gold...my gold";
+		treasureGoblin.onAttackText = "me take gold";
+		treasureGoblin.onAllyDeathText = "all gold mine now";
 		auto& slime = arr[MONSTER_IDS::SLIME];
 		slime.name = "slime";
 		slime.attack = 0;
@@ -1059,10 +1035,6 @@ namespace game
 		slime.onBuffedText = "prhrh";
 		slime.onDamagedText = "phzzzhzhzhhz";
 		slime.onAttackText = "pzz";
-		slime.onAllySummonText = "phrzhzhz";
-		slime.onEnemySummonText = "hzhrhzh";
-		slime.onAllyDeathText = "hzr";
-		slime.onEnemyDeathText = "rrrrrhz";
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
 		daisy.ruleText = "[summon] heal to full.";
@@ -1093,14 +1065,14 @@ namespace game
 				}
 				return false;
 			};
-		daisy.onCastText = "lets go";
-		daisy.onBuffedText = "huuugh";
-		daisy.onDamagedText = "oww";
-		daisy.onAttackText = "haa";
-		daisy.onAllySummonText = "good";
-		daisy.onEnemySummonText = "hmm";
-		daisy.onAllyDeathText = "nooo";
-		daisy.onEnemyDeathText = "lets go";
+		daisy.onCastText = "...";
+		daisy.onBuffedText = "...";
+		daisy.onDamagedText = "...";
+		daisy.onAttackText = "...";
+		daisy.onAllySummonText = "...";
+		daisy.onEnemySummonText = "...";
+		daisy.onAllyDeathText = "...";
+		daisy.onEnemyDeathText = "...";
 		
 		auto& darkCrescent = arr[MONSTER_IDS::DARK_CRESCENT];
 		darkCrescent.name = "dark crescent";
@@ -1294,13 +1266,8 @@ namespace game
 				return false;
 			};
 		knifeJuggler.onCastText = "draw cards already";
-		knifeJuggler.onBuffedText = "not my speciality but sure";
-		knifeJuggler.onDamagedText = "hey...protect me";
 		knifeJuggler.onAttackText = "now...stand still";
-		knifeJuggler.onAllySummonText = "wanna see my knifes";
 		knifeJuggler.onEnemySummonText = "more target practice";
-		knifeJuggler.onAllyDeathText = "knifes out";
-		knifeJuggler.onEnemyDeathText = "headshot";
 
 		auto& elvenSage = arr[MONSTER_IDS::ELVEN_SAGE];
 		elvenSage.name = "elven sage";
@@ -1324,11 +1291,8 @@ namespace game
 			};
 		elvenSage.onCastText = "nature grows";
 		elvenSage.onBuffedText = "nature heals";
-		elvenSage.onDamagedText = "do not defy nature";
 		elvenSage.onAttackText = "i will guide you";
 		elvenSage.onAllySummonText = "serve the forest";
-		elvenSage.onEnemySummonText = "a threat to the foreset";
-		elvenSage.onAllyDeathText = "and now return to the cycle";
 		elvenSage.onEnemyDeathText = "nature is healing";
 
 		auto& stormElemental = arr[MONSTER_IDS::STORM_ELEMENTAL];
@@ -1354,12 +1318,7 @@ namespace game
 			};
 		stormElemental.onCastText = "a wind blows";
 		stormElemental.onBuffedText = "a storm gathers";
-		stormElemental.onDamagedText = "there is a tempest in me";
-		stormElemental.onAttackText = "feel the power of a thousand storms";
-		stormElemental.onAllySummonText = "a new wind blows";
-		stormElemental.onEnemySummonText = "you will be swept away";
-		stormElemental.onAllyDeathText = "we will weather this loss";
-		stormElemental.onEnemyDeathText = "be swept away";
+		stormElemental.onAttackText = "there is a tempest in me";
 
 		auto& mossyElemental = arr[MONSTER_IDS::MOSSY_ELEMENTAL];
 		mossyElemental.name = "mossy elemental";
@@ -1417,13 +1376,7 @@ namespace game
 				return false;
 			};
 		forestSpirit.onCastText = "a magical song";
-		forestSpirit.onBuffedText = "i can feel that";
-		forestSpirit.onDamagedText = "ow...you stepped on my toes";
-		forestSpirit.onAttackText = "dance off";
 		forestSpirit.onAllySummonText = "dance with me";
-		forestSpirit.onEnemySummonText = "another one";
-		forestSpirit.onAllyDeathText = "no more dancing for you";
-		forestSpirit.onEnemyDeathText = "you have danced your last...dance";
 
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
@@ -1477,27 +1430,18 @@ namespace game
 				return false;
 			};
 		goblinChampion.onCastText = "magic sucks";
-		goblinChampion.onBuffedText = "good..make me stronger";
+		goblinChampion.onBuffedText = "i am the strongest";
 		goblinChampion.onDamagedText = "you think this hurts";
 		goblinChampion.onAttackText = "be crushed";
-		goblinChampion.onAllySummonText = "more fodder";
-		goblinChampion.onEnemySummonText = "i am the strongest";
-		goblinChampion.onAllyDeathText = "weakling";
-		goblinChampion.onEnemyDeathText = "for my king";
 
 		auto& unstableCreation = arr[MONSTER_IDS::UNSTABLE_CREATION];
 		unstableCreation.name = "unstable creation";
 		unstableCreation.attack = 4;
 		unstableCreation.health = 16;
 		unstableCreation.tags = TAG_TOKEN | TAG_ELEMENTAL;
-		unstableCreation.onCastText = "aaah";
-		unstableCreation.onBuffedText = "uuuuugh";
-		unstableCreation.onDamagedText = "uuuauauah";
-		unstableCreation.onAttackText = "uuughh....";
-		unstableCreation.onAllySummonText = "hhhhh....";
-		unstableCreation.onEnemySummonText = "hhhhhh....";
-		unstableCreation.onAllyDeathText = "uuuahh";
-		unstableCreation.onEnemyDeathText = "uuh...uuuuh";
+		unstableCreation.onCastText = "aaah...";
+		unstableCreation.onBuffedText = "uuuuugh...";
+		unstableCreation.onDamagedText = "uuuauauah...";
 
 		auto& moonAcolyte = arr[MONSTER_IDS::MOON_ACOLYTE];
 		moonAcolyte.name = "moon acolyte";
@@ -1523,14 +1467,11 @@ namespace game
 				}
 				return false;
 			};
-		moonAcolyte.onCastText = "moon magic guide you";
 		moonAcolyte.onBuffedText = "the moon speaks";
 		moonAcolyte.onDamagedText = "moon maiden protect me";
-		moonAcolyte.onAttackText = "moon goddess smite thee";
+		moonAcolyte.onAttackText = "heretic";
 		moonAcolyte.onAllySummonText = "serve the moon maiden";
-		moonAcolyte.onEnemySummonText = "heretic";
-		moonAcolyte.onAllyDeathText = "you will serve me in death";
-		moonAcolyte.onEnemyDeathText = "a sacrifice to the great wheel of cheese";
+		moonAcolyte.onAllyDeathText = "a sacrifice to the great wheel of cheese";
 
 		auto& berserker = arr[MONSTER_IDS::BERSERKER];
 		berserker.name = "berserker";
@@ -1581,10 +1522,6 @@ namespace game
 		berserker.onBuffedText = "blood...give me blood";
 		berserker.onDamagedText = "more more more more more more";
 		berserker.onAttackText = "die die die die die die die die";
-		berserker.onAllySummonText = "step aside";
-		berserker.onEnemySummonText = "mother...i crave violence";
-		berserker.onAllyDeathText = "weakness disgusts me";
-		berserker.onEnemyDeathText = "more skulls for my throne";
 
 		auto& manaDevourer = arr[MONSTER_IDS::MANA_DEVOURER];
 		manaDevourer.name = "mana devourer";
@@ -1609,11 +1546,7 @@ namespace game
 			};
 		manaDevourer.onCastText = "ma..giiic...";
 		manaDevourer.onBuffedText = "mmm...ooore";
-		manaDevourer.onDamagedText = "mhhaaaaa...";
-		manaDevourer.onAttackText = "mmmiiiineee..";
-		manaDevourer.onAllySummonText = "mmmmmaaa...nnna";
 		manaDevourer.onEnemySummonText = "mmman...aaa";
-		manaDevourer.onAllyDeathText = "mmmm....";
 		manaDevourer.onEnemyDeathText = "aaaan...naaa...";
 
 		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_PANDANA];
@@ -1636,14 +1569,9 @@ namespace game
 				}
 				return false;
 			};
-		woundedTroll.onCastText = "thats a healing spell right";
-		woundedTroll.onBuffedText = "im still bleeding";
-		woundedTroll.onDamagedText = "owww... right on the sore spot";
-		woundedTroll.onAttackText = "im bleeding";
-		woundedTroll.onAllySummonText = "do you happen to be a doctor";
-		woundedTroll.onEnemySummonText = "and im still wounded from the last fight";
-		woundedTroll.onAllyDeathText = "oh no... im next";
-		woundedTroll.onEnemyDeathText = "i really need to get this looked at";
+		woundedTroll.onCastText = "...";
+		woundedTroll.onAllySummonText = "...";
+		woundedTroll.onAllyDeathText = "...";
 
 		auto& chaosClown = arr[MONSTER_IDS::CHAOS_CLOWN];
 		chaosClown.name = "mad clown";
@@ -1673,13 +1601,8 @@ namespace game
 				return false;
 			};
 		chaosClown.onCastText = "im playing both sides so that i always come out on top";
-		chaosClown.onBuffedText = "you know im gonna die anyway right";
-		chaosClown.onDamagedText = "my nose...my nose";
-		chaosClown.onAttackText = "you get what you fluckin deserve";
-		chaosClown.onAllySummonText = "an ally...or an enemy";
-		chaosClown.onEnemySummonText = "one more to clown on";
+		chaosClown.onAttackText = "you get what you deserve";
 		chaosClown.onAllyDeathText = "sad clown noises";
-		chaosClown.onEnemyDeathText = "guess we were both clowns";
 
 		auto& dungLobber = arr[MONSTER_IDS::DUNG_LOBBER];
 		dungLobber.name = "dung lobber";
@@ -1710,14 +1633,11 @@ namespace game
 				}
 				return false;
 			};
-		dungLobber.onCastText = "confused monkey stare";
 		dungLobber.onBuffedText = "happy monkey noises";
-		dungLobber.onDamagedText = "screaching noises";
-		dungLobber.onAttackText = "poop throwing noises";
+		dungLobber.onDamagedText = "upset monkey noises";
+		dungLobber.onAttackText = "angry monkey noises";
 		dungLobber.onAllySummonText = "waves in monkey";
-		dungLobber.onEnemySummonText = "yells in monkey";
 		dungLobber.onAllyDeathText = "sad monkey noises";
-		dungLobber.onEnemyDeathText = "angry monkey sounds";
 
 		auto& goblinBomber = arr[MONSTER_IDS::GOBLIN_BOMBER];
 		goblinBomber.name = "goblin bomber";
@@ -1742,13 +1662,7 @@ namespace game
 				return false;
 			};
 		goblinBomber.onCastText = "and boom it goes";
-		goblinBomber.onBuffedText = "that feels explosive";
-		goblinBomber.onDamagedText = "like a bomb just went off";
 		goblinBomber.onAttackText = "catch this";
-		goblinBomber.onAllySummonText = "get ready to be blown away";
-		goblinBomber.onEnemySummonText = "catch";
-		goblinBomber.onAllyDeathText = "what an explosive end";
-		goblinBomber.onEnemyDeathText = "explode";
 
 		auto& goblinPrincess = arr[MONSTER_IDS::GOBLIN_PRINCESS];
 		goblinPrincess.name = "goblin princess";
@@ -1773,14 +1687,9 @@ namespace game
 				}
 				return false;
 			};
-		goblinPrincess.onCastText = "pretty and i know it";
 		goblinPrincess.onBuffedText = "i feel empowered";
 		goblinPrincess.onDamagedText = "you wouldnt hit a lady";
-		goblinPrincess.onAttackText = "im not just pretty";
-		goblinPrincess.onAllySummonText = "another one to swoon over me";
-		goblinPrincess.onEnemySummonText = "i need a strong goblin to protect me";
 		goblinPrincess.onAllyDeathText = "oh well...anyway";
-		goblinPrincess.onEnemyDeathText = "i should have looked away";
 
 		auto& peskyParasite = arr[MONSTER_IDS::PESKY_PARASITE];
 		peskyParasite.name = "pesky parasite";
@@ -1816,10 +1725,6 @@ namespace game
 		peskyParasite.onCastText = "skkk";
 		peskyParasite.onBuffedText = "skkrtkt";
 		peskyParasite.onDamagedText = "skkrkrkrkrkrk";
-		peskyParasite.onAttackText = "skr skrss";
-		peskyParasite.onAllySummonText = "srktsk";
-		peskyParasite.onEnemySummonText = "ksrkkts";
-		peskyParasite.onAllyDeathText = "ksrktks";
 		peskyParasite.onEnemyDeathText = "ktskrksts";
 
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
@@ -1846,14 +1751,9 @@ namespace game
 				}
 				return false;
 			};
-		slimeSoldier.onCastText = "a spell like that gave me the power to talk once";
-		slimeSoldier.onBuffedText = "i see you understand why im strong";
-		slimeSoldier.onDamagedText = "you know this will make my clones weaker right";
-		slimeSoldier.onAttackText = "for the slime emperor";
-		slimeSoldier.onAllySummonText = "the power of one...the power of many";
-		slimeSoldier.onEnemySummonText = "i will slime you";
-		slimeSoldier.onAllyDeathText = "goodbye...other me";
-		slimeSoldier.onEnemyDeathText = "get slimed on";
+		slimeSoldier.onBuffedText = "...";
+		slimeSoldier.onAllySummonText = "...";
+		slimeSoldier.onAllyDeathText = "...";
 
 		auto& madPyromancer = arr[MONSTER_IDS::MAD_PYROMANCER];
 		madPyromancer.name = "mad pyromancer";
@@ -1875,13 +1775,10 @@ namespace game
 				return false;
 			};
 		madPyromancer.onCastText = "burn them all";
-		madPyromancer.onBuffedText = "hahahaahaaaa";
 		madPyromancer.onDamagedText = "we will all burn";
-		madPyromancer.onAttackText = "ahahahahahah";
+		madPyromancer.onAttackText = "become cinder";
 		madPyromancer.onAllySummonText = "flame take us all";
-		madPyromancer.onEnemySummonText = "all will be ashes soon";
-		madPyromancer.onAllyDeathText = "now serve as fuel for my flames";
-		madPyromancer.onEnemyDeathText = "become cinders";
+		madPyromancer.onAllyDeathText = "all will be ashes soon";
 
 		auto& phantasm = arr[MONSTER_IDS::PHANTASM];
 		phantasm.name = "phantasm";
@@ -1919,13 +1816,8 @@ namespace game
 				return false;
 			};
 		phantasm.onCastText = "feel the cold of death";
-		phantasm.onBuffedText = "i have become immortal";
-		phantasm.onDamagedText = "it is futile";
-		phantasm.onAttackText = "the dead rise";
+		phantasm.onDamagedText = "futile";
 		phantasm.onAllySummonText = "follow my light";
-		phantasm.onEnemySummonText = "you will soon join me in the afterlife";
-		phantasm.onAllyDeathText = "i will guide your spirit";
-		phantasm.onEnemyDeathText = "i will guide your spirit the wrong way on purpose";
 
 		auto& gnomeScout = arr[MONSTER_IDS::GNOME_SCOUT];
 		gnomeScout.name = "gnome scout";
@@ -1983,13 +1875,8 @@ namespace game
 				return false;
 			};
 		slimeHead.onCastText = "what do you think of my head";
-		slimeHead.onBuffedText = "my head is growing";
 		slimeHead.onDamagedText = "i blocked that with my head";
 		slimeHead.onAttackText = "head butt";
-		slimeHead.onAllySummonText = "i see you looking at my head";
-		slimeHead.onEnemySummonText = "yes...my head is real";
-		slimeHead.onAllyDeathText = "my hat off to you";
-		slimeHead.onEnemyDeathText = "head shot";
 
 		auto& beastSpirit = arr[MONSTER_IDS::BEAST_SPIRIT];
 		beastSpirit.name = "beast spirit";
@@ -2050,14 +1937,9 @@ namespace game
 				}
 				return false;
 			};
-		librarian.onCastText = "i have read about this";
 		librarian.onBuffedText = "knowledge overflowing";
-		librarian.onDamagedText = "insolent fool";
-		librarian.onAttackText = "the text has been written";
 		librarian.onAllySummonText = "another student";
-		librarian.onEnemySummonText = "and so the next chapter begins";
-		librarian.onAllyDeathText = "your name has been written in my book";
-		librarian.onEnemyDeathText = "wiped from the history books";
+		librarian.onEnemyDeathText = "wiped from the books";
 		return arr;
 	}
 
