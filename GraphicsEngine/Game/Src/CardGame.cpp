@@ -1112,7 +1112,7 @@ namespace game
 		auto& slimeFather = arr[MONSTER_IDS::SLIME_FATHER];
 		slimeFather.name = "slime father";
 		slimeFather.attack = 2;
-		slimeFather.health = 50;
+		slimeFather.health = 35;
 		slimeFather.ruleText = "[end of turn] summon a slime soldier with my stats.";
 		slimeFather.unique = true;
 		slimeFather.tags = TAG_SLIME | TAG_BOSS;
@@ -1140,7 +1140,7 @@ namespace game
 		auto& ghostflamePontiff = arr[MONSTER_IDS::GHOSTFLAME_PONTIFF];
 		ghostflamePontiff.name = "ghostflame pontiff";
 		ghostflamePontiff.attack = 0;
-		ghostflamePontiff.health = 100;
+		ghostflamePontiff.health = 75;
 		ghostflamePontiff.ruleText = "[enemy buff] copy it for myself. [end of turn] deal 2 damage to all enemies.";
 		ghostflamePontiff.unique = true;
 		ghostflamePontiff.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1173,9 +1173,9 @@ namespace game
 
 		auto& lordOfFlame = arr[MONSTER_IDS::LORD_OF_FLAME];
 		lordOfFlame.name = "lord of flame";
-		lordOfFlame.attack = 5;
-		lordOfFlame.health = 555;
-		lordOfFlame.ruleText = "[start of turn 5] dies. [end of turn] summon a demon with my base stats.";
+		lordOfFlame.attack = 6;
+		lordOfFlame.health = 666;
+		lordOfFlame.ruleText = "[start of turn 5] dies. [end of turn] summon two demons with stats equal to the highest attack enemy monster.";
 		lordOfFlame.unique = true;
 		lordOfFlame.tags = TAG_BOSS;
 		lordOfFlame.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
@@ -1195,14 +1195,29 @@ namespace game
 				}
 				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
+					uint32_t attack = 0;
+					uint32_t health = 0;
+					const auto& boardState = state.boardState;
+
+					for (size_t i = 0; i < boardState.allyCount; i++)
+					{
+						const auto& combatStats = boardState.combatStats[i];
+						if (attack < combatStats.attack + combatStats.tempAttack)
+						{
+							attack = combatStats.attack + combatStats.tempAttack;
+							health = combatStats.health + combatStats.tempHealth;
+						}
+					}
+
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
 					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
-					summonState.values[ActionState::VSummon::attack] = 5;
-					summonState.values[ActionState::VSummon::health] = 555;
-					state.TryAddToStack(summonState);
+					summonState.values[ActionState::VSummon::attack] = attack;
+					summonState.values[ActionState::VSummon::health] = health;
+					for (uint32_t i = 0; i < 2; i++)
+						state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
