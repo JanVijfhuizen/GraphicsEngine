@@ -634,6 +634,19 @@ namespace game
 			}
 		}
 
+		{
+			TextTask textTask{};
+			textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x - 80, 20);
+			textTask.text = "turn-";
+			textTask.text = TextInterpreter::Concat(textTask.text, TextInterpreter::IntToConstCharPtr(state.turn, info.frameArena), info.frameArena);
+			info.textTasks.Push(textTask);
+
+			textTask.position.y -= 9;
+			textTask.text = "depth-";
+			textTask.text = TextInterpreter::Concat(textTask.text, TextInterpreter::IntToConstCharPtr(state.depth, info.frameArena), info.frameArena);
+			info.textTasks.Push(textTask);
+		}
+
 		// Draw end turn button.
 		ButtonDrawInfo buttonDrawInfo{};
 		buttonDrawInfo.center = true;
