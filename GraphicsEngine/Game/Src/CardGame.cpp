@@ -871,8 +871,8 @@ namespace game
 
 		arr[0] = "Art/Monsters/dark_crescent.png";
 		arr[1] = "Art/Monsters/slime_father.png";
-		arr[2] = "Art/Monsters/the_pontiff.png";
-		arr[3] = "Art/Monsters/lord_of_flame.png";
+		arr[3] = "Art/Monsters/the_pontiff.png";
+		arr[2] = "Art/Monsters/lord_of_flame.png";
 		arr[4] = "Art/Monsters/goblin_queen.png";
 		return arr;
 	}
@@ -1099,7 +1099,7 @@ namespace game
 		daisy.onAttackText = "haa";
 		daisy.onAllySummonText = "good";
 		daisy.onEnemySummonText = "hmm";
-		daisy.onAllyDeathText = "noooooooooooooooooo oooooooooooooooooo oooooooooooooooooo";
+		daisy.onAllyDeathText = "nooo";
 		daisy.onEnemyDeathText = "lets go";
 		
 		auto& darkCrescent = arr[MONSTER_IDS::DARK_CRESCENT];
@@ -1140,7 +1140,7 @@ namespace game
 		auto& slimeFather = arr[MONSTER_IDS::SLIME_FATHER];
 		slimeFather.name = "slime father";
 		slimeFather.attack = 2;
-		slimeFather.health = 35;
+		slimeFather.health = 50;
 		slimeFather.ruleText = "[end of turn] summon a slime soldier with my stats.";
 		slimeFather.unique = true;
 		slimeFather.tags = TAG_SLIME | TAG_BOSS;
@@ -1165,40 +1165,48 @@ namespace game
 			};
 		slimeFather.animIndex = 1;
 
-		auto& lordOfFlame = arr[MONSTER_IDS::LORD_OF_FLAME];
-		lordOfFlame.name = "lord of flame";
-		lordOfFlame.attack = 5;
-		lordOfFlame.health = 75;
-		lordOfFlame.ruleText = "[attacked, cast] +1 bonus attack.";
-		lordOfFlame.unique = true;
-		lordOfFlame.tags = TAG_BOSS;
-		lordOfFlame.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& ghostflamePontiff = arr[MONSTER_IDS::GHOSTFLAME_PONTIFF];
+		ghostflamePontiff.name = "ghostflame pontiff";
+		ghostflamePontiff.attack = 0;
+		ghostflamePontiff.health = 100;
+		ghostflamePontiff.ruleText = "[enemy buff] copy it for myself. [end of turn] deal 2 damage to all enemies.";
+		ghostflamePontiff.unique = true;
+		ghostflamePontiff.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
-				if (actionState.trigger == ActionState::Trigger::onCast || actionState.trigger == ActionState::Trigger::onAttack)
+				if (actionState.trigger == ActionState::Trigger::onEndOfTurn)
 				{
-					if (actionState.trigger == ActionState::Trigger::onAttack && actionState.dst != self)
+					ActionState damageState{};
+					damageState.trigger = ActionState::Trigger::onDamage;
+					damageState.source = ActionState::Source::other;
+					damageState.values[ActionState::VDamage::damage] = 2;
+					TargetOfType(info, state, damageState, self, -1, TypeTarget::enemies);
+					return true;
+				}
+
+				if (actionState.trigger == ActionState::Trigger::onStatBuff)
+				{
+					if (actionState.dst == self)
 						return false;
 
-					ActionState buffState{};
-					buffState.trigger = ActionState::Trigger::onStatBuff;
-					buffState.source = ActionState::Source::other;
+					ActionState buffState = actionState;
 					buffState.dst = self;
 					buffState.dstUniqueId = state.boardState.uniqueIds[self];
-					buffState.values[ActionState::VStatBuff::tempAttack] = 1;
 					state.TryAddToStack(buffState);
 					return true;
 				}
 				return false;
 			};
-		lordOfFlame.animIndex = 2;
+		ghostflamePontiff.tags = TAG_BOSS;
+		ghostflamePontiff.animIndex = 3;
 
-		auto& ghostflamePontiff = arr[MONSTER_IDS::GHOSTFLAME_PONTIFF];
-		ghostflamePontiff.name = "ghostflame pontiff";
-		ghostflamePontiff.attack = 0;
-		ghostflamePontiff.health = 100;
-		ghostflamePontiff.ruleText = "[end of turn] summon the dread. [start of turn 5] dies.";
-		ghostflamePontiff.unique = true;
-		ghostflamePontiff.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
+		auto& lordOfFlame = arr[MONSTER_IDS::LORD_OF_FLAME];
+		lordOfFlame.name = "lord of flame";
+		lordOfFlame.attack = 5;
+		lordOfFlame.health = 555;
+		lordOfFlame.ruleText = "[start of turn 5] dies. [end of turn] summon a demon with my base stats.";
+		lordOfFlame.unique = true;
+		lordOfFlame.tags = TAG_BOSS;
+		lordOfFlame.onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
 				if (actionState.trigger == ActionState::Trigger::onStartOfTurn)
 				{
@@ -1218,14 +1226,16 @@ namespace game
 					ActionState summonState{};
 					summonState.trigger = ActionState::Trigger::onSummon;
 					summonState.source = ActionState::Source::other;
-					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::GHOSTFLAME_PONTIFF;
+					summonState.values[ActionState::VSummon::id] = MONSTER_IDS::DEMON;
 					summonState.values[ActionState::VSummon::isAlly] = self < BOARD_CAPACITY_PER_SIDE;
+					summonState.values[ActionState::VSummon::attack] = 5;
+					summonState.values[ActionState::VSummon::health] = 555;
 					state.TryAddToStack(summonState);
 					return true;
 				}
 				return false;
 			};
-		ghostflamePontiff.animIndex = 3;
+		lordOfFlame.animIndex = 2;
 
 		auto& goblinQueen = arr[MONSTER_IDS::GOBLIN_QUEEN];
 		goblinQueen.name = "goblin queen";
@@ -2551,8 +2561,8 @@ namespace game
 			a = -1;
 		
 		arr[0] = MONSTER_IDS::SLIME_FATHER;
-		arr[1] = MONSTER_IDS::LORD_OF_FLAME;
-		arr[2] = MONSTER_IDS::GHOSTFLAME_PONTIFF;
+		arr[1] = MONSTER_IDS::GHOSTFLAME_PONTIFF;
+		arr[2] = MONSTER_IDS::LORD_OF_FLAME;
 		arr[3] = MONSTER_IDS::GOBLIN_QUEEN;
 		return arr;
 	}
