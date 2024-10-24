@@ -633,7 +633,7 @@ namespace game
 				level->DrawCardSelection(info, eventSelectionDrawInfo);
 			}
 		}
-
+		/*
 		{
 			TextTask textTask{};
 			textTask.position = glm::ivec2(SIMULATED_RESOLUTION.x - 80, 20);
@@ -646,7 +646,7 @@ namespace game
 			textTask.text = TextInterpreter::Concat(textTask.text, TextInterpreter::IntToConstCharPtr(state.depth, info.frameArena), info.frameArena);
 			info.textTasks.Push(textTask);
 		}
-
+		*/
 		// Draw end turn button.
 		ButtonDrawInfo buttonDrawInfo{};
 		buttonDrawInfo.center = true;
