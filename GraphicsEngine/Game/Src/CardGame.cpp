@@ -1111,7 +1111,7 @@ namespace game
 
 		auto& slimeFather = arr[MONSTER_IDS::SLIME_FATHER];
 		slimeFather.name = "slime father";
-		slimeFather.attack = 2;
+		slimeFather.attack = 1;
 		slimeFather.health = 35;
 		slimeFather.ruleText = "[end of turn] summon a slime soldier with my stats.";
 		slimeFather.unique = true;
