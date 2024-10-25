@@ -141,6 +141,7 @@ namespace game
 
 		ma_engine audioEngine;
 		ma_sound audioBackground;
+		bool musicEnabled;
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -224,7 +225,8 @@ namespace game
 				rooms,
 				spells,
 				curses,
-				events
+				events,
+				musicEnabled
 			};
 			
 			levels[static_cast<uint32_t>(levelIndex)]->Create(info);
@@ -257,6 +259,8 @@ namespace game
 		bool fullscreen = isFullScreen;
 		glm::ivec2 requestedResolution{};
 		
+		bool musicEnabledCurrent = musicEnabled;
+
 		const LevelUpdateInfo info
 		{
 			levelArena,
@@ -272,6 +276,7 @@ namespace game
 			spells,
 			curses,
 			events,
+			musicEnabledCurrent,
 			resolution,
 			requestedResolution,
 			inputState,
@@ -300,6 +305,12 @@ namespace game
 		if (!result)
 			return result;
 		level->PostUpdate(info);
+
+		if (musicEnabled != musicEnabledCurrent)
+		{
+			musicEnabled = musicEnabledCurrent;
+			ma_sound_set_volume(&audioBackground, musicEnabled ? AUDIO_BACKGROUND_VOLUME : 0);
+		}
 
 		if (fullscreen != isFullScreen)
 		{
@@ -401,6 +412,7 @@ namespace game
 			outCardGame->engine = Engine::Create(engineCreateInfo);
 		}
 		outCardGame->restart = false;
+		outCardGame->musicEnabled = true;
 
 		auto engineConfig = ma_engine_config_init();
 		auto result = ma_engine_init(nullptr, &outCardGame->audioEngine);
@@ -411,6 +423,7 @@ namespace game
 		assert(result == MA_SUCCESS);
 		ma_sound_set_looping(&outCardGame->audioBackground, true);
 		ma_sound_start(&outCardGame->audioBackground);
+		ma_sound_set_volume(&outCardGame->audioBackground, AUDIO_BACKGROUND_VOLUME);
 
 		res = Engine::GetResolution();
 		outCardGame->resolution = res;

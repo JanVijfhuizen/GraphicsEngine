@@ -1,6 +1,7 @@
 ﻿#include "pch_game.h"
 #include "Levels/MainMenuLevel.h"
 #include <Utils/SubTextureUtils.h>
+#include "Interpreters/TextInterpreter.h"
 
 namespace game
 {
@@ -238,6 +239,17 @@ namespace game
 		if (DrawButton(info, buttonDrawInfo, openTime))
 		{
 			inTutorial = true;
+			openTime = 0;
+			return true;
+		}
+
+		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
+		buttonDrawInfo.text = "turn music ";
+		const char* prefix = info.musicEnabled ? "off" : "on";
+		buttonDrawInfo.text = TextInterpreter::Concat(buttonDrawInfo.text, prefix, info.frameArena);
+		if (DrawButton(info, buttonDrawInfo, openTime))
+		{
+			info.musicEnabled = !info.musicEnabled;
 			openTime = 0;
 			return true;
 		}

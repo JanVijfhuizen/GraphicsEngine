@@ -43,6 +43,8 @@ namespace game
 		const jv::Array<SpellCard>& spells;
 		const jv::Array<CurseCard>& curses;
 		const jv::Array<EventCard>& events;
+
+		bool& musicEnabled;
 	};
 
 	struct LevelCreateInfo final : LevelInfo
