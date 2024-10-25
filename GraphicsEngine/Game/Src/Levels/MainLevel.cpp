@@ -1693,6 +1693,9 @@ namespace game
 				uint32_t index = state.depth / ROOM_COUNT_BEFORE_BOSS;
 				index %= 5;
 
+				// ignore previous stuff, just one moon rn
+				index = 0;
+
 				if (state.depth + 1 < ROOM_COUNT_BEFORE_BOSS * TOTAL_BOSS_COUNT) 
 				{
 					PixelPerfectRenderTask renderTask{};
