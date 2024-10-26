@@ -547,8 +547,8 @@ namespace game
 			}
 		}
 
-		DrawParallaxBackground(state, info, false);
-		DrawParallaxBackground(state, info, true);
+		DrawParallaxBackground(*level, state, info, false);
+		DrawParallaxBackground(*level, state, info, true);
 		
 		{
 			const float l = jv::Min(1.f, level->GetTime() * 3);
@@ -1671,7 +1671,7 @@ namespace game
 		++state.depth;
 	}
 
-	void MainLevel::CombatState::DrawParallaxBackground(State& state, const LevelUpdateInfo& info, const bool mirror) const
+	void MainLevel::CombatState::DrawParallaxBackground(const Level& level, State& state, const LevelUpdateInfo& info, const bool mirror) const
 	{
 		glm::vec2 mouseOffset = info.inputState.mousePos - SIMULATED_RESOLUTION / 2;
 
@@ -1679,29 +1679,30 @@ namespace game
 			if(backgroundType == BackgroundType::moonLight)
 			{
 				auto& atlasTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::moon)];
-				jv::ge::SubTexture moonFrames[5];
-				Divide(atlasTexture.subTexture, moonFrames, 5);
-
-				glm::ivec2 positionOffsets[5]{
-					glm::ivec2(90, 10),
-					glm::ivec2(60, 30),
-					glm::ivec2(0, 60),
-					glm::ivec2(-60, 30),
-					glm::ivec2(-90, 10)
-				};
+				jv::ge::SubTexture moonFrames[13];
+				Divide(atlasTexture.subTexture, moonFrames, 13);
 
 				uint32_t index = state.depth / ROOM_COUNT_BEFORE_BOSS;
-				index %= 5;
 
-				// ignore previous stuff, just one moon rn
-				index = 0;
+				if (index >= 4)
+				{
+					auto i = static_cast<uint32_t>(level.GetTime() * CARD_ANIM_SPEED);
+					i %= 9;
+					index = 4 + i;
+				}
 
-				if (state.depth + 1 < ROOM_COUNT_BEFORE_BOSS * TOTAL_BOSS_COUNT) 
+				const bool containsBoss = (state.depth + 1) % ROOM_COUNT_BEFORE_BOSS == 0;
+				const bool finalBossEncountered = state.depth + 1 >= ROOM_COUNT_BEFORE_BOSS * TOTAL_BOSS_COUNT;
+
+				if (finalBossEncountered)
+					index = 0;
+
+				if (!finalBossEncountered || !containsBoss)
 				{
 					PixelPerfectRenderTask renderTask{};
-					renderTask.scale = atlasTexture.resolution / glm::ivec2(5, 1);
+					renderTask.scale = atlasTexture.resolution / glm::ivec2(13, 1);
 					renderTask.subTexture = moonFrames[index];
-					renderTask.position = glm::ivec2(SIMULATED_RESOLUTION / 2) + positionOffsets[index];
+					renderTask.position = glm::ivec2(SIMULATED_RESOLUTION / 2) + glm::ivec2(90, 10);
 					renderTask.xCenter = true;
 					info.renderTasks.Push(renderTask);
 				}	
@@ -2034,8 +2035,8 @@ namespace game
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
 
-		stateMachine.state.depth = 29;
-		stateMachine.next = stateMachine.current;
+		//stateMachine.state.depth = 29;
+		//stateMachine.next = stateMachine.current;
 	}
 
 	bool MainLevel::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)

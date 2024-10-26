@@ -110,7 +110,7 @@ namespace game
 			[[nodiscard]] static uint32_t GetEventCardCount(const State& state);
 			static void Shake(const LevelUpdateInfo& info);
 			void OnExit(State& state, const LevelInfo& info) override;
-			void DrawParallaxBackground(State& state, const LevelUpdateInfo& info, bool mirror) const;
+			void DrawParallaxBackground(const Level& level, State& state, const LevelUpdateInfo& info, bool mirror) const;
 		};
 
 		struct RewardMagicCardState final : LevelState<State>
