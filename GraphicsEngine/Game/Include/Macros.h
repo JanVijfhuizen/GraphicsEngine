@@ -59,6 +59,8 @@ constexpr float CARD_HORIZONTAL_MOVE_SPEED = 1.f / (ACTION_STATE_DEFAULT_DURATIO
 constexpr float CARD_VERTICAL_MOVE_SPEED = ACTION_STATE_DEFAULT_DURATION / 2;
 
 const constexpr char* SOUND_BACKGROUND_MUSIC = "Audio/battle_music.wav";
+const constexpr char* SOUND_CLICK = "Audio/click.wav";
+const constexpr char* SOUND_HOVER = "Audio/hover.wav";
 constexpr float AUDIO_BACKGROUND_VOLUME = .3f;
 
 struct MONSTER_IDS

@@ -969,6 +969,7 @@ namespace game
 		}
 		else if(actionState.trigger == ActionState::Trigger::onAttack)
 		{
+			info.playAttack = true;
 			if (actionState.src < BOARD_CAPACITY_PER_SIDE)
 			{
 				auto& target = state.targets[actionState.dst - BOARD_CAPACITY_PER_SIDE];

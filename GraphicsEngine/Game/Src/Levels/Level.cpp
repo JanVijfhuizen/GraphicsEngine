@@ -490,6 +490,9 @@ namespace game
 			cardDrawInfo.card = drawInfo.cards[i];
 			cardDrawInfo.selectable = drawInfo.selectable;
 			const bool collides = CollidesCard(info, cardDrawInfo);
+			if(collides && info.inputState.lMouse.PressEvent())
+				info.playClick = true;
+
 			uint32_t stackedSelected = -1;
 			uint32_t stackedCount = -1;
 
@@ -645,6 +648,9 @@ namespace game
 
 		if (drawInfo.metaData)
 		{
+			if (collided && drawInfo.metaData->hoverDuration < 0.0001)
+				info.playHover = true;
+
 			drawInfo.metaData->hoverDuration += 5 * info.deltaTime * ((collided || drawInfo.activationLerp >= 0) * 2 - 1);
 			drawInfo.metaData->hoverDuration = jv::Clamp(drawInfo.metaData->hoverDuration, 0.f, 1.f);
 

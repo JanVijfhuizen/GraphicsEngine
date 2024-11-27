@@ -79,6 +79,9 @@ namespace game
 		bool& inCombat;
 		bool& isFullScreen;
 		ma_engine& audioEngine;
+		bool& playClick;
+		bool& playHover;
+		bool& playAttack;
 	};
 
 	struct Level

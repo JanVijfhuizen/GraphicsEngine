@@ -140,8 +140,12 @@ namespace game
 		bool restart;
 
 		ma_engine audioEngine;
-		ma_sound audioBackground;
+		ma_sound backgroundAudio;
 		bool musicEnabled;
+
+		ma_sound clickAudio;
+		ma_sound hoverAudio;
+		ma_sound attackAudios[9];
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -260,6 +264,9 @@ namespace game
 		glm::ivec2 requestedResolution{};
 		
 		bool musicEnabledCurrent = musicEnabled;
+		bool playClick = false;
+		bool playHover = false;
+		bool playAttack = false;
 
 		const LevelUpdateInfo info
 		{
@@ -292,6 +299,9 @@ namespace game
 			inCombat,
 			fullscreen,
 			cardGame.audioEngine,
+			playClick,
+			playHover,
+			playAttack
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -306,10 +316,26 @@ namespace game
 			return result;
 		level->PostUpdate(info);
 
+		playHover = false;
+
+		if (playClick)
+		{
+			ma_sound_start(&clickAudio);
+		}
+		if (playHover)
+		{
+			ma_sound_start(&hoverAudio);
+		}
+		if (playAttack)
+		{
+			uint32_t randInt = rand() % 9;
+			ma_sound_start(&attackAudios[randInt]);
+		}
+
 		if (musicEnabled != musicEnabledCurrent)
 		{
 			musicEnabled = musicEnabledCurrent;
-			ma_sound_set_volume(&audioBackground, musicEnabled ? AUDIO_BACKGROUND_VOLUME : 0);
+			ma_sound_set_volume(&backgroundAudio, musicEnabled ? AUDIO_BACKGROUND_VOLUME : 0);
 		}
 
 		if (fullscreen != isFullScreen)
@@ -415,15 +441,6 @@ namespace game
 		outCardGame->musicEnabled = true;
 
 		auto engineConfig = ma_engine_config_init();
-		auto result = ma_engine_init(nullptr, &outCardGame->audioEngine);
-		assert(result == MA_SUCCESS);
-
-		result = ma_sound_init_from_file(&outCardGame->audioEngine, SOUND_BACKGROUND_MUSIC,
-			MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->audioBackground);
-		assert(result == MA_SUCCESS);
-		ma_sound_set_looping(&outCardGame->audioBackground, true);
-		ma_sound_start(&outCardGame->audioBackground);
-		ma_sound_set_volume(&outCardGame->audioBackground, AUDIO_BACKGROUND_VOLUME);
 
 		res = Engine::GetResolution();
 		outCardGame->resolution = res;
@@ -439,6 +456,36 @@ namespace game
 		outCardGame->p1Lerp = outCardGame->p2Lerp = 0;
 
 		const auto mem = outCardGame->engine.GetMemory();
+
+		auto result = ma_engine_init(nullptr, &outCardGame->audioEngine);
+		assert(result == MA_SUCCESS);
+
+		result = ma_sound_init_from_file(&outCardGame->audioEngine, SOUND_BACKGROUND_MUSIC,
+			MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->backgroundAudio);
+		assert(result == MA_SUCCESS);
+		ma_sound_set_looping(&outCardGame->backgroundAudio, true);
+		ma_sound_start(&outCardGame->backgroundAudio);
+		ma_sound_set_volume(&outCardGame->backgroundAudio, AUDIO_BACKGROUND_VOLUME);
+
+		result = ma_sound_init_from_file(&outCardGame->audioEngine, SOUND_HOVER,
+			MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->hoverAudio);
+		assert(result == MA_SUCCESS);
+
+		result = ma_sound_init_from_file(&outCardGame->audioEngine, SOUND_CLICK,
+			MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->clickAudio);
+		assert(result == MA_SUCCESS);
+
+		for (uint32_t i = 0; i < 9; i++)
+		{
+			const auto scope = mem.tempArena.CreateScope();
+			const char* c = TextInterpreter::IntToConstCharPtr(i, mem.tempArena);
+			const char* str = TextInterpreter::Concat("Audio/atk", c, mem.tempArena);
+			str = TextInterpreter::Concat(str, ".wav", mem.tempArena);
+			result = ma_sound_init_from_file(&outCardGame->audioEngine, str,
+				MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->attackAudios[i]);
+			assert(result == MA_SUCCESS);
+			mem.tempArena.DestroyScope(scope);
+		}
 
 #ifdef _DEBUG
 		{
