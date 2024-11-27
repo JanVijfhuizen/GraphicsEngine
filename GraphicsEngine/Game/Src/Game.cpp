@@ -12,9 +12,20 @@ bool Loop()
 	return ret;
 }
 
+#ifdef _DEBUG
 int main()
 {
 	while (Loop())
 		;
 	return 0;
 }
+#endif
+#ifdef NDEBUG
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+	PSTR lpCmdLine, int nCmdShow)
+{
+	while (Loop())
+		;
+	return 0;
+}
+#endif
