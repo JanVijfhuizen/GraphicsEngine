@@ -55,7 +55,7 @@ namespace game
 			info.textTasks.Push(textTask);
 
 			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
-			textTask.text = "tristan ten cate - audio";
+			textTask.text = "tristan ten cate - background music";
 			info.textTasks.Push(textTask);
 
 			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
@@ -64,6 +64,10 @@ namespace game
 
 			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET);
 			textTask.text = "ana dirica - art help";
+			info.textTasks.Push(textTask);
+
+			textTask.position -= glm::ivec2(0, SMALL_BUTTON_OFFSET * 2);
+			textTask.text = "sfx asset pack - leohpaz on itch.io";
 			info.textTasks.Push(textTask);
 
 			ButtonDrawInfo buttonDrawInfo{};

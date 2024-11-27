@@ -82,6 +82,7 @@ namespace game
 		bool& playClick;
 		bool& playHover;
 		bool& playAttack;
+		bool& playDamaged;
 	};
 
 	struct Level

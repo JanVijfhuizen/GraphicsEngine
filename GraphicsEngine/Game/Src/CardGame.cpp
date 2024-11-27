@@ -146,6 +146,7 @@ namespace game
 		ma_sound clickAudio;
 		ma_sound hoverAudio;
 		ma_sound attackAudios[9];
+		ma_sound damagedAudios[6];
 
 		[[nodiscard]] bool Update();
 		static void Create(CardGame* outCardGame);
@@ -267,6 +268,7 @@ namespace game
 		bool playClick = false;
 		bool playHover = false;
 		bool playAttack = false;
+		bool playDamaged = false;
 
 		const LevelUpdateInfo info
 		{
@@ -301,7 +303,8 @@ namespace game
 			cardGame.audioEngine,
 			playClick,
 			playHover,
-			playAttack
+			playAttack,
+			playDamaged
 		};
 
 		const bool waitForImage = jv::ge::WaitForImage();
@@ -316,20 +319,34 @@ namespace game
 			return result;
 		level->PostUpdate(info);
 
-		playHover = false;
+		if (info.inputState.enter.PressEvent())
+			playClick = true;
 
 		if (playClick)
 		{
+			ma_sound_set_volume(&clickAudio, .4);
+			ma_sound_seek_to_pcm_frame(&clickAudio, 0);
 			ma_sound_start(&clickAudio);
 		}
 		if (playHover)
 		{
+			ma_sound_set_volume(&hoverAudio, .2);
+			ma_sound_seek_to_pcm_frame(&hoverAudio, 0);
 			ma_sound_start(&hoverAudio);
 		}
 		if (playAttack)
 		{
 			uint32_t randInt = rand() % 9;
-			ma_sound_start(&attackAudios[randInt]);
+			const auto ptr = &attackAudios[randInt];
+			ma_sound_seek_to_pcm_frame(ptr, 0);
+			ma_sound_start(ptr);
+		}
+		if (playDamaged)
+		{
+			uint32_t randInt = rand() % 6;
+			const auto ptr = &damagedAudios[randInt];
+			ma_sound_seek_to_pcm_frame(ptr, 0);
+			ma_sound_start(ptr);
 		}
 
 		if (musicEnabled != musicEnabledCurrent)
@@ -483,6 +500,18 @@ namespace game
 			str = TextInterpreter::Concat(str, ".wav", mem.tempArena);
 			result = ma_sound_init_from_file(&outCardGame->audioEngine, str,
 				MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->attackAudios[i]);
+			assert(result == MA_SUCCESS);
+			mem.tempArena.DestroyScope(scope);
+		}
+
+		for (uint32_t i = 0; i < 6; i++)
+		{
+			const auto scope = mem.tempArena.CreateScope();
+			const char* c = TextInterpreter::IntToConstCharPtr(i, mem.tempArena);
+			const char* str = TextInterpreter::Concat("Audio/dmg", c, mem.tempArena);
+			str = TextInterpreter::Concat(str, ".wav", mem.tempArena);
+			result = ma_sound_init_from_file(&outCardGame->audioEngine, str,
+				MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_STREAM, nullptr, nullptr, &outCardGame->damagedAudios[i]);
 			assert(result == MA_SUCCESS);
 			mem.tempArena.DestroyScope(scope);
 		}
@@ -992,7 +1021,6 @@ namespace game
 		vulture.attack = 1;
 		vulture.tags = TAG_TOKEN | TAG_BEAST;
 		vulture.unique = true;
-		vulture.onEnemyDeathText = "ki ki ki";
 		auto& goblin = arr[MONSTER_IDS::GOBLIN];
 		goblin.name = "goblin";
 		goblin.attack = 2;
@@ -1027,14 +1055,12 @@ namespace game
 				}
 				return false;
 			};
-		goblin.onAttackText = "stab stab stab";
 		auto& demon = arr[MONSTER_IDS::DEMON];
 		demon.name = "demon";
 		demon.health = 0;
 		demon.attack = 0;
 		demon.tags = TAG_TOKEN;
 		demon.unique = true;
-		demon.onDamagedText = "you dare";
 		auto& elf = arr[MONSTER_IDS::ELF];
 		elf.name = "elf";
 		elf.health = 1;
@@ -1051,7 +1077,6 @@ namespace game
 				}
 				return false;
 			};
-		elf.onAttackText = "adult attack";
 		auto& treasureGoblin = arr[MONSTER_IDS::TREASURE_GOBLIN];
 		treasureGoblin.name = "treasure goblin";
 		treasureGoblin.health = 1;
@@ -1073,14 +1098,12 @@ namespace game
 				}
 				return false;
 			};
-		treasureGoblin.onAllyDeathText = "all gold mine now";
 		auto& slime = arr[MONSTER_IDS::SLIME];
 		slime.name = "slime";
 		slime.attack = 0;
 		slime.health = 0;
 		slime.unique = true;
 		slime.tags = TAG_TOKEN | TAG_SLIME;
-		slime.onBuffedText = "ppphhhzz";
 		auto& daisy = arr[MONSTER_IDS::DAISY];
 		daisy.name = "daisy";
 		daisy.ruleText = "[summon] heal to full.";
@@ -1111,14 +1134,6 @@ namespace game
 				}
 				return false;
 			};
-		daisy.onCastText = "...";
-		daisy.onBuffedText = "...";
-		daisy.onDamagedText = "...";
-		daisy.onAttackText = "...";
-		daisy.onAllySummonText = "...";
-		daisy.onEnemySummonText = "...";
-		daisy.onAllyDeathText = "...";
-		daisy.onEnemyDeathText = "...";
 		
 		auto& darkCrescent = arr[MONSTER_IDS::DARK_CRESCENT];
 		darkCrescent.name = "dark crescent";
@@ -1326,7 +1341,6 @@ namespace game
 				}
 				return false;
 			};
-		darkMagician.onAttackText = "dark blast";
 
 		auto& elvenSage = arr[MONSTER_IDS::ELVEN_SAGE];
 		elvenSage.name = "elven sage";
@@ -1348,7 +1362,6 @@ namespace game
 				}
 				return false;
 			};
-		elvenSage.onCastText = "nature grows";
 
 		auto& stormElemental = arr[MONSTER_IDS::STORM_ELEMENTAL];
 		stormElemental.name = "storm elemental";
@@ -1371,7 +1384,6 @@ namespace game
 				}
 				return false;
 			};
-		stormElemental.onBuffedText = "a storm gathers";
 
 		auto& mossyElemental = arr[MONSTER_IDS::MOSSY_ELEMENTAL];
 		mossyElemental.name = "mossy elemental";
@@ -1397,7 +1409,6 @@ namespace game
 				}
 				return false;
 			};
-		mossyElemental.onDamagedText = "...pointless...";
 
 		auto& forestSpirit = arr[MONSTER_IDS::FOREST_SPIRIT];
 		forestSpirit.name = "forest spirit";
@@ -1421,7 +1432,6 @@ namespace game
 				}
 				return false;
 			};
-		forestSpirit.onCastText = "a magical song";
 
 		auto& goblinKing = arr[MONSTER_IDS::GOBLIN_KING];
 		goblinKing.name = "goblin king";
@@ -1443,7 +1453,6 @@ namespace game
 				}
 				return false;
 			};
-		goblinKing.onAllySummonText = "now serve";
 
 		auto& goblinChampion = arr[MONSTER_IDS::GOBLIN_CHAMPION];
 		goblinChampion.name = "goblin champion";
@@ -1467,14 +1476,12 @@ namespace game
 				}
 				return false;
 			};
-		goblinChampion.onBuffedText = "i am absolute";
 
 		auto& unstableCreation = arr[MONSTER_IDS::UNSTABLE_CREATION];
 		unstableCreation.name = "unstable creation";
 		unstableCreation.attack = 4;
 		unstableCreation.health = 16;
 		unstableCreation.tags = TAG_TOKEN | TAG_ELEMENTAL;
-		unstableCreation.onDamagedText = "uuuauauah...";
 
 		auto& moonAcolyte = arr[MONSTER_IDS::MOON_ACOLYTE];
 		moonAcolyte.name = "moon acolyte";
@@ -1500,7 +1507,6 @@ namespace game
 				}
 				return false;
 			};
-		moonAcolyte.onBuffedText = "all hail great wheel of cheese";
 
 		auto& berserker = arr[MONSTER_IDS::BERSERKER];
 		berserker.name = "berserker";
@@ -1547,7 +1553,6 @@ namespace game
 				}
 				return false;
 			};
-		berserker.onAttackText = "die die die die die die die die";
 
 		auto& manaDevourer = arr[MONSTER_IDS::MANA_DEVOURER];
 		manaDevourer.name = "mana devourer";
@@ -1570,7 +1575,6 @@ namespace game
 				}
 				return false;
 			};
-		manaDevourer.onCastText = "ma..giiic...";
 
 		auto& woundedTroll = arr[MONSTER_IDS::WOUNDED_PANDANA];
 		woundedTroll.name = "wounded pandana";
@@ -1592,7 +1596,6 @@ namespace game
 				}
 				return false;
 			};
-		woundedTroll.onDamagedText = "sniff";
 
 		auto& chaosClown = arr[MONSTER_IDS::CHAOS_CLOWN];
 		chaosClown.name = "mad clown";
@@ -1621,7 +1624,6 @@ namespace game
 				}
 				return false;
 			};
-		chaosClown.onAllyDeathText = "sad clown noises";
 
 		auto& dungLobber = arr[MONSTER_IDS::DUNG_LOBBER];
 		dungLobber.name = "dung lobber";
@@ -1652,7 +1654,6 @@ namespace game
 				}
 				return false;
 			};
-		dungLobber.onBuffedText = "happy monkey noises";
 
 		auto& goblinBomber = arr[MONSTER_IDS::GOBLIN_BOMBER];
 		goblinBomber.name = "goblin bomber";
@@ -1676,7 +1677,6 @@ namespace game
 				
 				return false;
 			};
-		goblinBomber.onAttackText = "catch this";
 
 		auto& goblinPrincess = arr[MONSTER_IDS::GOBLIN_PRINCESS];
 		goblinPrincess.name = "goblin princess";
@@ -1701,7 +1701,6 @@ namespace game
 				}
 				return false;
 			};
-		goblinPrincess.onBuffedText = "teehee";
 
 		auto& peskyParasite = arr[MONSTER_IDS::PESKY_PARASITE];
 		peskyParasite.name = "pesky parasite";
@@ -1734,7 +1733,6 @@ namespace game
 				}
 				return false;
 			};
-		peskyParasite.onBuffedText = "skkrtkt";
 
 		auto& slimeSoldier = arr[MONSTER_IDS::SLIME_SOLDIER];
 		slimeSoldier.name = "slime soldier";
@@ -1760,7 +1758,6 @@ namespace game
 				}
 				return false;
 			};
-		slimeSoldier.onBuffedText = "...";
 
 		auto& madPyromancer = arr[MONSTER_IDS::MAD_PYROMANCER];
 		madPyromancer.name = "mad pyromancer";
@@ -1781,7 +1778,6 @@ namespace game
 				}
 				return false;
 			};
-		madPyromancer.onCastText = "burn them all";
 
 		auto& phantasm = arr[MONSTER_IDS::PHANTASM];
 		phantasm.name = "phantasm";
@@ -1818,7 +1814,6 @@ namespace game
 				}
 				return false;
 			};
-		phantasm.onDamagedText = "futile";
 
 		auto& gnomeScout = arr[MONSTER_IDS::GNOME_SCOUT];
 		gnomeScout.name = "gnome scout";
@@ -1845,7 +1840,6 @@ namespace game
 				}
 				return false;
 			};
-		gnomeScout.onBuffedText = "hihihi";
 
 		auto& slimeHead = arr[MONSTER_IDS::SLIME_HEAD];
 		slimeHead.name = "slime head";
@@ -1868,7 +1862,6 @@ namespace game
 				}
 				return false;
 			};
-		slimeHead.onAttackText = "head butt";
 
 		auto& beastSpirit = arr[MONSTER_IDS::BEAST_SPIRIT];
 		beastSpirit.name = "beast spirit";
@@ -1896,7 +1889,6 @@ namespace game
 				}
 				return false;
 			};
-		beastSpirit.onEnemyDeathText = "...";
 
 		auto& librarian = arr[MONSTER_IDS::LIBRARIAN];
 		librarian.name = "librarian";
@@ -1922,7 +1914,6 @@ namespace game
 				}
 				return false;
 			};
-		librarian.onBuffedText = "knowledge overflowing";
 		return arr;
 	}
 
@@ -3500,7 +3491,7 @@ namespace game
 		for (auto& card : arr)
 			card.animIndex = CURSE_ID_START + c++;
 
-		arr[CURSE_IDS::FADING].name = "fading";
+		arr[CURSE_IDS::FADING].name = "curse of fading";
 		arr[CURSE_IDS::FADING].ruleText = "[end of turn] take one damage.";
 		arr[CURSE_IDS::FADING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3517,7 +3508,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::WEAKNESS].name = "weakness";
+		arr[CURSE_IDS::WEAKNESS].name = "curse of weakness";
 		arr[CURSE_IDS::WEAKNESS].ruleText = "[start of turn] my attack becomes 1.";
 		arr[CURSE_IDS::WEAKNESS].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3534,7 +3525,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::COWARDICE].name = "cowardice";
+		arr[CURSE_IDS::COWARDICE].name = "curse of cowardice";
 		arr[CURSE_IDS::COWARDICE].ruleText = "[any attack] tap.";
 		arr[CURSE_IDS::COWARDICE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3545,7 +3536,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::DUM_DUM].name = "dum dum";
+		arr[CURSE_IDS::DUM_DUM].name = "curse of dum dum";
 		arr[CURSE_IDS::DUM_DUM].ruleText = "[start of turn] your maximum mana is capped at 3.";
 		arr[CURSE_IDS::DUM_DUM].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3558,7 +3549,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::HATE].name = "hate";
+		arr[CURSE_IDS::HATE].name = "curse of hate";
 		arr[CURSE_IDS::HATE].ruleText = "[end of turn] +2 attack, take 2 damage.";
 		arr[CURSE_IDS::HATE].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3583,7 +3574,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::HAUNTING].name = "haunting";
+		arr[CURSE_IDS::HAUNTING].name = "curse of haunting";
 		arr[CURSE_IDS::HAUNTING].ruleText = "[attack] summon a goblin for your opponent.";
 		arr[CURSE_IDS::HAUNTING].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3602,7 +3593,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::TIME].name = "time";
+		arr[CURSE_IDS::TIME].name = "curse of time";
 		arr[CURSE_IDS::TIME].ruleText = "[start of turn 6] die.";
 		arr[CURSE_IDS::TIME].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{
@@ -3621,7 +3612,7 @@ namespace game
 				}
 				return false;
 			};
-		arr[CURSE_IDS::VULNERABILITY].name = "vulnerability";
+		arr[CURSE_IDS::VULNERABILITY].name = "curse of vulnerability";
 		arr[CURSE_IDS::VULNERABILITY].ruleText = "[attacked] take 1 damage.";
 		arr[CURSE_IDS::VULNERABILITY].onActionEvent = [](const LevelInfo& info, State& state, const ActionState& actionState, const uint32_t self)
 			{

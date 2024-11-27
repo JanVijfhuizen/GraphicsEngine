@@ -950,6 +950,8 @@ namespace game
 			return false;
 
 		auto& boardState = state.boardState;
+		if (actionState.trigger == ActionState::Trigger::onDamage)
+			info.playDamaged = true;
 		if(actionState.trigger == ActionState::Trigger::onStartOfTurn)
 		{
 			const auto c = GetEventCardCount(state);
@@ -1313,31 +1315,101 @@ namespace game
 			if (actionState.dst != target)
 			{
 				if (actionStateAllied)
-					metaData.textBubble = card.onAllySummonText;
+				{
+					// Ally Summon
+					const char* arr[]
+					{
+						"hello",
+						"hey",
+						"hi",
+						"yo",
+						"greetings"
+					};
+					metaData.textBubble = arr[rand() % 5];
+				}
 				else
-					metaData.textBubble = card.onEnemySummonText;
+				{
+					// Enemy Summon
+					const char* arr[]
+					{
+						"an enemy",
+						"another one",
+						"oh no",
+						"a worthy opponent",
+						"lets fight"
+					};
+					metaData.textBubble = arr[rand() % 5];
+				}
 			}
 			break;
 		case ActionState::Trigger::onCast:
-			metaData.textBubble = card.onCastText;
+			{
+				const char* arr[]
+				{
+					"magic",
+					"a spell",
+					"what power"
+				};
+				metaData.textBubble = arr[rand() % 3];
+			}
 			break;
 		case ActionState::Trigger::onStatBuff:
 			if (actionState.dst == target)
-				metaData.textBubble = card.onBuffedText;
+			{
+				const char* arr[]
+				{
+					"yeah",
+					"lets go",
+					"im strong"
+				};
+				metaData.textBubble = arr[rand() % 3];
+			}
 			break;
 		case ActionState::Trigger::onDamage:
 			if (actionState.dst == target)
-				metaData.textBubble = card.onDamagedText;
+			{
+				const char* arr[]
+				{
+					"oww",
+					"that hurts",
+					"aaagh"
+				};
+				metaData.textBubble = arr[rand() % 3];
+			}
 			break;
 		case ActionState::Trigger::onAttack:
 			if(actionState.src == target)
-				metaData.textBubble = card.onAttackText;
+			{
+				const char* arr[]
+				{
+					"hyaa",
+					"wazaa",
+					"yaaaa"
+				};
+				metaData.textBubble = arr[rand() % 3];
+			}
 			break;
 		case ActionState::Trigger::onDeath:
 			if (actionStateAllied)
-				metaData.textBubble = card.onAllyDeathText;
+			{
+				const char* arr[]
+				{
+					"nooo",
+					"oh no",
+					"very sad"
+				};
+				metaData.textBubble = arr[rand() % 3];
+			}
 			else
-				metaData.textBubble = card.onEnemyDeathText;
+			{
+				const char* arr[]
+				{
+					"too easy",
+					"pathetic",
+					"good job guys"
+				};
+				metaData.textBubble = arr[rand() % 3];
+			}
 			break;
 		default:
 			break;
@@ -2047,6 +2119,7 @@ namespace game
 
 		if (info.inputState.esc.PressEvent() || pauseRequest)
 		{
+			info.playClick = true;
 			ingameMenuOpened = !ingameMenuOpened;
 			timeSinceIngameMenuOpened = GetTime();
 			pauseRequest = false;

@@ -28,15 +28,6 @@ namespace game
 		uint32_t health = 2;
 		uint32_t tags = 0;
 
-		const char* onCastText = nullptr;
-		const char* onBuffedText = nullptr;
-		const char* onDamagedText = nullptr;
-		const char* onAttackText = nullptr;
-		const char* onAllySummonText = nullptr;
-		const char* onEnemySummonText = nullptr;
-		const char* onAllyDeathText = nullptr;
-		const char* onEnemyDeathText = nullptr;
-
 		[[nodiscard]] Type GetType() override
 		{
 			return Type::monster;

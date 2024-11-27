@@ -360,12 +360,16 @@ namespace game
 				info.renderTasks.Push(buttonRenderTask);
 			//buttonTextTask.lifetime = _buttonLifetime;
 			//buttonTextTask.fadeIn = false;
+
 			_buttonHovered = true;
 		}
 		else if(drawInfo.showLine && drawInfo.drawLineByDefault)
 			info.renderTasks.Push(buttonRenderTask);
 		if (collided && info.inputState.lMouse.ReleaseEvent())
+		{
+			info.playClick = true;
 			pressed = true;
+		}
 
 		info.textTasks.Push(buttonTextTask);
 		return pressed;
