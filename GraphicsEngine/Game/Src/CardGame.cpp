@@ -541,6 +541,7 @@ namespace game
 
 			for (uint32_t i = 0; i < frameCount; ++i)
 			{
+				std::cout << "Creating frame " << i << "\n";
 				auto& frameBuffer = swapChain.frameBuffers[i];
 
 				jv::ge::ImageCreateInfo imageCreateInfo{};

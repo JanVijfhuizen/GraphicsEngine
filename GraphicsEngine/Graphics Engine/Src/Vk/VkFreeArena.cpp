@@ -5,6 +5,8 @@
 #include "JLib/Math.h"
 #include "Vk/VkApp.h"
 #include "Vk/VkMemory.h"
+#include <iostream>
+#include <bitset>
 
 namespace jv::vk
 {
@@ -19,6 +21,10 @@ namespace jv::vk
 			++id;
 		}
 
+		std::bitset<sizeof(properties)> propbits(properties);
+		std::bitset < sizeof (typeFilter) > typebits(typeFilter);
+		std::cout << "GetPoolId fail: ";
+		std::cout << propbits << " " << typebits << "\n";
 		return UINT32_MAX;
 	}
 
@@ -29,6 +35,7 @@ namespace jv::vk
 
 	FreeArena FreeArena::Create(Arena& arena, const App& app, const VkDeviceSize pageSize)
 	{
+		std::cout << "Creating Arena\n";
 		FreeArena freeArena{};
 		freeArena.pageSize = pageSize;
 		freeArena.scope = arena.CreateScope();
@@ -42,8 +49,11 @@ namespace jv::vk
 			auto& pool = freeArena.pools[i] = {};
 			const auto& memType = memProperties.memoryTypes[i];
 			pool.memPropertyFlags = memType.propertyFlags;
+			std::bitset<sizeof(pool.memPropertyFlags) * 8> bits(pool.memPropertyFlags);
+			std::cout << "Created pool with flags " << bits << "\n";
 		}
 
+		
 		return freeArena;
 	}
 
