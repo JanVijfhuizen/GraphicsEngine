@@ -56,6 +56,8 @@ namespace jv::vk
 			fullScreen ? monitor : nullptr, nullptr);
 		assert(window);
 
+		glfwSetWindowPos(window, mode->width / 2 - res.x / 2, mode->height / 2 - res.y / 2);
+
 		GLFWimage images[1];
 		images[0].pixels = stbi_load(icon, &images[0].width, &images[0].height, 0, 4);
 		assert(images[0].pixels);

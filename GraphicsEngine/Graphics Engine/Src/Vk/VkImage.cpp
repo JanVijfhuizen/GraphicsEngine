@@ -206,7 +206,7 @@ namespace jv::vk
 		vkGetImageMemoryRequirements(app.device, image.image, &memRequirements);
 
 		image.memoryHandle = freeArena.Alloc(arena, app, memRequirements,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1, image.memory);
+			0, 1, image.memory);
 		result = vkBindImageMemory(app.device, image.image, image.memory.memory, image.memory.offset);
 		assert(!result);
 
