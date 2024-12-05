@@ -5,7 +5,7 @@
 	return i > 0 ? static_cast<int32_t>(log10(static_cast<double>(i))) + 1 : 1;
 }
 
-constexpr uint32_t DAISY_MOD_STATS = 99;
+constexpr uint32_t DAISY_MOD_STATS = 3;
 
 constexpr glm::ivec2 SIMULATED_RESOLUTION(320, 240);
 constexpr float TEXT_DRAW_SPEED = 20;
