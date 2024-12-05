@@ -1151,32 +1151,29 @@ namespace game
 			auto& health = combatStats.health;
 			auto& tempHealth = combatStats.tempHealth;
 
-			if (health > 0)
+			constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
+			auto damage = actionState.values[vDamage];
+
+			const auto th = tempHealth;
+			if (damage <= tempHealth)
 			{
-				constexpr auto vDamage = static_cast<uint32_t>(ActionState::VDamage::damage);
-				auto damage = actionState.values[vDamage];
+				tempHealth -= damage;
+				damage = 0;
+			}
+			else
+			{
+				tempHealth = 0;
+				damage -= th;
+			}
 
-				const auto th = tempHealth;
-				if (damage <= tempHealth)
-				{
-					tempHealth -= damage;
-					damage = 0;
-				}
-				else
-				{
-					tempHealth = 0;
-					damage -= th;
-				}
+			health = health < damage ? 0 : health - damage;
+			metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
 
-				health = health < damage ? 0 : health - damage;
-				metaDatas[META_DATA_ALLY_INDEX + actionState.dst].timeSinceStatsChanged = level->GetTime();
-
-				if (health == 0)
-				{
-					ActionState deathActionState = actionState;
-					deathActionState.trigger = ActionState::Trigger::onDeath;
-					state.TryAddToStack(deathActionState);
-				}
+			if (health == 0)
+			{
+				ActionState deathActionState = actionState;
+				deathActionState.trigger = ActionState::Trigger::onDeath;
+				state.TryAddToStack(deathActionState);
 			}
 		}
 		else if (actionState.trigger == ActionState::Trigger::onStatBuff)
@@ -1225,8 +1222,8 @@ namespace game
 			i -= mod;
 			const uint32_t c = (isEnemy ? boardState.enemyCount : boardState.allyCount) - 1;
 
-			for (uint32_t j = actionState.dst + 2 + HAND_MAX_SIZE; j < BOARD_CAPACITY + HAND_MAX_SIZE + 1; ++j)
-				metaDatas[j] = metaDatas[j + 1];
+			//for (uint32_t j = actionState.dst + 2 + HAND_MAX_SIZE; j < BOARD_CAPACITY + HAND_MAX_SIZE + 1; ++j)
+				//metaDatas[j] = metaDatas[j + 1];
 
 			if (isEnemy)
 			{
@@ -1252,6 +1249,8 @@ namespace game
 				gameState.curses[c] = -1;
 				--boardState.allyCount;
 			}
+
+			metaDatas[META_DATA_ALLY_INDEX + i] = {};
 
 			// Remove shared data.
 			for (uint32_t j = i; j < c; ++j)
@@ -2108,7 +2107,7 @@ namespace game
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
 		ingameMenuOpened = false;
 
-		//stateMachine.state.depth = 29;
+		//stateMachine.state.depth = 5;
 		//stateMachine.next = stateMachine.current;
 	}
 
@@ -2165,6 +2164,17 @@ namespace game
 			if (DrawButton(info, buttonDrawInfo, lifetime))
 			{
 				loadLevelIndex = LevelIndex::mainMenu;
+				return true;
+			}
+
+			buttonDrawInfo.origin.y -= 12;
+			buttonDrawInfo.text = "music ";
+			const char* prefix = info.musicEnabled ? "off" : "on";
+			buttonDrawInfo.text = TextInterpreter::Concat(buttonDrawInfo.text, prefix, info.frameArena);
+			if (DrawButton(info, buttonDrawInfo, lifetime))
+			{
+				info.musicEnabled = !info.musicEnabled;
+				timeSinceIngameMenuOpened = GetTime();
 				return true;
 			}
 

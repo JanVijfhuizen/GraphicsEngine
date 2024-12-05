@@ -324,13 +324,13 @@ namespace game
 
 		if (playClick)
 		{
-			ma_sound_set_volume(&clickAudio, .4);
+			ma_sound_set_volume(&clickAudio, .2);
 			ma_sound_seek_to_pcm_frame(&clickAudio, 0);
 			ma_sound_start(&clickAudio);
 		}
 		if (playHover)
 		{
-			ma_sound_set_volume(&hoverAudio, .2);
+			ma_sound_set_volume(&hoverAudio, .1);
 			ma_sound_seek_to_pcm_frame(&hoverAudio, 0);
 			ma_sound_start(&hoverAudio);
 		}
@@ -338,6 +338,7 @@ namespace game
 		{
 			uint32_t randInt = rand() % 9;
 			const auto ptr = &attackAudios[randInt];
+			ma_sound_set_volume(ptr, .4);
 			ma_sound_seek_to_pcm_frame(ptr, 0);
 			ma_sound_start(ptr);
 		}
@@ -1058,7 +1059,7 @@ namespace game
 			};
 		auto& demon = arr[MONSTER_IDS::DEMON];
 		demon.name = "demon";
-		demon.health = 0;
+		demon.health = 1;
 		demon.attack = 0;
 		demon.tags = TAG_TOKEN;
 		demon.unique = true;
@@ -1174,7 +1175,7 @@ namespace game
 		auto& slimeFather = arr[MONSTER_IDS::SLIME_FATHER];
 		slimeFather.name = "slime father";
 		slimeFather.attack = 1;
-		slimeFather.health = 35;
+		slimeFather.health = 30;
 		slimeFather.ruleText = "[end of turn] summon a slime soldier with my stats.";
 		slimeFather.unique = true;
 		slimeFather.tags = TAG_SLIME | TAG_BOSS;

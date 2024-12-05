@@ -5,7 +5,7 @@
 	return i > 0 ? static_cast<int32_t>(log10(static_cast<double>(i))) + 1 : 1;
 }
 
-constexpr uint32_t DAISY_MOD_STATS = 3;
+constexpr uint32_t DAISY_MOD_STATS = 99;
 
 constexpr glm::ivec2 SIMULATED_RESOLUTION(320, 240);
 constexpr float TEXT_DRAW_SPEED = 20;
@@ -61,7 +61,7 @@ constexpr float CARD_VERTICAL_MOVE_SPEED = ACTION_STATE_DEFAULT_DURATION / 2;
 const constexpr char* SOUND_BACKGROUND_MUSIC = "Audio/battle_music.wav";
 const constexpr char* SOUND_CLICK = "Audio/click.wav";
 const constexpr char* SOUND_HOVER = "Audio/hover.wav";
-constexpr float AUDIO_BACKGROUND_VOLUME = .3f;
+constexpr float AUDIO_BACKGROUND_VOLUME = .1f;
 
 struct MONSTER_IDS
 {

@@ -248,7 +248,7 @@ namespace game
 		}
 
 		buttonDrawInfo.origin.y -= SMALL_BUTTON_OFFSET;
-		buttonDrawInfo.text = "turn music ";
+		buttonDrawInfo.text = "music ";
 		const char* prefix = info.musicEnabled ? "off" : "on";
 		buttonDrawInfo.text = TextInterpreter::Concat(buttonDrawInfo.text, prefix, info.frameArena);
 		if (DrawButton(info, buttonDrawInfo, openTime))

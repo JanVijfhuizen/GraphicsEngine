@@ -103,7 +103,7 @@ namespace game
 		uint32_t l = depth / ROOM_COUNT_BEFORE_BOSS;
 		if (info.bosses.length <= l)
 			return -1;
-		return info.bosses[l];
+		return info.bosses[l + path];
 	}
 
 	uint32_t State::GetRoom(const LevelInfo& info)
