@@ -30,8 +30,10 @@ namespace game
 		_timeSinceLoading = 0;
 		_loading = false;
 		_animateLoading = false;
+		_ingameMenuOpened = false;
 		for (auto& metaData : _cardDrawMetaDatas)
 			metaData = {};
+		canPause = true;
 	}
 
 	bool Level::Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex)
@@ -76,6 +78,77 @@ namespace game
 			info.pixelation = 1;
 
 		_timeSinceOpened += info.deltaTime;
+
+		if (canPause && (info.inputState.esc.PressEvent() || pauseRequest))
+		{
+			info.playClick = true;
+			_ingameMenuOpened = !_ingameMenuOpened;
+			_timeSinceIngameMenuOpened = GetTime();
+			pauseRequest = false;
+			Load(LevelIndex::animOnlyNoTimeReset, true);
+		}
+
+		if (_ingameMenuOpened)
+		{
+			const auto& pauseMenuTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::pauseMenu)];
+			jv::ge::SubTexture pauseMenuFrames[4];
+			Divide(pauseMenuTexture.subTexture, pauseMenuFrames, 4);
+
+			const uint32_t index = floor(fmodf(GetTime() * 4, 4));
+
+			PixelPerfectRenderTask pauseMenuRenderTask{};
+			pauseMenuRenderTask.subTexture = pauseMenuFrames[index];
+			pauseMenuRenderTask.scale = pauseMenuTexture.resolution / glm::ivec2(4, 1);
+			pauseMenuRenderTask.position = SIMULATED_RESOLUTION / 2;
+			pauseMenuRenderTask.xCenter = true;
+			pauseMenuRenderTask.yCenter = true;
+			info.renderTasks.Push(pauseMenuRenderTask);
+
+			info.inCombat = false;
+			const float lifetime = GetTime() - _timeSinceIngameMenuOpened;
+
+			//DrawTopCenterHeader(info, HeaderSpacing::close, "pause menu", 2, lifetime);
+
+			ButtonDrawInfo buttonDrawInfo{};
+			buttonDrawInfo.center = true;
+			buttonDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 10);
+			buttonDrawInfo.drawLineByDefault = false;
+
+			buttonDrawInfo.text = "resume";
+			if (DrawButton(info, buttonDrawInfo, lifetime))
+			{
+				_ingameMenuOpened = false;
+				Load(LevelIndex::animOnlyNoTimeReset, true);
+				return true;
+			}
+
+			buttonDrawInfo.text = "main menu";
+			buttonDrawInfo.origin.y -= 12;
+			if (DrawButton(info, buttonDrawInfo, lifetime))
+			{
+				loadLevelIndex = LevelIndex::mainMenu;
+				return true;
+			}
+
+			buttonDrawInfo.origin.y -= 12;
+			buttonDrawInfo.text = "music ";
+			const char* prefix = info.musicEnabled ? "off" : "on";
+			buttonDrawInfo.text = TextInterpreter::Concat(buttonDrawInfo.text, prefix, info.frameArena);
+			if (DrawButton(info, buttonDrawInfo, lifetime))
+			{
+				info.musicEnabled = !info.musicEnabled;
+				_timeSinceIngameMenuOpened = GetTime();
+				return true;
+			}
+
+			buttonDrawInfo.text = "exit game";
+			buttonDrawInfo.origin.y -= 12;
+			if (DrawButton(info, buttonDrawInfo, lifetime))
+				return false;
+
+			return true;
+		}
+
 		return true;
 	}
 
@@ -969,5 +1042,9 @@ namespace game
 		_loadingLevelIndex = index;
 		_timeSinceLoading = 0;
 		_animateLoading = animate;
+	}
+	bool Level::IsPaused() const
+	{
+		return _ingameMenuOpened;
 	}
 }

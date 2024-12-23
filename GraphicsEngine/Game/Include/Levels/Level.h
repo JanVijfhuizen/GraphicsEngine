@@ -199,6 +199,7 @@ namespace game
 		};
 
 		bool pauseRequest;
+		bool canPause;
 
 		virtual void Create(const LevelCreateInfo& info);
 		virtual bool Update(const LevelUpdateInfo& info, LevelIndex& loadLevelIndex);
@@ -221,6 +222,7 @@ namespace game
 		[[nodiscard]] float GetTime() const;
 		[[nodiscard]] bool GetIsLoading() const;
 		void Load(LevelIndex index, bool animate);
+		[[nodiscard]] bool IsPaused() const;
 
 	private:
 		const float _LOAD_DURATION = .2f;
@@ -238,6 +240,9 @@ namespace game
 		float _buttonLifetime;
 		bool _buttonHovered;
 		bool _buttonHoveredLastFrame;
+
+		bool _ingameMenuOpened;
+		float _timeSinceIngameMenuOpened;
 
 		CardDrawMetaData _cardDrawMetaDatas[PARTY_CAPACITY];
 	};

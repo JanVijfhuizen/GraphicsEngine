@@ -13,6 +13,7 @@ namespace game
 		inCredits = false;
 		openTime = 0;
 		changingResolution = false;
+		canPause = false;
 	}
 
 	void MainMenuLevel::DrawTitle(const LevelUpdateInfo& info)
@@ -34,6 +35,8 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
+		if (IsPaused())
+			return true;
 		if (changingResolution)
 			return true;
 

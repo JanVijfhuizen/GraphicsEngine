@@ -22,6 +22,8 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
+		if (IsPaused())
+			return true;
 		return stateMachine.Update(info, this, loadLevelIndex);
 	}
 

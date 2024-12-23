@@ -1389,7 +1389,7 @@ namespace game
 			}
 			break;
 		case ActionState::Trigger::onDeath:
-			if (actionStateAllied)
+			if (actionStateAllied && actionState.dst != target)
 			{
 				const char* arr[]
 				{
@@ -2105,7 +2105,6 @@ namespace game
 		states[4] = info.arena.New<RewardFlawCardState>();
 		states[5] = info.arena.New<RewardArtifactState>();
 		stateMachine = LevelStateMachine<State>::Create(info, states, State::Create(info));
-		ingameMenuOpened = false;
 
 		//stateMachine.state.depth = 5;
 		//stateMachine.next = stateMachine.current;
@@ -2115,79 +2114,8 @@ namespace game
 	{
 		if (!Level::Update(info, loadLevelIndex))
 			return false;
-
-		if (info.inputState.esc.PressEvent() || pauseRequest)
-		{
-			info.playClick = true;
-			ingameMenuOpened = !ingameMenuOpened;
-			timeSinceIngameMenuOpened = GetTime();
-			pauseRequest = false;
-			Load(LevelIndex::animOnlyNoTimeReset, true);
-		}
-
-		if (ingameMenuOpened)
-		{
-			const auto& pauseMenuTexture = info.atlasTextures[static_cast<uint32_t>(TextureId::pauseMenu)];
-			jv::ge::SubTexture pauseMenuFrames[4];
-			Divide(pauseMenuTexture.subTexture, pauseMenuFrames, 4);
-			
-			const uint32_t index = floor(fmodf(GetTime() * 4, 4));
-
-			PixelPerfectRenderTask pauseMenuRenderTask{};
-			pauseMenuRenderTask.subTexture = pauseMenuFrames[index];
-			pauseMenuRenderTask.scale = pauseMenuTexture.resolution / glm::ivec2(4, 1);
-			pauseMenuRenderTask.position = SIMULATED_RESOLUTION / 2;
-			pauseMenuRenderTask.xCenter = true;
-			pauseMenuRenderTask.yCenter = true;
-			info.renderTasks.Push(pauseMenuRenderTask);
-
-			info.inCombat = false;
-			const float lifetime = GetTime() - timeSinceIngameMenuOpened;
-
-			//DrawTopCenterHeader(info, HeaderSpacing::close, "pause menu", 2, lifetime);
-
-			ButtonDrawInfo buttonDrawInfo{};
-			buttonDrawInfo.center = true;
-			buttonDrawInfo.origin = SIMULATED_RESOLUTION / 2 + glm::ivec2(0, 10);
-			buttonDrawInfo.drawLineByDefault = false;
-			
-			buttonDrawInfo.text = "resume";
-			if(DrawButton(info, buttonDrawInfo, lifetime))
-			{
-				ingameMenuOpened = false;
-				Load(LevelIndex::animOnlyNoTimeReset, true);
-				return true;
-			}
-
-			buttonDrawInfo.text = "main menu";
-			buttonDrawInfo.origin.y -= 12;
-			if (DrawButton(info, buttonDrawInfo, lifetime))
-			{
-				loadLevelIndex = LevelIndex::mainMenu;
-				return true;
-			}
-
-			buttonDrawInfo.origin.y -= 12;
-			buttonDrawInfo.text = "music ";
-			const char* prefix = info.musicEnabled ? "off" : "on";
-			buttonDrawInfo.text = TextInterpreter::Concat(buttonDrawInfo.text, prefix, info.frameArena);
-			if (DrawButton(info, buttonDrawInfo, lifetime))
-			{
-				info.musicEnabled = !info.musicEnabled;
-				timeSinceIngameMenuOpened = GetTime();
-				return true;
-			}
-
-			buttonDrawInfo.text = "exit game";
-			buttonDrawInfo.origin.y -= 12;
-			if (DrawButton(info, buttonDrawInfo, lifetime))
-			{
-				return false;
-			}
-
+		if (IsPaused())
 			return true;
-		}
-
 		return stateMachine.Update(info, this, loadLevelIndex);
 	}
 }
