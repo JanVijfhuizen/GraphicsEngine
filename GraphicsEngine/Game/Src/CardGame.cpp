@@ -324,13 +324,13 @@ namespace game
 
 		if (playClick)
 		{
-			ma_sound_set_volume(&clickAudio, .2);
+			ma_sound_set_volume(&clickAudio, .1);
 			ma_sound_seek_to_pcm_frame(&clickAudio, 0);
 			ma_sound_start(&clickAudio);
 		}
 		if (playHover)
 		{
-			ma_sound_set_volume(&hoverAudio, .1);
+			ma_sound_set_volume(&hoverAudio, .05);
 			ma_sound_seek_to_pcm_frame(&hoverAudio, 0);
 			ma_sound_start(&hoverAudio);
 		}
@@ -338,7 +338,7 @@ namespace game
 		{
 			uint32_t randInt = rand() % 9;
 			const auto ptr = &attackAudios[randInt];
-			ma_sound_set_volume(ptr, .4);
+			ma_sound_set_volume(ptr, .2);
 			ma_sound_seek_to_pcm_frame(ptr, 0);
 			ma_sound_start(ptr);
 		}
@@ -346,6 +346,7 @@ namespace game
 		{
 			uint32_t randInt = rand() % 6;
 			const auto ptr = &damagedAudios[randInt];
+			ma_sound_set_volume(ptr, .5);
 			ma_sound_seek_to_pcm_frame(ptr, 0);
 			ma_sound_start(ptr);
 		}

@@ -250,6 +250,13 @@ namespace game
 
 		auto& gameState = info.gameState;
 		auto& boardState = state.boardState;
+
+		// temp
+		if (info.inputState.enter.PressEvent() && !activeStateValid && state.stack.count == 0)
+		{
+			lastEnemyDefeatedId = state.boardState.ids[BOARD_CAPACITY_PER_SIDE + rand() % state.boardState.enemyCount];
+			state.boardState.enemyCount = 0;
+		}
 		
 		const bool stackOverloaded = state.stack.count == state.stack.length;
 		if (stackOverloaded || comboCounter > STACK_OVERLOAD_THRESHOLD)
